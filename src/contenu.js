@@ -1,5 +1,6 @@
 import { site } from "./data/site";
 import { matieres } from "./data/matieres";
+import { competences } from "./data/competences";
 import { exercices } from "./data/exercices";
 import { qcms } from "./data/qcm";
 import { videosSuggerees } from "./data/videos";
@@ -28,6 +29,7 @@ const DELAI_MAXIMUM = 4000;
 
 const TABLEAUX = {
   matieres,
+  competences,
   exercices,
   qcms,
   videos: videosSuggerees,
@@ -57,7 +59,12 @@ export async function chargerContenu() {
   const controle = new AbortController();
   const minuteur = setTimeout(() => controle.abort(), DELAI_MAXIMUM);
   try {
-    const reponse = await fetch(new URL("/contenu", site.urlIA), { signal: controle.signal });
+    // Jamais depuis le cache du navigateur : juste après « Publier »,
+    // on doit voir la nouvelle version, pas celle d'il y a une minute.
+    const reponse = await fetch(new URL("/contenu", site.urlIA), {
+      signal: controle.signal,
+      cache: "no-store",
+    });
     const contenu = await reponse.json();
     if (valide(contenu)) {
       remplacer(contenu);

@@ -1,8 +1,8 @@
 /* ==================================================================
    Le contenu pédagogique publié depuis l'espace admin.
 
-   Matières et cours, exercices, QCM, vidéos, examens blancs et
-   annales : un seul document JSON dans Cloudflare KV, sous la clé
+   Matières et cours, compétences, exercices, QCM, vidéos, examens
+   blancs et annales : un seul document JSON dans Cloudflare KV, sous la clé
    `contenu`. Le site le charge à l'ouverture ; tant que rien n'est
    publié, il garde le contenu écrit dans `src/data/`.
 
@@ -74,6 +74,15 @@ const nettoyerMatiere = (m) => ({
       contenu: texte(c?.contenu, 30000),
     }))
     .filter((c) => c.titre),
+});
+
+/* Une compétence renvoie vers des chapitres par leur titre exact :
+   c'est ce qui permet de dire « relis ce chapitre » sans rien inventer. */
+const nettoyerCompetence = (c) => ({
+  id: id(c?.id),
+  nom: texte(c?.nom, 120),
+  matiere: id(c?.matiere),
+  chapitres: textes(c?.chapitres, 20, 150),
 });
 
 const nettoyerExercice = (e) => ({
@@ -154,6 +163,12 @@ const nettoyerAnnale = (a) => ({
 export function nettoyerContenu(brut) {
   return {
     matieres: uniques(liste(brut?.matieres, 30).map(nettoyerMatiere).filter((m) => m.nom)),
+    // Absentes d'une publication (page admin d'avant leur arrivée,
+    // restée en cache), les compétences ne sont pas vidées : la clé est
+    // omise, et le site garde les siennes.
+    competences: Array.isArray(brut?.competences)
+      ? uniques(liste(brut.competences, 300).map(nettoyerCompetence).filter((c) => c.nom))
+      : undefined,
     exercices: uniques(liste(brut?.exercices, 500).map(nettoyerExercice).filter((e) => e.titre)),
     qcms: uniques(liste(brut?.qcms, 200).map(nettoyerQcm).filter((q) => q.titre)),
     videos: uniques(liste(brut?.videos, 500).map(nettoyerVideo).filter((v) => v.titre)),

@@ -9,7 +9,6 @@ import ConnexionAdmin, {
   messageErreurAdmin,
 } from "../components/ConnexionAdmin";
 import { themesMatiere } from "../data/couleurs";
-import { competences } from "../data/competences";
 import { iaActive } from "../ia";
 import {
   copieContenu,
@@ -21,8 +20,8 @@ import {
 } from "../contenu";
 
 /* ==================================================================
-   Gérer le contenu : matières et cours, exercices, QCM, vidéos,
-   examens blancs et annales.
+   Gérer le contenu : matières et cours, compétences, exercices, QCM,
+   vidéos, examens blancs et annales.
 
    On modifie un BROUILLON, gardé dans la page. Rien ne change pour les
    étudiants tant qu'on n'a pas cliqué « Publier » : le brouillon part
@@ -39,6 +38,7 @@ import {
 
 const ONGLETS = [
   { cle: "matieres", label: "Matières et cours", icone: "folder" },
+  { cle: "competences", label: "Compétences", icone: "layers" },
   { cle: "exercices", label: "Exercices", icone: "pencil" },
   { cle: "qcms", label: "QCM", icone: "target" },
   { cle: "videos", label: "Vidéos", icone: "video" },
@@ -292,18 +292,95 @@ const optionsMatieres = (matieres) => [
   { value: "", label: "— Choisir —" },
   ...matieres.map((m) => ({ value: m.id, label: m.nom || m.id })),
 ];
-const optionsCompetences = (matiere) => [
+const optionsCompetences = (competences, matiere) => [
   { value: "", label: "Aucune" },
-  ...competences.filter((c) => c.matiere === matiere).map((c) => ({ value: c.id, label: c.nom })),
+  ...competences
+    .filter((c) => c.matiere === matiere)
+    .map((c) => ({ value: c.id, label: c.nom || c.id })),
 ];
 
-function EditeurExercice({ element: e, changer, matieres }) {
+/* Une compétence : ce que l'analyse mesure. Les questions de QCM et les
+   exercices y sont rattachés, et elle renvoie vers les chapitres à
+   relire quand elle est faible. */
+function EditeurCompetence({ element: c, changer, matieres, usages }) {
+  const matiere = matieres.find((m) => m.id === c.matiere);
+  const titres = matiere?.chapitres.map((ch) => ch.titre) ?? [];
+  const orphelins = c.chapitres.filter((t) => !titres.includes(t));
+  const basculer = (titre) =>
+    changer({
+      chapitres: c.chapitres.includes(titre)
+        ? c.chapitres.filter((t) => t !== titre)
+        : [...c.chapitres, titre],
+    });
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Champ
+          label="Nom"
+          value={c.nom}
+          maxLength={120}
+          placeholder="Adressage et sous-réseaux"
+          onChange={(e) => changer({ nom: e.target.value })}
+        />
+        <Choix
+          label="Matière"
+          value={c.matiere}
+          options={optionsMatieres(matieres)}
+          onChange={(e) => changer({ matiere: e.target.value, chapitres: [] })}
+        />
+      </div>
+
+      <fieldset>
+        <legend className="text-xs font-semibold text-ink-600 dark:text-ink-300">
+          Chapitres à relire quand cette compétence est faible
+        </legend>
+        {titres.length === 0 ? (
+          <p className="mt-2 text-sm text-ink-500">Choisis d'abord une matière qui a des chapitres.</p>
+        ) : (
+          <div className="mt-2 space-y-1">
+            {titres.map((t) => (
+              <label
+                key={t}
+                className="flex items-center gap-3 rounded-lg px-2 py-1.5 text-sm text-ink-700 hover:bg-ink-50 dark:text-ink-300 dark:hover:bg-ink-800"
+              >
+                <input
+                  type="checkbox"
+                  checked={c.chapitres.includes(t)}
+                  onChange={() => basculer(t)}
+                  className="size-4 accent-brand-600"
+                />
+                {t}
+              </label>
+            ))}
+          </div>
+        )}
+        {orphelins.map((t) => (
+          <p key={t} className="mt-2 flex items-center gap-2 text-xs text-sun-700 dark:text-sun-400">
+            Chapitre introuvable : « {t} »
+            <button type="button" onClick={() => basculer(t)} className="font-medium underline">
+              retirer
+            </button>
+          </p>
+        ))}
+      </fieldset>
+
+      <p className="rounded-xl bg-ink-50 px-4 py-3 text-xs/5 text-ink-600 dark:bg-ink-950 dark:text-ink-400">
+        Utilisée par {usages.exercices} exercice(s) et {usages.questions} question(s) de QCM. Une
+        compétence n'est jugée qu'à partir de 3 réponses : prévois au moins 3 questions de QCM
+        qui s'y rattachent.
+      </p>
+    </div>
+  );
+}
+
+function EditeurExercice({ element: e, changer, matieres, competences }) {
   return (
     <div className="space-y-4">
       <Champ label="Titre" value={e.titre} maxLength={150} onChange={(ev) => changer({ titre: ev.target.value })} />
       <div className="grid gap-4 sm:grid-cols-4">
         <Choix label="Matière" value={e.matiere} options={optionsMatieres(matieres)} onChange={(ev) => changer({ matiere: ev.target.value, competence: "" })} />
-        <Choix label="Compétence" value={e.competence ?? ""} options={optionsCompetences(e.matiere)} onChange={(ev) => changer({ competence: ev.target.value })} />
+        <Choix label="Compétence" value={e.competence ?? ""} options={optionsCompetences(competences, e.matiere)} onChange={(ev) => changer({ competence: ev.target.value })} />
         <Choix
           label="Difficulté"
           value={e.difficulte}
@@ -333,7 +410,7 @@ function EditeurExercice({ element: e, changer, matieres }) {
   );
 }
 
-function EditeurQcm({ element: q, changer, matieres }) {
+function EditeurQcm({ element: q, changer, matieres, competences }) {
   const questions = q.questions;
   const changerQuestion = (i, modif) =>
     changer({ questions: questions.map((x, j) => (j === i ? { ...x, ...modif } : x)) });
@@ -408,7 +485,7 @@ function EditeurQcm({ element: q, changer, matieres }) {
                   )}
                 </fieldset>
                 <div className="grid gap-3 sm:grid-cols-[200px_1fr]">
-                  <Choix label="Compétence" value={x.competence ?? ""} options={optionsCompetences(q.matiere)} onChange={(e) => changerQuestion(i, { competence: e.target.value })} />
+                  <Choix label="Compétence" value={x.competence ?? ""} options={optionsCompetences(competences, q.matiere)} onChange={(e) => changerQuestion(i, { competence: e.target.value })} />
                   <Zone label="Explication" rows={2} value={x.explication} maxLength={1500} onChange={(e) => changerQuestion(i, { explication: e.target.value })} />
                 </div>
               </div>
@@ -610,6 +687,17 @@ const TYPES = {
     titre: (m) => m.nom,
     detail: (m) => `${m.chapitres.length} chapitres`,
   },
+  competences: {
+    Editeur: EditeurCompetence,
+    nouveau: (tous, matiere) => ({
+      id: identifiant(`${matiere || "competence"}-competence`, tous),
+      nom: "",
+      matiere,
+      chapitres: [],
+    }),
+    titre: (c) => c.nom,
+    detail: (c) => `${c.chapitres.length} chapitre(s)`,
+  },
   exercices: {
     Editeur: EditeurExercice,
     nouveau: (tous, matiere) => ({
@@ -677,6 +765,17 @@ function problemes(b) {
   const liste = [];
   const ids = new Set(b.matieres.map((m) => m.id));
   for (const m of b.matieres) if (!m.nom.trim()) liste.push(`Une matière n'a pas de nom (${m.id}).`);
+  for (const c of b.competences) {
+    if (!c.nom.trim()) {
+      liste.push(`La compétence « ${c.id} » n'a pas de nom : elle serait supprimée.`);
+      continue;
+    }
+    if (!ids.has(c.matiere)) liste.push(`La compétence « ${c.nom} » n'a pas de matière.`);
+    const titres = b.matieres.find((m) => m.id === c.matiere)?.chapitres.map((ch) => ch.titre) ?? [];
+    for (const t of c.chapitres) {
+      if (!titres.includes(t)) liste.push(`La compétence « ${c.nom} » renvoie vers un chapitre introuvable : « ${t} ».`);
+    }
+  }
   for (const [cle, nom] of [
     ["exercices", "L'exercice"],
     ["qcms", "Le QCM"],
@@ -739,7 +838,10 @@ export default function GestionContenu() {
     lireContenuAdmin(motDePasse)
       .then((c) => {
         if (annule) return;
-        setBrouillon(c ?? copieContenuParDefaut());
+        // Une publication plus ancienne peut ne pas avoir toutes les
+        // rubriques (les compétences sont arrivées après) : on complète
+        // avec le contenu du code.
+        setBrouillon(c ? { ...copieContenuParDefaut(), ...c } : copieContenuParDefaut());
         setPublie(c?.publieLe ?? null);
         setEtat({
           type: "",
@@ -790,8 +892,40 @@ export default function GestionContenu() {
     setBrouillon((b) => ({ ...b, [cle]: liste }));
     setModifie(true);
   };
-  const changer = (modif) =>
+  const changer = (modif) => {
+    // Renommer un chapitre met à jour les compétences qui le citent :
+    // sans cela, « relis ce chapitre » pointerait vers un titre disparu.
+    if (
+      onglet === "matieres" &&
+      modif.chapitres &&
+      modif.chapitres.length === selectionne.chapitres.length
+    ) {
+      const renommages = new Map();
+      selectionne.chapitres.forEach((c, i) => {
+        if (c.titre !== modif.chapitres[i].titre) renommages.set(c.titre, modif.chapitres[i].titre);
+      });
+      if (renommages.size) {
+        const matiere = selectionne.id;
+        setBrouillon((b) => ({
+          ...b,
+          competences: b.competences.map((c) =>
+            c.matiere !== matiere
+              ? c
+              : { ...c, chapitres: c.chapitres.map((t) => renommages.get(t) ?? t) }
+          ),
+        }));
+      }
+    }
     modifierListe(onglet, elements.map((e) => (e.id === selectionne.id ? { ...e, ...modif } : e)));
+  };
+
+  const usagesCompetence = (id) => ({
+    exercices: brouillon.exercices.filter((e) => e.competence === id).length,
+    questions: brouillon.qcms.reduce(
+      (n, q) => n + q.questions.filter((x) => x.competence === id).length,
+      0
+    ),
+  });
 
   const ajouter = () => {
     const nouveau = type.nouveau(elements, filtre || brouillon.matieres[0]?.id || "");
@@ -801,7 +935,7 @@ export default function GestionContenu() {
 
   const supprimer = () => {
     if (onglet === "matieres") {
-      const lies = ["exercices", "qcms", "videos", "examens", "annales"].reduce(
+      const lies = ["competences", "exercices", "qcms", "videos", "examens", "annales"].reduce(
         (n, cle) => n + brouillon[cle].filter((e) => e.matiere === selectionne.id).length,
         0
       );
@@ -809,6 +943,31 @@ export default function GestionContenu() {
         window.alert(`Cette matière a encore ${lies} contenu(s) rattaché(s). Supprime-les ou change leur matière d'abord.`);
         return;
       }
+    }
+    if (onglet === "competences") {
+      // Une compétence supprimée est détachée des exercices et des
+      // questions, qui restent en place.
+      const u = usagesCompetence(selectionne.id);
+      const n = u.exercices + u.questions;
+      const message =
+        `Supprimer la compétence « ${selectionne.nom || selectionne.id} » ?` +
+        (n
+          ? `\n\n${u.exercices} exercice(s) et ${u.questions} question(s) y sont rattachés : ils seront détachés, pas supprimés.`
+          : "");
+      if (!window.confirm(message)) return;
+      const id = selectionne.id;
+      setBrouillon((b) => ({
+        ...b,
+        competences: b.competences.filter((c) => c.id !== id),
+        exercices: b.exercices.map((e) => (e.competence === id ? { ...e, competence: "" } : e)),
+        qcms: b.qcms.map((q) => ({
+          ...q,
+          questions: q.questions.map((x) => (x.competence === id ? { ...x, competence: "" } : x)),
+        })),
+      }));
+      setModifie(true);
+      setSelection((s) => ({ ...s, competences: null }));
+      return;
     }
     if (!window.confirm(`Supprimer « ${type.titre(selectionne) || selectionne.id} » ?`)) return;
     modifierListe(onglet, elements.filter((e) => e.id !== selectionne.id));
@@ -991,7 +1150,14 @@ export default function GestionContenu() {
                         Supprimer
                       </Bouton>
                     </div>
-                    <Editeur key={selectionne.id} element={selectionne} changer={changer} matieres={brouillon.matieres} />
+                    <Editeur
+                      key={selectionne.id}
+                      element={selectionne}
+                      changer={changer}
+                      matieres={brouillon.matieres}
+                      competences={brouillon.competences}
+                      usages={onglet === "competences" ? usagesCompetence(selectionne.id) : null}
+                    />
                   </>
                 )}
               </div>

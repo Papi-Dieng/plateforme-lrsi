@@ -338,8 +338,8 @@ réécrire les pages.
 ### Depuis l'espace admin (recommandé)
 
 *Administration*, puis *Gérer le contenu* (`/#/admin/contenu`), avec le mot de
-passe admin. Six onglets : matières et cours (le texte de chaque chapitre),
-exercices, QCM, vidéos, examens blancs et annales.
+passe admin. Sept onglets : matières et cours (le texte de chaque chapitre),
+compétences, exercices, QCM, vidéos, examens blancs et annales.
 
 On modifie un **brouillon** : rien ne change pour les étudiants avant
 **« Publier »**. Le contenu publié est gardé par le relais (Cloudflare KV,
@@ -354,15 +354,17 @@ recompilation, pas de push.
   gardée dans le navigateur, et à défaut le contenu des fichiers.
 - Les **identifiants** (adresse d'un exercice ou d'un QCM) sont fabriqués à
   la création et ne changent plus : la progression et les favoris y sont
-  attachés. Renommer un chapitre détache en revanche ses favoris et les
-  compétences qui citent son titre.
+  attachés. Renommer un chapitre détache en revanche les favoris posés dessus.
 - Une **annale** n'est montrée aux étudiants qu'avec une autorisation écrite
   déclarée et un lien https vers le sujet. Le relais applique cette règle, pas
   seulement la page. La plateforme n'héberge aucun fichier : sujets et
   corrigés sont des liens.
 - Le **cours** d'un chapitre s'affiche aux étudiants sous le chapitre
   (« Lire le cours »), et l'assistant IA s'en sert pour répondre.
-- Les compétences restent définies dans `src/data/competences.js`.
+- Les **compétences** se gèrent dans leur onglet : nom, matière, et chapitres
+  à relire quand elle est faible. Renommer un chapitre met à jour les
+  compétences qui le citent. Supprimer une compétence la détache des
+  exercices et des questions de QCM, sans les supprimer.
 
 ### Dans les fichiers
 

@@ -215,14 +215,15 @@ export default {
     const chemin = new URL(requete.url).pathname;
 
     // Le contenu publié, lu par chaque visiteur à l'ouverture du site :
-    // public, hors de la limite par visiteur (tout un campus peut
-    // partager la même adresse IP), et mis en cache une minute.
+    // public, et hors de la limite par visiteur (tout un campus peut
+    // partager la même adresse IP). Pas de cache navigateur : une
+    // publication doit se voir au rechargement suivant.
     if (chemin === "/contenu" && requete.method === "GET") {
       const contenu = env.EDUCATION ? await lireContenu(env) : null;
       return new Response(JSON.stringify(contenu ? versionPublique(contenu) : null), {
         headers: {
           "Content-Type": "application/json; charset=utf-8",
-          "Cache-Control": "public, max-age=60",
+          "Cache-Control": "no-store",
           ...cors,
         },
       });
