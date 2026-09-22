@@ -1,10 +1,15 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
+import { HashRouter } from "react-router-dom";
 import App from "./App.jsx";
 import { FournisseurSession } from "./FournisseurSession";
 import { site } from "./data/site";
 import "./index.css";
+
+// Routeur à dièse : les adresses contiennent un « # », par exemple
+// /#/cours. Cela évite les erreurs 404 au rechargement d'une page sur
+// un hébergeur statique comme GitHub Pages, qui ne sait pas renvoyer
+// index.html pour une adresse inconnue.
 
 // Le titre de l'onglet suit le nom défini dans src/data/site.js,
 // pour qu'il n'y ait qu'un seul endroit à modifier quand le nom
@@ -26,10 +31,10 @@ try {
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <BrowserRouter>
+    <HashRouter>
       <FournisseurSession>
         <App />
       </FournisseurSession>
-    </BrowserRouter>
+    </HashRouter>
   </StrictMode>
 );

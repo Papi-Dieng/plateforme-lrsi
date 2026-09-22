@@ -26,6 +26,20 @@ npm run build     # génère la version de production dans dist/
 npm run preview   # sert la version de production en local
 ```
 
+### Ouvrir index.html directement ne marche pas
+
+C'est normal, et ce n'est pas un bug. Le fichier `index.html` à la racine ne
+contient pas le site : il appelle `src/main.jsx`, que le navigateur ne sait ni
+lire ni assembler. Il faut un serveur, ne serait-ce qu'en local.
+
+La version compilée dans `dist/` ne s'ouvre pas non plus par double-clic : les
+navigateurs refusent de charger un module JavaScript depuis une adresse
+`file://`. Pour la voir, utiliser `npm run preview`, ou la déposer sur un
+hébergeur statique.
+
+Les adresses contiennent un dièse, par exemple `/#/cours`. C'est voulu : cela
+évite les erreurs 404 au rechargement sur un hébergeur statique.
+
 ---
 
 ## 2. Identité visuelle
