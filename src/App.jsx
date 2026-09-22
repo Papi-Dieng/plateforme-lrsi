@@ -17,6 +17,7 @@ import Parametres from "./pages/Parametres";
 import Conditions from "./pages/Conditions";
 import Admin from "./pages/Admin";
 import Favoris from "./pages/Favoris";
+import Assistant from "./pages/Assistant";
 
 /* ------------------------------------------------------------------ */
 /* Aiguillage selon la session                                         */
@@ -120,6 +121,14 @@ export default function App() {
           element={
             <Protege>
               <Progression />
+            </Protege>
+          }
+        />
+        <Route
+          path="assistant"
+          element={
+            <Protege>
+              <Assistant />
             </Protege>
           }
         />

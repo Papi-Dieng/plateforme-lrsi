@@ -246,6 +246,7 @@ latérale laisse place à un menu dans la barre du haut.
 | `/profil` | Mon profil | Avatar, nom d'utilisateur, coordonnées |
 | `/favoris` | Mes favoris | Matières, chapitres, exercices, QCM et vidéos mis de côté |
 | `/progression` | Ma progression | Tableau de bord en grille : vue d'ensemble, précision, régularité, matières, QCM |
+| `/assistant` | Assistant IA | Présentation de l'assistant de révision prévu, et données réelles sur lesquelles il s'appuiera |
 | `/parametres` | Paramètres | Thème, session, données conservées sur l'appareil |
 | `/conditions` | Conditions d'utilisation | Cadre d'usage, droits, données personnelles |
 | `/admin` | Administration | Page d'auteur : inventaire, couverture, liste de rédaction |
@@ -259,6 +260,7 @@ Toute autre adresse affiche une page « introuvable » avec un retour à l'accue
 ```
 lrsi-platform/
 ├── public/
+│   ├── apercu-partage.png    image affichée au partage du lien
 │   └── logo.svg              icône d'onglet
 ├── src/
 │   ├── components/
@@ -525,6 +527,19 @@ et jamais un simple masquage dans l'interface.
 **Version 4 — assistant de révision.** Intégration d'un modèle de langage, avec
 des limites explicites : pas d'invention d'informations pédagogiques, pas
 d'accès à des documents non autorisés.
+
+La page `/assistant` existe déjà, en barre latérale, mais **rien ne répond
+derrière**. Elle ne simule aucune conversation et n'affiche aucune réponse
+inventée : un assistant qui ferait semblant de fonctionner donnerait confiance
+à tort, jusqu'au jour où il faudrait vraiment compter dessus. Ce qu'elle montre
+de chiffré vient en revanche de la progression réelle enregistrée dans le
+navigateur, afin d'expliquer concrètement sur quoi l'outil s'appuiera.
+
+Deux conditions avant de la brancher : assez de questions par matière, chacune
+rattachée à une compétence, et l'autorisation du département pour les cours
+qu'elle citerait. Ce qui serait envoyé à un service d'intelligence artificielle,
+et ce qui ne le serait pas, devra être écrit dans les conditions d'utilisation
+avant la moindre mise en service.
 
 **Version 5 — ouverture.** D'autres filières et d'autres établissements.
 
