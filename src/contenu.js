@@ -138,3 +138,29 @@ export async function restaurerContenu(motDePasse) {
   dateContenu = restaure.publieLe;
   return restaure;
 }
+
+/* ---------------------------------------------------------------- */
+/* Cours en PDF                                                       */
+/* ---------------------------------------------------------------- */
+
+export const TAILLE_MAX_PDF = 20 * 1024 * 1024;
+
+/* L'adresse publique d'un PDF de cours, servi par le relais. */
+export const urlPdf = (id) => new URL(`/fichiers/${id}`, site.urlIA).href;
+
+/* Envoie le fichier tel quel au relais, qui vérifie que c'est bien un
+   PDF et renvoie { id, nom, taille }. */
+export async function televerserPdf(fichier, motDePasse) {
+  const reponse = await fetch(new URL("/admin/fichiers", site.urlIA), {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/pdf",
+      "X-Admin": motDePasse,
+      "X-Nom-Fichier": encodeURIComponent(fichier.name),
+    },
+    body: fichier,
+  });
+  const donnees = await reponse.json().catch(() => ({}));
+  if (!reponse.ok) throw new Error(donnees?.erreur ?? `statut ${reponse.status}`);
+  return donnees;
+}

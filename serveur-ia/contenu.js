@@ -15,6 +15,8 @@
    texte, jamais comme du HTML.
    ================================================================== */
 
+import { ID_FICHIER } from "./fichiers.js";
+
 const CLE = "contenu";
 const CLE_PRECEDENT = "contenu:precedent";
 export const TAILLE_MAX = 3_000_000;
@@ -66,13 +68,26 @@ const nettoyerMatiere = (m) => ({
   semestre: texte(m?.semestre, 40),
   resume: texte(m?.resume, 600),
   chapitres: liste(m?.chapitres, 40)
-    .map((c) => ({
-      titre: texte(c?.titre, 150),
-      resume: texte(c?.resume, 600),
-      duree: texte(c?.duree, 20),
-      statut: unParmi(c?.statut, ["disponible", "bientot"], "bientot"),
-      contenu: texte(c?.contenu, 30000),
-    }))
+    .map((c) => {
+      // Un cours s'écrit directement, ou se téléverse en PDF. Dans ce
+      // cas, `texteIA` garde le texte extrait du PDF : l'assistant s'en
+      // sert, les étudiants lisent le PDF.
+      const pdf =
+        c?.pdf && ID_FICHIER.test(c.pdf.id)
+          ? { id: c.pdf.id, nom: texte(c.pdf.nom, 120) || "cours.pdf", taille: entier(c.pdf.taille, 0, 30_000_000, 0) }
+          : null;
+      const format = c?.format === "pdf" && pdf ? "pdf" : "texte";
+      return {
+        titre: texte(c?.titre, 150),
+        resume: texte(c?.resume, 600),
+        duree: texte(c?.duree, 20),
+        statut: unParmi(c?.statut, ["disponible", "bientot"], "bientot"),
+        format,
+        contenu: format === "texte" ? texte(c?.contenu, 30000) : "",
+        pdf: format === "pdf" ? pdf : null,
+        texteIA: format === "pdf" ? texte(c?.texteIA, 30000) : "",
+      };
+    })
     .filter((c) => c.titre),
 });
 
@@ -195,7 +210,8 @@ export async function publierContenu(env, brut) {
   const actuel = await env.EDUCATION.get(CLE);
   if (actuel) await env.EDUCATION.put(CLE_PRECEDENT, actuel);
   await env.EDUCATION.put(CLE, serialise);
-  return { contenu };
+  // Les deux versions gardées : les PDF qu'elles citent sont conservés.
+  return { contenu, versions: [contenu, actuel ? JSON.parse(actuel) : null] };
 }
 
 /* Annuler la dernière publication : l'actuelle et la précédente

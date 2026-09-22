@@ -17,7 +17,11 @@ import {
   lireContenuAdmin,
   publierContenu,
   restaurerContenu,
+  TAILLE_MAX_PDF,
+  televerserPdf,
+  urlPdf,
 } from "../contenu";
+import { extraireTextePdf } from "../extrairePdf";
 
 /* ==================================================================
    Gérer le contenu : matières et cours, compétences, exercices, QCM,
@@ -179,7 +183,173 @@ const deplacer = (liste, de, vers) => {
 /* Éditeurs, un par type de contenu                                    */
 /* ------------------------------------------------------------------ */
 
-function EditeurMatiere({ element: m, changer }) {
+const formatTaille = (octets) =>
+  octets >= 1024 * 1024
+    ? `${(octets / 1024 / 1024).toFixed(1).replace(".", ",")} Mo`
+    : `${Math.max(1, Math.round(octets / 1024))} Ko`;
+
+/* Le cours d'un chapitre : écrit directement, ou téléversé en PDF.
+
+   Un PDF part tout de suite au relais (il faut bien le stocker), mais
+   le chapitre ne le montre aux étudiants qu'après « Publier », comme
+   le reste. Son texte est extrait ici, dans le navigateur, pour que
+   l'assistant IA puisse s'appuyer dessus. */
+function CoursChapitre({ chapitre: c, changer, motDePasse }) {
+  const [etat, setEtat] = useState({ type: "", texte: "" });
+  const format = c.format === "pdf" ? "pdf" : "texte";
+
+  const choisirPdf = async (fichier) => {
+    if (!fichier) return;
+    if (fichier.type && fichier.type !== "application/pdf") {
+      setEtat({ type: "erreur", texte: "Choisis un fichier PDF." });
+      return;
+    }
+    if (fichier.size > TAILLE_MAX_PDF) {
+      setEtat({ type: "erreur", texte: messageErreurAdmin("pdf-trop-gros") });
+      return;
+    }
+    try {
+      setEtat({ type: "", texte: `Envoi de « ${fichier.name} » (${formatTaille(fichier.size)})…` });
+      const pdf = await televerserPdf(fichier, motDePasse);
+
+      setEtat({ type: "", texte: "Lecture du texte pour l'assistant IA…" });
+      // Sans extraction, le PDF reste lisible par les étudiants : seul
+      // l'assistant IA en est privé. On distingue un PDF sans texte (scanné)
+      // d'une lecture qui a échoué (connexion, pdf.js indisponible).
+      let texteIA = "";
+      let echecLecture = false;
+      try {
+        texteIA = await extraireTextePdf(fichier);
+      } catch {
+        echecLecture = true;
+      }
+      changer({ format: "pdf", pdf, texteIA });
+      setEtat(
+        texteIA
+          ? { type: "ok", texte: `PDF envoyé. L'assistant IA pourra s'appuyer sur ${texteIA.length.toLocaleString("fr-FR")} caractères de texte.` }
+          : echecLecture
+            ? {
+                type: "attention",
+                texte:
+                  "PDF envoyé, mais la lecture de son texte a échoué (connexion ?). Les étudiants le liront normalement ; pour l'assistant IA, téléverse-le à nouveau plus tard.",
+              }
+            : {
+                type: "attention",
+                texte:
+                  "PDF envoyé, mais il ne contient pas de texte lisible : c'est sans doute un PDF scanné. Les étudiants le liront normalement, l'assistant IA ne pourra pas s'en servir.",
+              }
+      );
+    } catch (e) {
+      setEtat({ type: "erreur", texte: messageErreurAdmin(e.message) });
+    }
+  };
+
+  return (
+    <fieldset className="rounded-xl border border-ink-200 p-4 dark:border-ink-800">
+      <legend className="px-1 text-xs font-semibold text-ink-600 dark:text-ink-300">Cours</legend>
+
+      <div role="radiogroup" aria-label="Forme du cours" className="flex flex-wrap gap-2">
+        {[
+          { valeur: "texte", label: "Écrire le cours", icone: "pencil" },
+          { valeur: "pdf", label: "Téléverser un PDF", icone: "file" },
+        ].map((o) => (
+          <button
+            key={o.valeur}
+            type="button"
+            role="radio"
+            aria-checked={format === o.valeur}
+            onClick={() => changer({ format: o.valeur })}
+            className={cx(
+              "inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
+              format === o.valeur
+                ? "bg-brand-600 text-white"
+                : "ring-1 ring-ink-200 ring-inset text-ink-600 hover:bg-ink-50 dark:ring-ink-700 dark:text-ink-300 dark:hover:bg-ink-800"
+            )}
+          >
+            <Icon name={o.icone} className="size-4" />
+            {o.label}
+          </button>
+        ))}
+      </div>
+
+      {format === "texte" ? (
+        <Zone
+          className="mt-3"
+          label="Texte du cours"
+          rows={14}
+          value={c.contenu ?? ""}
+          maxLength={30000}
+          placeholder="Le texte complet du cours : définitions, explications, exemples…"
+          aide={`${(c.contenu ?? "").length} / 30 000 caractères. Une ligne vide sépare deux paragraphes. Visible seulement si le chapitre est « Disponible ».`}
+          onChange={(e) => changer({ contenu: e.target.value })}
+        />
+      ) : (
+        <div className="mt-3 space-y-3">
+          {c.pdf ? (
+            <div className="flex flex-wrap items-center gap-3 rounded-xl bg-ink-50 px-4 py-3 dark:bg-ink-950">
+              <Icon name="file" className="size-5 text-flame-500" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium text-ink-900 dark:text-white">{c.pdf.nom}</span>
+                <span className="text-xs text-ink-500">
+                  {formatTaille(c.pdf.taille)}
+                  {" · "}
+                  {c.texteIA
+                    ? `${c.texteIA.length.toLocaleString("fr-FR")} caractères lus par l'IA`
+                    : "texte non lisible par l'IA"}
+                </span>
+              </span>
+              <a
+                href={urlPdf(c.pdf.id)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-300"
+              >
+                Ouvrir ↗
+              </a>
+            </div>
+          ) : (
+            <p className="text-sm text-ink-500 dark:text-ink-400">Aucun PDF pour ce chapitre.</p>
+          )}
+
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-ink-200 px-3.5 py-2 text-sm font-semibold text-ink-700 hover:bg-ink-50 dark:border-ink-700 dark:text-ink-200 dark:hover:bg-ink-800">
+            <Icon name="plus" className="size-4" />
+            {c.pdf ? "Remplacer le PDF" : "Choisir un PDF"}
+            <input
+              type="file"
+              accept="application/pdf,.pdf"
+              className="sr-only"
+              onChange={(e) => {
+                choisirPdf(e.target.files?.[0]);
+                e.target.value = "";
+              }}
+            />
+          </label>
+          <p className="text-xs text-ink-400">20 Mo au maximum. Visible par les étudiants après « Publier ».</p>
+        </div>
+      )}
+
+      {etat.texte && (
+        <p
+          role="status"
+          className={cx(
+            "mt-3 text-xs/5",
+            etat.type === "erreur"
+              ? "text-flame-600 dark:text-flame-400"
+              : etat.type === "attention"
+                ? "text-sun-700 dark:text-sun-400"
+                : etat.type === "ok"
+                  ? "text-accent-700 dark:text-accent-400"
+                  : "text-ink-500"
+          )}
+        >
+          {etat.texte}
+        </p>
+      )}
+    </fieldset>
+  );
+}
+
+function EditeurMatiere({ element: m, changer, motDePasse }) {
   const chapitres = m.chapitres;
   const changerChapitre = (i, modif) =>
     changer({ chapitres: chapitres.map((c, j) => (j === i ? { ...c, ...modif } : c)) });
@@ -232,7 +402,9 @@ function EditeurMatiere({ element: m, changer }) {
                 <Badge ton={c.statut === "disponible" ? "accent" : "sun"}>
                   {c.statut === "disponible" ? "Disponible" : "Bientôt"}
                 </Badge>
-                <Badge ton={c.contenu ? "accent" : "neutre"}>{c.contenu ? "cours rédigé" : "pas de cours"}</Badge>
+                <Badge ton={c.contenu || (c.format === "pdf" && c.pdf) ? "accent" : "neutre"}>
+                  {c.format === "pdf" && c.pdf ? "cours en PDF" : c.contenu ? "cours rédigé" : "pas de cours"}
+                </Badge>
               </summary>
               <div className="space-y-3 border-t border-ink-200 p-4 dark:border-ink-800">
                 <div className="grid gap-3 sm:grid-cols-[1fr_120px_150px]">
@@ -249,14 +421,10 @@ function EditeurMatiere({ element: m, changer }) {
                   />
                 </div>
                 <Zone label="Résumé" rows={2} value={c.resume} maxLength={600} onChange={(e) => changerChapitre(i, { resume: e.target.value })} />
-                <Zone
-                  label="Cours"
-                  rows={14}
-                  value={c.contenu ?? ""}
-                  maxLength={30000}
-                  placeholder="Le texte complet du cours : définitions, explications, exemples…"
-                  aide={`${(c.contenu ?? "").length} / 30 000 caractères. Visible seulement si le chapitre est « Disponible ».`}
-                  onChange={(e) => changerChapitre(i, { contenu: e.target.value })}
+                <CoursChapitre
+                  chapitre={c}
+                  changer={(modif) => changerChapitre(i, modif)}
+                  motDePasse={motDePasse}
                 />
                 <div className="flex justify-end">
                   <Ordre
@@ -278,7 +446,7 @@ function EditeurMatiere({ element: m, changer }) {
           icone="plus"
           className="mt-3"
           onClick={() =>
-            changer({ chapitres: [...chapitres, { titre: "", resume: "", duree: "", statut: "bientot", contenu: "" }] })
+            changer({ chapitres: [...chapitres, { titre: "", resume: "", duree: "", statut: "bientot", format: "texte", contenu: "" }] })
           }
         >
           Ajouter un chapitre
@@ -1156,6 +1324,7 @@ export default function GestionContenu() {
                       changer={changer}
                       matieres={brouillon.matieres}
                       competences={brouillon.competences}
+                      motDePasse={motDePasse}
                       usages={onglet === "competences" ? usagesCompetence(selectionne.id) : null}
                     />
                   </>

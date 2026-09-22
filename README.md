@@ -263,6 +263,7 @@ lrsi-platform/
 ├── serveur-ia/               relais IA gratuit (Cloudflare Workers), garde la clé
 │   ├── consignes.js          règles générales et exemples de l'IA
 │   ├── contenu.js            contenu publié depuis l'espace admin
+│   ├── fichiers.js           cours en PDF téléversés
 │   └── education.js          fiches par matière saisies dans l'espace admin
 ├── scripts/                  banc de test de l'IA (npm run banc-ia)
 ├── public/
@@ -309,6 +310,7 @@ lrsi-platform/
 │   ├── assistant.js          moteur du guide de révision
 │   ├── ia.js                 appel au relais IA, si `urlIA` est renseignée
 │   ├── contenu.js            charge le contenu publié avant le premier affichage
+│   ├── extrairePdf.js        lit le texte d'un PDF pour l'assistant (admin)
 │   ├── progression.js        exercices travaillés, scores, favoris, vidéos
 │   ├── competences.js        analyse : forces, faiblesses, modules
 │   ├── profil.js             fiche profil et vérifications
@@ -359,8 +361,17 @@ recompilation, pas de push.
   déclarée et un lien https vers le sujet. Le relais applique cette règle, pas
   seulement la page. La plateforme n'héberge aucun fichier : sujets et
   corrigés sont des liens.
-- Le **cours** d'un chapitre s'affiche aux étudiants sous le chapitre
-  (« Lire le cours »), et l'assistant IA s'en sert pour répondre.
+- Le **cours** d'un chapitre s'écrit directement ou se téléverse **en PDF**
+  (bouton « Écrire le cours » / « Téléverser un PDF »). Il s'affiche aux
+  étudiants sous le chapitre, et l'assistant IA s'en sert pour répondre.
+- **Les PDF** (20 Mo au plus) sont gardés par le relais, dans Cloudflare KV
+  (`serveur-ia/fichiers.js`) : 1 Go gratuit au total. Le relais n'accepte que
+  de vrais PDF, vérifiés sur leur contenu et non sur leur nom. Au
+  téléversement, la page lit le texte du PDF avec pdf.js, chargé à ce
+  moment-là seulement, pour l'assistant IA. Un PDF scanné n'a pas de texte :
+  les étudiants le lisent, l'IA ne peut pas s'en servir, et la page le dit.
+  Un PDF qu'aucune version publiée ne cite plus est supprimé un jour après,
+  lors d'une publication.
 - Les **compétences** se gèrent dans leur onglet : nom, matière, et chapitres
   à relire quand elle est faible. Renommer un chapitre met à jour les
   compétences qui le citent. Supprimer une compétence la détache des

@@ -34,6 +34,7 @@ import {
   restaurerContenu,
   versionPublique,
 } from "./contenu.js";
+import { menagePdfs, servirPdf, televerserPdf } from "./fichiers.js";
 
 const MAX_MESSAGES = 10;
 const MAX_CARACTERES = 1500;
@@ -50,7 +51,7 @@ function entetesCors(origine, env) {
   return {
     "Access-Control-Allow-Origin": origine,
     "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, X-Admin",
+    "Access-Control-Allow-Headers": "Content-Type, X-Admin, X-Nom-Fichier",
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",
   };
@@ -186,7 +187,14 @@ async function appelerGemini({ messages, extraits }, env) {
 }
 
 export default {
-  async fetch(requete, env) {
+  async fetch(requete, env, ctx) {
+    // Un PDF de cours s'ouvre par un simple lien, sans en-tête d'origine :
+    // il est servi avant le contrôle des origines. Lecture seule.
+    const cheminBrut = new URL(requete.url).pathname;
+    if (requete.method === "GET" && cheminBrut.startsWith("/fichiers/")) {
+      return servirPdf(cheminBrut.slice("/fichiers/".length), env);
+    }
+
     const cors = entetesCors(requete.headers.get("Origin") ?? "", env);
     if (!cors) return new Response("Origine non autorisée", { status: 403 });
 
@@ -262,9 +270,16 @@ export default {
             return json({ erreur: "format" }, 400, cors);
           }
           const r = await publierContenu(env, donnees);
-          return r.erreur ? json(r, 413, cors) : json(r.contenu, 200, cors);
+          if (r.erreur) return json(r, 413, cors);
+          // Ménage des PDF qui ne servent plus, après la réponse.
+          ctx?.waitUntil(menagePdfs(env, r.versions).catch((e) => console.log("Ménage des PDF", e)));
+          return json(r.contenu, 200, cors);
         }
         return json({ erreur: "methode" }, 405, cors);
+      }
+      if (chemin === "/admin/fichiers" && requete.method === "PUT") {
+        const r = await televerserPdf(requete, env);
+        return r.erreur ? json({ erreur: r.erreur }, r.statut, cors) : json(r.fichier, 200, cors);
       }
       if (chemin === "/admin/contenu/restaurer" && requete.method === "POST") {
         const r = await restaurerContenu(env);

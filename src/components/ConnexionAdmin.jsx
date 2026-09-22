@@ -38,6 +38,8 @@ const MESSAGES_ERREUR = {
   "trop-de-requetes": "Trop d'essais d'un coup. Attends une minute.",
   "trop-gros": "Le contenu dépasse la taille maximale acceptée par le relais (3 Mo).",
   "aucune-version-precedente": "Il n'y a pas encore de version précédente à restaurer.",
+  "pas-un-pdf": "Ce fichier n'est pas un PDF valide.",
+  "pdf-trop-gros": "Ce PDF dépasse 20 Mo. Compresse-le ou découpe-le en plusieurs chapitres.",
 };
 
 export const messageErreurAdmin = (code) =>

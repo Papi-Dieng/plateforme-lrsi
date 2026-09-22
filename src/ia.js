@@ -29,8 +29,8 @@ const DELAI_MAXIMUM = 45_000;
    - un exercice part avec son énoncé, son indice, sa méthode et sa
      correction ; les consignes du relais interdisent au modèle de
      livrer la correction d'emblée ;
-   - un chapitre part avec son texte (`contenu`) dès qu'il sera
-     rédigé dans `src/data/matieres.js`, sinon avec son résumé. */
+   - un chapitre part avec son cours : le texte écrit dans l'admin, ou
+     celui extrait de son PDF. */
 function contenuDe(lien) {
   if (lien.type === "exercice") {
     const e = getExercice(lien.to.split("/").pop());
@@ -49,7 +49,8 @@ function contenuDe(lien) {
     const chapitre = getMatiere(lien.matiere)?.chapitres.find(
       (c) => c.titre === lien.titre
     );
-    return chapitre?.contenu ?? "";
+    // Cours écrit, ou texte extrait du PDF téléversé.
+    return chapitre?.contenu || chapitre?.texteIA || "";
   }
   return "";
 }
