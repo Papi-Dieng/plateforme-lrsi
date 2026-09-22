@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Icon from "../components/Icon";
 import { Badge, Container, EnTetePage, cx } from "../components/ui";
+import ConnexionAdmin, {
+  champAdmin,
+  ecrireSessionAdmin as ecrireSession,
+  lireSessionAdmin as lireSession,
+  messageErreurAdmin as messageErreur,
+} from "../components/ConnexionAdmin";
 import { matieres } from "../data/matieres";
 import { themeMatiere } from "../data/couleurs";
 import { repondre } from "../assistant";
@@ -12,7 +18,6 @@ import {
   iaActive,
   lireFiche,
   raisonEchec,
-  verifierAdmin,
   verifierReponse,
 } from "../ia";
 
@@ -21,51 +26,24 @@ import {
 
    On choisit une matière, puis on remplit sa fiche :
    - des consignes (ce que l'IA doit faire pour cette matière) ;
-   - le cours de chaque chapitre, qui fait foi sur sa mémoire ;
    - des questions-réponses modèles, qu'elle imite ;
    - des tests, lancés d'ici pour vérifier ses réponses.
 
    Rien n'est stocké dans le site : la fiche est enregistrée par le
    relais IA (Cloudflare KV) et n'est modifiable qu'avec le mot de
-   passe admin, vérifié par le relais. Le mot de passe est gardé le
-   temps de l'onglet (sessionStorage), jamais au-delà.
+   passe admin, vérifié par le relais.
+
+   Le cours des chapitres ne se saisit plus ici mais dans « Gérer le
+   contenu » : le même texte sert aux étudiants et à l'IA.
    ================================================================== */
 
-const CLE_SESSION = "lrsi-admin-ia";
-
-const MAX = { consignes: 4000, cours: 15000 };
+const MAX = { consignes: 4000 };
 
 const ONGLETS = [
   { cle: "consignes", label: "Consignes", icone: "settings" },
-  { cle: "cours", label: "Cours", icone: "book" },
   { cle: "exemples", label: "Questions-réponses modèles", icone: "sparkles" },
   { cle: "tests", label: "Tests", icone: "target" },
 ];
-
-const MESSAGES_ERREUR = {
-  "mot-de-passe": "Mot de passe incorrect.",
-  "admin-non-configure":
-    "Le mot de passe admin n'a pas encore été créé sur le relais. Voir le README, section « Éduquer l'assistant ».",
-  "trop-de-requetes": "Trop d'essais d'un coup. Attends une minute.",
-};
-const messageErreur = (code) =>
-  MESSAGES_ERREUR[code] ?? `Le relais n'a pas pu répondre (${code}).`;
-
-const lireSession = () => {
-  try {
-    return sessionStorage.getItem(CLE_SESSION) ?? "";
-  } catch {
-    return "";
-  }
-};
-const ecrireSession = (valeur) => {
-  try {
-    if (valeur) sessionStorage.setItem(CLE_SESSION, valeur);
-    else sessionStorage.removeItem(CLE_SESSION);
-  } catch {
-    /* navigation privée : on redemandera le mot de passe */
-  }
-};
 
 /* Les tests sont édités en texte, un mot par ligne ; les alternatives
    d'une même ligne sont séparées par « / ». */
@@ -92,8 +70,7 @@ const depuisTexte = (t) => ({
 
 const ficheVide = () => ({ consignes: "", cours: {}, exemples: [], tests: [] });
 
-const champ =
-  "w-full rounded-xl border border-ink-200 bg-white px-3.5 py-2.5 text-sm text-ink-900 placeholder:text-ink-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-ink-700 dark:bg-ink-950 dark:text-white";
+const champ = champAdmin;
 
 function BoutonAction({ onClick, disabled, variante = "principal", icone, children }) {
   return (
@@ -147,64 +124,6 @@ function ReponseIA({ texte }) {
   );
 }
 
-/* ---- Connexion ---- */
-
-function Connexion({ onConnecte }) {
-  const [saisie, setSaisie] = useState("");
-  const [erreur, setErreur] = useState("");
-  const [enCours, setEnCours] = useState(false);
-
-  const valider = async (e) => {
-    e.preventDefault();
-    setEnCours(true);
-    setErreur("");
-    try {
-      await verifierAdmin(saisie);
-      ecrireSession(saisie);
-      onConnecte(saisie);
-    } catch (err) {
-      setErreur(messageErreur(err.message));
-    } finally {
-      setEnCours(false);
-    }
-  };
-
-  return (
-    <form onSubmit={valider} className="card max-w-md p-6">
-      <h2 className="flex items-center gap-2 font-semibold text-ink-900 dark:text-white">
-        <Icon name="lock" className="size-4 text-brand-500" />
-        Accès réservé
-      </h2>
-      <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">
-        Le mot de passe admin choisi lors de l'installation du relais IA.
-      </p>
-      <label htmlFor="mdp-admin" className="sr-only">
-        Mot de passe admin
-      </label>
-      <input
-        id="mdp-admin"
-        type="password"
-        autoComplete="current-password"
-        value={saisie}
-        onChange={(e) => setSaisie(e.target.value)}
-        className={cx(champ, "mt-4")}
-      />
-      {erreur && (
-        <p className="mt-2 text-sm text-flame-600 dark:text-flame-400">{erreur}</p>
-      )}
-      <div className="mt-4">
-        <button
-          type="submit"
-          disabled={!saisie || enCours}
-          className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {enCours ? "Vérification…" : "Se connecter"}
-        </button>
-      </div>
-    </form>
-  );
-}
-
 /* ---- Onglet Consignes ---- */
 
 function OngletConsignes({ fiche, modifier, matiere }) {
@@ -232,60 +151,6 @@ function OngletConsignes({ fiche, modifier, matiere }) {
         className={cx(champ, "mt-3 font-mono text-[13px]/6")}
       />
       <Compteur valeur={fiche.consignes} max={MAX.consignes} />
-    </div>
-  );
-}
-
-/* ---- Onglet Cours ---- */
-
-function OngletCours({ fiche, modifier, matiere }) {
-  const changer = (titre, texte) =>
-    modifier({ cours: { ...fiche.cours, [titre]: texte } });
-
-  return (
-    <div>
-      <p className="text-xs/5 text-ink-500 dark:text-ink-400">
-        Le texte de chaque chapitre. Quand un étudiant pose une question sur ce
-        chapitre, l'IA lit ce cours avant de répondre, et il fait foi sur ce
-        qu'elle croit savoir. Colle ici ton cours, tes définitions, tes
-        exemples.
-      </p>
-      <div className="mt-4 space-y-3">
-        {matiere.chapitres.map((c) => {
-          const texte = fiche.cours[c.titre] ?? "";
-          return (
-            <details
-              key={c.titre}
-              className="group rounded-xl border border-ink-200 dark:border-ink-800"
-            >
-              <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3">
-                <Icon
-                  name="chevron"
-                  className="size-4 shrink-0 -rotate-90 text-ink-400 transition-transform group-open:rotate-0"
-                />
-                <span className="min-w-0 flex-1 text-sm font-medium text-ink-900 dark:text-white">
-                  {c.titre}
-                </span>
-                <Badge ton={texte ? "accent" : "neutre"}>
-                  {texte ? `${texte.length} caractères` : "vide"}
-                </Badge>
-              </summary>
-              <div className="px-4 pb-4">
-                <textarea
-                  rows={14}
-                  maxLength={MAX.cours}
-                  value={texte}
-                  onChange={(e) => changer(c.titre, e.target.value)}
-                  aria-label={`Cours du chapitre ${c.titre}`}
-                  placeholder={c.resume}
-                  className={cx(champ, "text-[13px]/6")}
-                />
-                <Compteur valeur={texte} max={MAX.cours} />
-              </div>
-            </details>
-          );
-        })}
-      </div>
     </div>
   );
 }
@@ -672,7 +537,7 @@ export default function EducationIA() {
       <EnTetePage
         surtitre="Espace d'administration"
         titre="Éduquer l'IA"
-        texte="Matière par matière : ce que l'assistant doit faire, le cours sur lequel il s'appuie, des réponses modèles à imiter, et des tests pour vérifier."
+        texte="Matière par matière : ce que l'assistant doit faire, des réponses modèles à imiter, et des tests pour vérifier. Le cours des chapitres, qu'il lit aussi, se saisit dans « Gérer le contenu »."
       >
         <Link
           to="/admin"
@@ -692,7 +557,7 @@ export default function EducationIA() {
             {etat.type === "erreur" && (
               <p className="text-sm text-flame-600 dark:text-flame-400">{etat.texte}</p>
             )}
-            <Connexion
+            <ConnexionAdmin
               onConnecte={(mdp) => {
                 setEtat({ type: "", texte: "" });
                 setMotDePasse(mdp);
@@ -765,8 +630,6 @@ export default function EducationIA() {
                   </p>
                 ) : onglet === "consignes" ? (
                   <OngletConsignes fiche={fiche} modifier={modifier} matiere={matiere} />
-                ) : onglet === "cours" ? (
-                  <OngletCours fiche={fiche} modifier={modifier} matiere={matiere} />
                 ) : onglet === "exemples" ? (
                   <OngletExemples fiche={fiche} modifier={modifier} />
                 ) : (

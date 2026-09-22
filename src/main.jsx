@@ -1,8 +1,8 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter } from "react-router-dom";
-import App from "./App.jsx";
 import { FournisseurSession } from "./FournisseurSession";
+import { chargerContenu } from "./contenu";
 import { site } from "./data/site";
 import "./index.css";
 
@@ -28,6 +28,14 @@ try {
 } catch {
   /* stockage indisponible : on garde le thème clair par défaut */
 }
+
+// Le contenu publié depuis l'espace admin est chargé AVANT les pages :
+// certaines calculent des chiffres dès leur chargement (nombre de
+// chapitres, par exemple), qui doivent porter sur le bon contenu.
+// `chargerContenu` ne dure jamais plus de quatre secondes et ne
+// bloque jamais : en cas d'échec, le contenu du code s'affiche.
+await chargerContenu();
+const { default: App } = await import("./App.jsx");
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

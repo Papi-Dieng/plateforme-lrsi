@@ -246,6 +246,7 @@ latérale laisse place à un menu dans la barre du haut.
 | `/profil` | Mon profil | Avatar, nom d'utilisateur, coordonnées |
 | `/favoris` | Mes favoris | Matières, chapitres, exercices, QCM et vidéos mis de côté |
 | `/progression` | Ma progression | Tableau de bord en grille : vue d'ensemble, précision, régularité, matières, QCM |
+| `/examens` | Examens | Examens blancs chronométrés avec corrigé à la fin, et annales autorisées |
 | `/assistant` | Assistant de révision | Guide qui retrouve chapitres, exercices et QCM, et dit par où commencer |
 | `/parametres` | Paramètres | Thème, session, données conservées sur l'appareil |
 | `/conditions` | Conditions d'utilisation | Cadre d'usage, droits, données personnelles |
@@ -261,6 +262,7 @@ Toute autre adresse affiche une page « introuvable » avec un retour à l'accue
 lrsi-platform/
 ├── serveur-ia/               relais IA gratuit (Cloudflare Workers), garde la clé
 │   ├── consignes.js          règles générales et exemples de l'IA
+│   ├── contenu.js            contenu publié depuis l'espace admin
 │   └── education.js          fiches par matière saisies dans l'espace admin
 ├── scripts/                  banc de test de l'IA (npm run banc-ia)
 ├── public/
@@ -299,11 +301,14 @@ lrsi-platform/
 │   │   ├── Parametres.jsx        thème et données locales
 │   │   ├── Conditions.jsx        conditions d'utilisation
 │   │   ├── Admin.jsx             page d'auteur, hors parcours étudiant
-│   │   └── EducationIA.jsx       éduquer l'IA par matière (admin)
+│   │   ├── EducationIA.jsx       éduquer l'IA par matière (admin)
+│   │   ├── GestionContenu.jsx    gérer tout le contenu (admin)
+│   │   └── Examens.jsx           examens blancs et annales
 │   ├── session.js            contexte et hook de session (voir section 7)
 │   ├── FournisseurSession.jsx  le fournisseur, séparé du hook
 │   ├── assistant.js          moteur du guide de révision
 │   ├── ia.js                 appel au relais IA, si `urlIA` est renseignée
+│   ├── contenu.js            charge le contenu publié avant le premier affichage
 │   ├── progression.js        exercices travaillés, scores, favoris, vidéos
 │   ├── competences.js        analyse : forces, faiblesses, modules
 │   ├── profil.js             fiche profil et vérifications
@@ -329,6 +334,40 @@ réécrire les pages.
 ---
 
 ## 5. Ajouter du contenu
+
+### Depuis l'espace admin (recommandé)
+
+*Administration*, puis *Gérer le contenu* (`/#/admin/contenu`), avec le mot de
+passe admin. Six onglets : matières et cours (le texte de chaque chapitre),
+exercices, QCM, vidéos, examens blancs et annales.
+
+On modifie un **brouillon** : rien ne change pour les étudiants avant
+**« Publier »**. Le contenu publié est gardé par le relais (Cloudflare KV,
+`serveur-ia/contenu.js`), qui vérifie et borne chaque champ. Le site le charge
+à l'ouverture, avant le premier affichage (`src/contenu.js`) : pas de
+recompilation, pas de push.
+
+- **Restaurer la version précédente** annule la dernière publication.
+- Tant que rien n'est publié, le site affiche le contenu des fichiers de
+  `src/data/` ci-dessous. Le premier brouillon part de ce contenu.
+- Si le relais ne répond pas, le site affiche la dernière version reçue,
+  gardée dans le navigateur, et à défaut le contenu des fichiers.
+- Les **identifiants** (adresse d'un exercice ou d'un QCM) sont fabriqués à
+  la création et ne changent plus : la progression et les favoris y sont
+  attachés. Renommer un chapitre détache en revanche ses favoris et les
+  compétences qui citent son titre.
+- Une **annale** n'est montrée aux étudiants qu'avec une autorisation écrite
+  déclarée et un lien https vers le sujet. Le relais applique cette règle, pas
+  seulement la page. La plateforme n'héberge aucun fichier : sujets et
+  corrigés sont des liens.
+- Le **cours** d'un chapitre s'affiche aux étudiants sous le chapitre
+  (« Lire le cours »), et l'assistant IA s'en sert pour répondre.
+- Les compétences restent définies dans `src/data/competences.js`.
+
+### Dans les fichiers
+
+Les sections suivantes décrivent le contenu par défaut, écrit dans le code.
+Une fois du contenu publié depuis l'admin, c'est ce dernier qui s'affiche.
 
 ### Une matière
 

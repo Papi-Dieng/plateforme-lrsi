@@ -138,13 +138,34 @@ export default function Admin() {
               className="mt-0.5 size-4.5 shrink-0 text-sun-600 dark:text-sun-400"
             />
             <p className="text-sm/6 text-sun-900 dark:text-sun-100">
-              <strong className="font-semibold">Aucun contrôle d'accès.</strong>{" "}
-              Il n'y a pas encore de serveur, donc pas de rôles : cette page est
-              accessible à quiconque connaît son adresse. La gestion des
-              utilisateurs, des autorisations et de la publication arrivera en
-              version 3, en même temps que la véritable authentification.
+              <strong className="font-semibold">Accès.</strong>{" "}
+              Ce tableau de bord est lisible par quiconque connaît son adresse,
+              mais il ne montre que ce qui est déjà public. Modifier le contenu
+              ou l'éducation de l'IA demande le mot de passe admin, vérifié par
+              le relais. Les comptes et les rôles arriveront en version 3.
             </p>
           </div>
+
+          {/* ---- Gérer le contenu ---- */}
+          <Link
+            to="/admin/contenu"
+            className="card flex items-center gap-4 p-5 transition-colors hover:border-brand-300 sm:p-6 dark:hover:border-brand-500/40"
+          >
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-accent-600 text-white">
+              <Icon name="folder" className="size-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold text-ink-900 dark:text-white">
+                Gérer le contenu
+              </span>
+              <span className="mt-0.5 block text-sm text-ink-500 dark:text-ink-400">
+                Matières et cours, exercices, QCM, vidéos, examens blancs et
+                annales. Publié en un clic, visible tout de suite par les
+                étudiants.
+              </span>
+            </span>
+            <Icon name="chevron" className="size-5 shrink-0 -rotate-90 text-ink-400" />
+          </Link>
 
           {/* ---- Éduquer l'IA ---- */}
           <Link
@@ -159,8 +180,8 @@ export default function Admin() {
                 Éduquer l'IA
               </span>
               <span className="mt-0.5 block text-sm text-ink-500 dark:text-ink-400">
-                Par matière : consignes, cours, questions-réponses modèles et
-                tests de l'assistant. Protégé par le mot de passe admin.
+                Par matière : consignes, questions-réponses modèles et tests
+                de l'assistant. Protégé par le mot de passe admin.
               </span>
             </span>
             <Icon name="chevron" className="size-5 shrink-0 -rotate-90 text-ink-400" />

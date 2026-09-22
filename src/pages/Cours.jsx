@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import Icon from "../components/Icon";
+import TexteLibre from "../components/TexteLibre";
 import {
   Badge,
   Bouton,
@@ -273,6 +274,18 @@ export function CoursDetail() {
                         <Icon name="clock" className="size-3.5" />
                         Volume indicatif : {c.duree}
                       </p>
+                      {pret && c.contenu && (
+                        <details className="group mt-4 rounded-xl border border-ink-200 dark:border-ink-800">
+                          <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-2.5 text-sm font-semibold text-brand-600 dark:text-brand-300">
+                            <Icon
+                              name="chevron"
+                              className="size-4 -rotate-90 transition-transform group-open:rotate-0"
+                            />
+                            Lire le cours
+                          </summary>
+                          <TexteLibre texte={c.contenu} className="border-t border-ink-200 px-4 py-4 dark:border-ink-800" />
+                        </details>
+                      )}
                     </div>
                   </li>
                 );

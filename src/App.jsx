@@ -8,6 +8,7 @@ import TableauDeBord from "./pages/Accueil";
 import { Cours, CoursDetail } from "./pages/Cours";
 import { Exercices, ExerciceDetail } from "./pages/Exercices";
 import { QcmListe, QcmSession } from "./pages/Qcm";
+import { ExamenSession, ExamensListe } from "./pages/Examens";
 import Bibliotheque from "./pages/Bibliotheque";
 import Projet from "./pages/Projet";
 import Profil from "./pages/Profil";
@@ -17,6 +18,7 @@ import Parametres from "./pages/Parametres";
 import Conditions from "./pages/Conditions";
 import Admin from "./pages/Admin";
 import EducationIA from "./pages/EducationIA";
+import GestionContenu from "./pages/GestionContenu";
 import Favoris from "./pages/Favoris";
 import Assistant from "./pages/Assistant";
 
@@ -97,6 +99,8 @@ export default function App() {
         <Route path="exercices/:exerciceId" element={<ExerciceDetail />} />
         <Route path="qcm" element={<QcmListe />} />
         <Route path="qcm/:qcmId" element={<QcmSession />} />
+        <Route path="examens" element={<ExamensListe />} />
+        <Route path="examens/:id" element={<ExamenSession />} />
         <Route path="videos" element={<Videos />} />
         <Route path="bibliotheque" element={<Bibliotheque />} />
         <Route path="conditions" element={<Conditions />} />
@@ -146,6 +150,14 @@ export default function App() {
           element={
             <Protege>
               <Admin />
+            </Protege>
+          }
+        />
+        <Route
+          path="admin/contenu"
+          element={
+            <Protege>
+              <GestionContenu />
             </Protege>
           }
         />

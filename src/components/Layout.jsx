@@ -108,6 +108,7 @@ const icones = {
   "/cours": "folder",
   "/exercices": "pencil",
   "/qcm": "target",
+  "/examens": "graduation",
   "/videos": "video",
   "/bibliotheque": "book",
   "/favoris": "bookmark",

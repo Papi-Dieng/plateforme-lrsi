@@ -7,8 +7,9 @@
    quitte jamais ce serveur.
 
    Il ne stocke aucune question, réponse ni adresse IP. Il garde
-   seulement l'éducation de l'IA saisie dans l'espace admin
-   (`education.js`), protégée par un mot de passe.
+   seulement ce que l'espace admin publie, protégé par un mot de
+   passe : le contenu pédagogique (`contenu.js`) et l'éducation de
+   l'IA (`education.js`).
 
    Garde-fous, tous appliqués ici et non dans le site, puisque le
    site peut être contourné :
@@ -27,6 +28,12 @@ import {
   lireFiche,
   motDePasseValide,
 } from "./education.js";
+import {
+  lireContenu,
+  publierContenu,
+  restaurerContenu,
+  versionPublique,
+} from "./contenu.js";
 
 const MAX_MESSAGES = 10;
 const MAX_CARACTERES = 1500;
@@ -205,6 +212,22 @@ export default {
       );
     }
 
+    const chemin = new URL(requete.url).pathname;
+
+    // Le contenu publié, lu par chaque visiteur à l'ouverture du site :
+    // public, hors de la limite par visiteur (tout un campus peut
+    // partager la même adresse IP), et mis en cache une minute.
+    if (chemin === "/contenu" && requete.method === "GET") {
+      const contenu = env.EDUCATION ? await lireContenu(env) : null;
+      return new Response(JSON.stringify(contenu ? versionPublique(contenu) : null), {
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "Cache-Control": "public, max-age=60",
+          ...cors,
+        },
+      });
+    }
+
     // Limite par visiteur, si elle est déclarée dans wrangler.toml. Elle
     // s'applique aussi aux essais de mot de passe : 10 par minute au
     // plus. Seul l'admin authentifié en est dispensé, pour lancer ses
@@ -217,14 +240,36 @@ export default {
       if (!success) return json({ erreur: "trop-de-requetes" }, 429, cors);
     }
 
-    /* ---- Espace admin : l'éducation de l'IA ---- */
-    const chemin = new URL(requete.url).pathname;
-    if (chemin === "/admin/verifier" || chemin.startsWith("/education/")) {
+    /* ---- Espace admin : contenu publié et éducation de l'IA ---- */
+    if (chemin.startsWith("/admin/") || chemin.startsWith("/education/")) {
       if (!env.ADMIN_MOT_DE_PASSE || !env.EDUCATION) {
         return json({ erreur: "admin-non-configure" }, 503, cors);
       }
       if (!admin) return json({ erreur: "mot-de-passe" }, 401, cors);
       if (chemin === "/admin/verifier") return json({ ok: true }, 200, cors);
+
+      if (chemin === "/admin/contenu") {
+        // L'admin voit tout, y compris les annales en attente d'autorisation.
+        if (requete.method === "GET") return json(await lireContenu(env), 200, cors);
+        if (requete.method === "PUT") {
+          const brut = await requete.text();
+          if (brut.length > 2 * 3_000_000) return json({ erreur: "trop-gros" }, 413, cors);
+          let donnees;
+          try {
+            donnees = JSON.parse(brut);
+          } catch {
+            return json({ erreur: "format" }, 400, cors);
+          }
+          const r = await publierContenu(env, donnees);
+          return r.erreur ? json(r, 413, cors) : json(r.contenu, 200, cors);
+        }
+        return json({ erreur: "methode" }, 405, cors);
+      }
+      if (chemin === "/admin/contenu/restaurer" && requete.method === "POST") {
+        const r = await restaurerContenu(env);
+        return r.erreur ? json(r, 404, cors) : json(r.contenu, 200, cors);
+      }
+      if (!chemin.startsWith("/education/")) return json({ erreur: "introuvable" }, 404, cors);
 
       const id = chemin.slice("/education/".length);
       if (!ID_MATIERE.test(id)) return json({ erreur: "matiere" }, 400, cors);
