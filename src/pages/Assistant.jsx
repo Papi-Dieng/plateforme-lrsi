@@ -19,22 +19,36 @@ import {
   reponsesEnregistrees,
 } from "../competences";
 import { repondre, questionsRapides } from "../assistant";
+import { decouperReponse, demanderIA, iaActive } from "../ia";
 import { getMatiere } from "../data/matieres";
 import { themeMatiere } from "../data/couleurs";
 
 /* ==================================================================
    Assistant de révision.
 
-   Il fonctionne, mais ce n'est PAS une IA générative : il ne rédige
-   aucune explication. Il comprend l'intention d'une question,
-   cherche dans le contenu de la plateforme et renvoie vers ce qui
-   existe vraiment. Toute la logique est dans `src/assistant.js` ;
-   cette page ne fait que l'afficher.
+   Deux étages. Le guide (`src/assistant.js`) répond toujours, tout de
+   suite et sans réseau : il retrouve les chapitres, exercices et QCM
+   qui existent vraiment. Quand le relais IA est configuré
+   (`site.urlIA`), le modèle de langage rédige en plus l'explication,
+   en s'appuyant sur ce que le guide a trouvé ; les liens restent ceux
+   du guide, donc aucun contenu inventé ne peut apparaître en lien.
 
-   Ce choix est dit à l'écran, pas seulement dans ce commentaire :
-   un outil qui laisserait croire qu'il comprend la matière
-   tromperait l'étudiant au moment où il a le plus besoin d'être sûr.
+   Si l'IA échoue (hors connexion, quota gratuit atteint), le guide
+   répond seul, et l'écran le dit.
+
+   « Par où commencer » reste au guide : la réponse vient d'un calcul
+   sur les scores, qui ne quittent pas le navigateur.
+
+   Chaque réponse rédigée par l'IA est signalée comme telle : un outil
+   qui laisserait croire qu'il ne se trompe jamais tromperait
+   l'étudiant au moment où il a le plus besoin d'être sûr.
    ================================================================== */
+
+const INTENTIONS_SANS_IA = new Set(["priorite", "aide"]);
+
+/* Ce que l'assistant a « dit », pour l'historique envoyé au relais :
+   le texte de l'IA quand il existe, sinon celui du guide. */
+const texteAffiche = (m) => m.texteIA ?? m.reponse.texte.join("\n");
 
 const capacites = [
   {
@@ -57,12 +71,37 @@ const capacites = [
   },
 ];
 
-const cequilNeFaitPas = [
-  "Rédiger une explication : il cite le cours, il ne le réécrit pas.",
-  "Donner la réponse d'un exercice sans que tu ouvres la correction.",
-  "Inventer un contenu absent de la plateforme : il dit qu'il n'a rien trouvé.",
-  "Juger ton niveau sur deux réponses : il lui en faut au moins trois.",
-];
+const cequilNeFaitPas = iaActive
+  ? [
+      "Remplacer le cours : l'IA peut se tromper, le cours et l'enseignant font foi.",
+      "Donner d'emblée la réponse d'un exercice : il commence par la méthode et un indice.",
+      "Proposer en lien un contenu absent de la plateforme : les liens viennent du guide, pas de l'IA.",
+      "Juger ton niveau sur deux réponses : il lui en faut au moins trois.",
+    ]
+  : [
+      "Rédiger une explication : il cite le cours, il ne le réécrit pas.",
+      "Donner la réponse d'un exercice sans que tu ouvres la correction.",
+      "Inventer un contenu absent de la plateforme : il dit qu'il n'a rien trouvé.",
+      "Juger ton niveau sur deux réponses : il lui en faut au moins trois.",
+    ];
+
+/* ---- Texte rédigé par l'IA, affiché comme du texte simple ---- */
+
+function TexteIA({ texte }) {
+  return decouperReponse(texte).map((b, i) =>
+    b.type === "liste" ? (
+      <ul key={i} className={cx("list-disc space-y-1 pl-5", i > 0 && "mt-2")}>
+        {b.elements.map((e, j) => (
+          <li key={j}>{e}</li>
+        ))}
+      </ul>
+    ) : (
+      <p key={i} className={i > 0 ? "mt-2" : undefined}>
+        {b.texte}
+      </p>
+    )
+  );
+}
 
 const iconesLien = {
   matiere: "folder",
@@ -149,18 +188,41 @@ export default function Assistant() {
   const fragiles = faiblesses(analyse);
   const modules = modulesAAmeliorer(analyse);
 
-  const envoyer = (question) => {
+  const enAttente = messages.some((m) => m.etat === "attente");
+
+  const envoyer = async (question) => {
     const texte = question.trim();
-    if (!texte) return;
+    if (!texte || enAttente) return;
 
     const reponse = repondre(texte, analyse);
+    const avecIA = iaActive && !INTENTIONS_SANS_IA.has(reponse.intention);
+
     compteur.current += 2;
+    const id = compteur.current;
     setMessages((liste) => [
       ...liste,
-      { id: compteur.current - 1, role: "etudiant", texte },
-      { id: compteur.current, role: "assistant", reponse },
+      { id: id - 1, role: "etudiant", texte },
+      { id, role: "assistant", reponse, etat: avecIA ? "attente" : "guide" },
     ]);
     setSaisie("");
+    if (!avecIA) return;
+
+    const historique = [
+      ...messages.map((m) => ({
+        role: m.role === "etudiant" ? "etudiant" : "assistant",
+        texte: m.role === "etudiant" ? m.texte : texteAffiche(m),
+      })),
+      { role: "etudiant", texte },
+    ];
+
+    let maj;
+    try {
+      const texteIA = await demanderIA(historique, reponse.liens);
+      maj = { etat: "ia", texteIA };
+    } catch {
+      maj = { etat: "secours" };
+    }
+    setMessages((liste) => liste.map((m) => (m.id === id ? { ...m, ...maj } : m)));
   };
 
   /* Les trois compteurs de l'en-tête : à la place des statistiques
@@ -218,10 +280,16 @@ export default function Assistant() {
       <EnTetePage
         surtitre="Guide de révision"
         titre="Assistant de révision"
-        texte="Pose ta question : il retrouve le chapitre, l'exercice ou le QCM qui traite le sujet, et il sait dire par où commencer d'après tes résultats. Il ne rédige aucune explication lui-même."
+        texte={
+          iaActive
+            ? "Pose ta question : l'IA t'explique la notion, et le guide retrouve le chapitre, l'exercice ou le QCM qui la traite. Il sait aussi dire par où commencer d'après tes résultats."
+            : "Pose ta question : il retrouve le chapitre, l'exercice ou le QCM qui traite le sujet, et il sait dire par où commencer d'après tes résultats. Il ne rédige aucune explication lui-même."
+        }
       >
         <Badge ton="neutre" icone="info">
-          Guide, pas une IA générative
+          {iaActive
+            ? "IA générative — peut se tromper"
+            : "Guide, pas une IA générative"}
         </Badge>
       </EnTetePage>
 
@@ -246,7 +314,9 @@ export default function Assistant() {
                       aria-hidden="true"
                       className="size-2 rounded-full bg-accent-400"
                     />
-                    En service — cherche dans le contenu de la plateforme
+                    {iaActive
+                      ? "En service — IA Gemini et contenu de la plateforme"
+                      : "En service — cherche dans le contenu de la plateforme"}
                   </p>
                 </div>
               </div>
@@ -274,19 +344,34 @@ export default function Assistant() {
                 <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300">
                   <Icon name="sparkles" className="size-4" />
                 </span>
-                <div className="max-w-xl rounded-2xl rounded-bl-md bg-ink-100 px-4 py-3 text-sm/6 text-ink-700 dark:bg-ink-800 dark:text-ink-200">
-                  <p>
-                    Je suis un guide, pas une intelligence artificielle. Je ne
-                    rédige aucune explication : je cherche dans les cours, les
-                    exercices et les QCM de la plateforme, et je t'amène au bon
-                    endroit.
-                  </p>
-                  <p className="mt-2">
-                    C'est une limite, et c'est aussi une garantie : je ne peux
-                    pas me tromper sur une notion, puisque je n'en explique
-                    aucune. Si je ne trouve rien, je te le dirai.
-                  </p>
-                </div>
+                {iaActive ? (
+                  <div className="max-w-xl rounded-2xl rounded-bl-md bg-ink-100 px-4 py-3 text-sm/6 text-ink-700 dark:bg-ink-800 dark:text-ink-200">
+                    <p>
+                      Salut ! Pose-moi une question sur une notion, un exercice
+                      ou un chapitre. Une intelligence artificielle t'explique,
+                      et je t'amène aux cours, exercices et QCM de la plateforme
+                      qui traitent le sujet.
+                    </p>
+                    <p className="mt-2">
+                      Une IA peut se tromper : en cas de doute, le cours et ton
+                      enseignant font foi. N'écris rien de personnel ici.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="max-w-xl rounded-2xl rounded-bl-md bg-ink-100 px-4 py-3 text-sm/6 text-ink-700 dark:bg-ink-800 dark:text-ink-200">
+                    <p>
+                      Je suis un guide, pas une intelligence artificielle. Je ne
+                      rédige aucune explication : je cherche dans les cours, les
+                      exercices et les QCM de la plateforme, et je t'amène au
+                      bon endroit.
+                    </p>
+                    <p className="mt-2">
+                      C'est une limite, et c'est aussi une garantie : je ne peux
+                      pas me tromper sur une notion, puisque je n'en explique
+                      aucune. Si je ne trouve rien, je te le dirai.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {messages.map((m) =>
@@ -302,17 +387,45 @@ export default function Assistant() {
                       <Icon name="sparkles" className="size-4" />
                     </span>
                     <div className="min-w-0 max-w-xl flex-1">
-                      <div className="rounded-2xl rounded-bl-md bg-ink-100 px-4 py-3 text-sm/6 text-ink-700 dark:bg-ink-800 dark:text-ink-200">
-                        {m.reponse.texte.map((p, i) => (
-                          <p key={p} className={i > 0 ? "mt-2" : undefined}>
-                            {p}
+                      <div
+                        aria-live="polite"
+                        className="rounded-2xl rounded-bl-md bg-ink-100 px-4 py-3 text-sm/6 text-ink-700 dark:bg-ink-800 dark:text-ink-200"
+                      >
+                        {m.etat === "attente" ? (
+                          <p className="flex items-center gap-2 text-ink-500 dark:text-ink-400">
+                            <span
+                              aria-hidden="true"
+                              className="size-2 animate-pulse rounded-full bg-brand-500"
+                            />
+                            L'IA rédige sa réponse…
                           </p>
-                        ))}
+                        ) : m.etat === "ia" ? (
+                          <TexteIA texte={m.texteIA} />
+                        ) : (
+                          m.reponse.texte.map((p, i) => (
+                            <p key={p} className={i > 0 ? "mt-2" : undefined}>
+                              {p}
+                            </p>
+                          ))
+                        )}
                       </div>
 
-                      <Liens liens={m.reponse.liens} />
+                      {m.etat === "ia" && (
+                        <p className="mt-1.5 text-[11px] text-ink-500 dark:text-ink-400">
+                          Rédigé par une IA : elle peut se tromper, le cours
+                          fait foi.
+                        </p>
+                      )}
+                      {m.etat === "secours" && (
+                        <p className="mt-1.5 text-[11px] text-sun-700 dark:text-sun-400">
+                          L'IA n'a pas pu répondre (connexion ou quota
+                          gratuit atteint). Voici ce que le guide a trouvé.
+                        </p>
+                      )}
 
-                      {m.reponse.suggestions && (
+                      {m.etat !== "attente" && <Liens liens={m.reponse.liens} />}
+
+                      {m.etat !== "attente" && m.etat !== "ia" && m.reponse.suggestions && (
                         <div className="mt-3 flex flex-wrap gap-2">
                           {questionsRapides.map((q) => (
                             <button
@@ -354,7 +467,7 @@ export default function Assistant() {
                 />
                 <button
                   type="submit"
-                  disabled={!saisie.trim()}
+                  disabled={!saisie.trim() || enAttente}
                   className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-ink-200 disabled:text-ink-400 dark:disabled:bg-ink-800 dark:disabled:text-ink-500"
                 >
                   <Icon name="arrow" className="size-4" />
@@ -364,6 +477,8 @@ export default function Assistant() {
               <p className="mt-2 text-xs text-ink-500 dark:text-ink-400">
                 La conversation n'est pas enregistrée : elle disparaît en
                 quittant la page.
+                {iaActive &&
+                  " Tes questions sont envoyées à Google Gemini pour rédiger la réponse."}
               </p>
             </form>
           </div>
@@ -522,6 +637,7 @@ export default function Assistant() {
         {/* ============================================================
             La suite
             ============================================================ */}
+        {!iaActive && (
         <section>
           <TitreSection
             surtitre="Version 4"
@@ -551,14 +667,30 @@ export default function Assistant() {
             </p>
           </div>
         </section>
+        )}
 
-        <NoteDemo>
-          Tout se passe dans ton navigateur : ta question n'est envoyée nulle
-          part, et la conversation n'est pas enregistrée. Le jour où un vrai
-          modèle de langage sera branché, ce qui lui sera transmis et ce qui ne
-          le sera pas sera écrit dans les conditions d'utilisation avant la
-          moindre mise en service.
-        </NoteDemo>
+        {iaActive ? (
+          <NoteDemo>
+            Tes questions, les réponses déjà reçues dans cette conversation et
+            les titres des contenus trouvés sont envoyés à Google Gemini, via
+            le relais de la plateforme, pour rédiger la réponse. Ton profil, ta
+            progression et tes scores ne sont jamais envoyés. Le relais
+            n'enregistre rien, mais Google peut conserver les échanges de
+            l'offre gratuite : n'écris rien de personnel. Détails dans les{" "}
+            <Link to="/conditions" className="underline underline-offset-2">
+              conditions d'utilisation
+            </Link>
+            .
+          </NoteDemo>
+        ) : (
+          <NoteDemo>
+            Tout se passe dans ton navigateur : ta question n'est envoyée nulle
+            part, et la conversation n'est pas enregistrée. Le jour où un vrai
+            modèle de langage sera branché, ce qui lui sera transmis et ce qui
+            ne le sera pas sera écrit dans les conditions d'utilisation avant la
+            moindre mise en service.
+          </NoteDemo>
+        )}
       </Container>
     </>
   );

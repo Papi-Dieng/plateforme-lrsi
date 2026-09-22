@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import Icon from "../components/Icon";
 import { Badge, Container, EnTetePage } from "../components/ui";
 import { site } from "../data/site";
+import { iaActive } from "../ia";
 
 /* ==================================================================
    Conditions d'utilisation.
@@ -40,10 +41,26 @@ const articles = [
     titre: "Données personnelles",
     paragraphes: [
       "En version 1, il n'y a ni serveur ni base de données. Ton profil, ta progression et tes vidéos sont enregistrés uniquement dans ton navigateur, sur cet appareil.",
-      "Rien n'est transmis, rien n'est analysé, aucun traceur publicitaire n'est utilisé. Tu peux tout effacer à tout moment depuis les paramètres.",
+      iaActive
+        ? "Rien de tout cela n'est transmis, et aucun traceur publicitaire n'est utilisé. La seule exception est l'assistant de révision, décrit juste en dessous. Tu peux tout effacer à tout moment depuis les paramètres."
+        : "Rien n'est transmis, rien n'est analysé, aucun traceur publicitaire n'est utilisé. Tu peux tout effacer à tout moment depuis les paramètres.",
       "Les formulaires de connexion et d'inscription sont des maquettes : ils ne vérifient rien et n'enregistrent aucun mot de passe. La véritable authentification arrivera en version 3, avec les règles de protection des données qui s'imposent.",
     ],
   },
+  ...(iaActive
+    ? [
+        {
+          icone: "sparkles",
+          titre: "Assistant de révision et intelligence artificielle",
+          paragraphes: [
+            "Quand tu poses une question à l'assistant, elle est envoyée à Google Gemini, un service d'intelligence artificielle, pour rédiger la réponse. Partent avec elle : les autres messages de la conversation en cours, et les titres et résumés des contenus de la plateforme liés à ta question.",
+            "Ne partent jamais : ton profil, ton nom, ta progression, tes scores ni tes favoris. La question « par où commencer » est calculée dans ton navigateur, sans IA.",
+            "Le relais de la plateforme, hébergé chez Cloudflare, n'enregistre ni les questions ni les réponses. Google, en revanche, peut conserver et utiliser les échanges de son offre gratuite pour améliorer ses services : n'écris donc rien de personnel ou de confidentiel dans l'assistant.",
+            "Une IA peut se tromper avec assurance. Ses réponses sont signalées comme telles ; en cas de doute, le cours et l'enseignant font foi.",
+          ],
+        },
+      ]
+    : []),
   {
     icone: "users",
     titre: "Usage attendu",

@@ -1,0 +1,21 @@
+# Configuration du relais IA hébergé chez Cloudflare Workers (offre gratuite).
+# La clé Gemini n'est PAS écrite ici : elle se dépose avec
+#   npx wrangler secret put GEMINI_API_KEY
+name = "jangrsi-ia"
+main = "index.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+# Domaines autorisés à appeler le relais, séparés par des virgules.
+# Le site en ligne, puis le serveur de développement et l'aperçu locaux.
+ORIGINES = "https://papi-dieng.github.io,http://localhost:5173,http://localhost:4173"
+# Modèle utilisé. Les noms changent : voir la liste sur aistudio.google.com.
+MODELE = "gemini-3.6-flash"
+
+# 10 questions par minute et par visiteur, au-delà le guide répond seul.
+[[ratelimits]]
+name = "LIMITEUR"
+namespace_id = "1001"
+  [ratelimits.simple]
+  limit = 10
+  period = 60

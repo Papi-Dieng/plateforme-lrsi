@@ -1,0 +1,3 @@
+# Clé Gemini pour les essais en local (npx wrangler dev) : ne jamais la publier.
+.dev.vars
+.wrangler

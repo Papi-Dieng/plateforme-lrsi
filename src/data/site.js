@@ -26,6 +26,11 @@ export const site = {
   // Adresse de contact provisoire, à remplacer elle aussi.
   contact: "contact@exemple.sn",
   version: "Version 1 — site de présentation",
+  // Adresse du relais IA (dossier `serveur-ia/`), affichée par Cloudflare
+  // après `npx wrangler deploy`, par exemple
+  // "https://jangrsi-ia.<compte>.workers.dev". Tant qu'elle est vide,
+  // l'assistant fonctionne en guide seul, sans modèle de langage.
+  urlIA: "https://jangrsi-ia.soniadieng22.workers.dev",
   // Texte volontairement neutre : il reste juste quel que soit le nom choisi.
   origineNom:
     "Celui affiché ici est provisoire, le choix se fera plus tard. Il est défini à un seul endroit dans le code et se change en une ligne, sans rien casser ailleurs.",

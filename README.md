@@ -259,6 +259,7 @@ Toute autre adresse affiche une page « introuvable » avec un retour à l'accue
 
 ```
 lrsi-platform/
+├── serveur-ia/               relais IA gratuit (Cloudflare Workers), garde la clé
 ├── public/
 │   ├── apercu-partage.png    image affichée au partage du lien
 │   └── logo.svg              icône d'onglet
@@ -298,6 +299,7 @@ lrsi-platform/
 │   ├── session.js            contexte et hook de session (voir section 7)
 │   ├── FournisseurSession.jsx  le fournisseur, séparé du hook
 │   ├── assistant.js          moteur du guide de révision
+│   ├── ia.js                 appel au relais IA, si `urlIA` est renseignée
 │   ├── progression.js        exercices travaillés, scores, favoris, vidéos
 │   ├── competences.js        analyse : forces, faiblesses, modules
 │   ├── profil.js             fiche profil et vérifications
@@ -509,8 +511,10 @@ matière, et les résultats trop éloignés du meilleur sont écartés. La page 
 fait que l'afficher. Le jour où un vrai modèle de langage arrivera, c'est ce
 seul fichier qu'il faudra remplacer.
 
-La conversation n'est pas enregistrée et ne quitte pas le navigateur : aucune
-requête réseau n'est faite, la page fonctionne donc aussi hors connexion.
+La conversation n'est pas enregistrée. Sans IA branchée, elle ne quitte pas le
+navigateur : aucune requête réseau n'est faite, la page fonctionne donc aussi
+hors connexion. Une IA peut maintenant s'ajouter au guide : voir « Brancher
+l'IA » plus bas.
 
 ### Où vit la progression
 
@@ -557,19 +561,64 @@ et jamais un simple masquage dans l'interface.
 des limites explicites : pas d'invention d'informations pédagogiques, pas
 d'accès à des documents non autorisés.
 
-En attendant, la page `/assistant` **fonctionne déjà**, mais avec un guide et
-non un modèle de langage : voir « L'assistant de révision » plus haut.
+### Brancher l'IA (gratuit)
 
-Pourquoi pas tout de suite : brancher un modèle exige une clé d'accès payante.
-Sur un site statique, cette clé serait livrée au navigateur de chaque visiteur,
-donc lisible par tous, utilisable par n'importe qui et facturée au propriétaire
-du compte. Elle serait en outre publiée dans un dépôt public, où GitHub la
-révoquerait de lui-même. Il faut donc d'abord le serveur de la version 3, qui
-garde la clé et limite les abus.
+Le branchement est prêt, il reste à l'activer. Tant que `urlIA` est vide dans
+`src/data/site.js`, l'assistant reste le guide décrit plus haut.
 
-Ce qui serait envoyé à un service d'intelligence artificielle, et ce qui ne le
-serait pas, devra être écrit dans les conditions d'utilisation avant la moindre
-mise en service.
+**Le principe.** Une clé d'accès ne peut pas vivre dans un site statique : elle
+serait lisible par tous les visiteurs. Le dossier `serveur-ia/` contient donc
+un petit relais hébergé gratuitement chez Cloudflare Workers. Il garde la clé
+Google Gemini (offre gratuite, sans carte bancaire) et appelle le modèle à la
+place du navigateur.
+
+```
+navigateur (GitHub Pages) → relais Cloudflare (garde la clé) → Google Gemini
+```
+
+**Comment les deux étages travaillent ensemble.** Le guide répond toujours en
+premier et trouve les chapitres, exercices et QCM qui existent. Leurs titres
+sont envoyés au modèle, qui rédige l'explication en s'appuyant dessus. Les
+liens affichés restent ceux du guide : l'IA ne peut pas faire apparaître un
+contenu inventé. Si l'IA échoue (hors connexion, quota atteint, version hors
+ligne), le guide répond seul, et l'écran le signale. « Par où commencer » reste
+calculé dans le navigateur, sans IA : les scores ne sont jamais envoyés.
+
+**Mise en service, une seule fois :**
+
+1. Créer une clé sur <https://aistudio.google.com>, bouton « Get API key ».
+   **Ne pas activer la facturation** sur le projet Google : sans elle, le
+   quota gratuit ne peut rien coûter, il s'arrête simplement.
+2. Créer un compte gratuit sur <https://dash.cloudflare.com>.
+3. Déployer le relais :
+
+   ```bash
+   cd serveur-ia
+   npx wrangler login
+   npx wrangler secret put GEMINI_API_KEY
+   npx wrangler deploy
+   ```
+
+   La deuxième commande demande la clé : elle est stockée chez Cloudflare, jamais
+   dans le dépôt. La dernière affiche l'adresse du relais,
+   `https://jangrsi-ia.<compte>.workers.dev`.
+4. Recopier cette adresse dans `urlIA`, dans `src/data/site.js`, puis mettre le
+   site en ligne comme d'habitude (`npm run build`, commit, push).
+
+Les textes de la page Assistant et des conditions d'utilisation basculent tout
+seuls quand `urlIA` est renseignée : ils disent ce qui est envoyé à Google.
+
+**Garde-fous du relais** (`serveur-ia/index.js`, réglages dans
+`serveur-ia/wrangler.toml`) : seuls les domaines de `ORIGINES` peuvent
+l'appeler, 10 questions par minute et par visiteur, messages et historique
+tronqués, consignes du modèle écrites côté serveur. Il n'enregistre rien.
+Le modèle se change avec `MODELE` : les noms évoluent, la liste à jour est sur
+AI Studio.
+
+**Ce qu'il faut savoir.** Le quota gratuit est limité par minute et par jour :
+suffisant pour une promotion, pas pour des milliers de visiteurs. Google peut
+utiliser les échanges de l'offre gratuite pour améliorer ses services, d'où
+l'avertissement « n'écris rien de personnel » affiché à l'écran.
 
 **Version 5 — ouverture.** D'autres filières et d'autres établissements.
 
