@@ -38,6 +38,14 @@ navigateurs refusent de charger un module JavaScript depuis une adresse
 hébergeur statique. Il existe malgré tout une version faite pour le
 double-clic, décrite juste en dessous.
 
+Pour que personne ne reste devant une page blanche sans comprendre,
+`index.html` contient un petit script qui détecte une ouverture en `file://`
+et affiche l'explication à la place du vide. Il est volontairement écrit en
+script classique, et non en module, afin de s'exécuter même quand le reste ne
+se charge pas. La compilation hors ligne le retire, repérée par les deux
+commentaires `DEBUT` et `FIN AVERTISSEMENT FICHIER LOCAL` : cette version-là
+fonctionne depuis un fichier, l'avertissement y serait mensonger.
+
 Les adresses contiennent un dièse, par exemple `/#/cours`. C'est voulu : cela
 évite les erreurs 404 au rechargement sur un hébergeur statique.
 

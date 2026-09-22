@@ -36,8 +36,43 @@ function integrerIcone() {
   };
 }
 
+// `index.html` contient un avertissement destiné à qui ouvrirait la
+// page par double-clic : elle resterait blanche, faute de pouvoir
+// charger son module JavaScript. Ici, justement, tout est écrit dans
+// le fichier et la page fonctionne : l'avertissement serait faux, et
+// s'afficherait à la place du site. On le retire.
+//
+// Découpage par repères plutôt que par expression régulière : c'est
+// lisible, et cela échoue franchement si les repères sont renommés,
+// au lieu de laisser passer un fichier à moitié juste.
+const DEBUT = "<!-- DEBUT AVERTISSEMENT FICHIER LOCAL -->";
+const FIN = "<!-- FIN AVERTISSEMENT FICHIER LOCAL -->";
+
+function retirerAvertissementFichierLocal() {
+  return {
+    name: "retirer-avertissement-fichier-local",
+    transformIndexHtml(html) {
+      const debut = html.indexOf(DEBUT);
+      const fin = html.indexOf(FIN);
+      if (debut === -1 || fin === -1) {
+        throw new Error(
+          `Reperes introuvables dans index.html (${DEBUT} … ${FIN}). ` +
+            "Ont-ils ete renommes ou supprimes ?"
+        );
+      }
+      return html.slice(0, debut) + html.slice(fin + FIN.length).replace(/^\s*\n/, "");
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), tailwindcss(), integrerIcone(), viteSingleFile()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    integrerIcone(),
+    retirerAvertissementFichierLocal(),
+    viteSingleFile(),
+  ],
   // Rien n'est recopié à côté : la page doit se suffire à elle-même.
   publicDir: false,
   build: {

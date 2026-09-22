@@ -96,6 +96,22 @@
       </div>
     </noscript>
 
+    <!-- DEBUT AVERTISSEMENT FICHIER LOCAL -->
+    <!-- Ouverte par double-clic, cette page reste blanche : le module
+         JavaScript ci-dessous ne sera jamais charge. Plutot que de
+         laisser quelqu'un devant un ecran vide sans explication, on le
+         lui dit. Ce script est volontairement classique, et non un
+         module, afin de s'executer dans tous les cas.
+
+         La compilation hors ligne retire ce bloc : elle n'a rien a
+         charger, elle fonctionne donc depuis un fichier local. -->
+    <script>
+      if (location.protocol === "file:") {
+        document.getElementById("root").innerHTML = "<div style=\"max-width:36rem;margin:4rem auto;padding:0 1.5rem;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;line-height:1.7;color:#232838\"><h1 style=\"font-size:1.5rem;margin-bottom:.75rem\">Cette page ne peut pas s'ouvrir par double-clic</h1><p>Ce n'est pas une panne. Par sécurité, les navigateurs refusent de charger un module JavaScript depuis un fichier local. La page reste donc vide, quoi qu'il arrive.</p><p><strong>Pour voir le site, au choix :</strong></p><ul><li>ouvrir <code>hors-ligne/plateforme-lrsi-hors-ligne.html</code>, le fichier prévu exactement pour cet usage ;</li><li>lancer <code>npm run preview</code> dans le dossier du projet ;</li><li>aller sur <a href=\"https://papi-dieng.github.io/plateforme-lrsi/\">papi-dieng.github.io/plateforme-lrsi</a>.</li></ul><p style=\"color:#667085;font-size:.9rem\">Le fichier hors ligne se fabrique avec <code>npm run hors-ligne</code> s'il n'existe pas encore.</p></div>";
+      }
+    </script>
+    <!-- FIN AVERTISSEMENT FICHIER LOCAL -->
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
