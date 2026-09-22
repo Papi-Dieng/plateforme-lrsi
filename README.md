@@ -246,7 +246,7 @@ latérale laisse place à un menu dans la barre du haut.
 | `/profil` | Mon profil | Avatar, nom d'utilisateur, coordonnées |
 | `/favoris` | Mes favoris | Matières, chapitres, exercices, QCM et vidéos mis de côté |
 | `/progression` | Ma progression | Tableau de bord en grille : vue d'ensemble, précision, régularité, matières, QCM |
-| `/assistant` | Assistant IA | Présentation de l'assistant de révision prévu, et données réelles sur lesquelles il s'appuiera |
+| `/assistant` | Assistant de révision | Guide qui retrouve chapitres, exercices et QCM, et dit par où commencer |
 | `/parametres` | Paramètres | Thème, session, données conservées sur l'appareil |
 | `/conditions` | Conditions d'utilisation | Cadre d'usage, droits, données personnelles |
 | `/admin` | Administration | Page d'auteur : inventaire, couverture, liste de rédaction |
@@ -297,6 +297,7 @@ lrsi-platform/
 │   │   └── Admin.jsx             page d'auteur, hors parcours étudiant
 │   ├── session.js            contexte et hook de session (voir section 7)
 │   ├── FournisseurSession.jsx  le fournisseur, séparé du hook
+│   ├── assistant.js          moteur du guide de révision
 │   ├── progression.js        exercices travaillés, scores, favoris, vidéos
 │   ├── competences.js        analyse : forces, faiblesses, modules
 │   ├── profil.js             fiche profil et vérifications
@@ -483,6 +484,34 @@ qui fait la différence entre un questionnaire et un vrai outil de révision.
 par une API Node.js et Express, avec une base de données. Ajouter une interface
 d'administration pour créer cours, exercices et QCM sans toucher au code.
 
+### L'assistant de révision
+
+Il fonctionne, et **ce n'est pas une intelligence artificielle**. Il ne rédige
+aucune explication : il reconnaît l'intention d'une question, cherche dans les
+données de la plateforme et renvoie vers ce qui existe vraiment.
+
+C'est une limite, et c'est surtout une garantie : il ne peut pas se tromper sur
+une notion, puisqu'il n'en explique aucune. Quand il ne trouve rien, il le dit
+au lieu de meubler. L'interface l'annonce aussi, elle ne laisse pas croire à
+une IA.
+
+| Il comprend | Il répond par |
+| --- | --- |
+| « je n'ai pas compris X » | le chapitre qui traite X, ses exercices, ses QCM, ses vidéos |
+| « donne-moi un exercice sur X » | les exercices correspondants, ou ceux de la compétence la plus faible |
+| « interroge-moi sur X » | les QCM de la matière |
+| « sur quoi travailler ? » | la compétence la plus basse et ses chapitres, d'après les QCM terminés |
+| le reste | « je n'ai rien trouvé », sans rien inventer |
+
+Toute la logique tient dans `src/assistant.js`, hors de React et sans état :
+la recherche pondère les champs, un titre comptant plus que le nom de la
+matière, et les résultats trop éloignés du meilleur sont écartés. La page ne
+fait que l'afficher. Le jour où un vrai modèle de langage arrivera, c'est ce
+seul fichier qu'il faudra remplacer.
+
+La conversation n'est pas enregistrée et ne quitte pas le navigateur : aucune
+requête réseau n'est faite, la page fonctionne donc aussi hors connexion.
+
 ### Où vit la progression
 
 Trois clés dans le navigateur, toutes écrites au même endroit,
@@ -528,18 +557,19 @@ et jamais un simple masquage dans l'interface.
 des limites explicites : pas d'invention d'informations pédagogiques, pas
 d'accès à des documents non autorisés.
 
-La page `/assistant` existe déjà, en barre latérale, mais **rien ne répond
-derrière**. Elle ne simule aucune conversation et n'affiche aucune réponse
-inventée : un assistant qui ferait semblant de fonctionner donnerait confiance
-à tort, jusqu'au jour où il faudrait vraiment compter dessus. Ce qu'elle montre
-de chiffré vient en revanche de la progression réelle enregistrée dans le
-navigateur, afin d'expliquer concrètement sur quoi l'outil s'appuiera.
+En attendant, la page `/assistant` **fonctionne déjà**, mais avec un guide et
+non un modèle de langage : voir « L'assistant de révision » plus haut.
 
-Deux conditions avant de la brancher : assez de questions par matière, chacune
-rattachée à une compétence, et l'autorisation du département pour les cours
-qu'elle citerait. Ce qui serait envoyé à un service d'intelligence artificielle,
-et ce qui ne le serait pas, devra être écrit dans les conditions d'utilisation
-avant la moindre mise en service.
+Pourquoi pas tout de suite : brancher un modèle exige une clé d'accès payante.
+Sur un site statique, cette clé serait livrée au navigateur de chaque visiteur,
+donc lisible par tous, utilisable par n'importe qui et facturée au propriétaire
+du compte. Elle serait en outre publiée dans un dépôt public, où GitHub la
+révoquerait de lui-même. Il faut donc d'abord le serveur de la version 3, qui
+garde la clé et limite les abus.
+
+Ce qui serait envoyé à un service d'intelligence artificielle, et ce qui ne le
+serait pas, devra être écrit dans les conditions d'utilisation avant la moindre
+mise en service.
 
 **Version 5 — ouverture.** D'autres filières et d'autres établissements.
 
