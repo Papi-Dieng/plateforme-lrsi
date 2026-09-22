@@ -24,27 +24,6 @@ import { cas } from "./banc-ia-questions.js";
 const PAUSE_ENTRE_QUESTIONS = 7000;
 const FICHIER_RESULTATS = "scripts/banc-ia-resultats.md";
 
-const normalise = (s) =>
-  String(s)
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[’`]/g, "'");
-
-function verifier(reponse, { contient = [], exclut = [] }) {
-  const t = normalise(reponse);
-  const problemes = [];
-  for (const groupe of contient) {
-    if (!groupe.some((mot) => t.includes(normalise(mot)))) {
-      problemes.push(`devrait contenir : ${groupe.join(" ou ")}`);
-    }
-  }
-  for (const mot of exclut) {
-    if (t.includes(normalise(mot))) problemes.push(`ne devrait pas contenir : ${mot}`);
-  }
-  return problemes;
-}
-
 // Vite charge les modules du site tels quels (imports sans extension,
 // fichiers JSX), sans lancer de serveur web.
 const vite = await createServer({
@@ -55,7 +34,7 @@ const vite = await createServer({
 
 try {
   const { repondre } = await vite.ssrLoadModule("/src/assistant.js");
-  const { construireExtraits } = await vite.ssrLoadModule("/src/ia.js");
+  const { construireExtraits, verifierReponse: verifier } = await vite.ssrLoadModule("/src/ia.js");
   const { site } = await vite.ssrLoadModule("/src/data/site.js");
 
   if (!site.urlIA) throw new Error("urlIA est vide dans src/data/site.js");

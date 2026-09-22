@@ -57,12 +57,16 @@ function contenuDe(lien) {
 export const construireExtraits = (liens) =>
   liens.map((l) => ({
     type: l.type,
+    // Le relais y ajoute la fiche de la matière saisie dans l'espace admin.
+    matiere: l.matiere,
     titre: l.titre,
     detail: l.indisponible ? `${l.detail ?? ""} (pas encore publié)` : l.detail,
     contenu: contenuDe(l),
   }));
 
-export async function demanderIA(historique, liens) {
+// `motDePasse` : seulement depuis l'espace admin, pour que les tests
+// ne soient pas freinés par la limite de questions par minute.
+export async function demanderIA(historique, liens, motDePasse) {
   if (!iaActive) throw new Error("IA non configurée");
 
   const controle = new AbortController();
@@ -71,7 +75,10 @@ export async function demanderIA(historique, liens) {
   try {
     const reponse = await fetch(site.urlIA, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(motDePasse ? { "X-Admin": motDePasse } : {}),
+      },
       signal: controle.signal,
       body: JSON.stringify({
         messages: historique,
@@ -132,4 +139,63 @@ export function decouperReponse(texte) {
     }
   }
   return blocs;
+}
+
+/* ---------------------------------------------------------------- */
+/* Espace admin : l'éducation de l'IA, une fiche par matière          */
+/* ---------------------------------------------------------------- */
+
+/* Le mot de passe n'est vérifié que par le relais : le site n'en
+   connaît aucun. Une erreur renvoie son code (`mot-de-passe`,
+   `admin-non-configure`, `trop-de-requetes`…). */
+async function appelAdmin(chemin, motDePasse, options = {}) {
+  const reponse = await fetch(new URL(chemin, site.urlIA), {
+    ...options,
+    headers: { "Content-Type": "application/json", "X-Admin": motDePasse },
+  });
+  const donnees = await reponse.json().catch(() => ({}));
+  if (!reponse.ok) throw new Error(donnees.erreur ?? `statut ${reponse.status}`);
+  return donnees;
+}
+
+export const verifierAdmin = (motDePasse) => appelAdmin("/admin/verifier", motDePasse);
+
+export const lireFiche = (matiere, motDePasse) =>
+  appelAdmin(`/education/${matiere}`, motDePasse);
+
+export const enregistrerFiche = (matiere, fiche, motDePasse) =>
+  appelAdmin(`/education/${matiere}`, motDePasse, {
+    method: "PUT",
+    body: JSON.stringify(fiche),
+  });
+
+/* ---------------------------------------------------------------- */
+/* Vérification d'une réponse, pour les tests                         */
+/* ---------------------------------------------------------------- */
+
+const normaliserPourTest = (s) =>
+  String(s)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[’`]/g, "'");
+
+/* `contient` : groupes de mots ; chaque groupe doit être présent, un
+   seul de ses mots suffit. `exclut` : aucun de ces mots. Renvoie la
+   liste des problèmes, vide si la réponse passe. Partagée par l'espace
+   admin et le banc de test (`npm run banc-ia`). */
+export function verifierReponse(reponse, { contient = [], exclut = [] }) {
+  const t = normaliserPourTest(reponse);
+  const problemes = [];
+  for (const groupe of contient) {
+    if (!groupe.some((mot) => t.includes(normaliserPourTest(mot)))) {
+      problemes.push(`devrait contenir : ${groupe.join(" ou ")}`);
+    }
+  }
+  for (const mot of exclut) {
+    if (t.includes(normaliserPourTest(mot))) {
+      problemes.push(`ne devrait pas contenir : ${mot}`);
+    }
+  }
+  return problemes;
 }

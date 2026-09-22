@@ -260,7 +260,8 @@ Toute autre adresse affiche une page « introuvable » avec un retour à l'accue
 ```
 lrsi-platform/
 ├── serveur-ia/               relais IA gratuit (Cloudflare Workers), garde la clé
-│   └── consignes.js          l'éducation de l'IA : règles et exemples
+│   ├── consignes.js          règles générales et exemples de l'IA
+│   └── education.js          fiches par matière saisies dans l'espace admin
 ├── scripts/                  banc de test de l'IA (npm run banc-ia)
 ├── public/
 │   ├── apercu-partage.png    image affichée au partage du lien
@@ -297,7 +298,8 @@ lrsi-platform/
 │   │   ├── Favoris.jsx           tout ce qui est mis de côté
 │   │   ├── Parametres.jsx        thème et données locales
 │   │   ├── Conditions.jsx        conditions d'utilisation
-│   │   └── Admin.jsx             page d'auteur, hors parcours étudiant
+│   │   ├── Admin.jsx             page d'auteur, hors parcours étudiant
+│   │   └── EducationIA.jsx       éduquer l'IA par matière (admin)
 │   ├── session.js            contexte et hook de session (voir section 7)
 │   ├── FournisseurSession.jsx  le fournisseur, séparé du hook
 │   ├── assistant.js          moteur du guide de révision
@@ -626,6 +628,37 @@ s'obtient à l'adresse `/modeles` du relais.
 
 Une IA ne répond jamais parfaitement, mais on peut la rendre fiable. Rien
 n'est ré-entraîné : on lui donne, à chaque question, de quoi bien répondre.
+
+**Le plus simple : l'espace admin du site**, page *Administration*, puis
+*Éduquer l'IA* (`/#/admin/ia`). On choisit une matière, puis quatre onglets :
+
+| Onglet | Ce qu'on y met |
+| --- | --- |
+| Consignes | Ce que l'IA doit faire pour cette matière, une consigne par ligne |
+| Cours | Le texte de chaque chapitre ; il fait foi sur la mémoire de l'IA |
+| Questions-réponses modèles | Une question et la réponse idéale, que l'IA imite |
+| Tests | Une question et ce que la réponse doit contenir ; bouton « Lancer » |
+
+« Enregistrer » suffit : l'IA l'utilise dès la question suivante, sans
+recompiler ni republier le site. Tout est stocké par le relais, dans
+Cloudflare KV (`serveur-ia/education.js`), une fiche par matière. Une
+question d'étudiant reçoit les consignes et exemples de la matière concernée,
+et le cours des seuls chapitres trouvés par le guide. Les tests ne sont
+jamais montrés à l'IA.
+
+**Mot de passe admin, à créer une fois.** L'espace est protégé par un mot de
+passe vérifié par le relais, jamais par le site :
+
+```bash
+cd serveur-ia
+npx wrangler secret put ADMIN_MOT_DE_PASSE
+```
+
+Choisir un mot de passe long et propre à ce site. Les essais sont limités à
+10 par minute. Pour le changer, relancer la même commande.
+
+Le reste de cette section décrit ce qui se règle dans le code, pour aller plus
+loin.
 
 1. **Le contenu de la plateforme.** Le site joint aux questions le contenu
    complet des exercices trouvés par le guide (énoncé, indice, méthode,

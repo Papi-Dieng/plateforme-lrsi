@@ -16,6 +16,7 @@ import Videos from "./pages/Videos";
 import Parametres from "./pages/Parametres";
 import Conditions from "./pages/Conditions";
 import Admin from "./pages/Admin";
+import EducationIA from "./pages/EducationIA";
 import Favoris from "./pages/Favoris";
 import Assistant from "./pages/Assistant";
 
@@ -145,6 +146,14 @@ export default function App() {
           element={
             <Protege>
               <Admin />
+            </Protege>
+          }
+        />
+        <Route
+          path="admin/ia"
+          element={
+            <Protege>
+              <EducationIA />
             </Protege>
           }
         />

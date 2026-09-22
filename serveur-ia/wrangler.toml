@@ -23,3 +23,11 @@ namespace_id = "1001"
   [ratelimits.simple]
   limit = 10
   period = 60
+
+# Ce que l'espace admin du site enregistre pour éduquer l'IA, matière par
+# matière : consignes, cours, exemples de réponses et tests.
+# Modifiable seulement avec le mot de passe admin, déposé avec
+#   npx wrangler secret put ADMIN_MOT_DE_PASSE
+[[kv_namespaces]]
+binding = "EDUCATION"
+id = "ccb922dc28c146d18036317b64b8b098"

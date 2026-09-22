@@ -6,7 +6,9 @@
    d'accès et appelle le modèle à la place du navigateur. La clé ne
    quitte jamais ce serveur.
 
-   Il ne stocke rien : ni question, ni réponse, ni adresse IP.
+   Il ne stocke aucune question, réponse ni adresse IP. Il garde
+   seulement l'éducation de l'IA saisie dans l'espace admin
+   (`education.js`), protégée par un mot de passe.
 
    Garde-fous, tous appliqués ici et non dans le site, puisque le
    site peut être contourné :
@@ -18,6 +20,13 @@
    ================================================================== */
 
 import { CONSIGNES } from "./consignes.js";
+import {
+  ID_MATIERE,
+  ecrireFiche,
+  educationPour,
+  lireFiche,
+  motDePasseValide,
+} from "./education.js";
 
 const MAX_MESSAGES = 10;
 const MAX_CARACTERES = 1500;
@@ -33,8 +42,8 @@ function entetesCors(origine, env) {
   if (!autorisees.includes(origine)) return null;
   return {
     "Access-Control-Allow-Origin": origine,
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, X-Admin",
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",
   };
@@ -72,6 +81,7 @@ function lireDemande(corps) {
       budget -= contenu.length;
       return {
         type: texte(e?.type, 20),
+        matiere: texte(e?.matiere, 40),
         titre: texte(e?.titre, 200),
         detail: texte(e?.detail, MAX_CARACTERES_DETAIL),
         contenu,
@@ -82,17 +92,26 @@ function lireDemande(corps) {
   return { messages, extraits };
 }
 
-function construireConsignes(extraits) {
+function construireConsignes(extraits, education) {
+  const parties = [CONSIGNES];
+  if (education) parties.push(education);
+
   if (extraits.length === 0) {
-    return `${CONSIGNES}\n\nAucun contenu de la plateforme ne correspond à cette question : réponds avec tes connaissances, en restant prudent.`;
+    parties.push(
+      "Aucun contenu de la plateforme ne correspond à cette question : réponds avec tes connaissances, en restant prudent."
+    );
+  } else {
+    const liste = extraits
+      .map((e) => {
+        const entete = `### [${e.type}] ${e.titre}${e.detail ? ` : ${e.detail}` : ""}`;
+        return e.contenu ? `${entete}\n${e.contenu}` : entete;
+      })
+      .join("\n\n");
+    parties.push(
+      `Contenu de la plateforme lié à la question (il fait foi ; les corrections d'exercices ne se donnent pas d'emblée) :\n\n${liste}`
+    );
   }
-  const liste = extraits
-    .map((e) => {
-      const entete = `### [${e.type}] ${e.titre}${e.detail ? ` : ${e.detail}` : ""}`;
-      return e.contenu ? `${entete}\n${e.contenu}` : entete;
-    })
-    .join("\n\n");
-  return `${CONSIGNES}\n\nContenu de la plateforme lié à la question (il fait foi ; les corrections d'exercices ne se donnent pas d'emblée) :\n\n${liste}`;
+  return parties.join("\n\n");
 }
 
 const API_GEMINI = "https://generativelanguage.googleapis.com/v1beta";
@@ -112,8 +131,13 @@ const listeModeles = (env) =>
     .filter((m, i, t) => m && t.indexOf(m) === i);
 
 async function appelerGemini({ messages, extraits }, env) {
+  const education = await educationPour(env, extraits).catch((e) => {
+    // Une fiche illisible ne doit pas priver l'étudiant de réponse.
+    console.log("Éducation illisible, consignes générales seules", e);
+    return "";
+  });
   const corps = JSON.stringify({
-    systemInstruction: { parts: [{ text: construireConsignes(extraits) }] },
+    systemInstruction: { parts: [{ text: construireConsignes(extraits, education) }] },
     contents: messages.map((m) => ({ role: m.role, parts: [{ text: m.texte }] })),
     generationConfig: { temperature: 0.4, maxOutputTokens: 2048 },
   });
@@ -181,14 +205,44 @@ export default {
       );
     }
 
-    if (requete.method !== "POST") return json({ erreur: "methode" }, 405, cors);
-
-    // Limite par visiteur, si elle est déclarée dans wrangler.toml.
-    if (env.LIMITEUR) {
+    // Limite par visiteur, si elle est déclarée dans wrangler.toml. Elle
+    // s'applique aussi aux essais de mot de passe : 10 par minute au
+    // plus. Seul l'admin authentifié en est dispensé, pour lancer ses
+    // tests d'un coup.
+    const motDePasse = requete.headers.get("X-Admin");
+    const admin = await motDePasseValide(motDePasse, env);
+    if (env.LIMITEUR && !admin) {
       const ip = requete.headers.get("CF-Connecting-IP") ?? "inconnu";
       const { success } = await env.LIMITEUR.limit({ key: ip });
       if (!success) return json({ erreur: "trop-de-requetes" }, 429, cors);
     }
+
+    /* ---- Espace admin : l'éducation de l'IA ---- */
+    const chemin = new URL(requete.url).pathname;
+    if (chemin === "/admin/verifier" || chemin.startsWith("/education/")) {
+      if (!env.ADMIN_MOT_DE_PASSE || !env.EDUCATION) {
+        return json({ erreur: "admin-non-configure" }, 503, cors);
+      }
+      if (!admin) return json({ erreur: "mot-de-passe" }, 401, cors);
+      if (chemin === "/admin/verifier") return json({ ok: true }, 200, cors);
+
+      const id = chemin.slice("/education/".length);
+      if (!ID_MATIERE.test(id)) return json({ erreur: "matiere" }, 400, cors);
+
+      if (requete.method === "GET") return json(await lireFiche(env, id), 200, cors);
+      if (requete.method === "PUT") {
+        let fiche;
+        try {
+          fiche = await requete.json();
+        } catch {
+          return json({ erreur: "format" }, 400, cors);
+        }
+        return json(await ecrireFiche(env, id, fiche), 200, cors);
+      }
+      return json({ erreur: "methode" }, 405, cors);
+    }
+
+    if (requete.method !== "POST") return json({ erreur: "methode" }, 405, cors);
 
     let corps;
     try {

@@ -146,6 +146,26 @@ export default function Admin() {
             </p>
           </div>
 
+          {/* ---- Éduquer l'IA ---- */}
+          <Link
+            to="/admin/ia"
+            className="card flex items-center gap-4 p-5 transition-colors hover:border-brand-300 sm:p-6 dark:hover:border-brand-500/40"
+          >
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-brand-600 text-white">
+              <Icon name="sparkles" className="size-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold text-ink-900 dark:text-white">
+                Éduquer l'IA
+              </span>
+              <span className="mt-0.5 block text-sm text-ink-500 dark:text-ink-400">
+                Par matière : consignes, cours, questions-réponses modèles et
+                tests de l'assistant. Protégé par le mot de passe admin.
+              </span>
+            </span>
+            <Icon name="chevron" className="size-5 shrink-0 -rotate-90 text-ink-400" />
+          </Link>
+
           {/* ---- Inventaire ---- */}
           <Bloc
             icone="layers"
