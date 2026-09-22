@@ -28,3 +28,6 @@ dist-ssr
 # versionner alourdirait l'historique à chaque compilation, pour un
 # fichier que personne ne modifie à la main.
 hors-ligne
+
+# Réponses du banc de test IA : elles changent à chaque lancement.
+scripts/banc-ia-resultats.md

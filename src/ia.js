@@ -1,4 +1,6 @@
 import { site } from "./data/site";
+import { getExercice } from "./data/exercices";
+import { getMatiere } from "./data/matieres";
 
 /* ==================================================================
    Appel au relais IA (dossier `serveur-ia/`).
@@ -8,8 +10,8 @@ import { site } from "./data/site";
    au relais, qui ajoute ses consignes et interroge Gemini.
 
    Ce qui part : les questions de la conversation en cours, les
-   réponses déjà reçues, et les titres et résumés des contenus trouvés
-   par le guide. Rien d'autre : ni profil, ni progression, ni scores.
+   réponses déjà reçues, et le contenu de la plateforme trouvé par le
+   guide. Rien d'autre : ni profil, ni progression, ni scores.
 
    Toute erreur est remontée à l'appelant, qui retombe alors sur la
    réponse du guide : l'assistant ne reste jamais muet.
@@ -19,6 +21,46 @@ export const iaActive = Boolean(site.urlIA);
 
 // Le modèle gratuit met souvent 10 à 20 secondes à répondre.
 const DELAI_MAXIMUM = 45_000;
+
+/* Le contenu complet d'un lien trouvé par le guide, pour que l'IA
+   s'appuie sur ce que la plateforme enseigne plutôt que sur sa seule
+   mémoire. Ce contenu est déjà public : il est dans le site.
+
+   - un exercice part avec son énoncé, son indice, sa méthode et sa
+     correction ; les consignes du relais interdisent au modèle de
+     livrer la correction d'emblée ;
+   - un chapitre part avec son texte (`contenu`) dès qu'il sera
+     rédigé dans `src/data/matieres.js`, sinon avec son résumé. */
+function contenuDe(lien) {
+  if (lien.type === "exercice") {
+    const e = getExercice(lien.to.split("/").pop());
+    if (!e) return "";
+    return [
+      `Énoncé : ${e.enonce}`,
+      `Indice : ${e.indice}`,
+      `Méthode : ${(e.etapes ?? []).join(" ")}`,
+      `Correction : ${e.reponse}`,
+      e.explication ? `À retenir : ${e.explication}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+  if (lien.type === "chapitre") {
+    const chapitre = getMatiere(lien.matiere)?.chapitres.find(
+      (c) => c.titre === lien.titre
+    );
+    return chapitre?.contenu ?? "";
+  }
+  return "";
+}
+
+export const construireExtraits = (liens) =>
+  liens.map((l) => ({
+    type: l.type,
+    titre: l.titre,
+    detail: l.indisponible ? `${l.detail ?? ""} (pas encore publié)` : l.detail,
+    contenu: contenuDe(l),
+  }));
 
 export async function demanderIA(historique, liens) {
   if (!iaActive) throw new Error("IA non configurée");
@@ -33,11 +75,7 @@ export async function demanderIA(historique, liens) {
       signal: controle.signal,
       body: JSON.stringify({
         messages: historique,
-        extraits: liens.map((l) => ({
-          type: l.type,
-          titre: l.titre,
-          detail: l.indisponible ? `${l.detail ?? ""} (pas encore publié)` : l.detail,
-        })),
+        extraits: construireExtraits(liens),
       }),
     });
 

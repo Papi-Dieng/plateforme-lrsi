@@ -13,29 +13,20 @@
    - seuls les domaines listés dans ORIGINES peuvent l'appeler ;
    - taille des questions et de l'historique bornée ;
    - nombre de requêtes par minute limité pour chaque visiteur ;
-   - les consignes données au modèle sont écrites ici, un visiteur
-     ne peut pas les remplacer.
+   - les consignes données au modèle sont écrites côté serveur, dans
+     `consignes.js` : un visiteur ne peut pas les remplacer.
    ================================================================== */
+
+import { CONSIGNES } from "./consignes.js";
 
 const MAX_MESSAGES = 10;
 const MAX_CARACTERES = 1500;
 const MAX_EXTRAITS = 8;
-const MAX_CARACTERES_EXTRAIT = 400;
-
-const CONSIGNES = `Tu es l'assistant de révision d'une plateforme gratuite pour les étudiants de Licence Réseaux et Systèmes Informatiques (LRSI).
-
-Ton rôle :
-- Expliquer les notions de réseaux, systèmes, programmation et cybersécurité, simplement, avec un petit exemple quand c'est utile.
-- Répondre en français, tutoyer l'étudiant, rester court : 150 mots au maximum sauf si on te demande plus.
-- Écrire en texte simple, sans titres, tableaux ni formules LaTeX (écris 2^8 - 2, pas $2^8 - 2$). Des listes courtes commençant par « - » sont permises.
-
-Règles :
-- Un extrait du contenu de la plateforme peut t'être fourni. S'il traite la question, appuie-toi dessus en priorité et invite l'étudiant à ouvrir le chapitre, l'exercice ou le QCM correspondant : les liens s'affichent sous ta réponse.
-- Ne cite jamais un chapitre, un exercice ou un QCM qui n'est pas dans l'extrait : il n'existe peut-être pas.
-- Si tu n'es pas sûr d'une information, dis-le franchement et renvoie vers le cours ou l'enseignant, qui font foi.
-- Pour un exercice, ne donne pas la réponse finale d'emblée : donne la méthode et un indice, puis la réponse seulement si l'étudiant la redemande.
-- Refuse poliment ce qui n'a rien à voir avec les études, et ne rédige pas de devoir à rendre à la place de l'étudiant.
-- Ne demande jamais d'information personnelle.`;
+const MAX_CARACTERES_DETAIL = 400;
+// Le contenu complet d'un exercice ou d'un chapitre, et le total envoyé
+// au modèle : de quoi s'appuyer sur la plateforme sans exploser le quota.
+const MAX_CARACTERES_CONTENU = 3000;
+const MAX_CARACTERES_CONTENUS = 9000;
 
 function entetesCors(origine, env) {
   const autorisees = (env.ORIGINES ?? "").split(",").map((o) => o.trim());
@@ -73,13 +64,19 @@ function lireDemande(corps) {
   while (messages.length && messages[0].role !== "user") messages.shift();
   if (messages.length === 0 || messages.at(-1).role !== "user") return null;
 
+  let budget = MAX_CARACTERES_CONTENUS;
   const extraits = (Array.isArray(corps?.extraits) ? corps.extraits : [])
     .slice(0, MAX_EXTRAITS)
-    .map((e) => ({
-      type: texte(e?.type, 20),
-      titre: texte(e?.titre, 200),
-      detail: texte(e?.detail, MAX_CARACTERES_EXTRAIT),
-    }))
+    .map((e) => {
+      const contenu = texte(e?.contenu, Math.min(MAX_CARACTERES_CONTENU, budget));
+      budget -= contenu.length;
+      return {
+        type: texte(e?.type, 20),
+        titre: texte(e?.titre, 200),
+        detail: texte(e?.detail, MAX_CARACTERES_DETAIL),
+        contenu,
+      };
+    })
     .filter((e) => e.titre);
 
   return { messages, extraits };
@@ -87,12 +84,15 @@ function lireDemande(corps) {
 
 function construireConsignes(extraits) {
   if (extraits.length === 0) {
-    return `${CONSIGNES}\n\nAucun contenu de la plateforme ne correspond à cette question.`;
+    return `${CONSIGNES}\n\nAucun contenu de la plateforme ne correspond à cette question : réponds avec tes connaissances, en restant prudent.`;
   }
   const liste = extraits
-    .map((e) => `- [${e.type}] ${e.titre}${e.detail ? ` : ${e.detail}` : ""}`)
-    .join("\n");
-  return `${CONSIGNES}\n\nContenu de la plateforme lié à la question :\n${liste}`;
+    .map((e) => {
+      const entete = `### [${e.type}] ${e.titre}${e.detail ? ` : ${e.detail}` : ""}`;
+      return e.contenu ? `${entete}\n${e.contenu}` : entete;
+    })
+    .join("\n\n");
+  return `${CONSIGNES}\n\nContenu de la plateforme lié à la question (il fait foi ; les corrections d'exercices ne se donnent pas d'emblée) :\n\n${liste}`;
 }
 
 const API_GEMINI = "https://generativelanguage.googleapis.com/v1beta";

@@ -260,6 +260,8 @@ Toute autre adresse affiche une page « introuvable » avec un retour à l'accue
 ```
 lrsi-platform/
 ├── serveur-ia/               relais IA gratuit (Cloudflare Workers), garde la clé
+│   └── consignes.js          l'éducation de l'IA : règles et exemples
+├── scripts/                  banc de test de l'IA (npm run banc-ia)
 ├── public/
 │   ├── apercu-partage.png    image affichée au partage du lien
 │   └── logo.svg              icône d'onglet
@@ -614,6 +616,43 @@ l'appeler, 10 questions par minute et par visiteur, messages et historique
 tronqués, consignes du modèle écrites côté serveur. Il n'enregistre rien.
 Le modèle se change avec `MODELE` : les noms évoluent, la liste à jour est sur
 AI Studio.
+
+**Modèles de secours.** Si le modèle principal (`MODELE`) est saturé, a épuisé
+son quota ou a été retiré par Google, le relais passe à ceux de
+`MODELES_SECOURS`, dans l'ordre. La liste des modèles que la clé peut utiliser
+s'obtient à l'adresse `/modeles` du relais.
+
+### Éduquer l'assistant
+
+Une IA ne répond jamais parfaitement, mais on peut la rendre fiable. Rien
+n'est ré-entraîné : on lui donne, à chaque question, de quoi bien répondre.
+
+1. **Le contenu de la plateforme.** Le site joint aux questions le contenu
+   complet des exercices trouvés par le guide (énoncé, indice, méthode,
+   correction), et le texte des chapitres dès qu'il existera : ajouter un
+   champ `contenu` à un chapitre dans `src/data/matieres.js` suffit, l'IA s'en
+   servira. Ce contenu fait foi sur la mémoire du modèle.
+2. **Des consignes précises**, générales et propres à la filière (montrer le
+   calcul des sous-réseaux, préciser le système d'une commande, refuser
+   l'attaque d'un système réel…).
+3. **Des exemples de réponses idéales**, que le modèle imite.
+
+Les points 2 et 3 sont dans `serveur-ia/consignes.js`, le seul fichier à
+modifier pour changer son comportement, suivi de `npx wrangler deploy`.
+
+4. **Le banc de test**, pour mesurer au lieu de deviner :
+
+   ```bash
+   npm run banc-ia
+   ```
+
+   Il pose les questions de `scripts/banc-ia-questions.js` au relais en ligne,
+   par le même chemin que le site, vérifie chaque réponse et donne un score.
+   Les réponses complètes sont écrites dans `scripts/banc-ia-resultats.md`,
+   à relire : un mot-clé présent ne prouve pas qu'une explication est bonne.
+   À lancer après chaque modification des consignes. Quand une mauvaise
+   réponse est repérée sur le site, on l'ajoute comme cas : elle ne pourra
+   plus revenir sans que le banc le signale.
 
 **Ce qu'il faut savoir.** Le quota gratuit est limité par minute et par jour :
 suffisant pour une promotion, pas pour des milliers de visiteurs. Google peut
