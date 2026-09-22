@@ -11,6 +11,10 @@ compatibility_date = "2026-09-01"
 ORIGINES = "https://papi-dieng.github.io,http://localhost:5173,http://localhost:4173"
 # Modèle utilisé. Les noms changent : voir la liste sur aistudio.google.com.
 MODELE = "gemini-3.6-flash"
+# Essayés dans l'ordre si le principal est saturé ou a épuisé son quota.
+# La liste des modèles disponibles pour la clé :
+#   https://jangrsi-ia.soniadieng22.workers.dev/modeles (depuis le site)
+MODELES_SECOURS = "gemini-3.1-flash-lite,gemini-3.5-flash"
 
 # 10 questions par minute et par visiteur, au-delà le guide répond seul.
 [[ratelimits]]

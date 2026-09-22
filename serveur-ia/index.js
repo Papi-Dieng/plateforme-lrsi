@@ -42,7 +42,7 @@ function entetesCors(origine, env) {
   if (!autorisees.includes(origine)) return null;
   return {
     "Access-Control-Allow-Origin": origine,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",
@@ -95,36 +95,47 @@ function construireConsignes(extraits) {
   return `${CONSIGNES}\n\nContenu de la plateforme lié à la question :\n${liste}`;
 }
 
+const API_GEMINI = "https://generativelanguage.googleapis.com/v1beta";
+
 /* L'offre gratuite renvoie souvent « modèle surchargé » (503) pendant
-   quelques secondes. On réessaie donc, en espaçant les tentatives,
-   avant d'abandonner. */
-const ATTENTES_AVANT_NOUVEL_ESSAI = [1500, 3000];
+   quelques secondes. On réessaie une fois le même modèle, puis on
+   passe aux modèles de secours (MODELES_SECOURS dans wrangler.toml),
+   dans l'ordre. Chaque modèle a son propre quota gratuit : un secours
+   sert donc aussi quand le principal a épuisé le sien (429). */
+const ATTENTE_AVANT_NOUVEL_ESSAI = 1500;
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+const passerAuSuivant = (statut) => [404, 429, 500, 503].includes(statut);
+
+const listeModeles = (env) =>
+  [env.MODELE || "gemini-3.6-flash", ...(env.MODELES_SECOURS ?? "").split(",")]
+    .map((m) => m.trim())
+    .filter((m, i, t) => m && t.indexOf(m) === i);
 
 async function appelerGemini({ messages, extraits }, env) {
-  const modele = env.MODELE || "gemini-3.6-flash";
-  const envoyer = () =>
-    fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modele)}:generateContent`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": env.GEMINI_API_KEY,
-        },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: construireConsignes(extraits) }] },
-          contents: messages.map((m) => ({ role: m.role, parts: [{ text: m.texte }] })),
-          generationConfig: { temperature: 0.4, maxOutputTokens: 2048 },
-        }),
-      }
-    );
+  const corps = JSON.stringify({
+    systemInstruction: { parts: [{ text: construireConsignes(extraits) }] },
+    contents: messages.map((m) => ({ role: m.role, parts: [{ text: m.texte }] })),
+    generationConfig: { temperature: 0.4, maxOutputTokens: 2048 },
+  });
+  const envoyer = (modele) =>
+    fetch(`${API_GEMINI}/models/${encodeURIComponent(modele)}:generateContent`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": env.GEMINI_API_KEY,
+      },
+      body: corps,
+    });
 
-  let reponse = await envoyer();
-  for (const attente of ATTENTES_AVANT_NOUVEL_ESSAI) {
-    if (reponse.status !== 503 && reponse.status !== 500) break;
-    await pause(attente);
-    reponse = await envoyer();
+  let reponse;
+  for (const modele of listeModeles(env)) {
+    reponse = await envoyer(modele);
+    if (reponse.status === 503 || reponse.status === 500) {
+      await pause(ATTENTE_AVANT_NOUVEL_ESSAI);
+      reponse = await envoyer(modele);
+    }
+    if (reponse.ok || !passerAuSuivant(reponse.status)) break;
+    console.log(`Modèle ${modele} indisponible (${reponse.status}), passage au suivant`);
   }
 
   if (reponse.status === 429) return { erreur: "quota", statut: 429 };
@@ -149,9 +160,28 @@ export default {
     if (!cors) return new Response("Origine non autorisée", { status: 403 });
 
     if (requete.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
-    if (requete.method !== "POST") return json({ erreur: "methode" }, 405, cors);
-
     if (!env.GEMINI_API_KEY) return json({ erreur: "configuration" }, 500, cors);
+
+    // Entretien : les noms des modèles que la clé peut utiliser, pour
+    // choisir MODELE et MODELES_SECOURS. Seulement des noms, jamais la clé.
+    if (requete.method === "GET" && new URL(requete.url).pathname === "/modeles") {
+      const r = await fetch(`${API_GEMINI}/models?pageSize=200`, {
+        headers: { "x-goog-api-key": env.GEMINI_API_KEY },
+      });
+      const { models = [] } = await r.json();
+      return json(
+        {
+          utilises: listeModeles(env),
+          disponibles: models
+            .filter((m) => m.supportedGenerationMethods?.includes("generateContent"))
+            .map((m) => m.name.replace("models/", "")),
+        },
+        r.ok ? 200 : 502,
+        cors
+      );
+    }
+
+    if (requete.method !== "POST") return json({ erreur: "methode" }, 405, cors);
 
     // Limite par visiteur, si elle est déclarée dans wrangler.toml.
     if (env.LIMITEUR) {
