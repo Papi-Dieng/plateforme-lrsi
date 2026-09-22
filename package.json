@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && npm run hors-ligne",
+    "hors-ligne": "vite build --config vite.config.hors-ligne.js",
+    "hors-ligne:suivi": "vite build --watch --config vite.config.hors-ligne.js",
     "lint": "oxlint",
-    "preview": "vite preview",
-    "hors-ligne": "vite build --config vite.config.hors-ligne.js && node scripts/renommer-hors-ligne.mjs"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

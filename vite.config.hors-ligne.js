@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, renameSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -21,6 +22,11 @@ import { viteSingleFile } from "vite-plugin-singlefile";
    Ce que cette version ne peut pas faire : les vidéos restent
    hébergées par YouTube, elles demandent donc une connexion.
    ================================================================== */
+
+const NOM_FICHIER = "plateforme-lrsi-hors-ligne.html";
+
+const DEBUT = "<!-- DEBUT AVERTISSEMENT FICHIER LOCAL -->";
+const FIN = "<!-- FIN AVERTISSEMENT FICHIER LOCAL -->";
 
 // L'icône vit dans `public/`, un dossier simplement recopié à côté du
 // HTML. Un fichier isolé ne la trouverait donc plus : on la recopie
@@ -45,9 +51,6 @@ function integrerIcone() {
 // Découpage par repères plutôt que par expression régulière : c'est
 // lisible, et cela échoue franchement si les repères sont renommés,
 // au lieu de laisser passer un fichier à moitié juste.
-const DEBUT = "<!-- DEBUT AVERTISSEMENT FICHIER LOCAL -->";
-const FIN = "<!-- FIN AVERTISSEMENT FICHIER LOCAL -->";
-
 function retirerAvertissementFichierLocal() {
   return {
     name: "retirer-avertissement-fichier-local",
@@ -60,7 +63,37 @@ function retirerAvertissementFichierLocal() {
             "Ont-ils ete renommes ou supprimes ?"
         );
       }
-      return html.slice(0, debut) + html.slice(fin + FIN.length).replace(/^\s*\n/, "");
+      return (
+        html.slice(0, debut) + html.slice(fin + FIN.length).replace(/^\s*\n/, "")
+      );
+    },
+  };
+}
+
+// Vite nomme toujours sa sortie `index.html`, un nom qui ne dit rien
+// une fois le fichier envoyé à quelqu'un.
+//
+// Le renommage se fait sur le disque, après écriture. C'est le seul
+// moment sûr : Rolldown, le compilateur de Vite, interdit à un plugin
+// de modifier la liste des fichiers produits. Ce moment-là convient
+// aussi au mode continu, où il se rejoue à chaque enregistrement.
+function nommerFichierUnique() {
+  let dossier = "hors-ligne";
+  return {
+    name: "nommer-fichier-unique",
+    configResolved(config) {
+      dossier = config.build.outDir;
+    },
+    writeBundle() {
+      const source = join(dossier, "index.html");
+      if (!existsSync(source)) {
+        throw new Error(`Page introuvable apres compilation : ${source}`);
+      }
+      const cible = join(dossier, NOM_FICHIER);
+      renameSync(source, cible);
+      const taille = (statSync(cible).size / 1024 / 1024).toFixed(1);
+      console.log(`\nFichier unique : ${cible} (${taille} Mo)`);
+      console.log("Il s'ouvre par double-clic, sans serveur ni connexion.\n");
     },
   };
 }
@@ -72,6 +105,7 @@ export default defineConfig({
     integrerIcone(),
     retirerAvertissementFichierLocal(),
     viteSingleFile(),
+    nommerFichierUnique(),
   ],
   // Rien n'est recopié à côté : la page doit se suffire à elle-même.
   publicDir: false,

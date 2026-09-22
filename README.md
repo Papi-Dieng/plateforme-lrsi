@@ -51,11 +51,20 @@ Les adresses contiennent un dièse, par exemple `/#/cours`. C'est voulu : cela
 
 ### La version hors ligne, en un seul fichier
 
+Elle est produite **automatiquement par `npm run build`**, en même temps que
+le site : il n'y a rien de plus à lancer, et elle n'est donc jamais en retard
+sur le code.
+
+Pendant qu'on développe, ce mode la régénère à chaque enregistrement :
+
 ```bash
-npm run hors-ligne
+npm run hors-ligne:suivi
 ```
 
-Produit `hors-ligne/plateforme-lrsi-hors-ligne.html`, environ 0,5 Mo. Ce
+Et `npm run hors-ligne` la fabrique une fois, sans compiler le site.
+
+Le fichier obtenu est `hors-ligne/plateforme-lrsi-hors-ligne.html`, environ
+0,5 Mo. Ce
 fichier **contient tout le site** : le JavaScript et le CSS sont écrits à
 l'intérieur du HTML, l'icône y est encodée en base64. Il n'a donc plus rien à
 aller chercher, et c'est ce qui le rend ouvrable **par double-clic**, sans
