@@ -35,10 +35,37 @@ lire ni assembler. Il faut un serveur, ne serait-ce qu'en local.
 La version compilée dans `docs/` ne s'ouvre pas non plus par double-clic : les
 navigateurs refusent de charger un module JavaScript depuis une adresse
 `file://`. Pour la voir, utiliser `npm run preview`, ou la déposer sur un
-hébergeur statique.
+hébergeur statique. Il existe malgré tout une version faite pour le
+double-clic, décrite juste en dessous.
 
 Les adresses contiennent un dièse, par exemple `/#/cours`. C'est voulu : cela
 évite les erreurs 404 au rechargement sur un hébergeur statique.
+
+### La version hors ligne, en un seul fichier
+
+```bash
+npm run hors-ligne
+```
+
+Produit `hors-ligne/plateforme-lrsi-hors-ligne.html`, environ 0,5 Mo. Ce
+fichier **contient tout le site** : le JavaScript et le CSS sont écrits à
+l'intérieur du HTML, l'icône y est encodée en base64. Il n'a donc plus rien à
+aller chercher, et c'est ce qui le rend ouvrable **par double-clic**, sans
+serveur et sans connexion. Il se copie sur une clé USB ou s'envoie par
+messagerie à un camarade.
+
+Deux limites à connaître :
+
+- les **vidéos** restent hébergées par YouTube, elles demandent une connexion ;
+- la progression est enregistrée dans le navigateur, et un fichier ouvert
+  depuis le disque ne partage pas cet espace avec le site en ligne : les deux
+  versions ont chacune leur propre progression.
+
+Ce fichier n'est pas versionné, `.gitignore` l'écarte. Il se régénère en une
+commande, et le verser dans l'historique à chaque compilation l'alourdirait
+pour rien. La configuration correspondante est `vite.config.hors-ligne.js`,
+volontairement séparée de `vite.config.js` : les deux compilations n'ont pas
+le même but, et mélanger les deux rendrait chacune illisible.
 
 ### Publier sur GitHub Pages
 

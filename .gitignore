@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Version hors ligne en un seul fichier : elle se régénère en une
+# commande (`npm run hors-ligne`) et pèse un demi-mégaoctet. La
+# versionner alourdirait l'historique à chaque compilation, pour un
+# fichier que personne ne modifie à la main.
+hors-ligne
