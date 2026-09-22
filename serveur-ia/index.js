@@ -95,25 +95,40 @@ function construireConsignes(extraits) {
   return `${CONSIGNES}\n\nContenu de la plateforme lié à la question :\n${liste}`;
 }
 
+/* L'offre gratuite renvoie souvent « modèle surchargé » (503) pendant
+   quelques secondes. On réessaie donc, en espaçant les tentatives,
+   avant d'abandonner. */
+const ATTENTES_AVANT_NOUVEL_ESSAI = [1500, 3000];
+const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+
 async function appelerGemini({ messages, extraits }, env) {
   const modele = env.MODELE || "gemini-3.6-flash";
-  const reponse = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modele)}:generateContent`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": env.GEMINI_API_KEY,
-      },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: construireConsignes(extraits) }] },
-        contents: messages.map((m) => ({ role: m.role, parts: [{ text: m.texte }] })),
-        generationConfig: { temperature: 0.4, maxOutputTokens: 2048 },
-      }),
-    }
-  );
+  const envoyer = () =>
+    fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modele)}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": env.GEMINI_API_KEY,
+        },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: construireConsignes(extraits) }] },
+          contents: messages.map((m) => ({ role: m.role, parts: [{ text: m.texte }] })),
+          generationConfig: { temperature: 0.4, maxOutputTokens: 2048 },
+        }),
+      }
+    );
+
+  let reponse = await envoyer();
+  for (const attente of ATTENTES_AVANT_NOUVEL_ESSAI) {
+    if (reponse.status !== 503 && reponse.status !== 500) break;
+    await pause(attente);
+    reponse = await envoyer();
+  }
 
   if (reponse.status === 429) return { erreur: "quota", statut: 429 };
+  if (reponse.status === 503) return { erreur: "surcharge", statut: 503 };
   if (!reponse.ok) {
     console.log("Gemini a refusé la requête", reponse.status, await reponse.text());
     return { erreur: "modele", statut: 502 };

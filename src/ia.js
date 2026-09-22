@@ -46,8 +46,27 @@ export async function demanderIA(historique, liens) {
       throw new Error(donnees.erreur ?? `statut ${reponse.status}`);
     }
     return donnees.texte;
+  } catch (e) {
+    throw new Error(controle.signal.aborted ? "delai" : e.message, { cause: e });
   } finally {
     clearTimeout(minuteur);
+  }
+}
+
+/* Ce qu'on dit à l'étudiant quand l'IA n'a pas répondu, selon la
+   raison renvoyée par le relais. */
+export function raisonEchec(code) {
+  switch (code) {
+    case "surcharge":
+      return "Le service d'IA gratuit est saturé en ce moment. Réessaie dans quelques secondes.";
+    case "quota":
+      return "Le quota gratuit de l'IA est atteint pour le moment. Réessaie un peu plus tard.";
+    case "trop-de-requetes":
+      return "Tu as posé beaucoup de questions d'un coup. Attends une minute avant de réessayer.";
+    case "delai":
+      return "L'IA a mis trop de temps à répondre. Réessaie.";
+    default:
+      return "L'IA n'a pas pu répondre (connexion ou service indisponible). Réessaie.";
   }
 }
 

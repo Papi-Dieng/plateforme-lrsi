@@ -19,7 +19,7 @@ import {
   reponsesEnregistrees,
 } from "../competences";
 import { repondre, questionsRapides } from "../assistant";
-import { decouperReponse, demanderIA, iaActive } from "../ia";
+import { decouperReponse, demanderIA, iaActive, raisonEchec } from "../ia";
 import { getMatiere } from "../data/matieres";
 import { themeMatiere } from "../data/couleurs";
 
@@ -33,8 +33,9 @@ import { themeMatiere } from "../data/couleurs";
    en s'appuyant sur ce que le guide a trouvé ; les liens restent ceux
    du guide, donc aucun contenu inventé ne peut apparaître en lien.
 
-   Si l'IA échoue (hors connexion, quota gratuit atteint), le guide
-   répond seul, et l'écran le dit.
+   Si l'IA échoue (saturée, hors connexion, quota gratuit atteint),
+   l'écran en donne la raison, propose de réessayer, et affiche déjà
+   les liens trouvés par le guide.
 
    « Par où commencer » reste au guide : la réponse vient d'un calcul
    sur les scores, qui ne quittent pas le navigateur.
@@ -44,11 +45,26 @@ import { themeMatiere } from "../data/couleurs";
    l'étudiant au moment où il a le plus besoin d'être sûr.
    ================================================================== */
 
-const INTENTIONS_SANS_IA = new Set(["priorite", "aide"]);
+const INTENTIONS_SANS_IA = new Set(["priorite"]);
 
-/* Ce que l'assistant a « dit », pour l'historique envoyé au relais :
-   le texte de l'IA quand il existe, sinon celui du guide. */
-const texteAffiche = (m) => m.texteIA ?? m.reponse.texte.join("\n");
+/* L'historique envoyé au relais : les échanges aboutis seulement. Un
+   échange où l'IA a échoué est écarté, sinon le modèle lirait le texte
+   de secours du guide comme s'il l'avait écrit lui-même. */
+function historiqueAvant(messages, id) {
+  const historique = [];
+  for (let i = 0; i + 1 < messages.length && messages[i + 1].id < id; i += 2) {
+    const [question, reponse] = [messages[i], messages[i + 1]];
+    if (reponse.etat !== "ia" && reponse.etat !== "guide") continue;
+    historique.push(
+      { role: "etudiant", texte: question.texte },
+      {
+        role: "assistant",
+        texte: reponse.texteIA ?? reponse.reponse.texte.join("\n"),
+      }
+    );
+  }
+  return historique;
+}
 
 const capacites = [
   {
@@ -205,24 +221,32 @@ export default function Assistant() {
       { id, role: "assistant", reponse, etat: avecIA ? "attente" : "guide" },
     ]);
     setSaisie("");
-    if (!avecIA) return;
+    if (avecIA) interrogerIA(id, texte, reponse.liens, messages);
+  };
 
+  const interrogerIA = async (id, question, liens, precedents) => {
     const historique = [
-      ...messages.map((m) => ({
-        role: m.role === "etudiant" ? "etudiant" : "assistant",
-        texte: m.role === "etudiant" ? m.texte : texteAffiche(m),
-      })),
-      { role: "etudiant", texte },
+      ...historiqueAvant(precedents, id),
+      { role: "etudiant", texte: question },
     ];
 
     let maj;
     try {
-      const texteIA = await demanderIA(historique, reponse.liens);
-      maj = { etat: "ia", texteIA };
-    } catch {
-      maj = { etat: "secours" };
+      maj = { etat: "ia", texteIA: await demanderIA(historique, liens) };
+    } catch (e) {
+      maj = { etat: "secours", echec: e.message };
     }
     setMessages((liste) => liste.map((m) => (m.id === id ? { ...m, ...maj } : m)));
+  };
+
+  const reessayer = (id) => {
+    if (enAttente) return;
+    const question = messages.find((m) => m.id === id - 1);
+    const cible = messages.find((m) => m.id === id);
+    setMessages((liste) =>
+      liste.map((m) => (m.id === id ? { ...m, etat: "attente" } : m))
+    );
+    interrogerIA(id, question.texte, cible.reponse.liens, messages);
   };
 
   /* Les trois compteurs de l'en-tête : à la place des statistiques
@@ -401,6 +425,26 @@ export default function Assistant() {
                           </p>
                         ) : m.etat === "ia" ? (
                           <TexteIA texte={m.texteIA} />
+                        ) : m.etat === "secours" ? (
+                          <>
+                            <p>{raisonEchec(m.echec)}</p>
+                            {m.reponse.intention !== "aide" && (
+                              <p className="mt-2">
+                                {m.reponse.liens.length > 0
+                                  ? "En attendant, voici ce que la plateforme propose sur ce sujet."
+                                  : "Je n'ai rien trouvé sur ce sujet dans le contenu de la plateforme."}
+                              </p>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => reessayer(m.id)}
+                              disabled={enAttente}
+                              className="mt-3 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              <Icon name="sparkles" className="size-3.5" />
+                              Réessayer
+                            </button>
+                          </>
                         ) : (
                           m.reponse.texte.map((p, i) => (
                             <p key={p} className={i > 0 ? "mt-2" : undefined}>
@@ -414,12 +458,6 @@ export default function Assistant() {
                         <p className="mt-1.5 text-[11px] text-ink-500 dark:text-ink-400">
                           Rédigé par une IA : elle peut se tromper, le cours
                           fait foi.
-                        </p>
-                      )}
-                      {m.etat === "secours" && (
-                        <p className="mt-1.5 text-[11px] text-sun-700 dark:text-sun-400">
-                          L'IA n'a pas pu répondre (connexion ou quota
-                          gratuit atteint). Voici ce que le guide a trouvé.
                         </p>
                       )}
 
