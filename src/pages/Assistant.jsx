@@ -21,49 +21,56 @@ import {
 /* ==================================================================
    Assistant de révision — prévu pour la version 4.
 
-   Cette page présente un outil qui N'EXISTE PAS ENCORE. Elle ne
-   simule donc aucune conversation, et n'affiche aucune réponse
-   inventée : laisser croire que l'assistant fonctionne déjà ne
-   ferait que déplacer la déception au premier vrai besoin.
+   La mise en page reprend la maquette voulue : panneau de discussion
+   à gauche, capacités et questions rapides à droite.
 
-   En revanche, ce qu'elle montre est réel. Les chiffres viennent de
-   la progression enregistrée dans ce navigateur : ils expliquent
-   concrètement sur quoi l'assistant s'appuiera, au lieu de le
-   décrire dans le vide.
+   Deux écarts assumés par rapport à cette maquette :
+
+   1. Les compteurs de l'en-tête. La maquette affiche « 247
+      conversations » et « 98 % de satisfaction ». Inventer ces
+      chiffres reviendrait à mentir sur un outil qui n'a jamais
+      tourné. Le même emplacement montre donc des nombres réels,
+      tirés de la progression enregistrée dans ce navigateur.
+
+   2. La réponse de l'assistant. La maquette montre un message qui
+      explique et propose de l'aide. Ici, la seule bulle d'assistant
+      dit ce qui est vrai : il n'est pas branché. Aucune réponse
+      pédagogique n'est fabriquée, aucun champ n'est actif.
    ================================================================== */
 
-/* Exemples de demandes. Ce sont des QUESTIONS, jamais des réponses :
-   rien ici ne peut être pris pour un résultat produit par l'outil. */
-const exemplesDeQuestions = [
+/* Exemples de demandes. Ce sont des QUESTIONS, jamais des réponses. */
+const questionsRapides = [
+  "Je n'ai pas compris le masque de sous-réseau, tu peux reprendre ?",
+  "Donne-moi un exercice sur les adresses IP, de mon niveau.",
+  "Interroge-moi sur le chapitre que je révise en ce moment.",
+  "Sur quoi devrais-je travailler en priorité cette semaine ?",
+];
+
+const capacites = [
   {
     icone: "bulb",
-    texte: "Je n'ai pas compris le masque de sous-réseau, tu peux reprendre ?",
-  },
-  {
-    icone: "pencil",
-    texte: "Donne-moi un exercice sur les adresses IP, de mon niveau.",
+    titre: "Reprendre une notion",
+    texte:
+      "Réexpliquer autrement ce que le cours n'a pas fait passer, avec un autre angle et un exemple.",
   },
   {
     icone: "target",
-    texte: "Interroge-moi sur le chapitre que je révise en ce moment.",
+    titre: "Interroger",
+    texte:
+      "Poser des questions sur un chapitre pour vérifier que c'est compris, et pas seulement lu.",
   },
   {
-    icone: "layers",
-    texte: "Sur quoi devrais-je travailler en priorité cette semaine ?",
+    icone: "pencil",
+    titre: "Proposer un exercice",
+    texte:
+      "Choisir un exercice au niveau réellement atteint, d'après les QCM déjà terminés.",
   },
-];
-
-const cequilFera = [
-  "Reprendre une notion autrement quand le cours n'a pas suffi.",
-  "Poser des questions pour vérifier que c'est compris, pas seulement lu.",
-  "Proposer un exercice adapté au niveau réellement atteint.",
-  "Signaler les chapitres à revoir, en s'appuyant sur les QCM déjà faits.",
 ];
 
 const cequilNeFeraPas = [
   "Donner la réponse d'un exercice sans faire chercher d'abord.",
   "Composer un devoir à la place de l'étudiant.",
-  "Remplacer le cours de l'enseignant ni le contredire.",
+  "Remplacer le cours de l'enseignant, ni le contredire.",
   "Inventer une réponse quand il ne sait pas : il le dira.",
 ];
 
@@ -84,34 +91,54 @@ export default function Assistant() {
   const fragiles = faiblesses(analyse);
   const modules = modulesAAmeliorer(analyse);
 
-  const matiere = [
+  /* Les trois compteurs de l'en-tête. À la place des statistiques
+     flatteuses d'une maquette, les seuls nombres que la plateforme
+     peut affirmer sans mentir. */
+  const compteurs = [
     {
+      icone: "target",
+      valeur: reponses,
+      label: reponses > 1 ? "réponses analysées" : "réponse analysée",
+    },
+    {
+      icone: "layers",
+      valeur: fragiles.length,
+      label: fragiles.length > 1 ? "compétences fragiles" : "compétence fragile",
+    },
+    {
+      icone: "book",
+      valeur: modules.length,
+      label: modules.length > 1 ? "chapitres à revoir" : "chapitre à revoir",
+    },
+  ];
+
+  const detailProgression = [
+    {
+      icone: "target",
       valeur: reponses,
       label: reponses > 1 ? "réponses enregistrées" : "réponse enregistrée",
       detail: "chaque question de QCM terminée alimente l'analyse",
-      icone: "target",
     },
     {
-      valeur: fragiles.length,
-      label:
-        fragiles.length > 1 ? "compétences fragiles" : "compétence fragile",
-      detail: `repérées à partir de ${MINIMUM_REPONSES} réponses au minimum`,
       icone: "layers",
+      valeur: fragiles.length,
+      label: fragiles.length > 1 ? "compétences fragiles" : "compétence fragile",
+      detail: `repérées à partir de ${MINIMUM_REPONSES} réponses au minimum`,
     },
     {
+      icone: "book",
       valeur: modules.length,
       label: modules.length > 1 ? "chapitres à revoir" : "chapitre à revoir",
       detail: "déduits des compétences fragiles, pas d'un jugement global",
-      icone: "book",
     },
     {
+      icone: "pencil",
       valeur: exercicesTravailles.length,
       label:
         exercicesTravailles.length > 1
           ? "exercices travaillés"
           : "exercice travaillé",
       detail: "pour éviter de reproposer ce qui est déjà maîtrisé",
-      icone: "pencil",
     },
   ];
 
@@ -120,7 +147,7 @@ export default function Assistant() {
       <EnTetePage
         surtitre="Prévu pour la version 4"
         titre="Assistant de révision"
-        texte="Un assistant qui reprend une notion mal comprise, interroge sur un chapitre et propose des exercices au bon niveau. Il n'est pas encore en service : cette page explique ce qu'il fera et sur quoi il s'appuiera."
+        texte="Un assistant qui reprend une notion mal comprise, interroge sur un chapitre et propose des exercices au bon niveau. Il n'est pas encore en service : cette page montre l'interface prévue et ce sur quoi il s'appuiera."
       >
         <Badge ton="neutre" icone="lock">
           Pas encore disponible
@@ -128,83 +155,185 @@ export default function Assistant() {
       </EnTetePage>
 
       <Container className="space-y-12 py-10">
-        {/* ---- L'avertissement, en premier et sans ambiguïté ---- */}
-        <div className="card flex flex-col gap-4 border-sun-300/70 bg-sun-50 p-6 sm:flex-row sm:items-start dark:border-sun-500/30 dark:bg-sun-500/10">
-          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-sun-100 text-sun-700 dark:bg-sun-500/20 dark:text-sun-300">
-            <Icon name="lock" className="size-5" />
-          </span>
-          <div>
-            <h2 className="font-semibold text-ink-900 dark:text-white">
-              Rien ne répond encore derrière cette page
-            </h2>
-            <p className="mt-1.5 text-sm/6 text-ink-700 dark:text-ink-300">
-              Aucune conversation n'est simulée ici, et aucune réponse n'est
-              affichée. Un assistant qui ferait semblant de fonctionner
-              donnerait confiance à tort, jusqu'au jour où il faudrait vraiment
-              compter dessus. La suite ci-dessous décrit un outil à construire,
-              pas un outil caché.
-            </p>
-          </div>
-        </div>
+        {/* ============================================================
+            L'interface prévue : discussion à gauche, panneaux à droite
+            ============================================================ */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* ---- Panneau de discussion ---- */}
+          <div className="card flex flex-col overflow-hidden lg:col-span-2">
+            {/* En-tête sombre, comme la maquette */}
+            <div className="bg-brand-950 px-6 py-5 dark:bg-brand-950">
+              <div className="flex items-center gap-3.5">
+                <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-white/10 text-white ring-1 ring-white/15">
+                  <Icon name="sparkles" className="size-5" />
+                </span>
+                <div>
+                  <h2 className="text-lg font-bold tracking-tight text-white">
+                    Assistant de révision
+                  </h2>
+                  <p className="mt-0.5 flex items-center gap-2 text-sm text-white/70">
+                    <span
+                      aria-hidden="true"
+                      className="size-2 rounded-full bg-sun-400"
+                    />
+                    Pas encore en service
+                  </p>
+                </div>
+              </div>
 
-        {/* ---- Ce qu'on pourra lui demander ---- */}
-        <section>
-          <TitreSection
-            surtitre="À quoi ça servira"
-            titre="Ce que tu pourras lui demander"
-            texte="Quatre exemples de demandes. Les réponses, elles, n'existent pas encore : elles viendront avec la version 4."
-          />
-
-          <div className="mt-6 card overflow-hidden">
-            <div className="flex items-center gap-2 border-b border-ink-200 bg-ink-50 px-5 py-3 dark:border-ink-800 dark:bg-ink-950">
-              <Icon
-                name="sparkles"
-                className="size-4 text-ink-400 dark:text-ink-500"
-              />
-              <span className="text-sm font-medium text-ink-500 dark:text-ink-400">
-                Assistant de révision
-              </span>
-              <span className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-ink-100 px-2.5 py-1 text-xs font-medium text-ink-500 dark:bg-ink-800 dark:text-ink-400">
-                <Icon name="lock" className="size-3" />
-                hors service
-              </span>
+              {/* Compteurs réels, à la place des statistiques inventées */}
+              <dl className="mt-5 flex flex-wrap gap-x-6 gap-y-2 border-t border-white/10 pt-4">
+                {compteurs.map((c) => (
+                  <div key={c.label} className="flex items-center gap-2">
+                    <Icon name={c.icone} className="size-4 text-white/50" />
+                    <dt className="sr-only">{c.label}</dt>
+                    <dd className="text-sm text-white/80">
+                      <span className="font-semibold text-white">
+                        {c.valeur}
+                      </span>{" "}
+                      {c.label}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
             </div>
 
-            <ul className="space-y-3 p-5">
-              {exemplesDeQuestions.map((q) => (
-                <li key={q.texte} className="flex justify-end">
-                  <span className="inline-flex max-w-lg items-start gap-2.5 rounded-2xl rounded-br-md bg-brand-600 px-4 py-2.5 text-sm/6 text-white">
-                    <Icon name={q.icone} className="mt-0.5 size-4 shrink-0 opacity-80" />
-                    {q.texte}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            {/* ---- Fil de discussion ---- */}
+            <div className="flex-1 space-y-5 px-6 py-6">
+              {/* Bulle de l'étudiant : un exemple de demande */}
+              <div className="flex justify-end">
+                <div className="max-w-md">
+                  <p className="rounded-2xl rounded-br-md bg-brand-600 px-4 py-3 text-sm/6 text-white">
+                    Je n'ai pas compris le masque de sous-réseau, tu peux
+                    reprendre ?
+                  </p>
+                  <p className="mt-1.5 text-right text-xs text-ink-400 dark:text-ink-500">
+                    exemple de question
+                  </p>
+                </div>
+              </div>
 
-            {/* Champ volontairement inerte : il montre la forme de
-                l'interface, il ne prétend pas la faire marcher. */}
-            <div className="flex items-center gap-3 border-t border-ink-200 px-5 py-4 dark:border-ink-800">
+              {/* Bulle de l'assistant : la seule chose vraie qu'il puisse
+                  dire aujourd'hui. Pas de contenu pédagogique fabriqué. */}
+              <div className="flex gap-3">
+                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-ink-100 text-ink-400 dark:bg-ink-800 dark:text-ink-500">
+                  <Icon name="sparkles" className="size-4" />
+                </span>
+                <div className="max-w-md">
+                  <div className="rounded-2xl rounded-bl-md bg-ink-100 px-4 py-3 text-sm/6 text-ink-700 dark:bg-ink-800 dark:text-ink-200">
+                    <p>
+                      Je ne suis pas encore branché, je ne peux donc pas
+                      répondre à cette question.
+                    </p>
+                    <p className="mt-2">
+                      Aucune réponse n'est simulée ici : t'en montrer une
+                      fabriquée donnerait confiance à tort. En attendant,{" "}
+                      <Link
+                        to="/cours"
+                        className="font-medium text-brand-600 underline underline-offset-2 hover:text-brand-700 dark:text-brand-300"
+                      >
+                        le cours
+                      </Link>{" "}
+                      et{" "}
+                      <Link
+                        to="/exercices"
+                        className="font-medium text-brand-600 underline underline-offset-2 hover:text-brand-700 dark:text-brand-300"
+                      >
+                        les exercices corrigés
+                      </Link>{" "}
+                      traitent le sujet.
+                    </p>
+                  </div>
+                  <p className="mt-1.5 text-xs text-ink-400 dark:text-ink-500">
+                    réponse réelle de la plateforme, aujourd'hui
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* ---- Champ de saisie, volontairement inerte ---- */}
+            <div className="border-t border-ink-200 px-6 py-5 dark:border-ink-800">
               <label htmlFor="assistant-question" className="sr-only">
                 Écrire à l'assistant
               </label>
-              <input
-                id="assistant-question"
-                type="text"
-                disabled
-                placeholder="L'assistant n'est pas encore connecté."
-                className="min-w-0 flex-1 cursor-not-allowed rounded-xl border border-ink-200 bg-ink-50 px-4 py-2.5 text-sm text-ink-500 placeholder:text-ink-400 dark:border-ink-800 dark:bg-ink-950 dark:text-ink-400"
-              />
-              <span
-                aria-hidden="true"
-                className="grid size-10 shrink-0 cursor-not-allowed place-items-center rounded-xl bg-ink-100 text-ink-400 dark:bg-ink-800 dark:text-ink-500"
-              >
-                <Icon name="arrow" className="size-4" />
-              </span>
+              <div className="flex items-end gap-3">
+                <input
+                  id="assistant-question"
+                  type="text"
+                  disabled
+                  placeholder="L'assistant n'est pas encore connecté."
+                  className="min-w-0 flex-1 cursor-not-allowed rounded-xl border border-ink-200 bg-ink-50 px-4 py-3 text-sm text-ink-500 placeholder:text-ink-400 dark:border-ink-800 dark:bg-ink-950 dark:text-ink-400"
+                />
+                <button
+                  type="button"
+                  disabled
+                  className="inline-flex shrink-0 cursor-not-allowed items-center gap-2 rounded-xl bg-ink-200 px-5 py-3 text-sm font-semibold text-ink-400 dark:bg-ink-800 dark:text-ink-500"
+                >
+                  <Icon name="arrow" className="size-4" />
+                  Envoyer
+                </button>
+              </div>
             </div>
           </div>
-        </section>
 
-        {/* ---- Les données réelles sur lesquelles il s'appuiera ---- */}
+          {/* ---- Colonne de droite ---- */}
+          <div className="space-y-6">
+            {/* Ce qu'il saura faire */}
+            <div className="card p-5">
+              <h2 className="flex items-center gap-2 font-semibold text-ink-900 dark:text-white">
+                <Icon name="sparkles" className="size-4 text-flame-500" />
+                Ce qu'il saura faire
+              </h2>
+
+              <ul className="mt-4 space-y-3">
+                {capacites.map((c) => (
+                  <li
+                    key={c.titre}
+                    className="flex gap-3 rounded-xl bg-ink-50 p-3.5 dark:bg-ink-950"
+                  >
+                    <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-white text-brand-600 ring-1 ring-ink-200 dark:bg-ink-900 dark:text-brand-300 dark:ring-ink-800">
+                      <Icon name={c.icone} className="size-4.5" />
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-ink-900 dark:text-white">
+                        {c.titre}
+                      </p>
+                      <p className="mt-0.5 text-xs/5 text-ink-600 dark:text-ink-400">
+                        {c.texte}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Questions rapides */}
+            <div className="card p-5">
+              <h2 className="flex items-center gap-2 font-semibold text-ink-900 dark:text-white">
+                <Icon name="bulb" className="size-4 text-flame-500" />
+                Questions rapides
+              </h2>
+              <p className="mt-1 text-xs/5 text-ink-500 dark:text-ink-400">
+                Ce qu'on pourra lui demander en un clic. Inactif tant qu'il
+                n'est pas branché.
+              </p>
+
+              <ul className="mt-4 space-y-2.5">
+                {questionsRapides.map((q) => (
+                  <li key={q}>
+                    <span className="block cursor-not-allowed rounded-xl border border-ink-200 px-3.5 py-2.5 text-xs/5 text-ink-500 dark:border-ink-800 dark:text-ink-400">
+                      {q}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* ============================================================
+            Les données réelles sur lesquelles il s'appuiera
+            ============================================================ */}
         <section>
           <TitreSection
             surtitre="Sur quoi il s'appuiera"
@@ -216,11 +345,11 @@ export default function Assistant() {
             <div className="mt-6 card p-6">
               <p className="text-sm/6 text-ink-700 dark:text-ink-300">
                 Tu n'as pas encore terminé de QCM, l'assistant n'aurait donc
-                rien sur quoi s'appuyer. C'est le point important : il ne
-                devinera pas ton niveau, il le lira dans ce que tu auras
-                réellement fait. Une compétence n'est jugée qu'à partir de{" "}
-                {MINIMUM_REPONSES} réponses, pour éviter de conclure sur un
-                coup de chance ou un moment d'inattention.
+                rien sur quoi s'appuyer — c'est pour cela que les compteurs
+                ci-dessus sont à zéro. Il ne devinera pas ton niveau, il le lira
+                dans ce que tu auras réellement fait. Une compétence n'est jugée
+                qu'à partir de {MINIMUM_REPONSES} réponses, pour éviter de
+                conclure sur un coup de chance ou un moment d'inattention.
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <Bouton to="/qcm">
@@ -235,7 +364,7 @@ export default function Assistant() {
           ) : (
             <>
               <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {matiere.map((m) => (
+                {detailProgression.map((m) => (
                   <li key={m.label} className="card p-5">
                     <span className="grid size-9 place-items-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300">
                       <Icon name={m.icone} className="size-4.5" />
@@ -275,58 +404,31 @@ export default function Assistant() {
           )}
         </section>
 
-        {/* ---- Le cadre pédagogique ---- */}
+        {/* ============================================================
+            La limite pédagogique
+            ============================================================ */}
         <section>
           <TitreSection
             surtitre="Le cadre"
-            titre="Ce qu'il fera, et ce qu'il ne fera pas"
+            titre="Ce qu'il ne fera pas"
             texte="Un assistant qui donne les réponses fait gagner du temps et perdre l'examen. La limite est posée avant d'écrire la première ligne."
           />
 
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            <div className="card p-6">
-              <h3 className="flex items-center gap-2 font-semibold text-ink-900 dark:text-white">
-                <span className="grid size-7 place-items-center rounded-lg bg-accent-50 text-accent-600 dark:bg-accent-500/15 dark:text-accent-400">
-                  <Icon name="check" className="size-4" />
-                </span>
-                Ce qu'il fera
-              </h3>
-              <ul className="mt-4 space-y-3">
-                {cequilFera.map((t) => (
-                  <li key={t} className="flex gap-2.5 text-sm/6 text-ink-700 dark:text-ink-300">
-                    <Icon
-                      name="check"
-                      className="mt-1 size-4 shrink-0 text-accent-500"
-                    />
-                    {t}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="card p-6">
-              <h3 className="flex items-center gap-2 font-semibold text-ink-900 dark:text-white">
-                <span className="grid size-7 place-items-center rounded-lg bg-flame-100 text-flame-600 dark:bg-flame-500/15 dark:text-flame-400">
+          <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+            {cequilNeFeraPas.map((t) => (
+              <li key={t} className="card flex gap-3 p-4">
+                <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-flame-100 text-flame-600 dark:bg-flame-500/15 dark:text-flame-400">
                   <Icon name="close" className="size-4" />
                 </span>
-                Ce qu'il ne fera pas
-              </h3>
-              <ul className="mt-4 space-y-3">
-                {cequilNeFeraPas.map((t) => (
-                  <li key={t} className="flex gap-2.5 text-sm/6 text-ink-700 dark:text-ink-300">
-                    <Icon
-                      name="close"
-                      className="mt-1 size-4 shrink-0 text-flame-500"
-                    />
-                    {t}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+                <p className="text-sm/6 text-ink-700 dark:text-ink-300">{t}</p>
+              </li>
+            ))}
+          </ul>
         </section>
 
-        {/* ---- Ce qui doit exister avant ---- */}
+        {/* ============================================================
+            Ce qui doit exister avant
+            ============================================================ */}
         <section>
           <TitreSection
             surtitre="Pourquoi pas tout de suite"
