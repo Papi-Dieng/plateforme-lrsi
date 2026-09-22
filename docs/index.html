@@ -2,17 +2,77 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Plateforme d'apprentissage LRSI</title>
     <meta
       name="description"
-      content="Plateforme d'apprentissage pour les etudiants en Reseaux et Systemes Informatiques : cours, exercices corriges et QCM interactifs. Projet etudiant gratuit."
+      content="Plateforme gratuite pour les étudiants en Réseaux et Systèmes Informatiques : cours, exercices corrigés, QCM en mode examen, vidéos d'explication et suivi de progression. Projet étudiant, sans objectif commercial."
     />
-    <title>Plateforme d'apprentissage LRSI</title>
-    <script type="module" crossorigin src="./assets/index-7R113-Iu.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-Dym4Inch.css">
+    <meta name="author" content="Projet étudiant LRSI" />
+
+    <link rel="icon" type="image/svg+xml" href="./logo.svg" />
+
+    <!-- Couleur de la barre du navigateur, accordée aux deux thèmes. -->
+    <meta
+      name="theme-color"
+      content="#ffffff"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#0d101a"
+      media="(prefers-color-scheme: dark)"
+    />
+
+    <!-- Aperçu lors d'un partage de lien. `og:url` et `og:image`
+         demandent une adresse absolue : à renseigner une fois le site
+         en ligne, sous peine d'annoncer une adresse qui n'existe pas. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:site_name" content="Plateforme d'apprentissage LRSI" />
+    <meta
+      property="og:title"
+      content="Plateforme d'apprentissage LRSI"
+    />
+    <meta
+      property="og:description"
+      content="Cours, exercices corrigés, QCM et vidéos d'explication pour la filière Réseaux et Systèmes Informatiques. Gratuit."
+    />
+    <meta name="twitter:card" content="summary" />
+    <script type="module" crossorigin src="./assets/index-oKME-F7o.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-TJExP-HQ.css">
   </head>
+
   <body>
     <div id="root"></div>
+
+    <!-- Sans JavaScript, la page resterait blanche sans explication. -->
+    <noscript>
+      <div
+        style="
+          max-width: 34rem;
+          margin: 4rem auto;
+          padding: 0 1.5rem;
+          font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+          line-height: 1.7;
+          color: #232838;
+        "
+      >
+        <h1 style="font-size: 1.5rem; margin-bottom: 0.75rem">
+          JavaScript est désactivé
+        </h1>
+        <p>
+          Cette plateforme a besoin de JavaScript pour afficher les cours, les
+          exercices et les QCM. Active-le dans les réglages de ton navigateur,
+          puis recharge la page.
+        </p>
+        <p style="color: #667085; font-size: 0.9rem">
+          Aucune donnée n'est envoyée sur un serveur : la progression reste
+          dans ton navigateur.
+        </p>
+      </div>
+    </noscript>
+
   </body>
 </html>

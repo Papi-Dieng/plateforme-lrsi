@@ -63,8 +63,9 @@ Trois détails qui expliquent pourquoi cela fonctionne :
   sous-dossier `/<depot>/` et pas seulement à la racine d'un domaine ;
 - les adresses utilisent un **dièse**, donc recharger `/#/cours` ne provoque
   pas d'erreur 404, alors que GitHub Pages ne sait pas réécrire les adresses ;
-- le fichier **`docs/.nojekyll`** empêche GitHub de faire passer les fichiers
-  par Jekyll, qui ignorerait certains noms.
+- le fichier **`.nojekyll`** empêche GitHub de faire passer les fichiers par
+  Jekyll, qui ignorerait certains noms. Il vit dans `public/`, car chaque
+  compilation vide `docs/` : un fichier déposé à la main y serait effacé.
 
 Le revers de cette méthode : chaque compilation ajoute une nouvelle version du
 paquet JavaScript à l'historique Git, environ 500 Ko. Pour un projet étudiant
