@@ -47,7 +47,8 @@ automatisation à configurer : GitHub Pages sait publier ce dossier directement.
 
 **Une seule fois**, dans le dépôt GitHub : `Settings`, puis `Pages`, puis
 source `Deploy from a branch`, branche `main`, dossier `/docs`. Le site est
-alors servi à l'adresse `https://<compte>.github.io/<depot>/`.
+alors servi à l'adresse `https://<compte>.github.io/<depot>/`,
+dans notre cas <https://papi-dieng.github.io/plateforme-lrsi/>.
 
 **À chaque mise en ligne** :
 
@@ -72,6 +73,29 @@ paquet JavaScript à l'historique Git, environ 500 Ko. Pour un projet étudiant
 c'est sans conséquence. Si l'historique devenait lourd, il faudrait passer à
 une publication automatique par GitHub Actions, qui ne verse rien dans le
 dépôt.
+
+### L'aperçu de partage
+
+Quand le lien du site est collé dans WhatsApp, Facebook ou LinkedIn, c'est
+`public/apercu-partage.png` qui s'affiche, au format imposé de 1200 × 630.
+
+Ce PNG est **généré**, il ne se modifie pas à la main. La source est
+`design/apercu-partage.svg` : c'est ce fichier qu'il faut éditer, par exemple
+si le nom de la plateforme change. La conversion en PNG est obligatoire, les
+réseaux sociaux n'affichant pas les SVG.
+
+```bash
+npm install --no-save sharp
+node -e "const s=require('sharp'),f=require('fs');s(f.readFileSync('design/apercu-partage.svg')).resize(1200,630).png().toFile('public/apercu-partage.png').then(i=>console.log(i.width+'x'+i.height))"
+```
+
+L'option `--no-save` évite d'ajouter `sharp` aux dépendances du projet : il
+n'est utile que le jour où l'image change.
+
+Attention : les balises `og:image`, `og:url` et `canonical` de `index.html`
+contiennent l'adresse **absolue** du site. Un chemin relatif y serait inutile,
+les robots qui lisent la page ne sauraient pas le résoudre. Ces trois adresses
+sont donc à corriger si le site déménage.
 
 ---
 

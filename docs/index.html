@@ -13,6 +13,11 @@
 
     <link rel="icon" type="image/svg+xml" href="./logo.svg" />
 
+    <!-- Toutes les pages partagent cette adresse : le routeur à dièse
+         garde la navigation après le « # », qui n'est jamais envoyé au
+         serveur. L'adresse canonique est donc la racine du site. -->
+    <link rel="canonical" href="https://papi-dieng.github.io/plateforme-lrsi/" />
+
     <!-- Couleur de la barre du navigateur, accordée aux deux thèmes. -->
     <meta
       name="theme-color"
@@ -25,21 +30,40 @@
       media="(prefers-color-scheme: dark)"
     />
 
-    <!-- Aperçu lors d'un partage de lien. `og:url` et `og:image`
-         demandent une adresse absolue : à renseigner une fois le site
-         en ligne, sous peine d'annoncer une adresse qui n'existe pas. -->
+    <!-- Aperçu lors d'un partage de lien, sur WhatsApp, Facebook,
+         LinkedIn ou X. Ces adresses doivent être absolues : un chemin
+         relatif ne serait pas résolu par les robots qui lisent la page.
+         Elles sont donc à corriger si le site change d'hébergement.
+         L'image est générée depuis design/apercu-partage.svg. -->
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="fr_FR" />
     <meta property="og:site_name" content="Plateforme d'apprentissage LRSI" />
-    <meta
-      property="og:title"
-      content="Plateforme d'apprentissage LRSI"
-    />
+    <meta property="og:title" content="Plateforme d'apprentissage LRSI" />
     <meta
       property="og:description"
       content="Cours, exercices corrigés, QCM et vidéos d'explication pour la filière Réseaux et Systèmes Informatiques. Gratuit."
     />
-    <meta name="twitter:card" content="summary" />
+    <meta
+      property="og:url"
+      content="https://papi-dieng.github.io/plateforme-lrsi/"
+    />
+    <meta
+      property="og:image"
+      content="https://papi-dieng.github.io/plateforme-lrsi/apercu-partage.png"
+    />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Cours, exercices corrigés et QCM de la filière LRSI — Réseaux et Systèmes Informatiques, entièrement gratuit."
+    />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:image"
+      content="https://papi-dieng.github.io/plateforme-lrsi/apercu-partage.png"
+    />
     <script type="module" crossorigin src="./assets/index-oKME-F7o.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-TJExP-HQ.css">
   </head>

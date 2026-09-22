@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- ==================================================================
+       Image d'aperçu affichée quand le lien du site est partagé
+       (WhatsApp, Facebook, LinkedIn, X…). Format imposé : 1200 x 630.
+
+       Ce fichier est la SOURCE, modifiable. Le PNG réellement publié se
+       trouve dans public/apercu-partage.png et se régénère avec la
+       commande indiquée dans le README : les réseaux sociaux
+       n'affichent pas les SVG, la conversion est obligatoire.
+       ================================================================== -->
+  <defs>
+    <!-- Quadrillage discret, repris du fond du site (.grid-bg). -->
+    <pattern id="quadrillage" width="52" height="52" patternUnits="userSpaceOnUse">
+      <path d="M52 0H0V52" fill="none" stroke="#242a3a" stroke-width="1"/>
+    </pattern>
+    <!-- Le quadrillage s'efface vers le bas, comme sur le site. -->
+    <radialGradient id="fondu" cx="30%" cy="0%" r="95%">
+      <stop offset="35%" stop-color="#fff" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <mask id="masque">
+      <rect width="1200" height="630" fill="url(#fondu)"/>
+    </mask>
+    <!-- Halo bleu de la marque, en haut à gauche. -->
+    <radialGradient id="halo" cx="12%" cy="8%" r="60%">
+      <stop offset="0%" stop-color="#1f47e0" stop-opacity=".45"/>
+      <stop offset="100%" stop-color="#1f47e0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="#0d101a"/>
+  <rect width="1200" height="630" fill="url(#quadrillage)" mask="url(#masque)"/>
+  <rect width="1200" height="630" fill="url(#halo)"/>
+
+  <!-- Logo, identique à celui de l'en-tête -->
+  <g transform="translate(80 72) scale(1.375)">
+    <rect width="64" height="64" rx="16" fill="#1f47e0"/>
+    <circle cx="32" cy="17" r="5.5" fill="#fff"/>
+    <circle cx="16" cy="45" r="5.5" fill="#cdef3e"/>
+    <circle cx="48" cy="45" r="5.5" fill="#ff5a2b"/>
+    <path d="M32 22.5 16 39.5M32 22.5l16 17M16 45h32"
+          stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".85"/>
+  </g>
+
+  <!-- Nom de la plateforme -->
+  <text x="196" y="137" font-family="Segoe UI, Arial, sans-serif"
+        font-size="46" font-weight="700" letter-spacing="-.5">
+    <tspan fill="#ff5a2b">Jàng</tspan><tspan fill="#ffffff">RSI</tspan>
+  </text>
+
+  <!-- Accroche -->
+  <text x="80" y="308" font-family="Segoe UI, Arial, sans-serif"
+        font-size="70" font-weight="700" fill="#ffffff" letter-spacing="-1.5">Cours, exercices corrigés</text>
+  <text x="80" y="390" font-family="Segoe UI, Arial, sans-serif"
+        font-size="70" font-weight="700" fill="#ffffff" letter-spacing="-1.5">et QCM de la filière LRSI</text>
+
+  <text x="80" y="452" font-family="Segoe UI, Arial, sans-serif"
+        font-size="30" fill="#8d96ab">Réseaux et Systèmes Informatiques · Entièrement gratuit</text>
+
+  <!-- Pied -->
+  <line x1="80" y1="518" x2="1120" y2="518" stroke="#242a3a" stroke-width="1"/>
+
+  <circle cx="88" cy="566" r="7" fill="#1f47e0"/>
+  <circle cx="112" cy="566" r="7" fill="#cdef3e"/>
+  <circle cx="136" cy="566" r="7" fill="#ff5a2b"/>
+
+  <text x="166" y="574" font-family="Segoe UI, Arial, sans-serif"
+        font-size="25" fill="#8d96ab">Projet étudiant · Sénégal</text>
+  <text x="1120" y="574" text-anchor="end" font-family="Segoe UI, Arial, sans-serif"
+        font-size="25" fill="#598eff">papi-dieng.github.io/plateforme-lrsi</text>
+</svg>
