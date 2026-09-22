@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+/* Le mode sombre est pilote par la classe .dark posee sur <html> (voir ThemeToggle). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* ---- Identite visuelle : bleu reseau ---- */
+  --color-brand-50: #eef4ff;
+  --color-brand-100: #d9e6ff;
+  --color-brand-200: #bcd3ff;
+  --color-brand-300: #8eb6ff;
+  --color-brand-400: #598eff;
+  --color-brand-500: #3366f5;
+  --color-brand-600: #1f47e0;
+  --color-brand-700: #1a37b5;
+  --color-brand-800: #1a3190;
+  --color-brand-900: #1b2f72;
+  --color-brand-950: #141e46;
+
+  /* ---- Accent : vert terminal ---- */
+  --color-accent-50: #ecfdf5;
+  --color-accent-100: #d1fae5;
+  --color-accent-300: #6ee7b7;
+  --color-accent-400: #34d399;
+  --color-accent-500: #10b981;
+  --color-accent-600: #059669;
+  --color-accent-700: #047857;
+  --color-accent-900: #064e3b;
+
+  /* ---- Accent chaud : valorisation, badges ---- */
+  --color-sun-100: #fef3c7;
+  --color-sun-400: #fbbf24;
+  --color-sun-500: #f59e0b;
+  --color-sun-600: #d97706;
+  --color-sun-900: #78350f;
+
+  /* ---- Orange vif : cartes, appels à l'action ---- */
+  --color-flame-50: #fff3ef;
+  --color-flame-100: #ffe2d9;
+  --color-flame-200: #ffc6b4;
+  --color-flame-300: #ff9f82;
+  --color-flame-400: #ff7a52;
+  --color-flame-500: #ff5a2b;
+  --color-flame-600: #ed3f0d;
+  --color-flame-700: #c42f08;
+  --color-flame-800: #9b280c;
+  --color-flame-900: #7d260f;
+
+  /* ---- Vert citron : boutons sur fond sombre, encart suggestion ---- */
+  --color-lime-50: #f9fee7;
+  --color-lime-100: #f0fcc2;
+  --color-lime-200: #e4f98f;
+  --color-lime-300: #d6f45c;
+  --color-lime-400: #cdef3e;
+  --color-lime-500: #b4da1f;
+  --color-lime-600: #8dae12;
+  --color-lime-700: #6a8412;
+  --color-lime-800: #546815;
+  --color-lime-900: #465716;
+
+  /* ---- Neutres ---- */
+  --color-ink-50: #f7f8fa;
+  --color-ink-100: #eef0f4;
+  --color-ink-200: #dde1e9;
+  --color-ink-300: #c2c8d6;
+  --color-ink-400: #8d96ab;
+  --color-ink-500: #667085;
+  --color-ink-600: #4b5468;
+  --color-ink-700: #373e4f;
+  --color-ink-800: #232838;
+  --color-ink-900: #161a27;
+  --color-ink-950: #0d101a;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas,
+    monospace;
+
+  --radius-xl2: 1.25rem;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-ink-50 text-ink-800 font-sans antialiased;
+  }
+
+  .dark body {
+    @apply bg-ink-950 text-ink-200;
+  }
+
+  ::selection {
+    @apply bg-brand-500/25;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-500;
+  }
+}
+
+@layer components {
+  /* Fond quadrille discret, clin d'oeil aux schemas reseau */
+  .grid-bg {
+    background-image: linear-gradient(
+        to right,
+        color-mix(in oklab, var(--color-ink-300) 55%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        color-mix(in oklab, var(--color-ink-300) 55%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 52px 52px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+  }
+
+  .dark .grid-bg {
+    background-image: linear-gradient(
+        to right,
+        color-mix(in oklab, var(--color-ink-700) 70%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        color-mix(in oklab, var(--color-ink-700) 70%, transparent) 1px,
+        transparent 1px
+      );
+  }
+
+  .card {
+    @apply rounded-2xl border border-ink-200 bg-white shadow-sm;
+  }
+
+  .dark .card {
+    @apply border-ink-800 bg-ink-900;
+  }
+
+  /* Apparition en cascade des cartes, avec un délai posé en ligne.
+     `backwards` plutôt qu'une opacité nulle au repos : si l'animation
+     ne démarre pas, la carte reste simplement visible. */
+  .apparition {
+    animation: apparition 0.45s ease-out backwards;
+  }
+}
+
+/* Apparition en cascade des cartes du tableau de bord de progression.
+   La règle « prefers-reduced-motion » ci-dessous la neutralise. */
+@keyframes apparition {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
