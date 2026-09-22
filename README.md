@@ -22,7 +22,7 @@ Le site est alors disponible sur http://localhost:5173.
 Autres commandes :
 
 ```bash
-npm run build     # génère la version de production dans dist/
+npm run build     # génère la version de production dans docs/
 npm run preview   # sert la version de production en local
 ```
 
@@ -32,13 +32,45 @@ C'est normal, et ce n'est pas un bug. Le fichier `index.html` à la racine ne
 contient pas le site : il appelle `src/main.jsx`, que le navigateur ne sait ni
 lire ni assembler. Il faut un serveur, ne serait-ce qu'en local.
 
-La version compilée dans `dist/` ne s'ouvre pas non plus par double-clic : les
+La version compilée dans `docs/` ne s'ouvre pas non plus par double-clic : les
 navigateurs refusent de charger un module JavaScript depuis une adresse
 `file://`. Pour la voir, utiliser `npm run preview`, ou la déposer sur un
 hébergeur statique.
 
 Les adresses contiennent un dièse, par exemple `/#/cours`. C'est voulu : cela
 évite les erreurs 404 au rechargement sur un hébergeur statique.
+
+### Publier sur GitHub Pages
+
+Le site compilé vit dans le dossier `docs/`, versionné avec le code. Aucune
+automatisation à configurer : GitHub Pages sait publier ce dossier directement.
+
+**Une seule fois**, dans le dépôt GitHub : `Settings`, puis `Pages`, puis
+source `Deploy from a branch`, branche `main`, dossier `/docs`. Le site est
+alors servi à l'adresse `https://<compte>.github.io/<depot>/`.
+
+**À chaque mise en ligne** :
+
+```bash
+npm run build
+git add docs && git commit -m "Mettre le site en ligne à jour"
+git push
+```
+
+Trois détails qui expliquent pourquoi cela fonctionne :
+
+- les chemins des fichiers sont **relatifs**, donc le site tourne depuis le
+  sous-dossier `/<depot>/` et pas seulement à la racine d'un domaine ;
+- les adresses utilisent un **dièse**, donc recharger `/#/cours` ne provoque
+  pas d'erreur 404, alors que GitHub Pages ne sait pas réécrire les adresses ;
+- le fichier **`docs/.nojekyll`** empêche GitHub de faire passer les fichiers
+  par Jekyll, qui ignorerait certains noms.
+
+Le revers de cette méthode : chaque compilation ajoute une nouvelle version du
+paquet JavaScript à l'historique Git, environ 500 Ko. Pour un projet étudiant
+c'est sans conséquence. Si l'historique devenait lourd, il faudrait passer à
+une publication automatique par GitHub Actions, qui ne verse rien dans le
+dépôt.
 
 ---
 
