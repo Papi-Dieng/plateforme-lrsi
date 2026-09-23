@@ -313,6 +313,7 @@ lrsi-platform/
 │   ├── ia.js                 appel au relais IA, si `urlIA` est renseignée
 │   ├── contenu.js            charge le contenu publié avant le premier affichage
 │   ├── extrairePdf.js        lit le texte d'un PDF pour l'assistant (admin)
+│   ├── quizTexte.js          lit et écrit un QCM au format texte (admin)
 │   ├── progression.js        exercices travaillés, scores, favoris, vidéos
 │   ├── competences.js        analyse : forces, faiblesses, modules
 │   ├── profil.js             fiche profil et vérifications
@@ -402,6 +403,25 @@ recompilation, pas de push.
 
   Sans cette clé, il utilise celle des étudiants. Le relais écarte toute
   compétence ou tout chapitre que l'agent inventerait.
+- **Écrire un QCM en texte** : dans un QCM, « Écrire le quiz en texte »,
+  comme sur papier (format décrit dans `src/quizTexte.js`) :
+
+  ```
+  1. Combien de couches compte le modèle OSI ?
+  a) 4
+  b) 5
+  *c) 7
+  d) 8
+  > Le modèle OSI a 7 couches, TCP/IP en a 4.
+  ```
+
+  Réponses avec `a)`, `B.`, `-` ou `•` ; bonne réponse marquée `*`, `✓`,
+  `(x)`, `[x]` au début ou à la fin, ou par une ligne `Réponse : c` ;
+  explication après `>` ou `Explication :`. Un aperçu se met à jour pendant
+  la saisie et signale les erreurs (aucune bonne réponse, plusieurs, réponses
+  en double) sans rien deviner. « Modifier en texte » affiche tout le QCM
+  dans ce format pour le corriger comme un document ; une question garde sa
+  compétence, retrouvée par son énoncé ou par sa place.
 - **Générer des questions de QCM** : dans un QCM, « Générer des questions
   avec l'IA ». On choisit les chapitres, le nombre (3 à 15) et le niveau ;
   l'agent lit le cours des chapitres (écrit ou extrait du PDF) et écrit des

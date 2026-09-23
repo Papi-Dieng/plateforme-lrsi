@@ -22,6 +22,7 @@ import {
   urlPdf,
 } from "../contenu";
 import { extraireTextePdf } from "../extrairePdf";
+import QuizEnTexte from "../components/QuizEnTexte";
 import {
   GenerateurQcm,
   PanneauCompetencesIA,
@@ -685,6 +686,13 @@ function EditeurQcm({ element: q, changer, matieres, competences, motDePasse }) 
         <Champ label="Durée" value={q.duree} maxLength={20} placeholder="10 min" onChange={(e) => changer({ duree: e.target.value })} />
       </div>
       <Zone label="Description" rows={2} value={q.description} maxLength={600} onChange={(e) => changer({ description: e.target.value })} />
+
+      <QuizEnTexte
+        key={`texte-${q.id}`}
+        qcm={q}
+        onAjouter={(nouvelles) => changer({ questions: [...questions, ...nouvelles] })}
+        onRemplacer={(toutes) => changer({ questions: toutes })}
+      />
 
       <GenerateurQcm
         key={q.id}
