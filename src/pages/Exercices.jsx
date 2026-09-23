@@ -6,7 +6,6 @@ import LectureTexte from "../components/LectureTexte";
 import VerifierReponse from "../components/VerifierReponse";
 import {
   Badge,
-  BlocCode,
   Bouton,
   ChampRecherche,
   Container,
@@ -361,21 +360,18 @@ function DetailExercice({ exerciceId }) {
                   pdf={exercice.pdfCorrige}
                   ouvert
                 >
-                  <div className="space-y-6">
+                  {/* Même présentation que l’énoncé : même taille, même couleur,
+                      lignes conservées. */}
+                  <div className="space-y-6 text-base/7 text-ink-800 dark:text-ink-200">
                     {exercice.etapes?.length > 0 && (
                       <div>
-                        <h3 className="text-sm font-semibold text-ink-900 dark:text-white">
+                        <h3 className="font-semibold text-ink-900 dark:text-white">
                           Méthode, étape par étape
                         </h3>
-                        <ol className="mt-3 space-y-3">
+                        <ol className="mt-2 list-decimal space-y-1 pl-6">
                           {exercice.etapes.map((etape, i) => (
-                            <li key={i} className="flex gap-3">
-                              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand-50 font-mono text-[11px] font-semibold text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">
-                                {i + 1}
-                              </span>
-                              <p className="text-sm/7 text-ink-700 dark:text-ink-300">
-                                {etape}
-                              </p>
+                            <li key={i} className="whitespace-pre-line">
+                              {etape}
                             </li>
                           ))}
                         </ol>
@@ -384,22 +380,20 @@ function DetailExercice({ exerciceId }) {
 
                     {exercice.reponse && (
                       <div>
-                        <h3 className="text-sm font-semibold text-ink-900 dark:text-white">
+                        <h3 className="font-semibold text-ink-900 dark:text-white">
                           Réponse
                         </h3>
-                        <BlocCode className="mt-3">{exercice.reponse}</BlocCode>
+                        <p className="mt-2 whitespace-pre-wrap">{exercice.reponse}</p>
                       </div>
                     )}
 
                     {exercice.explication && (
-                      <div className="rounded-xl bg-ink-100 p-4 dark:bg-ink-800/60">
-                        <h3 className="flex items-center gap-2 text-sm font-semibold text-ink-900 dark:text-white">
+                      <div>
+                        <h3 className="flex items-center gap-2 font-semibold text-ink-900 dark:text-white">
                           <Icon name="bulb" className="size-4 text-sun-600 dark:text-sun-400" />
                           À retenir
                         </h3>
-                        <p className="mt-2 text-sm/7 text-ink-700 dark:text-ink-300">
-                          {exercice.explication}
-                        </p>
+                        <p className="mt-2 whitespace-pre-line">{exercice.explication}</p>
                       </div>
                     )}
                   </div>
