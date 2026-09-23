@@ -32,8 +32,9 @@ const estObjet = (v) => v !== null && typeof v === "object" && !Array.isArray(v)
 export const DONNEES = [
   { cle: CLE_PROFIL, libelle: () => "ta fiche profil", valide: estObjet, compter: () => 1 },
   { cle: CLES.scores, libelle: (n) => `${n} QCM terminé${n > 1 ? "s" : ""}`, valide: estObjet, compter: (v) => Object.keys(v).length },
-  { cle: CLES.exercices, libelle: (n) => `${n} exercice${n > 1 ? "s" : ""} travaillé${n > 1 ? "s" : ""}`, valide: Array.isArray, compter: (v) => v.length },
-  { cle: CLES.favoris, libelle: (n) => `${n} favori${n > 1 ? "s" : ""}`, valide: (v) => Array.isArray(v) || estObjet(v), compter: (v) => (Array.isArray(v) ? v.length : Object.keys(v).length) },
+  // Exercices travaillés : { identifiant: { date } }, pas une liste.
+  { cle: CLES.exercices, libelle: (n) => `${n} exercice${n > 1 ? "s" : ""} travaillé${n > 1 ? "s" : ""}`, valide: estObjet, compter: (v) => Object.keys(v).length },
+  { cle: CLES.favoris, libelle: (n) => `${n} favori${n > 1 ? "s" : ""}`, valide: Array.isArray, compter: (v) => v.length },
   { cle: CLES.videos, libelle: (n) => `${n} vidéo${n > 1 ? "s" : ""} ajoutée${n > 1 ? "s" : ""}`, valide: Array.isArray, compter: (v) => v.length },
   { cle: CLES.videosVues, libelle: (n) => `${n} vidéo${n > 1 ? "s" : ""} vue${n > 1 ? "s" : ""}`, valide: Array.isArray, compter: (v) => v.length },
   { cle: CLE_PLANNING, libelle: () => "ton planning de révision", valide: estObjet, compter: () => 1 },

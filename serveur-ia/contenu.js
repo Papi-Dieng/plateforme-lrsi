@@ -129,6 +129,12 @@ function nettoyerExercice(e) {
     pdfCorrige: pdf ? pdfValide(e?.pdfCorrige) : null,
     texteEnonce: pdf ? texte(e?.texteEnonce, 15000) : "",
     texteCorrige: pdf ? texte(e?.texteCorrige, 15000) : "",
+    // Les résultats que l'étudiant peut vérifier lui-même : un libellé et
+    // la réponse attendue (plusieurs écritures séparées par « | »).
+    verification: liste(e?.verification, 50)
+      .map((v) => ({ libelle: texte(v?.libelle, 120), attendu: texte(v?.attendu, 300) }))
+      .filter((v) => v.libelle && v.attendu)
+      .slice(0, 10),
   };
 }
 

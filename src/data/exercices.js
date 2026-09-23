@@ -30,6 +30,13 @@ export const exercices = [
 Masque : 255.255.255.192   •   62 hôtes utilisables par sous-réseau`,
     explication:
       "L'erreur la plus fréquente est d'oublier de retirer deux adresses par sous-réseau. On passe ainsi de 254 hôtes sur le /24 à 4 × 62 = 248 hôtes au total : le découpage a un coût.",
+    // Ce que l'étudiant peut vérifier avant d'ouvrir la correction.
+    verification: [
+      { libelle: "Nouveau préfixe", attendu: "/26 | 26" },
+      { libelle: "Nouveau masque, en décimal", attendu: "255.255.255.192" },
+      { libelle: "Hôtes utilisables par sous-réseau", attendu: "62" },
+      { libelle: "Adresse de diffusion du dernier sous-réseau", attendu: "192.168.10.255" },
+    ],
   },
   {
     id: "adresse-reseau-diffusion",
@@ -56,6 +63,12 @@ Plage utile   : 172.16.32.1 → 172.16.47.254
 Hôtes         : 2¹² − 2 = 4094`,
     explication:
       "Quand le masque coupe au milieu d'un octet, le réflexe est de calculer le pas puis de chercher le multiple immédiatement inférieur à la valeur de l'octet concerné.",
+    verification: [
+      { libelle: "Masque, en décimal", attendu: "255.255.240.0" },
+      { libelle: "Adresse de réseau", attendu: "172.16.32.0" },
+      { libelle: "Adresse de diffusion", attendu: "172.16.47.255" },
+      { libelle: "Nombre d'hôtes utilisables", attendu: "4094" },
+    ],
   },
   {
     id: "encapsulation-osi",

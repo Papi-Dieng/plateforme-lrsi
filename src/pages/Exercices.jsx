@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import LecteurPdf from "../components/LecteurPdf";
+import VerifierReponse from "../components/VerifierReponse";
 import {
   Badge,
   BlocCode,
@@ -305,6 +306,17 @@ export function ExerciceDetail() {
               </p>
             )}
           </section>
+          )}
+
+          {/* Vérifier sa réponse avant la correction */}
+          {exercice.verification?.length > 0 && (
+            <VerifierReponse
+              key={exercice.id}
+              lignes={exercice.verification}
+              indiceDisponible={Boolean(exercice.indice)}
+              onBesoinIndice={() => setIndiceVisible(true)}
+              onReussi={() => marquerExerciceTravaille(exercice.id)}
+            />
           )}
 
           {/* Correction */}

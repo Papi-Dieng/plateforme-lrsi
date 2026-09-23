@@ -315,6 +315,8 @@ lrsi-platform/
 │   ├── contenu.js            charge le contenu publié avant le premier affichage
 │   ├── extrairePdf.js        lit le texte d'un PDF pour l'assistant (admin)
 │   ├── quizTexte.js          lit et écrit un QCM au format texte (admin)
+│   ├── verification.js       compare la réponse d'un étudiant à la réponse attendue
+│   ├── sauvegarde.js         sauvegarde et restauration des données de l'étudiant
 │   ├── progression.js        exercices travaillés, scores, favoris, vidéos
 │   ├── competences.js        analyse : forces, faiblesses, modules
 │   ├── profil.js             fiche profil et vérifications
@@ -390,6 +392,14 @@ recompilation, pas de push.
   correction : l'énoncé s'affiche tout de suite, la correction seulement quand
   l'étudiant clique « voir la correction ». Un indice écrit reste possible.
   L'assistant IA lit le texte des deux, et donne l'indice avant la correction.
+- **Vérification automatique** d'un exercice (facultatif) : les résultats à
+  trouver et leur réponse attendue, plusieurs écritures séparées par `|`
+  (`/26 | 26`). L'étudiant tape les siens dans « Vérifier ma réponse » et voit
+  chacun passer au vert ou au rouge, sans que la bonne réponse soit montrée ;
+  après deux essais ratés, l'indice lui est proposé, et tout juste compte
+  l'exercice comme travaillé. La comparaison (`src/verification.js`) ignore
+  majuscules, accents et espaces, et compare nombres et adresses IP par leur
+  valeur (`62` = `62,0`, `192.168.010.001` = `192.168.10.1`).
 - Un **devoir** peut se donner en deux PDF, le sujet et le corrigé : le
   sujet s'affiche au lancement du minuteur, le corrigé à la fin, et
   l'étudiant se note sur le total indiqué.
