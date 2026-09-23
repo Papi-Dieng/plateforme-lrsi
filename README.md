@@ -402,6 +402,16 @@ recompilation, pas de push.
 
   Sans cette clé, il utilise celle des étudiants. Le relais écarte toute
   compétence ou tout chapitre que l'agent inventerait.
+- **Générer des questions de QCM** : dans un QCM, « Générer des questions
+  avec l'IA ». On choisit les chapitres, le nombre (3 à 15) et le niveau ;
+  l'agent lit le cours des chapitres (écrit ou extrait du PDF) et écrit des
+  questions à 4 réponses, avec explication et compétence. On les relit, la
+  bonne réponse surlignée, et on garde celles qu'on coche. Le relais écarte
+  les questions invalides (réponses en double ou vides, bonne réponse
+  impossible, question déjà dans le QCM) et **mélange les réponses** : les
+  modèles placent volontiers la bonne en premier, ce qui la ferait deviner.
+  Sans cours rédigé, l'agent s'appuie sur ses connaissances : la page le
+  signale, et la relecture compte d'autant plus.
 - Les **compétences** se gèrent dans leur onglet : nom, matière, et chapitres
   à relire quand elle est faible. Renommer un chapitre met à jour les
   compétences qui le citent. Supprimer une compétence la détache des

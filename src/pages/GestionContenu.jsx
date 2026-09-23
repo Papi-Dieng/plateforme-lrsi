@@ -23,6 +23,7 @@ import {
 } from "../contenu";
 import { extraireTextePdf } from "../extrairePdf";
 import {
+  GenerateurQcm,
   PanneauCompetencesIA,
   SuggestionCompetence,
   texteExercice,
@@ -684,6 +685,15 @@ function EditeurQcm({ element: q, changer, matieres, competences, motDePasse }) 
         <Champ label="Durée" value={q.duree} maxLength={20} placeholder="10 min" onChange={(e) => changer({ duree: e.target.value })} />
       </div>
       <Zone label="Description" rows={2} value={q.description} maxLength={600} onChange={(e) => changer({ description: e.target.value })} />
+
+      <GenerateurQcm
+        key={q.id}
+        qcm={q}
+        matiere={matieres.find((m) => m.id === q.matiere)}
+        competences={competences}
+        motDePasse={motDePasse}
+        onAjouter={(nouvelles) => changer({ questions: [...questions, ...nouvelles] })}
+      />
 
       <h3 className="text-sm font-semibold text-ink-900 dark:text-white">Questions ({questions.length})</h3>
       <div className="space-y-3">

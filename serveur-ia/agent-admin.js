@@ -19,6 +19,8 @@
      compétence la plus adaptée parmi celles de la matière ;
    - « proposer-competences » : à partir des chapitres et de leur cours,
      une liste de compétences à créer, avec les chapitres à relire.
+   - « generer-qcm » : des questions de QCM écrites à partir du cours des
+     chapitres choisis, réponses mélangées.
    ================================================================== */
 
 import { interrogerGemini } from "./gemini.js";
@@ -193,9 +195,123 @@ Propose au plus ${MAX_PROPOSITIONS} nouvelles compétences utiles pour mesurer l
   return { resultat: { competences } };
 }
 
+/* ---- Générer des questions de QCM à partir du cours ---- */
+
+const MAX_QUESTIONS_GENEREES = 15;
+const MAX_TEXTE_COURS_QCM = 24000;
+
+const normaliser = (t) =>
+  String(t ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+/* Mélange de Fisher-Yates, avec un aléa cryptographique. Les modèles
+   placent volontiers la bonne réponse en premier : sans ce mélange, un
+   étudiant la devinerait. */
+function melanger(options, bonne) {
+  const ordre = options.map((_, i) => i);
+  const alea = crypto.getRandomValues(new Uint32Array(ordre.length));
+  for (let i = ordre.length - 1; i > 0; i--) {
+    const j = alea[i] % (i + 1);
+    [ordre[i], ordre[j]] = [ordre[j], ordre[i]];
+  }
+  return { options: ordre.map((i) => options[i]), bonne: ordre.indexOf(bonne) };
+}
+
+async function genererQcm(donnees, env) {
+  const nombre = Math.min(Math.max(Math.round(Number(donnees?.nombre) || 5), 1), MAX_QUESTIONS_GENEREES);
+  let budget = MAX_TEXTE_COURS_QCM;
+  const chapitres = liste(donnees?.chapitres, MAX_CHAPITRES)
+    .map((c) => {
+      const t = texte(c?.texte, Math.max(budget, 0));
+      budget -= t.length;
+      return { titre: texte(c?.titre, 150), texte: t };
+    })
+    .filter((c) => c.titre);
+  if (chapitres.length === 0) return { erreur: "rien-a-traiter", statut: 400 };
+  const competences = liste(donnees?.competences, MAX_COMPETENCES)
+    .map((c) => ({ id: texte(c?.id, 80), nom: texte(c?.nom, 120) }))
+    .filter((c) => c.id && c.nom);
+  const existantes = liste(donnees?.existantes, 200).map((e) => texte(e, 300)).filter(Boolean);
+  const avecCours = chapitres.some((c) => c.texte);
+
+  const consigne = `Matière : ${texte(donnees?.matiere, 120)}
+Niveau visé : ${texte(donnees?.niveau, 30) || "Intermédiaire"}
+
+${avecCours ? "Cours de référence (il fait foi : chaque question et chaque bonne réponse doivent pouvoir s'y vérifier) :" : "Chapitres (aucun cours rédigé : reste sur des notions classiques et sûres du programme LRSI) :"}
+${chapitres.map((c) => `### ${c.titre}\n${c.texte || "(pas de cours rédigé)"}`).join("\n\n")}
+
+Compétences de la matière (identifiant : nom) :
+${competences.length ? competences.map((c) => `- ${c.id} : ${c.nom}`).join("\n") : "- aucune"}
+
+Questions qui existent déjà (ne les répète pas, même reformulées) :
+${existantes.length ? existantes.map((e) => `- ${e}`).join("\n") : "- aucune"}
+
+Écris ${nombre} questions de QCM en français. Pour chacune :
+- un énoncé clair, sans ambiguïté, qui n'a qu'une seule bonne réponse ;
+- exactement 4 réponses proposées, courtes, de même longueur et de même style ; les mauvaises réponses sont plausibles (erreurs fréquentes des étudiants), jamais absurdes ;
+- « bonne » : la position (0 à 3) de la bonne réponse ;
+- une explication de 1 à 2 phrases qui justifie la bonne réponse et dit pourquoi le piège principal est faux ;
+- l'identifiant de la compétence mesurée, ou une chaîne vide si aucune ne convient.
+Varie les types : définitions, calculs (masques, hôtes, ports…), cas pratiques. Pas de « toutes les réponses » ni « aucune réponse ». Pour un calcul, vérifie ton résultat avant de l'écrire.`;
+
+  const schema = {
+    type: "OBJECT",
+    properties: {
+      questions: {
+        type: "ARRAY",
+        items: {
+          type: "OBJECT",
+          properties: {
+            enonce: { type: "STRING" },
+            options: { type: "ARRAY", items: { type: "STRING" } },
+            bonne: { type: "INTEGER" },
+            explication: { type: "STRING" },
+            competence: { type: "STRING" },
+          },
+          required: ["enonce", "options", "bonne", "explication", "competence"],
+        },
+      },
+    },
+    required: ["questions"],
+  };
+
+  const r = await demander(consigne, schema, env);
+  if (r.erreur) return r;
+
+  const ids = new Set(competences.map((c) => c.id));
+  const dejaLa = new Set(existantes.map(normaliser));
+  const vus = new Set();
+  const questions = [];
+  for (const q of liste(r.json?.questions, MAX_QUESTIONS_GENEREES)) {
+    const enonce = texte(q?.enonce, 1000);
+    const options = liste(q?.options, 6).map((o) => texte(o, 300));
+    const bonne = Number(q?.bonne);
+    const cle = normaliser(enonce);
+    // Écartées : question vide ou déjà présente, réponses vides ou en
+    // double, bonne réponse qui ne désigne aucune des réponses.
+    if (!enonce || dejaLa.has(cle) || vus.has(cle)) continue;
+    if (options.length < 3 || options.some((o) => !o)) continue;
+    if (new Set(options.map(normaliser)).size !== options.length) continue;
+    if (!Number.isInteger(bonne) || bonne < 0 || bonne >= options.length) continue;
+    vus.add(cle);
+    questions.push({
+      enonce,
+      ...melanger(options, bonne),
+      explication: texte(q?.explication, 1500),
+      competence: ids.has(q?.competence) ? q.competence : "",
+    });
+  }
+  return { resultat: { questions, avecCours } };
+}
+
 const TACHES = {
   rattacher,
   "proposer-competences": proposerCompetences,
+  "generer-qcm": genererQcm,
 };
 
 export async function executerTacheAdmin(corps, env) {

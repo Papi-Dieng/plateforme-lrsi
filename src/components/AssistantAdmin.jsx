@@ -391,3 +391,232 @@ export function PanneauCompetencesIA({ brouillon, appliquer, motDePasse, identif
     </section>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/* Générer des questions de QCM à partir du cours                      */
+/* ------------------------------------------------------------------ */
+
+const NIVEAUX = ["Débutant", "Intermédiaire", "Avancé"];
+
+export function GenerateurQcm({ qcm, matiere, competences, motDePasse, onAjouter }) {
+  const [ouvert, setOuvert] = useState(false);
+  const [choisis, setChoisis] = useState([]);
+  const [nombre, setNombre] = useState(5);
+  const [niveau, setNiveau] = useState(NIVEAUX.includes(qcm.niveau) ? qcm.niveau : "Intermédiaire");
+  const [etat, setEtat] = useState({ type: "", texte: "" });
+  const [propositions, setPropositions] = useState(null);
+  const [occupe, setOccupe] = useState(false);
+
+  const chapitres = matiere?.chapitres ?? [];
+  const disponibles = competences.filter((c) => c.matiere === matiere?.id);
+  const aDuCours = (c) => Boolean(c.contenu || c.texteIA);
+  const coursDe = (c) => [c.resume, c.contenu || c.texteIA].filter(Boolean).join("\n");
+  const sansCours = chapitres.filter((c) => choisis.includes(c.titre) && !aDuCours(c)).length;
+
+  const generer = async () => {
+    setOccupe(true);
+    setPropositions(null);
+    setEtat({ type: "", texte: `L'IA écrit ${nombre} questions… (20 à 40 secondes)` });
+    try {
+      const { questions } = await demanderAgentAdmin(
+        "generer-qcm",
+        {
+          matiere: matiere.nom,
+          niveau,
+          nombre,
+          chapitres: chapitres
+            .filter((c) => choisis.includes(c.titre))
+            .map((c) => ({ titre: c.titre, texte: coursDe(c) })),
+          competences: disponibles.map((c) => ({ id: c.id, nom: c.nom })),
+          existantes: qcm.questions.map((x) => x.enonce).filter(Boolean),
+        },
+        motDePasse
+      );
+      setPropositions(questions.map((x) => ({ ...x, garder: true })));
+      setEtat({
+        type: "",
+        texte: questions.length
+          ? `${questions.length} question(s) proposée(s). Relis chacune avant de l'ajouter : l'IA peut se tromper.`
+          : "L'IA n'a proposé aucune question valable. Réessaie, ou choisis d'autres chapitres.",
+      });
+    } catch (e) {
+      setEtat({ type: "erreur", texte: messageErreurAdmin(e.message) });
+    } finally {
+      setOccupe(false);
+    }
+  };
+
+  const ajouter = () => {
+    const gardees = propositions
+      .filter((x) => x.garder)
+      .map((x) => ({
+        enonce: x.enonce,
+        options: x.options,
+        bonne: x.bonne,
+        explication: x.explication,
+        competence: x.competence,
+      }));
+    onAjouter(gardees);
+    setEtat({ type: "", texte: `${gardees.length} question(s) ajoutée(s) à la fin du QCM.` });
+    setPropositions(null);
+  };
+
+  const nomCompetence = (id) => disponibles.find((c) => c.id === id)?.nom;
+
+  if (!ouvert) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOuvert(true)}
+        disabled={!matiere}
+        className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+      >
+        <Icon name="sparkles" className="size-4" />
+        Générer des questions avec l'IA
+      </button>
+    );
+  }
+
+  return (
+    <section className="space-y-4 rounded-xl border border-brand-300 bg-brand-50/40 p-4 dark:border-brand-500/30 dark:bg-brand-500/5">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-ink-900 dark:text-white">
+          <Icon name="sparkles" className="size-4 text-brand-500" />
+          Générer des questions avec l'IA
+        </h3>
+        <button type="button" onClick={() => setOuvert(false)} className="text-xs text-ink-500 hover:underline">
+          Fermer
+        </button>
+      </div>
+
+      <fieldset>
+        <legend className="text-xs font-semibold text-ink-600 dark:text-ink-300">
+          Chapitres sur lesquels porter les questions
+        </legend>
+        <div className="mt-2 grid gap-1 sm:grid-cols-2">
+          {chapitres.map((c) => (
+            <label
+              key={c.titre}
+              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-ink-700 hover:bg-white dark:text-ink-300 dark:hover:bg-ink-800"
+            >
+              <input
+                type="checkbox"
+                checked={choisis.includes(c.titre)}
+                onChange={() =>
+                  setChoisis((l) => (l.includes(c.titre) ? l.filter((t) => t !== c.titre) : [...l, c.titre]))
+                }
+                className="size-4 accent-brand-600"
+              />
+              <span className="min-w-0 flex-1 truncate">{c.titre}</span>
+              {!aDuCours(c) && <span className="text-[11px] text-sun-700 dark:text-sun-400">sans cours</span>}
+            </label>
+          ))}
+        </div>
+        {sansCours > 0 && (
+          <p className="mt-2 text-xs text-sun-700 dark:text-sun-400">
+            {sansCours} chapitre(s) choisi(s) sans cours rédigé : l'IA s'appuiera sur ses connaissances
+            générales. Relis encore plus attentivement.
+          </p>
+        )}
+      </fieldset>
+
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="text-xs font-semibold text-ink-600 dark:text-ink-300">
+          Nombre
+          <select
+            value={nombre}
+            onChange={(e) => setNombre(Number(e.target.value))}
+            className={cx(champAdmin, "mt-1.5 w-24 font-normal")}
+          >
+            {[3, 5, 10, 15].map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="text-xs font-semibold text-ink-600 dark:text-ink-300">
+          Niveau
+          <select
+            value={niveau}
+            onChange={(e) => setNiveau(e.target.value)}
+            className={cx(champAdmin, "mt-1.5 w-40 font-normal")}
+          >
+            {NIVEAUX.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button
+          type="button"
+          onClick={generer}
+          disabled={occupe || choisis.length === 0}
+          className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+        >
+          <Icon name="sparkles" className="size-4" />
+          {occupe ? "Génération…" : "Générer"}
+        </button>
+      </div>
+      <Message etat={etat} />
+
+      {propositions?.length > 0 && (
+        <div className="space-y-3">
+          <ul className="space-y-3">
+            {propositions.map((x, i) => (
+              <li
+                key={i}
+                className={cx(
+                  "rounded-xl border border-ink-200 bg-white p-4 dark:border-ink-700 dark:bg-ink-900",
+                  !x.garder && "opacity-50"
+                )}
+              >
+                <label className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={x.garder}
+                    onChange={(e) =>
+                      setPropositions((l) => l.map((y, j) => (j === i ? { ...y, garder: e.target.checked } : y)))
+                    }
+                    className="mt-1 size-4 accent-brand-600"
+                    aria-label={`Garder la question ${i + 1}`}
+                  />
+                  <span className="min-w-0 flex-1 text-sm font-medium text-ink-900 dark:text-white">{x.enonce}</span>
+                </label>
+                <ol className="mt-2 space-y-1 pl-7">
+                  {x.options.map((o, k) => (
+                    <li
+                      key={k}
+                      className={cx(
+                        "rounded-md px-2 py-1 text-sm",
+                        k === x.bonne
+                          ? "bg-accent-50 font-semibold text-accent-800 dark:bg-accent-500/10 dark:text-accent-300"
+                          : "text-ink-600 dark:text-ink-400"
+                      )}
+                    >
+                      {k === x.bonne ? "✓ " : ""}
+                      {o}
+                    </li>
+                  ))}
+                </ol>
+                <p className="mt-2 pl-7 text-xs/5 text-ink-500">{x.explication}</p>
+                <p className="mt-1 pl-7 text-[11px] text-ink-400">
+                  Compétence : {nomCompetence(x.competence) ?? "aucune"}
+                </p>
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            onClick={ajouter}
+            disabled={!propositions.some((x) => x.garder)}
+            className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+          >
+            Ajouter les questions cochées ({propositions.filter((x) => x.garder).length})
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
