@@ -119,6 +119,82 @@ export function SuggestionCompetence({ matiere, competences, texte, valeur, onAp
 }
 
 /* ------------------------------------------------------------------ */
+/* « À retenir » d'un exercice                                         */
+/* ------------------------------------------------------------------ */
+
+/* L'agent lit l'énoncé et la correction (écrits, ou à défaut le texte
+   lu dans les PDF) et propose le « À retenir ». L'auteur l'utilise tel
+   quel, le retouche, ou l'ignore. */
+export function SuggestionARetenir({ exercice: e, matiere, onAppliquer, motDePasse }) {
+  const [etat, setEtat] = useState({ type: "", texte: "" });
+  const [proposition, setProposition] = useState(null);
+
+  const enonce = e.enonce?.trim() || e.texteEnonce || "";
+  const etapes = (e.etapes ?? []).map((s) => s.trim()).filter(Boolean);
+  const correctionEcrite = [
+    etapes.length ? `Méthode :\n${etapes.map((s, i) => `${i + 1}. ${s}`).join("\n")}` : "",
+    e.reponse?.trim() ? `Réponse :\n${e.reponse.trim()}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+  const correction = correctionEcrite || e.texteCorrige || "";
+  const enCours = etat.texte === "L'IA lit l'exercice…";
+
+  const suggerer = async () => {
+    setProposition(null);
+    setEtat({ type: "", texte: "L'IA lit l'exercice…" });
+    try {
+      const r = await demanderAgentAdmin(
+        "a-retenir",
+        { matiere: matiere?.nom, titre: e.titre, enonce: couper(enonce, 8000), correction: couper(correction, 8000) },
+        motDePasse
+      );
+      setProposition(r);
+      setEtat({ type: "", texte: "" });
+    } catch (err) {
+      setEtat({ type: "erreur", texte: messageErreurAdmin(err.message) });
+    }
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <button
+        type="button"
+        onClick={suggerer}
+        disabled={(!enonce && !correction) || enCours}
+        title={!enonce && !correction ? "Écris d'abord l'énoncé ou la correction" : undefined}
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:underline disabled:cursor-not-allowed disabled:opacity-40 dark:text-brand-300"
+      >
+        <Icon name="sparkles" className="size-3.5" />
+        {e.explication?.trim() ? "Proposer un autre « À retenir » avec l'IA" : "Suggérer le « À retenir » avec l'IA"}
+      </button>
+      <Message etat={etat} />
+      {proposition && (
+        <div className="space-y-2 rounded-lg bg-brand-50 px-3 py-2.5 text-sm/6 text-ink-700 dark:bg-brand-500/10 dark:text-ink-200">
+          <p className="whitespace-pre-line">{proposition.aRetenir}</p>
+          {proposition.raison && <p className="text-xs text-ink-500 dark:text-ink-400">{proposition.raison}</p>}
+          <div className="flex flex-wrap gap-3 text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => {
+                onAppliquer(proposition.aRetenir);
+                setProposition(null);
+              }}
+              className="text-brand-600 underline dark:text-brand-300"
+            >
+              {e.explication?.trim() ? "Remplacer" : "Utiliser"}
+            </button>
+            <button type="button" onClick={() => setProposition(null)} className="text-ink-500 underline">
+              Ignorer
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* Panneau de l'onglet Compétences                                     */
 /* ------------------------------------------------------------------ */
 

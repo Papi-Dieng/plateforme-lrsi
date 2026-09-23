@@ -28,6 +28,7 @@ import {
   GenerateurQcm,
   PanneauCompetencesIA,
   SuggestionCompetence,
+  SuggestionARetenir,
   texteExercice,
   texteQuestion,
 } from "../components/AssistantAdmin";
@@ -637,15 +638,41 @@ function EditeurExercice({ element: e, changer, matieres, competences, motDePass
       </fieldset>
       <fieldset className="space-y-4 rounded-xl border border-ink-200 p-4 dark:border-ink-800">
         <legend className="px-1 text-xs font-semibold text-ink-600 dark:text-ink-300">Correction</legend>
+        <p className="text-xs/5 text-ink-500 dark:text-ink-400">
+          Ici, seulement la solution : l'énoncé va dans le cadre « Énoncé » au-dessus.
+        </p>
         <Zone
           label="Méthode, étape par étape"
-          aide="Une étape par ligne."
+          aide="Comment on trouve la solution. Chaque ligne devient une étape numérotée (1, 2, 3…) sur le site."
           rows={5}
+          placeholder={"Lire les données : prix du billet, âge du voyageur.\nSi l'âge est inférieur à 25 ans, appliquer 20 % de réduction.\nSi l'âge est supérieur à 65 ans, appliquer 15 % de réduction.\nAfficher le prix final."}
           value={(e.etapes ?? []).join("\n")}
           onChange={(ev) => changer({ etapes: ev.target.value.split("\n") })}
         />
-        <Zone label="Réponse" rows={5} mono value={e.reponse ?? ""} maxLength={5000} onChange={(ev) => changer({ reponse: ev.target.value })} />
-        <Zone label="À retenir" rows={2} value={e.explication ?? ""} maxLength={2000} onChange={(ev) => changer({ explication: ev.target.value })} />
+        <Zone
+          label="Réponse"
+          aide="Le résultat final : le programme complet, le calcul posé ou la valeur trouvée. Affiché en police de code, lignes conservées."
+          rows={5}
+          mono
+          placeholder={"program billet;\nvar age : integer; prix : real;\nbegin\n  ...\nend."}
+          value={e.reponse ?? ""}
+          maxLength={5000}
+          onChange={(ev) => changer({ reponse: ev.target.value })}
+        />
+        <Zone
+          label="À retenir"
+          aide="La notion ou la méthode clé à garder, en 1 à 3 phrases, affichée sous la correction."
+          rows={3}
+          value={e.explication ?? ""}
+          maxLength={2000}
+          onChange={(ev) => changer({ explication: ev.target.value })}
+        />
+        <SuggestionARetenir
+          exercice={e}
+          matiere={matieres.find((m) => m.id === e.matiere)}
+          motDePasse={motDePasse}
+          onAppliquer={(explication) => changer({ explication })}
+        />
         <ChampPdf
           libelle="Correction en PDF (facultatif, à télécharger)"
           pdf={e.pdfCorrige}

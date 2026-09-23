@@ -21,6 +21,8 @@
      une liste de compétences à créer, avec les chapitres à relire.
    - « generer-qcm » : des questions de QCM écrites à partir du cours des
      chapitres choisis, réponses mélangées.
+   - « a-retenir » : pour un exercice, le « À retenir » tiré de son
+     énoncé et de sa correction.
    ================================================================== */
 
 import { interrogerGemini } from "./gemini.js";
@@ -308,10 +310,47 @@ Varie les types : définitions, calculs (masques, hôtes, ports…), cas pratiqu
   return { resultat: { questions, avecCours } };
 }
 
+/* ---- Proposer le « À retenir » d'un exercice ---- */
+
+const MAX_TEXTE_EXERCICE = 8000;
+
+async function aRetenir(donnees, env) {
+  const enonce = texte(donnees?.enonce, MAX_TEXTE_EXERCICE);
+  const correction = texte(donnees?.correction, MAX_TEXTE_EXERCICE);
+  if (!enonce && !correction) return { erreur: "rien-a-traiter", statut: 400 };
+
+  const consigne = `Matière : ${texte(donnees?.matiere, 120)}
+Exercice : ${texte(donnees?.titre, 150)}
+
+Énoncé :
+${enonce || "(non fourni)"}
+
+Correction :
+${correction || "(non fournie : appuie-toi sur l'énoncé et sur les notions classiques du programme LRSI)"}
+
+Écris le « À retenir » de cet exercice, affiché aux étudiants sous la correction : 1 à 3 phrases en français, qui donnent la notion ou la méthode clé à garder, et le piège le plus fréquent s'il y en a un. Ne recopie pas la correction, ne refais pas le calcul, pas de titre ni de puce. Donne aussi, en une phrase courte, la raison de ce choix.`;
+
+  const schema = {
+    type: "OBJECT",
+    properties: {
+      aRetenir: { type: "STRING" },
+      raison: { type: "STRING" },
+    },
+    required: ["aRetenir", "raison"],
+  };
+
+  const r = await demander(consigne, schema, env);
+  if (r.erreur) return r;
+  const proposition = texte(r.json?.aRetenir, 2000);
+  if (!proposition) return { erreur: "reponse-illisible", statut: 502 };
+  return { resultat: { aRetenir: proposition, raison: texte(r.json?.raison, 200) } };
+}
+
 const TACHES = {
   rattacher,
   "proposer-competences": proposerCompetences,
   "generer-qcm": genererQcm,
+  "a-retenir": aRetenir,
 };
 
 export async function executerTacheAdmin(corps, env) {
