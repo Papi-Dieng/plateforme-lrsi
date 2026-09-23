@@ -264,6 +264,8 @@ lrsi-platform/
 │   ├── consignes.js          règles générales et exemples de l'IA
 │   ├── contenu.js            contenu publié depuis l'espace admin
 │   ├── fichiers.js           cours en PDF téléversés
+│   ├── gemini.js             appel à Gemini, partagé par les deux agents
+│   ├── agent-admin.js        l'agent IA de l'espace admin
 │   └── education.js          fiches par matière saisies dans l'espace admin
 ├── scripts/                  banc de test de l'IA (npm run banc-ia)
 ├── public/
@@ -382,6 +384,24 @@ recompilation, pas de push.
 - Ce qui est caché (correction, corrigé) l'est dans la page, pas sur le
   relais : quelqu'un qui connaît l'adresse d'un PDF peut l'ouvrir. C'est
   déjà le cas des corrections écrites, qui sont dans le site.
+- **L'agent IA de l'admin** aide à ranger, et ne décide jamais seul. Dans
+  l'onglet Compétences, « Proposer des compétences » lit les chapitres et
+  leur cours et propose une liste à cocher. « Rattacher ce qui n'a pas de
+  compétence » classe d'un coup les exercices et questions sans compétence,
+  dans une liste à relire et corriger avant d'appliquer. Sur chaque exercice
+  et chaque question, « Suggérer avec l'IA » propose une compétence avec sa
+  raison. Rien n'entre dans le brouillon sans un clic. C'est un second agent,
+  distinct de l'assistant des étudiants (`serveur-ia/agent-admin.js`), joignable
+  seulement avec le mot de passe admin. Il a sa propre clé, créée dans un autre
+  projet Google pour que son quota gratuit soit séparé :
+
+  ```bash
+  cd serveur-ia
+  npx wrangler secret put GEMINI_API_KEY_ADMIN
+  ```
+
+  Sans cette clé, il utilise celle des étudiants. Le relais écarte toute
+  compétence ou tout chapitre que l'agent inventerait.
 - Les **compétences** se gèrent dans leur onglet : nom, matière, et chapitres
   à relire quand elle est faible. Renommer un chapitre met à jour les
   compétences qui le citent. Supprimer une compétence la détache des

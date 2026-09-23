@@ -11,6 +11,10 @@
    passe : le contenu pédagogique (`contenu.js`) et l'éducation de
    l'IA (`education.js`).
 
+   Deux agents : l'assistant des étudiants (clé GEMINI_API_KEY), et
+   l'agent de l'espace admin (`agent-admin.js`, clé GEMINI_API_KEY_ADMIN),
+   joignable seulement avec le mot de passe.
+
    Garde-fous, tous appliqués ici et non dans le site, puisque le
    site peut être contourné :
    - seuls les domaines listés dans ORIGINES peuvent l'appeler ;
@@ -35,6 +39,8 @@ import {
   versionPublique,
 } from "./contenu.js";
 import { menagePdfs, servirPdf, televerserPdf } from "./fichiers.js";
+import { API_GEMINI, interrogerGemini, listeModeles } from "./gemini.js";
+import { executerTacheAdmin } from "./agent-admin.js";
 
 const MAX_MESSAGES = 10;
 const MAX_CARACTERES = 1500;
@@ -122,68 +128,21 @@ function construireConsignes(extraits, education) {
   return parties.join("\n\n");
 }
 
-const API_GEMINI = "https://generativelanguage.googleapis.com/v1beta";
-
-/* L'offre gratuite renvoie souvent « modèle surchargé » (503) pendant
-   quelques secondes. On réessaie une fois le même modèle, puis on
-   passe aux modèles de secours (MODELES_SECOURS dans wrangler.toml),
-   dans l'ordre. Chaque modèle a son propre quota gratuit : un secours
-   sert donc aussi quand le principal a épuisé le sien (429). */
-const ATTENTE_AVANT_NOUVEL_ESSAI = 1500;
-const pause = (ms) => new Promise((r) => setTimeout(r, ms));
-const passerAuSuivant = (statut) => [404, 429, 500, 503].includes(statut);
-
-const listeModeles = (env) =>
-  [env.MODELE || "gemini-3.6-flash", ...(env.MODELES_SECOURS ?? "").split(",")]
-    .map((m) => m.trim())
-    .filter((m, i, t) => m && t.indexOf(m) === i);
-
 async function appelerGemini({ messages, extraits }, env) {
   const education = await educationPour(env, extraits).catch((e) => {
     // Une fiche illisible ne doit pas priver l'étudiant de réponse.
     console.log("Éducation illisible, consignes générales seules", e);
     return "";
   });
-  const corps = JSON.stringify({
-    systemInstruction: { parts: [{ text: construireConsignes(extraits, education) }] },
-    contents: messages.map((m) => ({ role: m.role, parts: [{ text: m.texte }] })),
-    generationConfig: { temperature: 0.4, maxOutputTokens: 2048 },
-  });
-  const envoyer = (modele) =>
-    fetch(`${API_GEMINI}/models/${encodeURIComponent(modele)}:generateContent`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": env.GEMINI_API_KEY,
-      },
-      body: corps,
-    });
-
-  let reponse;
-  for (const modele of listeModeles(env)) {
-    reponse = await envoyer(modele);
-    if (reponse.status === 503 || reponse.status === 500) {
-      await pause(ATTENTE_AVANT_NOUVEL_ESSAI);
-      reponse = await envoyer(modele);
-    }
-    if (reponse.ok || !passerAuSuivant(reponse.status)) break;
-    console.log(`Modèle ${modele} indisponible (${reponse.status}), passage au suivant`);
-  }
-
-  if (reponse.status === 429) return { erreur: "quota", statut: 429 };
-  if (reponse.status === 503) return { erreur: "surcharge", statut: 503 };
-  if (!reponse.ok) {
-    console.log("Gemini a refusé la requête", reponse.status, await reponse.text());
-    return { erreur: "modele", statut: 502 };
-  }
-
-  const donnees = await reponse.json();
-  const resultat = (donnees.candidates?.[0]?.content?.parts ?? [])
-    .map((p) => p.text ?? "")
-    .join("")
-    .trim();
-
-  return resultat ? { texte: resultat } : { erreur: "vide", statut: 502 };
+  return interrogerGemini(
+    {
+      systemInstruction: { parts: [{ text: construireConsignes(extraits, education) }] },
+      contents: messages.map((m) => ({ role: m.role, parts: [{ text: m.texte }] })),
+      generationConfig: { temperature: 0.4, maxOutputTokens: 2048 },
+    },
+    env.GEMINI_API_KEY,
+    env
+  );
 }
 
 export default {
@@ -276,6 +235,21 @@ export default {
           return json(r.contenu, 200, cors);
         }
         return json({ erreur: "methode" }, 405, cors);
+      }
+      if (chemin === "/admin/ia" && requete.method === "POST") {
+        let corps;
+        try {
+          corps = await requete.json();
+        } catch {
+          return json({ erreur: "format" }, 400, cors);
+        }
+        try {
+          const r = await executerTacheAdmin(corps, env);
+          return r.erreur ? json({ erreur: r.erreur }, r.statut, cors) : json(r.resultat, 200, cors);
+        } catch (e) {
+          console.log("Agent admin", e);
+          return json({ erreur: "reseau" }, 502, cors);
+        }
       }
       if (chemin === "/admin/fichiers" && requete.method === "PUT") {
         const r = await televerserPdf(requete, env);

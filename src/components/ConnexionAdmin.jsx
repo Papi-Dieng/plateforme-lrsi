@@ -40,6 +40,10 @@ const MESSAGES_ERREUR = {
   "aucune-version-precedente": "Il n'y a pas encore de version précédente à restaurer.",
   "pas-un-pdf": "Ce fichier n'est pas un PDF valide.",
   "pdf-trop-gros": "Ce PDF dépasse 20 Mo. Compresse-le ou découpe-le en plusieurs chapitres.",
+  quota: "Le quota gratuit de l'IA admin est atteint pour le moment. Réessaie plus tard.",
+  surcharge: "Le service d'IA est saturé en ce moment. Réessaie dans quelques secondes.",
+  "reponse-illisible": "L'IA a renvoyé une réponse illisible. Réessaie.",
+  "rien-a-traiter": "Il n'y a rien à traiter : vérifie qu'il y a des compétences ou des chapitres dans cette matière.",
 };
 
 export const messageErreurAdmin = (code) =>

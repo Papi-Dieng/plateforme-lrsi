@@ -22,6 +22,12 @@ import {
   urlPdf,
 } from "../contenu";
 import { extraireTextePdf } from "../extrairePdf";
+import {
+  PanneauCompetencesIA,
+  SuggestionCompetence,
+  texteExercice,
+  texteQuestion,
+} from "../components/AssistantAdmin";
 
 /* ==================================================================
    Gérer le contenu : matières et cours, compétences, exercices, QCM,
@@ -591,6 +597,14 @@ function EditeurExercice({ element: e, changer, matieres, competences, motDePass
         />
         <Champ label="Durée" value={e.duree} maxLength={20} placeholder="20 min" onChange={(ev) => changer({ duree: ev.target.value })} />
       </div>
+      <SuggestionCompetence
+        matiere={matieres.find((m) => m.id === e.matiere)}
+        competences={competences}
+        texte={texteExercice(e)}
+        valeur={e.competence}
+        onAppliquer={(id) => changer({ competence: id })}
+        motDePasse={motDePasse}
+      />
       <Champ
         label="Mots-clés"
         aide="Séparés par des virgules. Ils aident la recherche et l'assistant."
@@ -656,7 +670,7 @@ function EditeurExercice({ element: e, changer, matieres, competences, motDePass
   );
 }
 
-function EditeurQcm({ element: q, changer, matieres, competences }) {
+function EditeurQcm({ element: q, changer, matieres, competences, motDePasse }) {
   const questions = q.questions;
   const changerQuestion = (i, modif) =>
     changer({ questions: questions.map((x, j) => (j === i ? { ...x, ...modif } : x)) });
@@ -731,7 +745,17 @@ function EditeurQcm({ element: q, changer, matieres, competences }) {
                   )}
                 </fieldset>
                 <div className="grid gap-3 sm:grid-cols-[200px_1fr]">
-                  <Choix label="Compétence" value={x.competence ?? ""} options={optionsCompetences(competences, q.matiere)} onChange={(e) => changerQuestion(i, { competence: e.target.value })} />
+                  <div className="space-y-2">
+                    <Choix label="Compétence" value={x.competence ?? ""} options={optionsCompetences(competences, q.matiere)} onChange={(e) => changerQuestion(i, { competence: e.target.value })} />
+                    <SuggestionCompetence
+                      matiere={matieres.find((m) => m.id === q.matiere)}
+                      competences={competences}
+                      texte={texteQuestion(x)}
+                      valeur={x.competence}
+                      onAppliquer={(id) => changerQuestion(i, { competence: id })}
+                      motDePasse={motDePasse}
+                    />
+                  </div>
                   <Zone label="Explication" rows={2} value={x.explication} maxLength={1500} onChange={(e) => changerQuestion(i, { explication: e.target.value })} />
                 </div>
               </div>
@@ -1384,6 +1408,18 @@ export default function GestionContenu() {
                 </button>
               ))}
             </div>
+
+            {onglet === "competences" && (
+              <PanneauCompetencesIA
+                brouillon={brouillon}
+                appliquer={(transformer) => {
+                  setBrouillon(transformer);
+                  setModifie(true);
+                }}
+                motDePasse={motDePasse}
+                identifiant={identifiant}
+              />
+            )}
 
             <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
               {/* ---- Liste ---- */}
