@@ -14,9 +14,34 @@ import { cx } from "./ui";
    aussi les barres du navigateur.
    ================================================================== */
 
+/* La taille du texte en plein écran (A− / A+), gardée d'une lecture à
+   l'autre dans ce navigateur. */
+const CLE_TAILLE = "lrsi-taille-lecture";
+const TAILLES = [0.85, 1, 1.15, 1.3, 1.5, 1.75];
+
+function lireTaille() {
+  try {
+    const t = Number(localStorage.getItem(CLE_TAILLE));
+    return TAILLES.includes(t) ? t : 1;
+  } catch {
+    return 1;
+  }
+}
+
 export default function PleinEcran({ titre, children, className }) {
   const bloc = useRef(null);
   const [actif, setActif] = useState(false);
+  const [taille, setTaille] = useState(lireTaille);
+
+  const changerTaille = (sens) => {
+    const suite = TAILLES[Math.min(Math.max(TAILLES.indexOf(taille) + sens, 0), TAILLES.length - 1)];
+    setTaille(suite);
+    try {
+      localStorage.setItem(CLE_TAILLE, String(suite));
+    } catch {
+      /* stockage indisponible : la taille vaut pour cette lecture */
+    }
+  };
 
   const ouvrir = () => {
     setActif(true);
@@ -33,8 +58,11 @@ export default function PleinEcran({ titre, children, className }) {
     const surChangement = () => {
       if (!document.fullscreenElement) setActif(false);
     };
+    // Échap ne ferme que le plein écran, pas l'aperçu admin qui le contient.
     const surTouche = (e) => {
-      if (e.key === "Escape") setActif(false);
+      if (e.key !== "Escape") return;
+      e.stopPropagation();
+      setActif(false);
     };
     document.addEventListener("fullscreenchange", surChangement);
     document.addEventListener("keydown", surTouche);
@@ -62,9 +90,30 @@ export default function PleinEcran({ titre, children, className }) {
       {actif ? (
         <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-ink-200 bg-white/95 px-4 py-3 backdrop-blur sm:px-8 dark:border-ink-800 dark:bg-ink-950/95">
           <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink-900 dark:text-white">{titre}</span>
-          <button type="button" onClick={fermer} className={bouton}>
+          <div className="flex items-center gap-1" role="group" aria-label="Taille du texte">
+            <button
+              type="button"
+              onClick={() => changerTaille(-1)}
+              disabled={taille === TAILLES[0]}
+              aria-label="Texte plus petit"
+              className={cx(bouton, "px-2.5 disabled:opacity-40")}
+            >
+              A−
+            </button>
+            <button
+              type="button"
+              onClick={() => changerTaille(1)}
+              disabled={taille === TAILLES.at(-1)}
+              aria-label="Texte plus grand"
+              className={cx(bouton, "px-2.5 text-base disabled:opacity-40")}
+            >
+              A+
+            </button>
+          </div>
+          <button type="button" onClick={fermer} className={bouton} aria-label="Quitter le plein écran">
             <Icon name="reduire" className="size-4" />
-            Quitter le plein écran
+            <span className="hidden sm:inline">Quitter le plein écran</span>
+            <span className="sm:hidden">Quitter</span>
           </button>
         </div>
       ) : (
@@ -75,7 +124,11 @@ export default function PleinEcran({ titre, children, className }) {
           </button>
         </div>
       )}
-      <div className={cx(actif && "mx-auto max-w-3xl px-4 py-8 text-base sm:px-8")}>{children}</div>
+      {/* `zoom` agrandit tout le texte, titres et code compris, quelles
+          que soient leurs tailles propres. */}
+      <div className={cx(actif && "mx-auto max-w-3xl px-4 py-8 text-base sm:px-8")}>
+        <div style={actif ? { zoom: taille } : undefined}>{children}</div>
+      </div>
     </div>
   );
 }

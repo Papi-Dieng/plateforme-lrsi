@@ -27,6 +27,8 @@ const tonsBadge = {
   accent:
     "bg-accent-50 text-accent-700 ring-accent-300/60 dark:bg-accent-500/15 dark:text-accent-300 dark:ring-accent-500/30",
   sun: "bg-sun-100 text-sun-900 ring-sun-400/50 dark:bg-sun-500/15 dark:text-sun-400 dark:ring-sun-500/30",
+  flame:
+    "bg-flame-100 text-flame-700 ring-flame-300/60 dark:bg-flame-500/15 dark:text-flame-400 dark:ring-flame-500/30",
 };
 
 export function Badge({ ton = "neutre", icone, className, children }) {

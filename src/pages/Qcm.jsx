@@ -16,6 +16,7 @@ import { getMatiere, matieres, nomMatiere } from "../data/matieres";
 import { themeMatiere } from "../data/couleurs";
 import BoutonFavori from "../components/BoutonFavori";
 import { dureeLisible, enregistrerScore, lireScores } from "../progression";
+import { envoyerStats } from "../stats";
 
 const POINTS_PAR_QUESTION = 10;
 const SEUIL_REUSSITE = 70; // en pourcentage
@@ -371,6 +372,8 @@ function SessionQcm({ qcmId }) {
       correct: reponses[i] === q.bonne,
     }));
     enregistrerScore(qcm.id, score, total, ecoule, detail);
+    // Les réponses, anonymes, pour les statistiques de l'admin (sauf refus).
+    envoyerStats(qcm, qcm.questions.map((_, i) => reponses[i]));
     setTermine(true);
     setAlerteFin(false);
   }, [qcm, termine, tempsImparti, restant, score, total, reponses]);

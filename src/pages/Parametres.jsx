@@ -5,6 +5,7 @@ import { Badge, Bouton, Container, EnTetePage, cx } from "../components/ui";
 import { useSession } from "../session";
 import { CLES } from "../progression";
 import { CLE_PROFIL } from "../profil";
+import { choisirStats, statsRefusees } from "../stats";
 import { site } from "../data/site";
 import {
   CLE_PLANNING,
@@ -26,6 +27,7 @@ const entreesStockage = [
   { cle: CLE_PROFIL, libelle: "Fiche profil", detail: "Avatar, nom d'utilisateur, coordonnées" },
   { cle: CLES.scores, libelle: "Scores des QCM", detail: "Meilleur score et tentatives" },
   { cle: CLES.exercices, libelle: "Exercices travaillés", detail: "Corrections déjà ouvertes" },
+  { cle: CLES.chapitresLus, libelle: "Chapitres lus", detail: "Cochés « J'ai lu ce chapitre »" },
   { cle: CLES.favoris, libelle: "Matières en favori", detail: "Marque-pages du tableau de bord" },
   { cle: CLES.videos, libelle: "Vidéos ajoutées", detail: "Identifiants YouTube collés" },
   { cle: CLES.videosVues, libelle: "Vidéos ouvertes", detail: "Pour la barre de lecture" },
@@ -161,6 +163,7 @@ export default function Parametres() {
   );
   const [tailles, setTailles] = useState(mesurer);
   const [confirmation, setConfirmation] = useState(false);
+  const [partage, setPartage] = useState(() => !statsRefusees());
 
   const relever = () => setTailles(mesurer());
 
@@ -274,6 +277,34 @@ export default function Parametres() {
           </section>
 
           {/* ------------------------------------------------ */}
+          {/* Statistiques anonymes                             */}
+          {/* ------------------------------------------------ */}
+          <section className="card p-6">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-ink-900 dark:text-white">
+              <Icon name="target" className="size-5" />
+              Statistiques anonymes des QCM
+            </h2>
+            <p className="mt-1.5 max-w-2xl text-sm/6 text-ink-600 dark:text-ink-400">
+              Quand tu termines un QCM, la réponse choisie à chaque question est envoyée,
+              sans ton nom ni aucun identifiant. L&apos;équipe voit ainsi quelles questions
+              sont le plus ratées, pour mieux les réexpliquer. Ton score et ta progression
+              restent sur cet appareil.
+            </p>
+            <label className="mt-4 flex items-center gap-3 text-sm font-medium text-ink-800 dark:text-ink-200">
+              <input
+                type="checkbox"
+                checked={partage}
+                onChange={(e) => {
+                  choisirStats(e.target.checked);
+                  setPartage(e.target.checked);
+                }}
+                className="size-4 accent-brand-600"
+              />
+              Partager mes réponses anonymes aux QCM
+            </label>
+          </section>
+
+          {/* ------------------------------------------------ */}
           {/* Données locales                                   */}
           {/* ------------------------------------------------ */}
           <section className="card p-6">
@@ -283,8 +314,10 @@ export default function Parametres() {
             </h2>
             <p className="mt-1.5 max-w-2xl text-sm/6 text-ink-600 dark:text-ink-400">
               Voici exactement ce que la plateforme conserve dans ce navigateur.
-              Rien n'est envoyé sur un serveur, et rien ne te suit d'un appareil
-              à l'autre, sauf si tu emportes ta sauvegarde (juste en dessous).
+              Ces données ne sont pas envoyées sur un serveur, et rien ne te suit
+              d'un appareil à l'autre, sauf si tu emportes ta sauvegarde (juste en
+              dessous). Seules tes réponses aux QCM partent, anonymes : voir
+              « Statistiques anonymes » plus bas.
             </p>
 
             <div className="mt-5 overflow-hidden rounded-2xl border border-ink-200 dark:border-ink-800">

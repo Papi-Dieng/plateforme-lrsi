@@ -65,7 +65,7 @@ export function ecrirePlanning(planning) {
 /* ---- Construire le programme ---- */
 
 /* Les tâches candidates, dans l'ordre où il vaut mieux les faire. */
-function taches(evaluation, { matieres, competences, exercices, qcms, analyse, exercicesTravailles }) {
+function taches(evaluation, { matieres, competences, exercices, qcms, analyse, exercicesTravailles, chapitresLus = {} }) {
   const matiere = matieres.find((m) => m.id === evaluation.matiere);
   if (!matiere) return [];
   const niveauDe = new Map(analyse.map((c) => [c.id, c]));
@@ -124,9 +124,13 @@ function taches(evaluation, { matieres, competences, exercices, qcms, analyse, e
     }
   }
 
-  // 2. Le reste de la matière : chapitres puis exercices pas encore faits.
+  // 2. Le reste de la matière : chapitres pas encore lus, puis exercices
+  // pas encore faits. (Un chapitre lu revient quand même au point 1 si sa
+  // compétence est faible : il faut alors le relire.)
   for (const ch of matiere.chapitres) {
-    if (ch.statut === "disponible") ajouter(tacheChapitre(ch.titre, "Pour couvrir tout le programme."));
+    if (ch.statut === "disponible" && !chapitresLus[`${matiere.id}::${ch.titre}`]) {
+      ajouter(tacheChapitre(ch.titre, "Pour couvrir tout le programme."));
+    }
   }
   for (const e of exercices) {
     if (e.matiere === matiere.id && !exercicesTravailles[e.id]) ajouter(tacheExercice(e, "Pour t'entraîner sur toute la matière."));

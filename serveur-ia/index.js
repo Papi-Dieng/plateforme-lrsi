@@ -6,10 +6,11 @@
    d'accès et appelle le modèle à la place du navigateur. La clé ne
    quitte jamais ce serveur.
 
-   Il ne stocke aucune question, réponse ni adresse IP. Il garde
-   seulement ce que l'espace admin publie, protégé par un mot de
-   passe : le contenu pédagogique (`contenu.js`) et l'éducation de
-   l'IA (`education.js`).
+   Il ne stocke aucune question posée à l'assistant, ni adresse IP. Il
+   garde ce que l'espace admin publie, protégé par un mot de passe : le
+   contenu pédagogique (`contenu.js`) et l'éducation de l'IA
+   (`education.js`) ; et des compteurs anonymes par question de QCM
+   (`stats.js`), que l'étudiant peut refuser dans ses paramètres.
 
    Deux agents : l'assistant des étudiants (clé GEMINI_API_KEY), et
    l'agent de l'espace admin (`agent-admin.js`, clé GEMINI_API_KEY_ADMIN),
@@ -42,6 +43,7 @@ import { menagePdfs, servirPdf, televerserPdf } from "./fichiers.js";
 import { API_GEMINI, interrogerGemini, listeModeles } from "./gemini.js";
 import { executerTacheAdmin } from "./agent-admin.js";
 import { avisRedaction } from "./avis.js";
+import { effacerStats, enregistrerStats, lireStats } from "./stats.js";
 
 const MAX_MESSAGES = 10;
 const MAX_CARACTERES = 1500;
@@ -260,6 +262,10 @@ export default {
         const r = await restaurerContenu(env);
         return r.erreur ? json(r, 404, cors) : json(r.contenu, 200, cors);
       }
+      if (chemin === "/admin/stats" && requete.method === "GET") return json(await lireStats(env), 200, cors);
+      if (chemin === "/admin/stats/effacer" && requete.method === "POST") {
+        return json(await effacerStats(env), 200, cors);
+      }
       if (!chemin.startsWith("/education/")) return json({ erreur: "introuvable" }, 404, cors);
 
       const id = chemin.slice("/education/".length);
@@ -279,6 +285,19 @@ export default {
     }
 
     if (requete.method !== "POST") return json({ erreur: "methode" }, 405, cors);
+
+    // Les réponses anonymes d'un QCM terminé (`stats.js`) : soumises à la
+    // limite par visiteur, comme le reste.
+    if (chemin === "/stats") {
+      let corps;
+      try {
+        corps = await requete.json();
+      } catch {
+        return json({ erreur: "format" }, 400, cors);
+      }
+      const r = await enregistrerStats(corps, env);
+      return r.erreur ? json({ erreur: r.erreur }, r.statut, cors) : json(r.resultat, 200, cors);
+    }
 
     // L'avis de l'IA sur une réponse rédigée dans un devoir : soumis,
     // comme l'assistant, à la limite de requêtes par visiteur.

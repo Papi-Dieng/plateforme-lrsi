@@ -24,10 +24,17 @@ import {
 } from "../contenu";
 import { extraireTextePdf } from "../extrairePdf";
 import QuizEnTexte from "../components/QuizEnTexte";
+import TexteLibre, { AIDE_MISE_EN_FORME } from "../components/TexteLibre";
+import Apercu from "../components/Apercu";
+import LectureTexte from "../components/LectureTexte";
+import LecteurPdf from "../components/LecteurPdf";
+import { CorrectionExercice, EnonceExercice } from "../components/AffichageExercice";
 import {
   GenerateurQcm,
   PanneauCompetencesIA,
   SuggestionCompetence,
+  PanneauImportTD,
+  RemplirDepuisPdf,
   SuggestionARetenir,
   texteExercice,
   texteQuestion,
@@ -352,20 +359,57 @@ function ChoixFormat({ valeur, options, onChange }) {
   );
 }
 
+/* Ouvre l'aperçu : le contenu tel que les étudiants le verront. */
+function BoutonApercu({ onClick, desactive }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={desactive}
+      title={desactive ? "Écris le texte ou ajoute un PDF d'abord" : undefined}
+      className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-semibold text-brand-600 ring-1 ring-brand-200 ring-inset hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-brand-300 dark:ring-ink-700 dark:hover:bg-ink-800"
+    >
+      <Icon name="search" className="size-4" />
+      Aperçu étudiant
+    </button>
+  );
+}
+
 /* Le cours d'un chapitre : un texte écrit, un PDF, ou les deux. Le
    texte s'affiche sur le site (« Lire ici ») ; le PDF est proposé en
    téléchargement. Sans texte, les étudiants lisent le PDF. */
 function CoursChapitre({ chapitre: c, changer, motDePasse }) {
+  const [apercu, setApercu] = useState(false);
   return (
     <fieldset className="space-y-4 rounded-xl border border-ink-200 p-4 dark:border-ink-800">
       <legend className="px-1 text-xs font-semibold text-ink-600 dark:text-ink-300">Cours</legend>
+      <BoutonApercu onClick={() => setApercu(true)} desactive={!c.contenu?.trim() && !c.pdf} />
+      {apercu && (
+        <Apercu titre={c.titre || "Chapitre sans titre"} onFermer={() => setApercu(false)}>
+          <div className="card p-5">
+            {c.resume && <p className="text-sm/6 text-ink-600 dark:text-ink-400">{c.resume}</p>}
+            {c.contenu?.trim() ? (
+              <LectureTexte libelle="Cours" titre={`Cours : ${c.titre}`} pdf={c.pdf} ouvert className="mt-4">
+                <TexteLibre texte={c.contenu} />
+              </LectureTexte>
+            ) : (
+              <LecteurPdf pdf={c.pdf} libelle="Cours en PDF" titre={`Cours : ${c.titre}`} ouvert className="mt-4" />
+            )}
+          </div>
+          {c.statut !== "disponible" && (
+            <p className="text-sm text-sun-700 dark:text-sun-400">
+              Ce chapitre est « Bientôt » : les étudiants ne verront son cours qu&apos;une fois passé en « Disponible ».
+            </p>
+          )}
+        </Apercu>
+      )}
       <Zone
         label="Texte du cours (affiché sur le site)"
         rows={14}
         value={c.contenu ?? ""}
         maxLength={30000}
         placeholder="Le texte complet du cours : définitions, explications, exemples…"
-        aide={`${(c.contenu ?? "").length} / 30 000 caractères. Une ligne vide sépare deux paragraphes. Visible seulement si le chapitre est « Disponible ».`}
+        aide={`${(c.contenu ?? "").length} / 30 000 caractères. Une ligne vide sépare deux paragraphes. Visible seulement si le chapitre est « Disponible ». ${AIDE_MISE_EN_FORME}`}
         onChange={(e) => changer({ contenu: e.target.value })}
       />
       <ChampPdf
@@ -576,8 +620,39 @@ function EditeurCompetence({ element: c, changer, matieres, usages }) {
 }
 
 function EditeurExercice({ element: e, changer, matieres, competences, motDePasse }) {
+  const [apercu, setApercu] = useState(false);
   return (
     <div className="space-y-4">
+      <BoutonApercu onClick={() => setApercu(true)} desactive={!e.enonce?.trim() && !e.pdfEnonce} />
+      {apercu && (
+        <Apercu titre={e.titre || "Exercice sans titre"} onFermer={() => setApercu(false)}>
+          <section className="card p-6">
+            <h2 className="flex items-center gap-2 text-sm font-semibold tracking-wide text-brand-600 uppercase dark:text-brand-400">
+              <Icon name="file" className="size-4" />
+              Énoncé
+            </h2>
+            <EnonceExercice exercice={e} />
+          </section>
+          {e.indice?.trim() && (
+            <section className="rounded-2xl border border-sun-400/40 bg-sun-100/50 p-5 dark:border-sun-500/25 dark:bg-sun-500/10">
+              <h2 className="flex items-center gap-2 font-semibold text-sun-900 dark:text-sun-400">
+                <Icon name="bulb" className="size-4.5" />
+                Indice (affiché à la demande)
+              </h2>
+              <p className="mt-3 text-sm/7 text-sun-900 dark:text-sun-100/90">{e.indice}</p>
+            </section>
+          )}
+          <section className="card overflow-hidden">
+            <h2 className="flex items-center gap-2 border-b border-ink-200 px-6 py-4 font-semibold text-ink-900 dark:border-ink-800 dark:text-white">
+              <Icon name="check" className="size-4.5 text-accent-600 dark:text-accent-400" />
+              Correction détaillée (affichée quand l&apos;étudiant la demande)
+            </h2>
+            <div className="px-6 py-6">
+              <CorrectionExercice exercice={e} />
+            </div>
+          </section>
+        </Apercu>
+      )}
       <Champ label="Titre" value={e.titre} maxLength={150} onChange={(ev) => changer({ titre: ev.target.value })} />
       <div className="grid gap-4 sm:grid-cols-4">
         <Choix label="Matière" value={e.matiere} options={optionsMatieres(matieres)} onChange={(ev) => changer({ matiere: ev.target.value, competence: "" })} />
@@ -604,6 +679,12 @@ function EditeurExercice({ element: e, changer, matieres, competences, motDePass
         value={(e.tags ?? []).join(", ")}
         onChange={(ev) => changer({ tags: ev.target.value.split(",").map((t) => t.trim()).filter(Boolean) })}
       />
+      <RemplirDepuisPdf
+        exercice={e}
+        matiere={matieres.find((m) => m.id === e.matiere)}
+        motDePasse={motDePasse}
+        onAppliquer={changer}
+      />
       {/* Le texte écrit s'affiche sur le site (« Lire ici », plein écran) ;
           les PDF, facultatifs, restent à télécharger. Sans texte, les
           étudiants lisent les PDF. */}
@@ -614,7 +695,7 @@ function EditeurExercice({ element: e, changer, matieres, competences, motDePass
           rows={6}
           value={e.enonce ?? ""}
           maxLength={5000}
-          aide={`${(e.enonce ?? "").length} / 5 000 caractères.`}
+          aide={`${(e.enonce ?? "").length} / 5 000 caractères. ${AIDE_MISE_EN_FORME}`}
           onChange={(ev) => changer({ enonce: ev.target.value })}
         />
         <ChampPdf
@@ -651,7 +732,7 @@ function EditeurExercice({ element: e, changer, matieres, competences, motDePass
         />
         <Zone
           label="Réponse"
-          aide="Le résultat final : le programme complet, le calcul posé ou la valeur trouvée. Affiché en police de code, lignes conservées."
+          aide="Le résultat final : le programme complet, le calcul posé ou la valeur trouvée. Lignes et espaces conservés ; pour un programme, entoure-le de ``` pour l'afficher en police de code."
           rows={5}
           mono
           placeholder={"program billet;\nvar age : integer; prix : real;\nbegin\n  ...\nend."}
@@ -1609,6 +1690,19 @@ export default function GestionContenu() {
                 </button>
               ))}
             </div>
+
+            {onglet === "exercices" && (
+              <PanneauImportTD
+                brouillon={brouillon}
+                appliquer={(transformer) => {
+                  setBrouillon(transformer);
+                  setModifie(true);
+                }}
+                motDePasse={motDePasse}
+                identifiant={identifiant}
+                extraireTexte={extraireTextePdf}
+              />
+            )}
 
             {onglet === "competences" && (
               <PanneauCompetencesIA

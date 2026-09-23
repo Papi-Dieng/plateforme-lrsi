@@ -40,10 +40,11 @@ const articles = [
     icone: "lock",
     titre: "Données personnelles",
     paragraphes: [
-      "En version 1, il n'y a ni serveur ni base de données. Ton profil, ta progression et tes vidéos sont enregistrés uniquement dans ton navigateur, sur cet appareil.",
+      "Il n'y a pas de compte étudiant. Ton profil, ta progression, tes scores et tes vidéos sont enregistrés uniquement dans ton navigateur, sur cet appareil.",
       iaActive
-        ? "Rien de tout cela n'est transmis, et aucun traceur publicitaire n'est utilisé. La seule exception est l'assistant de révision, décrit juste en dessous. Tu peux tout effacer à tout moment depuis les paramètres."
-        : "Rien n'est transmis, rien n'est analysé, aucun traceur publicitaire n'est utilisé. Tu peux tout effacer à tout moment depuis les paramètres.",
+        ? "Rien de tout cela n'est transmis, et aucun traceur publicitaire n'est utilisé. Deux exceptions, décrites ci-dessous : l'assistant de révision, et les statistiques anonymes des QCM. Tu peux tout effacer à tout moment depuis les paramètres."
+        : "Rien de tout cela n'est transmis, et aucun traceur publicitaire n'est utilisé. Une exception, décrite ci-dessous : les statistiques anonymes des QCM. Tu peux tout effacer à tout moment depuis les paramètres.",
+      "Statistiques anonymes des QCM : quand tu termines un QCM, la réponse choisie à chaque question est envoyée au relais de la plateforme (hébergé chez Cloudflare), sans ton nom ni aucun identifiant. Il ne garde ni ton adresse IP ni la date de ton envoi : seulement des compteurs par question, pour que l'équipe voie quelles questions sont le plus ratées. Ton score n'est pas envoyé. Tu peux refuser à tout moment dans les paramètres.",
       "Les formulaires de connexion et d'inscription sont des maquettes : ils ne vérifient rien et n'enregistrent aucun mot de passe. La véritable authentification arrivera en version 3, avec les règles de protection des données qui s'imposent.",
     ],
   },

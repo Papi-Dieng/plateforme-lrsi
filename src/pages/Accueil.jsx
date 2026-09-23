@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { lireChapitresLus, refChapitre } from "../progression";
 import Icon from "../components/Icon";
 import { Bouton, EtatVide, NoteDemo, cx } from "../components/ui";
 import SectionVideos from "../components/videos";
@@ -21,6 +23,7 @@ export default function Accueil() {
   const [params, setParams] = useSearchParams();
   const recherche = params.get("q") ?? "";
   const matiereActive = params.get("m") ?? "toutes";
+  const [lus] = useState(lireChapitresLus);
 
   const choisirMatiere = (id) => {
     const suite = {};
@@ -128,9 +131,12 @@ export default function Accueil() {
         <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {matieresFiltrees.map((m) => {
             const theme = themeMatiere(m);
-            const total = m.chapitres.length;
-            const dispo = m.chapitres.filter((c) => c.statut === "disponible").length;
-            const pourcentage = Math.round((dispo / total) * 100);
+            // Progression : les chapitres que l'étudiant a cochés « lu »,
+            // parmi ceux qui sont disponibles.
+            const disponibles = m.chapitres.filter((c) => c.statut === "disponible");
+            const dispo = disponibles.length;
+            const nbLus = disponibles.filter((c) => lus[refChapitre(m.id, c.titre)]).length;
+            const pourcentage = dispo ? Math.round((nbLus / dispo) * 100) : 0;
             const nbExercices = exercices.filter((e) => e.matiere === m.id).length;
             const nbQcm = qcms.filter((q) => q.matiere === m.id).length;
 
@@ -170,7 +176,7 @@ export default function Accueil() {
                   <div className="flex items-center justify-between text-xs">
                     <span className={surCarte.attenue}>Progression</span>
                     <span className={surCarte.attenue}>
-                      {dispo}/{total} chapitres
+                      {nbLus}/{dispo} chapitre{dispo > 1 ? "s lus" : " lu"}
                     </span>
                   </div>
                   <div
@@ -179,7 +185,7 @@ export default function Accueil() {
                     aria-valuenow={pourcentage}
                     aria-valuemin={0}
                     aria-valuemax={100}
-                    aria-label={`Chapitres disponibles en ${m.nom}`}
+                    aria-label={`Chapitres lus en ${m.nom}`}
                   >
                     <div
                       className={cx("h-full rounded-full", surCarte.barre)}
@@ -344,8 +350,8 @@ export default function Accueil() {
 
       <div className="mt-5">
         <NoteDemo>
-          Contenu de démonstration. La progression affichée correspond aux
-          chapitres déjà rédigés, et les favoris restent dans ton navigateur.
+          La progression compte les chapitres que tu as marqués « J'ai lu ce
+          chapitre ». Elle reste dans ton navigateur, comme tes favoris.
           Le suivi par compte arrivera en version 3.
         </NoteDemo>
       </div>

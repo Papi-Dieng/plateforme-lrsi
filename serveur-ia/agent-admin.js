@@ -22,7 +22,9 @@
    - « generer-qcm » : des questions de QCM écrites à partir du cours des
      chapitres choisis, réponses mélangées.
    - « a-retenir » : pour un exercice, le « À retenir » tiré de son
-     énoncé et de sa correction.
+     énoncé et de sa correction ;
+   - « extraire-exercices » : à partir du texte d'un PDF, remplir les
+     champs d'un exercice, ou découper un TD entier en exercices.
    ================================================================== */
 
 import { interrogerGemini } from "./gemini.js";
@@ -53,7 +55,7 @@ function lireJson(t) {
   return JSON.parse(nettoye);
 }
 
-async function demander(consigneTache, schema, env) {
+async function demander(consigneTache, schema, env, maxOutputTokens = 8192) {
   const cle = env.GEMINI_API_KEY_ADMIN || env.GEMINI_API_KEY;
   const r = await interrogerGemini(
     {
@@ -61,7 +63,7 @@ async function demander(consigneTache, schema, env) {
       contents: [{ role: "user", parts: [{ text: consigneTache }] }],
       generationConfig: {
         temperature: 0.2,
-        maxOutputTokens: 8192,
+        maxOutputTokens,
         responseMimeType: "application/json",
         responseSchema: schema,
       },
@@ -346,11 +348,95 @@ ${correction || "(non fournie : appuie-toi sur l'énoncé et sur les notions cla
   return { resultat: { aRetenir: proposition, raison: texte(r.json?.raison, 200) } };
 }
 
+/* ---- Tirer des exercices du texte d'un PDF ----
+
+   `un` : le texte est celui d'UN exercice (remplir ses champs) ; sinon
+   c'est un TD entier, à découper en exercices. Le texte vient du PDF,
+   lu dans le navigateur de l'auteur. */
+
+const MAX_TEXTE_TD = 30000;
+const MAX_EXERCICES_TD = 15;
+
+async function extraireExercices(donnees, env) {
+  const enonce = texte(donnees?.enonce, MAX_TEXTE_TD);
+  const corrige = texte(donnees?.corrige, MAX_TEXTE_TD);
+  if (!enonce) return { erreur: "rien-a-traiter", statut: 400 };
+  const un = donnees?.un === true;
+
+  const consigne = `Matière : ${texte(donnees?.matiere, 120)}
+${un ? `Titre de l'exercice : ${texte(donnees?.titre, 150) || "(à proposer)"}` : ""}
+
+Texte lu dans le PDF ${un ? "de l'énoncé" : "du TD (énoncés)"} :
+"""
+${enonce}
+"""
+
+${corrige ? `Texte lu dans le PDF du corrigé :\n"""\n${corrige}\n"""` : "Aucun corrigé fourni."}
+
+${un ? "Ce texte est UN SEUL exercice : renvoie exactement un exercice." : `Découpe ce TD en exercices distincts (au plus ${MAX_EXERCICES_TD}), dans l'ordre du document. Un « Exercice 1 », « Exercice 2 »… donne un exercice chacun.`}
+
+Pour chaque exercice :
+- « titre » : court et parlant (le sujet, pas « Exercice 1 ») ;
+- « enonce » : l'énoncé RECOPIÉ FIDÈLEMENT, sans le résumer ni changer les données. Remets en forme ce que la lecture du PDF a abîmé (coupures de lignes, espaces) ; mise en forme permise : « - » pour une liste, « 1. » pour une liste numérotée, **gras**, et \`\`\` sur une ligne seule avant et après un programme ;
+- « indice » : un coup de pouce en une ou deux phrases, qui aide sans donner la réponse ;
+- « etapes » : la méthode, une étape par élément, chaque étape en une phrase ;
+- « reponse » : le résultat final (programme complet entre \`\`\`, calcul posé, ou valeur) ;
+- « explication » : le « À retenir », 1 à 3 phrases : la notion clé et le piège fréquent ;
+- « difficulte » : Facile, Moyen ou Difficile ; « duree » : estimation, par exemple « 20 min » ;
+- « correctionParIA » : false si la correction vient du corrigé fourni, true si tu l'as rédigée toi-même.
+Si un corrigé est fourni, la correction doit le suivre. Sinon, rédige-la toi-même et vérifie chaque calcul avant de l'écrire.`;
+
+  const schema = {
+    type: "OBJECT",
+    properties: {
+      exercices: {
+        type: "ARRAY",
+        items: {
+          type: "OBJECT",
+          properties: {
+            titre: { type: "STRING" },
+            enonce: { type: "STRING" },
+            indice: { type: "STRING" },
+            etapes: { type: "ARRAY", items: { type: "STRING" } },
+            reponse: { type: "STRING" },
+            explication: { type: "STRING" },
+            difficulte: { type: "STRING", enum: ["Facile", "Moyen", "Difficile"] },
+            duree: { type: "STRING" },
+            correctionParIA: { type: "BOOLEAN" },
+          },
+          required: ["titre", "enonce", "indice", "etapes", "reponse", "explication", "difficulte", "duree", "correctionParIA"],
+        },
+      },
+    },
+    required: ["exercices"],
+  };
+
+  const r = await demander(consigne, schema, env, 32768);
+  if (r.erreur) return r;
+
+  const exercices = liste(r.json?.exercices, un ? 1 : MAX_EXERCICES_TD)
+    .map((e) => ({
+      titre: texte(e?.titre, 150),
+      enonce: texte(e?.enonce, 5000),
+      indice: texte(e?.indice, 1500),
+      etapes: liste(e?.etapes, 20).map((s) => texte(s, 1500)).filter(Boolean),
+      reponse: texte(e?.reponse, 5000),
+      explication: texte(e?.explication, 2000),
+      difficulte: ["Facile", "Moyen", "Difficile"].includes(e?.difficulte) ? e.difficulte : "Moyen",
+      duree: texte(e?.duree, 20),
+      correctionParIA: e?.correctionParIA !== false || !corrige,
+    }))
+    .filter((e) => e.enonce);
+  if (exercices.length === 0) return { erreur: "reponse-illisible", statut: 502 };
+  return { resultat: { exercices } };
+}
+
 const TACHES = {
   rattacher,
   "proposer-competences": proposerCompetences,
   "generer-qcm": genererQcm,
   "a-retenir": aRetenir,
+  "extraire-exercices": extraireExercices,
 };
 
 export async function executerTacheAdmin(corps, env) {

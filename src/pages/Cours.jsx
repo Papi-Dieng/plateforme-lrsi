@@ -18,7 +18,7 @@ import {
 import { getMatiere, matieres } from "../data/matieres";
 import { themeMatiere } from "../data/couleurs";
 import BoutonFavori from "../components/BoutonFavori";
-import { refChapitre } from "../progression";
+import { basculerChapitreLu, lireChapitresLus, refChapitre } from "../progression";
 import { exercices } from "../data/exercices";
 import { qcms } from "../data/qcm";
 
@@ -171,6 +171,7 @@ export function Cours() {
 export function CoursDetail() {
   const { matiereId } = useParams();
   const matiere = getMatiere(matiereId);
+  const [lus, setLus] = useState(lireChapitresLus);
 
   if (!matiere) {
     return (
@@ -191,6 +192,9 @@ export function CoursDetail() {
   const disponibles = matiere.chapitres.filter(
     (c) => c.statut === "disponible"
   ).length;
+  const nbLus = matiere.chapitres.filter(
+    (c) => c.statut === "disponible" && lus[refChapitre(matiere.id, c.titre)]
+  ).length;
 
   return (
     <>
@@ -210,6 +214,11 @@ export function CoursDetail() {
           <span className="text-ink-300 dark:text-ink-700">·</span>
           <Badge ton="accent">{disponibles} chapitres disponibles</Badge>
           <Badge>{matiere.chapitres.length} au total</Badge>
+          {disponibles > 0 && (
+            <Badge ton={nbLus === disponibles ? "accent" : "brand"} icone="check">
+              {nbLus} / {disponibles} lu{disponibles > 1 ? "s" : ""}
+            </Badge>
+          )}
           <BoutonFavori
             type="matiere"
             reference={matiere.id}
@@ -229,6 +238,8 @@ export function CoursDetail() {
             <ol className="mt-5 space-y-3">
               {matiere.chapitres.map((c, i) => {
                 const pret = c.statut === "disponible";
+                const ref = refChapitre(matiere.id, c.titre);
+                const lu = Boolean(lus[ref]);
                 return (
                   <li
                     key={c.titre}
@@ -290,6 +301,22 @@ export function CoursDetail() {
                         <LectureTexte libelle="Cours" titre={`Cours : ${c.titre}`} pdf={c.pdf} className="mt-4">
                           <TexteLibre texte={c.contenu} />
                         </LectureTexte>
+                      )}
+                      {pret && (c.contenu || c.pdf) && (
+                        <button
+                          type="button"
+                          aria-pressed={lu}
+                          onClick={() => setLus(basculerChapitreLu(ref))}
+                          className={cx(
+                            "mt-3 inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors",
+                            lu
+                              ? "bg-accent-50 text-accent-700 ring-1 ring-accent-300 ring-inset hover:bg-accent-100 dark:bg-accent-500/15 dark:text-accent-300 dark:ring-accent-500/30"
+                              : "text-ink-600 ring-1 ring-ink-200 ring-inset hover:bg-ink-50 dark:text-ink-300 dark:ring-ink-700 dark:hover:bg-ink-800"
+                          )}
+                        >
+                          <Icon name="check" className="size-4" />
+                          {lu ? "Chapitre lu" : "J'ai lu ce chapitre"}
+                        </button>
                       )}
                     </div>
                   </li>

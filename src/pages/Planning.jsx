@@ -8,7 +8,7 @@ import { exercices } from "../data/exercices";
 import { qcms } from "../data/qcm";
 import { examens as devoirs } from "../data/examens";
 import { analyserCompetences } from "../competences";
-import { lireExercicesTravailles, lireScores } from "../progression";
+import { lireChapitresLus, lireExercicesTravailles, lireScores } from "../progression";
 import {
   ajouterJours,
   aujourdhui,
@@ -141,6 +141,7 @@ export default function Planning() {
     devoirs,
     analyse: analyserCompetences(lireScores()),
     exercicesTravailles: lireExercicesTravailles(),
+    chapitresLus: lireChapitresLus(),
   }));
 
   const modifier = (suite) => {

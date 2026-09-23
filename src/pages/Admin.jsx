@@ -187,6 +187,26 @@ export default function Admin() {
             <Icon name="chevron" className="size-5 shrink-0 -rotate-90 text-ink-400" />
           </Link>
 
+          {/* ---- Statistiques des QCM ---- */}
+          <Link
+            to="/admin/stats"
+            className="card flex items-center gap-4 p-5 transition-colors hover:border-brand-300 sm:p-6 dark:hover:border-brand-500/40"
+          >
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-flame-500 text-white">
+              <Icon name="target" className="size-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold text-ink-900 dark:text-white">
+                Questions les plus ratées
+              </span>
+              <span className="mt-0.5 block text-sm text-ink-500 dark:text-ink-400">
+                D'après les réponses anonymes des étudiants aux QCM : le taux
+                d'échec de chaque question et le piège le plus choisi.
+              </span>
+            </span>
+            <Icon name="chevron" className="size-5 shrink-0 -rotate-90 text-ink-400" />
+          </Link>
+
           {/* ---- Inventaire ---- */}
           <Bloc
             icone="layers"

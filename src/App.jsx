@@ -19,6 +19,7 @@ import Conditions from "./pages/Conditions";
 import Admin from "./pages/Admin";
 import EducationIA from "./pages/EducationIA";
 import GestionContenu from "./pages/GestionContenu";
+import StatsAdmin from "./pages/StatsAdmin";
 import Favoris from "./pages/Favoris";
 import Assistant from "./pages/Assistant";
 import Planning from "./pages/Planning";
@@ -175,6 +176,14 @@ export default function App() {
           element={
             <Protege>
               <EducationIA />
+            </Protege>
+          }
+        />
+        <Route
+          path="admin/stats"
+          element={
+            <Protege>
+              <StatsAdmin />
             </Protege>
           }
         />

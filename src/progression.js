@@ -19,6 +19,7 @@ export const CLES = {
   favoris: "lrsi-favoris",
   videos: "lrsi-videos",
   videosVues: "lrsi-videos-vues",
+  chapitresLus: "lrsi-chapitres-lus",
 };
 
 function lire(cle, defaut) {
@@ -98,6 +99,25 @@ export function marquerExerciceTravaille(id) {
     ecrire(CLES.exercices, faits);
   }
   return faits;
+}
+
+/* ---------------------------------------------------------------- */
+/* Chapitres lus                                                     */
+/*                                                                   */
+/* L'étudiant coche « J'ai lu ce chapitre ». { refChapitre: { date } } */
+/* ---------------------------------------------------------------- */
+
+export function lireChapitresLus() {
+  const brut = lire(CLES.chapitresLus, {});
+  return typeof brut === "object" && brut !== null && !Array.isArray(brut) ? brut : {};
+}
+
+export function basculerChapitreLu(reference) {
+  const lus = lireChapitresLus();
+  if (lus[reference]) delete lus[reference];
+  else lus[reference] = { date: new Date().toISOString() };
+  ecrire(CLES.chapitresLus, lus);
+  return lus;
 }
 
 /* ---------------------------------------------------------------- */
