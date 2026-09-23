@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import TexteLibre from "../components/TexteLibre";
+import LecteurPdf from "../components/LecteurPdf";
 import { Badge, Container, EnTetePage, EtatVide, Filtres, cx } from "../components/ui";
 import { annales, examens, getExamen, totalPoints } from "../data/examens";
 import { getMatiere, matieres, nomMatiere } from "../data/matieres";
@@ -96,8 +97,8 @@ export function ExamensListe() {
                       {formatMinutes(x.dureeMinutes)}
                     </span>
                     <span className="flex items-center gap-1">
-                      <Icon name="layers" className="size-3.5" />
-                      {x.parties.length} parties
+                      <Icon name={x.format === "pdf" ? "file" : "layers"} className="size-3.5" />
+                      {x.format === "pdf" ? "Sujet en PDF" : `${x.parties.length} parties`}
                     </span>
                     <span>Sur {totalPoints(x)} points</span>
                   </div>
@@ -272,10 +273,15 @@ export function ExamenSession() {
               <ul className="mt-3 space-y-1.5 text-sm/6 text-ink-600 dark:text-ink-400">
                 <li>Durée : {formatMinutes(examen.dureeMinutes)}. Un minuteur s'affiche en haut de la page.</li>
                 <li>
-                  {examen.parties.length} parties, {total} points au total. Rédige tes réponses sur une
-                  feuille, comme le jour de l'examen.
+                  {examen.format === "pdf"
+                    ? `Sujet en PDF, noté sur ${total} points.`
+                    : `${examen.parties.length} parties, ${total} points au total.`}{" "}
+                  Rédige tes réponses sur une feuille, comme le jour de l'examen.
                 </li>
-                <li>Le corrigé ne s'affiche qu'à la fin, et tu te notes toi-même partie par partie.</li>
+                <li>
+                  Le corrigé ne s'affiche qu'à la fin, et tu te notes toi-même
+                  {examen.format === "pdf" ? "." : ", partie par partie."}
+                </li>
               </ul>
               {examen.consignes && (
                 <div className="mt-4 rounded-xl bg-sun-100/60 p-4 dark:bg-sun-500/10">
@@ -296,7 +302,54 @@ export function ExamenSession() {
             </div>
           )}
 
+          {etape !== "consignes" && examen.format === "pdf" && (
+            <>
+              <section className="card p-6">
+                <h2 className="font-semibold text-ink-900 dark:text-white">Sujet</h2>
+                <LecteurPdf
+                  pdf={examen.pdfEnonce}
+                  libelle="Sujet en PDF"
+                  titre={`Sujet : ${examen.titre}`}
+                  ouvert={etape === "epreuve"}
+                  className="mt-3"
+                />
+              </section>
+              {etape === "corrige" && (
+                <section className="card p-6">
+                  <h2 className="font-semibold text-accent-700 dark:text-accent-400">Corrigé</h2>
+                  {examen.pdfCorrige ? (
+                    <LecteurPdf
+                      pdf={examen.pdfCorrige}
+                      libelle="Corrigé en PDF"
+                      titre={`Corrigé : ${examen.titre}`}
+                      ouvert
+                      className="mt-3"
+                    />
+                  ) : (
+                    <p className="mt-2 text-sm text-ink-500">Le corrigé de cet examen n'a pas encore été publié.</p>
+                  )}
+                  <label className="mt-4 flex items-center gap-3 text-sm text-ink-700 dark:text-ink-300">
+                    Mes points
+                    <input
+                      type="number"
+                      min={0}
+                      max={total}
+                      step={0.5}
+                      value={notes[0] ?? ""}
+                      onChange={(e) =>
+                        setNotes({ 0: Math.min(Math.max(Number(e.target.value), 0), total) })
+                      }
+                      className="w-20 rounded-lg border border-ink-200 bg-white px-2 py-1.5 text-sm dark:border-ink-700 dark:bg-ink-950"
+                    />
+                    <span className="text-ink-500">/ {total}</span>
+                  </label>
+                </section>
+              )}
+            </>
+          )}
+
           {etape !== "consignes" &&
+            examen.format !== "pdf" &&
             examen.parties.map((p, i) => (
               <section key={i} className="card p-6">
                 <h2 className="flex flex-wrap items-baseline justify-between gap-2 font-semibold text-ink-900 dark:text-white">

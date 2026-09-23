@@ -372,6 +372,16 @@ recompilation, pas de push.
   les étudiants le lisent, l'IA ne peut pas s'en servir, et la page le dit.
   Un PDF qu'aucune version publiée ne cite plus est supprimé un jour après,
   lors d'une publication.
+- Un **exercice** peut aussi se donner en deux PDF, l'énoncé et la
+  correction : l'énoncé s'affiche tout de suite, la correction seulement quand
+  l'étudiant clique « voir la correction ». Un indice écrit reste possible.
+  L'assistant IA lit le texte des deux, et donne l'indice avant la correction.
+- Un **examen blanc** peut se donner en deux PDF, le sujet et le corrigé : le
+  sujet s'affiche au lancement du minuteur, le corrigé à la fin, et
+  l'étudiant se note sur le total indiqué.
+- Ce qui est caché (correction, corrigé) l'est dans la page, pas sur le
+  relais : quelqu'un qui connaît l'adresse d'un PDF peut l'ouvrir. C'est
+  déjà le cas des corrections écrites, qui sont dans le site.
 - Les **compétences** se gèrent dans leur onglet : nom, matière, et chapitres
   à relire quand elle est faible. Renommer un chapitre met à jour les
   compétences qui le citent. Supprimer une compétence la détache des

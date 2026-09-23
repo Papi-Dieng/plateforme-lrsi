@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Icon from "../components/Icon";
+import LecteurPdf from "../components/LecteurPdf";
 import {
   Badge,
   BlocCode,
@@ -154,7 +155,15 @@ export function Exercices() {
                       />
                     </div>
                     <p className="mt-2 line-clamp-3 flex-1 text-sm/6 text-ink-600 dark:text-ink-400">
-                      {e.enonce}
+                      {e.format === "pdf" ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <Icon name="file" className="size-4 text-flame-500" />
+                          Énoncé en PDF
+                          {e.pdfCorrige ? ", avec sa correction" : ""}
+                        </span>
+                      ) : (
+                        e.enonce
+                      )}
                     </p>
 
                     <div className="mt-4 flex flex-wrap gap-1.5">
@@ -258,12 +267,23 @@ export function ExerciceDetail() {
               <Icon name="file" className="size-4" />
               Énoncé
             </h2>
-            <p className="mt-4 text-base/7 whitespace-pre-line text-ink-800 dark:text-ink-200">
-              {exercice.enonce}
-            </p>
+            {exercice.format === "pdf" ? (
+              <LecteurPdf
+                pdf={exercice.pdfEnonce}
+                libelle="Énoncé en PDF"
+                titre={`Énoncé : ${exercice.titre}`}
+                ouvert
+                className="mt-4"
+              />
+            ) : (
+              <p className="mt-4 text-base/7 whitespace-pre-line text-ink-800 dark:text-ink-200">
+                {exercice.enonce}
+              </p>
+            )}
           </section>
 
-          {/* Indice */}
+          {/* Indice : facultatif pour un exercice donné en PDF */}
+          {exercice.indice && (
           <section className="rounded-2xl border border-sun-400/40 bg-sun-100/50 p-5 dark:border-sun-500/25 dark:bg-sun-500/10">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="flex items-center gap-2 font-semibold text-sun-900 dark:text-sun-400">
@@ -285,6 +305,7 @@ export function ExerciceDetail() {
               </p>
             )}
           </section>
+          )}
 
           {/* Correction */}
           <section className="card overflow-hidden">
@@ -306,7 +327,22 @@ export function ExerciceDetail() {
               </Bouton>
             </div>
 
-            {correctionVisible ? (
+            {correctionVisible && exercice.format === "pdf" ? (
+              <div className="px-6 py-6">
+                {exercice.pdfCorrige ? (
+                  <LecteurPdf
+                    pdf={exercice.pdfCorrige}
+                    libelle="Correction en PDF"
+                    titre={`Correction : ${exercice.titre}`}
+                    ouvert
+                  />
+                ) : (
+                  <p className="text-sm text-ink-500 dark:text-ink-400">
+                    La correction de cet exercice n'a pas encore été publiée.
+                  </p>
+                )}
+              </div>
+            ) : correctionVisible ? (
               <div className="space-y-6 px-6 py-6">
                 <div>
                   <h3 className="text-sm font-semibold text-ink-900 dark:text-white">

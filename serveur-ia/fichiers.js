@@ -68,11 +68,19 @@ export async function servirPdf(id, env) {
   });
 }
 
-/* Les identifiants de PDF cités par une version du contenu. */
+/* Les identifiants de PDF cités par une version du contenu : cours des
+   chapitres, énoncés et corrections des exercices et des examens. Un
+   PDF absent d'ici serait supprimé par le ménage. */
 export const pdfsCites = (contenu) =>
-  (contenu?.matieres ?? []).flatMap((m) =>
-    (m.chapitres ?? []).map((c) => c.pdf?.id).filter(Boolean)
-  );
+  [
+    ...(contenu?.matieres ?? []).flatMap((m) => (m.chapitres ?? []).map((c) => c.pdf)),
+    ...[...(contenu?.exercices ?? []), ...(contenu?.examens ?? [])].flatMap((e) => [
+      e.pdfEnonce,
+      e.pdfCorrige,
+    ]),
+  ]
+    .map((p) => p?.id)
+    .filter(Boolean);
 
 export async function menagePdfs(env, versions) {
   const gardes = new Set(versions.flatMap(pdfsCites));

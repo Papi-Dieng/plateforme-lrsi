@@ -61,5 +61,9 @@ export const examens = [
 export const annales = [];
 
 export const getExamen = (id) => examens.find((x) => x.id === id);
+// Un examen en PDF se note sur le total indiqué dans l'admin ; un
+// examen écrit, sur la somme de ses parties.
 export const totalPoints = (examen) =>
-  examen.parties.reduce((n, p) => n + (p.points ?? 0), 0);
+  examen.format === "pdf"
+    ? examen.pointsTotal ?? 20
+    : examen.parties.reduce((n, p) => n + (p.points ?? 0), 0);

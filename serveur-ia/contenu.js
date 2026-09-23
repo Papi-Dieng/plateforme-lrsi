@@ -59,6 +59,12 @@ function uniques(elements) {
   return elements.filter((e) => e.id && !vus.has(e.id) && vus.add(e.id));
 }
 
+/* Une référence à un PDF téléversé : identifiant, nom affiché, taille. */
+const pdfValide = (v) =>
+  v && typeof v === "object" && ID_FICHIER.test(v.id)
+    ? { id: v.id, nom: texte(v.nom, 120) || "document.pdf", taille: entier(v.taille, 0, 30_000_000, 0) }
+    : null;
+
 const nettoyerMatiere = (m) => ({
   id: id(m?.id),
   nomCourt: texte(m?.nomCourt, 30),
@@ -72,10 +78,7 @@ const nettoyerMatiere = (m) => ({
       // Un cours s'écrit directement, ou se téléverse en PDF. Dans ce
       // cas, `texteIA` garde le texte extrait du PDF : l'assistant s'en
       // sert, les étudiants lisent le PDF.
-      const pdf =
-        c?.pdf && ID_FICHIER.test(c.pdf.id)
-          ? { id: c.pdf.id, nom: texte(c.pdf.nom, 120) || "cours.pdf", taille: entier(c.pdf.taille, 0, 30_000_000, 0) }
-          : null;
+      const pdf = pdfValide(c?.pdf);
       const format = c?.format === "pdf" && pdf ? "pdf" : "texte";
       return {
         titre: texte(c?.titre, 150),
@@ -100,20 +103,33 @@ const nettoyerCompetence = (c) => ({
   chapitres: textes(c?.chapitres, 20, 150),
 });
 
-const nettoyerExercice = (e) => ({
-  id: id(e?.id),
-  titre: texte(e?.titre, 150),
-  matiere: id(e?.matiere),
-  competence: id(e?.competence),
-  difficulte: unParmi(e?.difficulte, ["Facile", "Moyen", "Difficile"], "Moyen"),
-  duree: texte(e?.duree, 20),
-  tags: textes(e?.tags, 10, 30),
-  enonce: texte(e?.enonce, 5000),
-  indice: texte(e?.indice, 1500),
-  etapes: textes(e?.etapes, 20, 1500),
-  reponse: texte(e?.reponse, 5000),
-  explication: texte(e?.explication, 2000),
-});
+/* Un exercice s'écrit, ou se donne en deux PDF : l'énoncé, et la
+   correction, montrée seulement quand l'étudiant la demande. Le texte
+   lu dans chaque PDF sert à l'assistant IA. L'indice reste écrit. */
+function nettoyerExercice(e) {
+  const pdfEnonce = pdfValide(e?.pdfEnonce);
+  const format = e?.format === "pdf" && pdfEnonce ? "pdf" : "texte";
+  const pdf = format === "pdf";
+  return {
+    id: id(e?.id),
+    titre: texte(e?.titre, 150),
+    matiere: id(e?.matiere),
+    competence: id(e?.competence),
+    difficulte: unParmi(e?.difficulte, ["Facile", "Moyen", "Difficile"], "Moyen"),
+    duree: texte(e?.duree, 20),
+    tags: textes(e?.tags, 10, 30),
+    format,
+    enonce: pdf ? "" : texte(e?.enonce, 5000),
+    indice: texte(e?.indice, 1500),
+    etapes: pdf ? [] : textes(e?.etapes, 20, 1500),
+    reponse: pdf ? "" : texte(e?.reponse, 5000),
+    explication: pdf ? "" : texte(e?.explication, 2000),
+    pdfEnonce: pdf ? pdfEnonce : null,
+    pdfCorrige: pdf ? pdfValide(e?.pdfCorrige) : null,
+    texteEnonce: pdf ? texte(e?.texteEnonce, 15000) : "",
+    texteCorrige: pdf ? texte(e?.texteCorrige, 15000) : "",
+  };
+}
 
 const nettoyerQcm = (q) => ({
   id: id(q?.id),
@@ -145,21 +161,35 @@ const nettoyerVideo = (v) => ({
   youtubeId: typeof v?.youtubeId === "string" && YOUTUBE.test(v.youtubeId) ? v.youtubeId : null,
 });
 
-const nettoyerExamen = (x) => ({
-  id: id(x?.id),
-  titre: texte(x?.titre, 150),
-  matiere: id(x?.matiere),
-  dureeMinutes: entier(x?.dureeMinutes, 5, 480, 60),
-  consignes: texte(x?.consignes, 2000),
-  parties: liste(x?.parties, 20)
-    .map((p) => ({
-      titre: texte(p?.titre, 150),
-      enonce: texte(p?.enonce, 8000),
-      points: entier(p?.points, 0, 100, 0),
-      corrige: texte(p?.corrige, 8000),
-    }))
-    .filter((p) => p.enonce),
-});
+/* Un examen blanc s'écrit partie par partie, ou se donne en deux PDF :
+   le sujet, montré au lancement du minuteur, et le corrigé, montré à la
+   fin. En PDF, la note se donne sur `pointsTotal`. */
+function nettoyerExamen(x) {
+  const pdfEnonce = pdfValide(x?.pdfEnonce);
+  const format = x?.format === "pdf" && pdfEnonce ? "pdf" : "parties";
+  const pdf = format === "pdf";
+  return {
+    id: id(x?.id),
+    titre: texte(x?.titre, 150),
+    matiere: id(x?.matiere),
+    dureeMinutes: entier(x?.dureeMinutes, 5, 480, 60),
+    consignes: texte(x?.consignes, 2000),
+    format,
+    parties: pdf
+      ? []
+      : liste(x?.parties, 20)
+          .map((p) => ({
+            titre: texte(p?.titre, 150),
+            enonce: texte(p?.enonce, 8000),
+            points: entier(p?.points, 0, 100, 0),
+            corrige: texte(p?.corrige, 8000),
+          }))
+          .filter((p) => p.enonce),
+    pdfEnonce: pdf ? pdfEnonce : null,
+    pdfCorrige: pdf ? pdfValide(x?.pdfCorrige) : null,
+    pointsTotal: pdf ? entier(x?.pointsTotal, 1, 200, 20) : 0,
+  };
+}
 
 const nettoyerAnnale = (a) => ({
   id: id(a?.id),

@@ -35,6 +35,16 @@ function contenuDe(lien) {
   if (lien.type === "exercice") {
     const e = getExercice(lien.to.split("/").pop());
     if (!e) return "";
+    // Exercice donné en PDF : le texte lu dans l'énoncé et la correction.
+    if (e.format === "pdf") {
+      return [
+        e.texteEnonce ? `Énoncé : ${e.texteEnonce}` : "",
+        e.indice ? `Indice : ${e.indice}` : "",
+        e.texteCorrige ? `Correction : ${e.texteCorrige}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n");
+    }
     return [
       `Énoncé : ${e.enonce}`,
       `Indice : ${e.indice}`,
