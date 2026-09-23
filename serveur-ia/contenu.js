@@ -105,13 +105,14 @@ const nettoyerCompetence = (c) => ({
   chapitres: textes(c?.chapitres, 20, 150),
 });
 
-/* Un exercice s'écrit, ou se donne en deux PDF : l'énoncé, et la
-   correction, montrée seulement quand l'étudiant la demande. Le texte
-   lu dans chaque PDF sert à l'assistant IA. L'indice reste écrit. */
+/* Un exercice a un texte écrit, deux PDF (l'énoncé, et la correction
+   montrée seulement quand l'étudiant la demande), ou les deux : le texte
+   s'affiche sur le site, les PDF restent à télécharger. Le texte lu dans
+   chaque PDF sert à l'assistant IA quand rien n'est écrit. */
 function nettoyerExercice(e) {
   const pdfEnonce = pdfValide(e?.pdfEnonce);
-  const format = e?.format === "pdf" && pdfEnonce ? "pdf" : "texte";
-  const pdf = format === "pdf";
+  const pdfCorrige = pdfValide(e?.pdfCorrige);
+  const enonce = texte(e?.enonce, 5000);
   return {
     id: id(e?.id),
     titre: texte(e?.titre, 150),
@@ -120,16 +121,16 @@ function nettoyerExercice(e) {
     difficulte: unParmi(e?.difficulte, ["Facile", "Moyen", "Difficile"], "Moyen"),
     duree: texte(e?.duree, 20),
     tags: textes(e?.tags, 10, 30),
-    format,
-    enonce: pdf ? "" : texte(e?.enonce, 5000),
+    format: !enonce && pdfEnonce ? "pdf" : "texte",
+    enonce,
     indice: texte(e?.indice, 1500),
-    etapes: pdf ? [] : textes(e?.etapes, 20, 1500),
-    reponse: pdf ? "" : texte(e?.reponse, 5000),
-    explication: pdf ? "" : texte(e?.explication, 2000),
-    pdfEnonce: pdf ? pdfEnonce : null,
-    pdfCorrige: pdf ? pdfValide(e?.pdfCorrige) : null,
-    texteEnonce: pdf ? texte(e?.texteEnonce, 15000) : "",
-    texteCorrige: pdf ? texte(e?.texteCorrige, 15000) : "",
+    etapes: textes(e?.etapes, 20, 1500),
+    reponse: texte(e?.reponse, 5000),
+    explication: texte(e?.explication, 2000),
+    pdfEnonce,
+    pdfCorrige,
+    texteEnonce: pdfEnonce ? texte(e?.texteEnonce, 15000) : "",
+    texteCorrige: pdfCorrige ? texte(e?.texteCorrige, 15000) : "",
     // Les résultats que l'étudiant peut vérifier lui-même : un libellé et
     // la réponse attendue (plusieurs écritures séparées par « | »).
     verification: liste(e?.verification, 50)

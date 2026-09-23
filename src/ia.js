@@ -35,21 +35,15 @@ function contenuDe(lien) {
   if (lien.type === "exercice") {
     const e = getExercice(lien.to.split("/").pop());
     if (!e) return "";
-    // Exercice donné en PDF : le texte lu dans l'énoncé et la correction.
-    if (e.format === "pdf") {
-      return [
-        e.texteEnonce ? `Énoncé : ${e.texteEnonce}` : "",
-        e.indice ? `Indice : ${e.indice}` : "",
-        e.texteCorrige ? `Correction : ${e.texteCorrige}` : "",
-      ]
-        .filter(Boolean)
-        .join("\n");
-    }
+    // Le texte écrit d'abord ; à défaut, celui lu dans les PDF.
+    const correctionEcrite = Boolean(e.reponse || e.etapes?.length);
     return [
-      `Énoncé : ${e.enonce}`,
-      `Indice : ${e.indice}`,
-      `Méthode : ${(e.etapes ?? []).join(" ")}`,
-      `Correction : ${e.reponse}`,
+      e.enonce || e.texteEnonce ? `Énoncé : ${e.enonce || e.texteEnonce}` : "",
+      e.indice ? `Indice : ${e.indice}` : "",
+      e.etapes?.length ? `Méthode : ${e.etapes.join(" ")}` : "",
+      correctionEcrite
+        ? e.reponse ? `Correction : ${e.reponse}` : ""
+        : e.texteCorrige ? `Correction : ${e.texteCorrige}` : "",
       e.explication ? `À retenir : ${e.explication}` : "",
     ]
       .filter(Boolean)

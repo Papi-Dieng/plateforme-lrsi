@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import LecteurPdf from "../components/LecteurPdf";
-import PleinEcran from "../components/PleinEcran";
+import LectureTexte from "../components/LectureTexte";
 import VerifierReponse from "../components/VerifierReponse";
 import {
   Badge,
@@ -157,7 +157,7 @@ export function Exercices() {
                       />
                     </div>
                     <p className="mt-2 line-clamp-3 flex-1 text-sm/6 text-ink-600 dark:text-ink-400">
-                      {e.format === "pdf" ? (
+                      {!e.enonce && e.pdfEnonce ? (
                         <span className="inline-flex items-center gap-1.5">
                           <Icon name="file" className="size-4 text-flame-500" />
                           Énoncé en PDF
@@ -213,6 +213,8 @@ function DetailExercice({ exerciceId }) {
 
   const [indiceVisible, setIndiceVisible] = useState(false);
   const [correctionVisible, setCorrectionVisible] = useState(false);
+  // La correction écrite passe avant le PDF, qui reste à télécharger.
+  const correctionEcrite = Boolean(exercice?.etapes?.length || exercice?.reponse || exercice?.explication);
 
   // Ouvrir la correction compte comme « exercice travaillé » dans le profil.
   const basculerCorrection = () => {
@@ -269,7 +271,21 @@ function DetailExercice({ exerciceId }) {
               <Icon name="file" className="size-4" />
               Énoncé
             </h2>
-            {exercice.format === "pdf" ? (
+            {/* L'énoncé écrit passe avant le PDF, qui reste à télécharger. */}
+            {exercice.enonce ? (
+              <LectureTexte
+                libelle="Énoncé"
+                icone="file"
+                titre={`Énoncé : ${exercice.titre}`}
+                pdf={exercice.pdfEnonce}
+                ouvert
+                className="mt-4"
+              >
+                <p className="text-base/7 whitespace-pre-line text-ink-800 dark:text-ink-200">
+                  {exercice.enonce}
+                </p>
+              </LectureTexte>
+            ) : (
               <LecteurPdf
                 pdf={exercice.pdfEnonce}
                 libelle="Énoncé en PDF"
@@ -277,12 +293,6 @@ function DetailExercice({ exerciceId }) {
                 ouvert
                 className="mt-4"
               />
-            ) : (
-              <PleinEcran titre={`Énoncé : ${exercice.titre}`} className="mt-3">
-                <p className="mt-4 text-base/7 whitespace-pre-line text-ink-800 dark:text-ink-200">
-                  {exercice.enonce}
-                </p>
-              </PleinEcran>
             )}
           </section>
 
@@ -342,7 +352,60 @@ function DetailExercice({ exerciceId }) {
               </Bouton>
             </div>
 
-            {correctionVisible && exercice.format === "pdf" ? (
+            {correctionVisible && correctionEcrite ? (
+              <div className="px-6 py-6">
+                <LectureTexte
+                  libelle="Correction"
+                  icone="check"
+                  titre={`Correction : ${exercice.titre}`}
+                  pdf={exercice.pdfCorrige}
+                  ouvert
+                >
+                  <div className="space-y-6">
+                    {exercice.etapes?.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-ink-900 dark:text-white">
+                          Méthode, étape par étape
+                        </h3>
+                        <ol className="mt-3 space-y-3">
+                          {exercice.etapes.map((etape, i) => (
+                            <li key={i} className="flex gap-3">
+                              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand-50 font-mono text-[11px] font-semibold text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">
+                                {i + 1}
+                              </span>
+                              <p className="text-sm/7 text-ink-700 dark:text-ink-300">
+                                {etape}
+                              </p>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                    )}
+
+                    {exercice.reponse && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-ink-900 dark:text-white">
+                          Réponse
+                        </h3>
+                        <BlocCode className="mt-3">{exercice.reponse}</BlocCode>
+                      </div>
+                    )}
+
+                    {exercice.explication && (
+                      <div className="rounded-xl bg-ink-100 p-4 dark:bg-ink-800/60">
+                        <h3 className="flex items-center gap-2 text-sm font-semibold text-ink-900 dark:text-white">
+                          <Icon name="bulb" className="size-4 text-sun-600 dark:text-sun-400" />
+                          À retenir
+                        </h3>
+                        <p className="mt-2 text-sm/7 text-ink-700 dark:text-ink-300">
+                          {exercice.explication}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </LectureTexte>
+              </div>
+            ) : correctionVisible ? (
               <div className="px-6 py-6">
                 {exercice.pdfCorrige ? (
                   <LecteurPdf
@@ -353,49 +416,10 @@ function DetailExercice({ exerciceId }) {
                   />
                 ) : (
                   <p className="text-sm text-ink-500 dark:text-ink-400">
-                    La correction de cet exercice n'a pas encore été publiée.
+                    La correction de cet exercice n&apos;a pas encore été publiée.
                   </p>
                 )}
               </div>
-            ) : correctionVisible ? (
-              <PleinEcran titre={`Correction : ${exercice.titre}`} className="px-6 py-6">
-              <div className="mt-3 space-y-6">
-                <div>
-                  <h3 className="text-sm font-semibold text-ink-900 dark:text-white">
-                    Méthode, étape par étape
-                  </h3>
-                  <ol className="mt-3 space-y-3">
-                    {exercice.etapes.map((etape, i) => (
-                      <li key={i} className="flex gap-3">
-                        <span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand-50 font-mono text-[11px] font-semibold text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">
-                          {i + 1}
-                        </span>
-                        <p className="text-sm/7 text-ink-700 dark:text-ink-300">
-                          {etape}
-                        </p>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-semibold text-ink-900 dark:text-white">
-                    Réponse
-                  </h3>
-                  <BlocCode className="mt-3">{exercice.reponse}</BlocCode>
-                </div>
-
-                <div className="rounded-xl bg-ink-100 p-4 dark:bg-ink-800/60">
-                  <h3 className="flex items-center gap-2 text-sm font-semibold text-ink-900 dark:text-white">
-                    <Icon name="bulb" className="size-4 text-sun-600 dark:text-sun-400" />
-                    À retenir
-                  </h3>
-                  <p className="mt-2 text-sm/7 text-ink-700 dark:text-ink-300">
-                    {exercice.explication}
-                  </p>
-                </div>
-              </div>
-              </PleinEcran>
             ) : (
               <p className="px-6 py-8 text-center text-sm text-ink-500 dark:text-ink-400">
                 Prends le temps de chercher avant d'ouvrir la correction. C'est

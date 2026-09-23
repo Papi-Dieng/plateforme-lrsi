@@ -3,7 +3,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import TexteLibre from "../components/TexteLibre";
 import LecteurPdf from "../components/LecteurPdf";
-import PleinEcran from "../components/PleinEcran";
+import LectureTexte from "../components/LectureTexte";
 import {
   Badge,
   Bouton,
@@ -19,7 +19,6 @@ import { getMatiere, matieres } from "../data/matieres";
 import { themeMatiere } from "../data/couleurs";
 import BoutonFavori from "../components/BoutonFavori";
 import { refChapitre } from "../progression";
-import { urlPdf } from "../contenu";
 import { exercices } from "../data/exercices";
 import { qcms } from "../data/qcm";
 
@@ -288,36 +287,9 @@ export function CoursDetail() {
                         />
                       )}
                       {pret && c.contenu && (
-                        <div className="mt-4 overflow-hidden rounded-xl border border-ink-200 dark:border-ink-800">
-                          <div className="flex flex-wrap items-center gap-3 px-4 py-2.5">
-                            <Icon name="book" className="size-4 text-brand-500" />
-                            <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink-900 dark:text-white">
-                              Cours
-                            </span>
-                            {c.pdf && (
-                              <a
-                                href={urlPdf(c.pdf.id)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-300"
-                              >
-                                Télécharger le PDF ↗
-                              </a>
-                            )}
-                          </div>
-                          <details className="group border-t border-ink-200 dark:border-ink-800">
-                            <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-2.5 text-sm font-semibold text-brand-600 dark:text-brand-300">
-                              <Icon
-                                name="chevron"
-                                className="size-4 -rotate-90 transition-transform group-open:rotate-0"
-                              />
-                              Lire ici
-                            </summary>
-                            <PleinEcran titre={`Cours : ${c.titre}`} className="border-t border-ink-200 px-4 py-4 dark:border-ink-800">
-                              <TexteLibre texte={c.contenu} className="mt-3" />
-                            </PleinEcran>
-                          </details>
-                        </div>
+                        <LectureTexte libelle="Cours" titre={`Cours : ${c.titre}`} pdf={c.pdf} className="mt-4">
+                          <TexteLibre texte={c.contenu} />
+                        </LectureTexte>
                       )}
                     </div>
                   </li>

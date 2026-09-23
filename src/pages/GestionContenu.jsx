@@ -575,7 +575,6 @@ function EditeurCompetence({ element: c, changer, matieres, usages }) {
 }
 
 function EditeurExercice({ element: e, changer, matieres, competences, motDePasse }) {
-  const format = e.format === "pdf" ? "pdf" : "texte";
   return (
     <div className="space-y-4">
       <Champ label="Titre" value={e.titre} maxLength={150} onChange={(ev) => changer({ titre: ev.target.value })} />
@@ -604,61 +603,60 @@ function EditeurExercice({ element: e, changer, matieres, competences, motDePass
         value={(e.tags ?? []).join(", ")}
         onChange={(ev) => changer({ tags: ev.target.value.split(",").map((t) => t.trim()).filter(Boolean) })}
       />
-      <ChoixFormat
-        valeur={format}
-        onChange={(f) => changer({ format: f })}
-        options={[
-          { valeur: "texte", label: "Écrire l'exercice", icone: "pencil" },
-          { valeur: "pdf", label: "Énoncé et correction en PDF", icone: "file" },
-        ]}
-      />
-      {format === "pdf" ? (
-        <>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <ChampPdf
-              libelle="Énoncé (PDF)"
-              pdf={e.pdfEnonce}
-              texte={e.texteEnonce}
-              lireTexte
-              motDePasse={motDePasse}
-              aide="Affiché tout de suite à l'étudiant."
-              onChange={(pdf, t) => changer({ format: "pdf", pdfEnonce: pdf, texteEnonce: t })}
-            />
-            <ChampPdf
-              libelle="Correction (PDF)"
-              pdf={e.pdfCorrige}
-              texte={e.texteCorrige}
-              lireTexte
-              motDePasse={motDePasse}
-              aide="Montrée seulement quand l'étudiant clique « voir la correction »."
-              onChange={(pdf, t) => changer({ pdfCorrige: pdf, texteCorrige: t })}
-              onRetirer={() => changer({ pdfCorrige: null, texteCorrige: "" })}
-            />
-          </div>
-          <Zone
-            label="Indice (facultatif)"
-            aide="Un coup de pouce écrit, affiché à la demande avant la correction."
-            rows={2}
-            value={e.indice}
-            maxLength={1500}
-            onChange={(ev) => changer({ indice: ev.target.value })}
-          />
-        </>
-      ) : (
-        <>
-          <Zone label="Énoncé" rows={5} value={e.enonce} maxLength={5000} onChange={(ev) => changer({ enonce: ev.target.value })} />
-          <Zone label="Indice" rows={2} value={e.indice} maxLength={1500} onChange={(ev) => changer({ indice: ev.target.value })} />
-          <Zone
-            label="Méthode, étape par étape"
-            aide="Une étape par ligne."
-            rows={5}
-            value={(e.etapes ?? []).join("\n")}
-            onChange={(ev) => changer({ etapes: ev.target.value.split("\n") })}
-          />
-          <Zone label="Réponse" rows={5} mono value={e.reponse} maxLength={5000} onChange={(ev) => changer({ reponse: ev.target.value })} />
-          <Zone label="À retenir" rows={2} value={e.explication} maxLength={2000} onChange={(ev) => changer({ explication: ev.target.value })} />
-        </>
-      )}
+      {/* Le texte écrit s'affiche sur le site (« Lire ici », plein écran) ;
+          les PDF, facultatifs, restent à télécharger. Sans texte, les
+          étudiants lisent les PDF. */}
+      <fieldset className="space-y-4 rounded-xl border border-ink-200 p-4 dark:border-ink-800">
+        <legend className="px-1 text-xs font-semibold text-ink-600 dark:text-ink-300">Énoncé</legend>
+        <Zone
+          label="Énoncé écrit (affiché sur le site)"
+          rows={6}
+          value={e.enonce ?? ""}
+          maxLength={5000}
+          aide={`${(e.enonce ?? "").length} / 5 000 caractères.`}
+          onChange={(ev) => changer({ enonce: ev.target.value })}
+        />
+        <ChampPdf
+          libelle="Énoncé en PDF (facultatif, à télécharger)"
+          pdf={e.pdfEnonce}
+          texte={e.texteEnonce}
+          lireTexte
+          motDePasse={motDePasse}
+          aide="Si l'énoncé est écrit, « Lire ici » l'affiche et le PDF reste à télécharger ; sinon l'étudiant lit le PDF."
+          onChange={(pdf, t) => changer({ pdfEnonce: pdf, texteEnonce: t })}
+          onRetirer={() => changer({ pdfEnonce: null, texteEnonce: "" })}
+        />
+        <Zone
+          label="Indice (facultatif)"
+          aide="Un coup de pouce, affiché à la demande avant la correction."
+          rows={2}
+          value={e.indice ?? ""}
+          maxLength={1500}
+          onChange={(ev) => changer({ indice: ev.target.value })}
+        />
+      </fieldset>
+      <fieldset className="space-y-4 rounded-xl border border-ink-200 p-4 dark:border-ink-800">
+        <legend className="px-1 text-xs font-semibold text-ink-600 dark:text-ink-300">Correction</legend>
+        <Zone
+          label="Méthode, étape par étape"
+          aide="Une étape par ligne."
+          rows={5}
+          value={(e.etapes ?? []).join("\n")}
+          onChange={(ev) => changer({ etapes: ev.target.value.split("\n") })}
+        />
+        <Zone label="Réponse" rows={5} mono value={e.reponse ?? ""} maxLength={5000} onChange={(ev) => changer({ reponse: ev.target.value })} />
+        <Zone label="À retenir" rows={2} value={e.explication ?? ""} maxLength={2000} onChange={(ev) => changer({ explication: ev.target.value })} />
+        <ChampPdf
+          libelle="Correction en PDF (facultatif, à télécharger)"
+          pdf={e.pdfCorrige}
+          texte={e.texteCorrige}
+          lireTexte
+          motDePasse={motDePasse}
+          aide="Proposée seulement quand l'étudiant clique « voir la correction »."
+          onChange={(pdf, t) => changer({ pdfCorrige: pdf, texteCorrige: t })}
+          onRetirer={() => changer({ pdfCorrige: null, texteCorrige: "" })}
+        />
+      </fieldset>
 
       <VerificationExercice
         lignes={e.verification ?? []}
@@ -1174,7 +1172,7 @@ const TYPES = {
       verification: [],
     }),
     titre: (e) => e.titre,
-    detail: (e) => `${e.difficulte}${e.format === "pdf" ? " · PDF" : ""}`,
+    detail: (e) => `${e.difficulte}${e.pdfEnonce ? (e.enonce ? " · texte + PDF" : " · PDF") : ""}`,
   },
   qcms: {
     Editeur: EditeurQcm,
@@ -1277,7 +1275,7 @@ function problemes(b) {
     }
   }
   for (const e of b.exercices) {
-    if (e.format === "pdf" && !e.pdfEnonce) liste.push(`L'exercice « ${e.titre || e.id} » est en PDF sans énoncé : il repasserait en texte, vide.`);
+    if (!e.enonce?.trim() && !e.pdfEnonce) liste.push(`L'exercice « ${e.titre || e.id} » n'a ni énoncé écrit ni énoncé en PDF.`);
   }
   for (const x of b.examens) {
     if (x.format === "pdf" && !x.pdfEnonce) liste.push(`Le devoir « ${x.titre || x.id} » est en PDF sans sujet : il repasserait en parties, vides.`);

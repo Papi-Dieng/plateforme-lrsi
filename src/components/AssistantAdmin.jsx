@@ -23,7 +23,7 @@ const couper = (t, max) => String(t ?? "").slice(0, max);
 
 /* Le texte qu'on montre à l'agent pour un exercice ou une question. */
 export const texteExercice = (e) =>
-  couper(`Exercice : ${e.titre}\n${e.format === "pdf" ? e.texteEnonce : e.enonce}`, 1100);
+  couper(`Exercice : ${e.titre}\n${e.enonce || e.texteEnonce || ""}`, 1100);
 
 export const texteQuestion = (x) =>
   couper(
