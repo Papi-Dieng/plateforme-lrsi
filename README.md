@@ -147,8 +147,9 @@ sont donc à corriger si le site déménage.
 
 ### Nom : à choisir
 
-Le site affiche pour l'instant **JàngRSI**, un nom provisoire. « Jàng »
-signifie *apprendre* en wolof, associé au sigle de la filière.
+Le site affiche pour l'instant **Sunu Cours**, un nom provisoire. « Sunu »
+signifie *notre* en wolof : « nos cours ». Le précédent, JàngRSI (« jàng » :
+*apprendre*), reste une piste.
 
 Pour le remplacer, une seule ligne à modifier dans `src/data/site.js` :
 

@@ -8,16 +8,16 @@
 //  toutes les pages. Rien d'autre dans le code n'en dépend.
 //
 //  Quelques pistes, à garder ou à jeter :
+//    Sunu Cours — « sunu » veut dire notre en wolof (choisi pour l'instant)
 //    JàngRSI   — « jàng » veut dire apprendre en wolof
 //    RSI Campus
 //    NetSkool
-//    Sunu Cours — « sunu » veut dire notre en wolof
 // ============================================================
 export const site = {
-  nom: "JàngRSI",
+  nom: "Sunu Cours",
   // Décoratif : si le nom commence par ce texte, cette partie s'affiche en
   // orange dans l'en-tête. Mettre "" pour un nom d'une seule couleur.
-  nomAccent: "Jàng",
+  nomAccent: "Sunu",
   baseline: "Apprendre, réviser, s'entraîner.",
   description:
     "Une plateforme gratuite qui rassemble au même endroit les cours, les exercices corrigés et les QCM de la filière Réseaux et Systèmes Informatiques.",
