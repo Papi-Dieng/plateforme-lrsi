@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import TexteLibre from "../components/TexteLibre";
 import LecteurPdf from "../components/LecteurPdf";
+import AvisRedaction from "../components/AvisRedaction";
 import { Badge, Container, EnTetePage, EtatVide, Filtres, cx } from "../components/ui";
 import { annales, examens, getExamen, totalPoints } from "../data/examens";
 import { getMatiere, matieres, nomMatiere } from "../data/matieres";
@@ -372,6 +373,7 @@ export function ExamenSession() {
                       Corrigé
                     </p>
                     <TexteLibre texte={p.corrige || "Pas de corrigé pour cette partie."} className="mt-1" />
+                    <AvisRedaction enonce={p.enonce} corrige={p.corrige} />
                     <label className="mt-4 flex items-center gap-3 text-sm text-ink-700 dark:text-ink-300">
                       Mes points
                       <input

@@ -268,6 +268,7 @@ lrsi-platform/
 │   ├── fichiers.js           cours en PDF téléversés
 │   ├── gemini.js             appel à Gemini, partagé par les deux agents
 │   ├── agent-admin.js        l'agent IA de l'espace admin
+│   ├── avis.js               avis de l'IA sur une réponse rédigée (devoirs)
 │   └── education.js          fiches par matière saisies dans l'espace admin
 ├── scripts/                  banc de test de l'IA (npm run banc-ia)
 ├── public/
@@ -402,6 +403,14 @@ recompilation, pas de push.
   l'exercice comme travaillé. La comparaison (`src/verification.js`) ignore
   majuscules, accents et espaces, et compare nombres et adresses IP par leur
   valeur (`62` = `62,0`, `192.168.010.001` = `192.168.10.1`).
+- **Avis de l'IA sur une rédaction** : à la fin d'un devoir écrit partie par
+  partie, sous chaque corrigé, l'étudiant peut recopier sa réponse et
+  « Demander l'avis de l'IA » (`serveur-ia/avis.js`). L'IA la compare au
+  corrigé et dit ce qui est juste, ce qui manque et ce qui est faux, avec un
+  conseil. Elle ne note jamais : une IA qui met une note se trompe parfois avec
+  assurance, et l'étudiant garde son auto-correction. C'est l'assistant des
+  étudiants (sa clé, sa limite par visiteur) ; la réponse de l'étudiant est
+  isolée dans la demande pour qu'une instruction glissée dedans soit ignorée.
 - Un **devoir** peut se donner en deux PDF, le sujet et le corrigé : le
   sujet s'affiche au lancement du minuteur, le corrigé à la fin, et
   l'étudiant se note sur le total indiqué.

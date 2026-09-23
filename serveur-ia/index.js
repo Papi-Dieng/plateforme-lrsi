@@ -41,6 +41,7 @@ import {
 import { menagePdfs, servirPdf, televerserPdf } from "./fichiers.js";
 import { API_GEMINI, interrogerGemini, listeModeles } from "./gemini.js";
 import { executerTacheAdmin } from "./agent-admin.js";
+import { avisRedaction } from "./avis.js";
 
 const MAX_MESSAGES = 10;
 const MAX_CARACTERES = 1500;
@@ -278,6 +279,24 @@ export default {
     }
 
     if (requete.method !== "POST") return json({ erreur: "methode" }, 405, cors);
+
+    // L'avis de l'IA sur une réponse rédigée dans un devoir : soumis,
+    // comme l'assistant, à la limite de requêtes par visiteur.
+    if (chemin === "/avis-redaction") {
+      let corps;
+      try {
+        corps = await requete.json();
+      } catch {
+        return json({ erreur: "format" }, 400, cors);
+      }
+      try {
+        const r = await avisRedaction(corps, env);
+        return r.erreur ? json({ erreur: r.erreur }, r.statut, cors) : json(r.resultat, 200, cors);
+      } catch (e) {
+        console.log("Avis sur une rédaction", e);
+        return json({ erreur: "reseau" }, 502, cors);
+      }
+    }
 
     let corps;
     try {

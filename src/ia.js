@@ -223,3 +223,16 @@ export const demanderAgentAdmin = (tache, donnees, motDePasse) =>
     method: "POST",
     body: JSON.stringify({ tache, donnees }),
   });
+
+/* L'avis de l'IA sur une réponse rédigée dans un devoir : ce qui est
+   juste, ce qui manque, ce qui est faux, un conseil. Jamais de note. */
+export async function demanderAvisRedaction({ enonce, corrige, reponse }) {
+  const r = await fetch(new URL("/avis-redaction", site.urlIA), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ enonce, corrige, reponse }),
+  });
+  const donnees = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(donnees.erreur ?? `statut ${r.status}`);
+  return donnees;
+}

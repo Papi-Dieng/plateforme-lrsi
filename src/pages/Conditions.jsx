@@ -24,7 +24,7 @@ const articles = [
     icone: "file",
     titre: "Contenus et droits d'auteur",
     paragraphes: [
-      "Les énoncés d'exercices et les questions de QCM ont été rédigés pour la plateforme. Les ressources externes renvoient vers le site de leur auteur, avec leur licence indiquée : rien n'est recopié ni réhébergé.",
+      "Les énoncés d'exercices et les questions de QCM ont été rédigés pour la plateforme. Les ressources externes renvoient vers le site de leur auteur, avec leur licence indiquée ; un document n'est déposé sur la plateforme que sous licence libre ou avec l'accord écrit de son auteur.",
       "Aucun cours, support ou sujet d'examen appartenant à l'université ou à un enseignant n'est publié sans autorisation écrite. Toute ressource est retirée à la simple demande de son auteur.",
     ],
   },
@@ -56,6 +56,7 @@ const articles = [
             "Quand tu poses une question à l'assistant, elle est envoyée à Google Gemini, un service d'intelligence artificielle, pour rédiger la réponse. Partent avec elle : les autres messages de la conversation en cours, et les titres et résumés des contenus de la plateforme liés à ta question.",
             "Ne partent jamais : ton profil, ton nom, ta progression, tes scores ni tes favoris. La question « par où commencer » est calculée dans ton navigateur, sans IA.",
             "Le relais de la plateforme, hébergé chez Cloudflare, n'enregistre ni les questions ni les réponses. Google, en revanche, peut conserver et utiliser les échanges de son offre gratuite pour améliorer ses services : n'écris donc rien de personnel ou de confidentiel dans l'assistant.",
+            "Dans un devoir, « Demander l'avis de l'IA » envoie aussi à Google Gemini la réponse que tu recopies, avec l'énoncé et le corrigé de la partie, pour les comparer. Rien n'est envoyé tant que tu ne cliques pas, et l'IA ne met pas de note.",
             "Une IA peut se tromper avec assurance. Ses réponses sont signalées comme telles ; en cas de doute, le cours et l'enseignant font foi.",
           ],
         },
