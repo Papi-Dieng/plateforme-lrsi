@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import {
   Bouton,
@@ -26,7 +27,11 @@ const normalise = (s) =>
 
 export default function Videos() {
   const v = useVideos();
-  const [matiere, setMatiere] = useState("toutes");
+  // `?m=reseaux` : arrivée depuis le tableau de bord, déjà filtrée.
+  const [params] = useSearchParams();
+  const [matiere, setMatiere] = useState(() =>
+    matieres.some((m) => m.id === params.get("m")) ? params.get("m") : "toutes"
+  );
   const [recherche, setRecherche] = useState("");
 
   // Un seul niveau de filtre : dans cette version, une filière

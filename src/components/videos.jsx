@@ -373,9 +373,12 @@ export function FormulaireVideo({ prefill, onFermer, onAjoutee }) {
 /* Rangée du tableau de bord                                           */
 /* ================================================================== */
 
-export default function SectionVideos() {
+/* `matiere` : la matière choisie en haut du tableau de bord. La rangée
+   ne montre alors que ses vidéos. */
+export default function SectionVideos({ matiere = null }) {
   const v = useVideos();
-  const pretes = v.toutes.filter((x) => x.youtubeId).length;
+  const liste = matiere ? v.toutes.filter((x) => x.matiere === matiere) : v.toutes;
+  const pretes = liste.filter((x) => x.youtubeId).length;
 
   return (
     <section className="rounded-3xl bg-ink-50 p-5 sm:p-6 dark:bg-ink-950">
@@ -387,21 +390,26 @@ export default function SectionVideos() {
               className="size-5 text-flame-600 dark:text-flame-400"
             />
             Vidéos d'explication
+            {matiere && (
+              <span className="text-ink-500 dark:text-ink-400">· {nomMatiere(matiere)}</span>
+            )}
           </h2>
           <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">
-            {pretes > 0
+            {liste.length === 0
+              ? "Pas encore de vidéo pour cette matière. Ajoute la tienne avec un lien YouTube."
+              : pretes > 0
               ? `${pretes} vidéo${pretes > 1 ? "s" : ""} prête${pretes > 1 ? "s" : ""} à regarder. Les autres attendent leur lien.`
               : "Colle un lien YouTube pour remplir un emplacement, ou ajoute ta propre vidéo."}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Bouton variante="secondaire" onClick={() => v.ouvrirFormulaire()}>
+          <Bouton variante="secondaire" onClick={() => v.ouvrirFormulaire(matiere ? { matiere } : {})}>
             <Icon name="plus" className="size-4" />
             Ajouter une vidéo
           </Bouton>
           <Link
-            to="/videos"
+            to={matiere ? `/videos?m=${matiere}` : "/videos"}
             className="text-sm font-medium text-flame-600 hover:text-flame-700 dark:text-flame-400"
           >
             Toutes les vidéos
@@ -410,7 +418,7 @@ export default function SectionVideos() {
       </div>
 
       <ul className="mt-5 flex snap-x gap-4 overflow-x-auto pb-2">
-        {v.toutes.map((video) => (
+        {liste.map((video) => (
           <li key={video.id} className="w-64 shrink-0 snap-start sm:w-72">
             <CarteVideo
               video={video}

@@ -224,7 +224,7 @@ export default function Accueil() {
       {/* Vidéos d'explication                                        */}
       {/* ---------------------------------------------------------- */}
       <div className="mt-5">
-        <SectionVideos />
+        <SectionVideos matiere={matiereActive === "toutes" ? null : matiereActive} />
       </div>
 
       {/* ---------------------------------------------------------- */}
