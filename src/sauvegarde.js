@@ -1,5 +1,6 @@
 import { CLES } from "./progression";
 import { CLE_PROFIL } from "./profil";
+import { CLE_PLANNING } from "./planning";
 
 /* ==================================================================
    Sauvegarder et restaurer ses données.
@@ -20,7 +21,7 @@ import { CLE_PROFIL } from "./profil";
    ================================================================== */
 
 export const CLE_THEME = "lrsi-theme";
-export const CLE_PLANNING = "lrsi-planning";
+export { CLE_PLANNING };
 
 const APPLICATION = "sunu-cours";
 const FORMAT = 1;

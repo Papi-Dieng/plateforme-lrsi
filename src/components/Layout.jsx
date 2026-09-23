@@ -113,6 +113,7 @@ const icones = {
   "/bibliotheque": "book",
   "/favoris": "bookmark",
   "/progression": "layers",
+  "/planning": "clock",
   "/assistant": "sparkles",
   "/projet": "info",
 };

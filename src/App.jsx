@@ -21,6 +21,7 @@ import EducationIA from "./pages/EducationIA";
 import GestionContenu from "./pages/GestionContenu";
 import Favoris from "./pages/Favoris";
 import Assistant from "./pages/Assistant";
+import Planning from "./pages/Planning";
 
 /* ------------------------------------------------------------------ */
 /* Aiguillage selon la session                                         */
@@ -126,6 +127,14 @@ export default function App() {
           element={
             <Protege>
               <Progression />
+            </Protege>
+          }
+        />
+        <Route
+          path="planning"
+          element={
+            <Protege>
+              <Planning />
             </Protege>
           }
         />

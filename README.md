@@ -248,6 +248,7 @@ latérale laisse place à un menu dans la barre du haut.
 | `/favoris` | Mes favoris | Matières, chapitres, exercices, QCM et vidéos mis de côté |
 | `/progression` | Ma progression | Tableau de bord en grille : vue d'ensemble, précision, régularité, matières, QCM |
 | `/examens` | Examens | Examens blancs chronométrés avec corrigé à la fin, et annales autorisées |
+| `/planning` | Mon planning | Programme de révision jusqu'à une évaluation, d'après les résultats |
 | `/assistant` | Assistant de révision | Guide qui retrouve chapitres, exercices et QCM, et dit par où commencer |
 | `/parametres` | Paramètres | Thème, session, données conservées sur l'appareil |
 | `/conditions` | Conditions d'utilisation | Cadre d'usage, droits, données personnelles |
@@ -317,6 +318,7 @@ lrsi-platform/
 │   ├── quizTexte.js          lit et écrit un QCM au format texte (admin)
 │   ├── verification.js       compare la réponse d'un étudiant à la réponse attendue
 │   ├── sauvegarde.js         sauvegarde et restauration des données de l'étudiant
+│   ├── planning.js           programme de révision jour par jour
 │   ├── progression.js        exercices travaillés, scores, favoris, vidéos
 │   ├── competences.js        analyse : forces, faiblesses, modules
 │   ├── profil.js             fiche profil et vérifications
@@ -671,6 +673,20 @@ Aucune de ces données ne quitte l'appareil, et elles ne suivent pas l'étudiant
 d'un ordinateur à l'autre. Pour passer au suivi par compte en version 3, il
 suffira de remplacer le contenu de ce fichier par des appels à l'API : aucune
 page n'a besoin de changer.
+
+### Le planning de révision
+
+Page *Mon planning* (`/#/planning`). L'étudiant note une évaluation (matière,
+date, nombre de tâches par jour) ; le site en tire un programme jour par jour
+jusqu'à la veille (`src/planning.js`), à partir de ses résultats de QCM :
+d'abord ses compétences les plus faibles, avec leurs chapitres à relire, leurs
+exercices pas encore faits et leurs QCM ; puis le reste de la matière ; un
+devoir en conditions réelles l'avant-veille, s'il en existe un ; refaire les
+QCM la veille. Ce qui ne tient pas dans les jours va dans « En plus, si tu as
+le temps ». Chaque tâche renvoie vers un contenu qui existe, se coche, et le
+programme se recalcule à chaque visite avec les nouveaux résultats. Le
+planning (`lrsi-planning`) reste dans le navigateur et part dans la
+sauvegarde.
 
 ### Sauvegarder et restaurer sa progression
 

@@ -46,6 +46,7 @@ export const navigation = [
   { label: "Bibliothèque", to: "/bibliotheque" },
   { label: "Mes favoris", to: "/favoris" },
   { label: "Ma progression", to: "/progression" },
+  { label: "Mon planning", to: "/planning" },
   { label: "Assistant IA", to: "/assistant" },
   { label: "Le projet", to: "/projet" },
 ];
