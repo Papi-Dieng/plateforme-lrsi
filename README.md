@@ -662,6 +662,18 @@ d'un ordinateur à l'autre. Pour passer au suivi par compte en version 3, il
 suffira de remplacer le contenu de ce fichier par des appels à l'API : aucune
 page n'a besoin de changer.
 
+### Sauvegarder et restaurer sa progression
+
+Sans compte, tout vit dans le navigateur. Dans *Paramètres*, « Télécharger ma
+sauvegarde » produit un fichier `sunu-cours-sauvegarde-AAAA-MM-JJ.json` :
+profil, scores, exercices travaillés, favoris, vidéos, planning et thème. Ni
+la session ni le mot de passe admin n'y figurent. « Restaurer une sauvegarde »
+le relit sur n'importe quel appareil, après un aperçu de ce qui sera remplacé.
+
+La relecture est méfiante (`src/sauvegarde.js`) : fichier d'une autre origine
+ou d'un format futur refusé, et seules les clés connues, de la bonne forme,
+sont écrites. Une donnée absente de la sauvegarde n'est pas effacée.
+
 ### Les écrans de connexion ne connectent à rien
 
 C'est le point à retenir avant de montrer le projet à quelqu'un. Il n'y a pas
