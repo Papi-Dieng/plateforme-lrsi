@@ -351,44 +351,32 @@ function ChoixFormat({ valeur, options, onChange }) {
   );
 }
 
-/* Le cours d'un chapitre : écrit directement, ou téléversé en PDF. */
+/* Le cours d'un chapitre : un texte écrit, un PDF, ou les deux. Le
+   texte s'affiche sur le site (« Lire ici ») ; le PDF est proposé en
+   téléchargement. Sans texte, les étudiants lisent le PDF. */
 function CoursChapitre({ chapitre: c, changer, motDePasse }) {
-  const format = c.format === "pdf" ? "pdf" : "texte";
-
   return (
-    <fieldset className="rounded-xl border border-ink-200 p-4 dark:border-ink-800">
+    <fieldset className="space-y-4 rounded-xl border border-ink-200 p-4 dark:border-ink-800">
       <legend className="px-1 text-xs font-semibold text-ink-600 dark:text-ink-300">Cours</legend>
-      <ChoixFormat
-        valeur={format}
-        onChange={(f) => changer({ format: f })}
-        options={[
-          { valeur: "texte", label: "Écrire le cours", icone: "pencil" },
-          { valeur: "pdf", label: "Téléverser un PDF", icone: "file" },
-        ]}
+      <Zone
+        label="Texte du cours (affiché sur le site)"
+        rows={14}
+        value={c.contenu ?? ""}
+        maxLength={30000}
+        placeholder="Le texte complet du cours : définitions, explications, exemples…"
+        aide={`${(c.contenu ?? "").length} / 30 000 caractères. Une ligne vide sépare deux paragraphes. Visible seulement si le chapitre est « Disponible ».`}
+        onChange={(e) => changer({ contenu: e.target.value })}
       />
-      <div className="mt-3">
-        {format === "texte" ? (
-          <Zone
-            label="Texte du cours"
-            rows={14}
-            value={c.contenu ?? ""}
-            maxLength={30000}
-            placeholder="Le texte complet du cours : définitions, explications, exemples…"
-            aide={`${(c.contenu ?? "").length} / 30 000 caractères. Une ligne vide sépare deux paragraphes. Visible seulement si le chapitre est « Disponible ».`}
-            onChange={(e) => changer({ contenu: e.target.value })}
-          />
-        ) : (
-          <ChampPdf
-            libelle="Cours en PDF"
-            pdf={c.pdf}
-            texte={c.texteIA}
-            lireTexte
-            motDePasse={motDePasse}
-            aide="20 Mo au maximum. Visible par les étudiants après « Publier »."
-            onChange={(pdf, texteIA) => changer({ format: "pdf", pdf, texteIA })}
-          />
-        )}
-      </div>
+      <ChampPdf
+        libelle="PDF du cours (facultatif, à télécharger)"
+        pdf={c.pdf}
+        texte={c.texteIA}
+        lireTexte
+        motDePasse={motDePasse}
+        aide="20 Mo au maximum. Si tu as écrit le texte, « Lire ici » l'affiche et le PDF reste à télécharger ; sinon les étudiants lisent le PDF."
+        onChange={(pdf, texteIA) => changer({ pdf, texteIA })}
+        onRetirer={() => changer({ pdf: null, texteIA: "" })}
+      />
     </fieldset>
   );
 }
@@ -446,8 +434,8 @@ function EditeurMatiere({ element: m, changer, motDePasse }) {
                 <Badge ton={c.statut === "disponible" ? "accent" : "sun"}>
                   {c.statut === "disponible" ? "Disponible" : "Bientôt"}
                 </Badge>
-                <Badge ton={c.contenu || (c.format === "pdf" && c.pdf) ? "accent" : "neutre"}>
-                  {c.format === "pdf" && c.pdf ? "cours en PDF" : c.contenu ? "cours rédigé" : "pas de cours"}
+                <Badge ton={c.contenu || c.pdf ? "accent" : "neutre"}>
+                  {c.contenu && c.pdf ? "texte + PDF" : c.contenu ? "cours rédigé" : c.pdf ? "PDF seul" : "pas de cours"}
                 </Badge>
               </summary>
               <div className="space-y-3 border-t border-ink-200 p-4 dark:border-ink-800">

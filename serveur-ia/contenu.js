@@ -76,20 +76,21 @@ const nettoyerMatiere = (m) => ({
   resume: texte(m?.resume, 600),
   chapitres: liste(m?.chapitres, 40)
     .map((c) => {
-      // Un cours s'écrit directement, ou se téléverse en PDF. Dans ce
-      // cas, `texteIA` garde le texte extrait du PDF : l'assistant s'en
-      // sert, les étudiants lisent le PDF.
+      // Un cours a un texte écrit, un PDF, ou les deux : les étudiants
+      // lisent le texte sur le site, le PDF reste à télécharger.
+      // `texteIA` garde le texte extrait du PDF, pour l'assistant quand
+      // rien n'est écrit.
       const pdf = pdfValide(c?.pdf);
-      const format = c?.format === "pdf" && pdf ? "pdf" : "texte";
+      const contenu = texte(c?.contenu, 30000);
       return {
         titre: texte(c?.titre, 150),
         resume: texte(c?.resume, 600),
         duree: texte(c?.duree, 20),
         statut: unParmi(c?.statut, ["disponible", "bientot"], "bientot"),
-        format,
-        contenu: format === "texte" ? texte(c?.contenu, 30000) : "",
-        pdf: format === "pdf" ? pdf : null,
-        texteIA: format === "pdf" ? texte(c?.texteIA, 30000) : "",
+        format: !contenu && pdf ? "pdf" : "texte",
+        contenu,
+        pdf,
+        texteIA: pdf ? texte(c?.texteIA, 30000) : "",
       };
     })
     .filter((c) => c.titre),

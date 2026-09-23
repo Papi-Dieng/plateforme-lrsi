@@ -18,6 +18,7 @@ import { getMatiere, matieres } from "../data/matieres";
 import { themeMatiere } from "../data/couleurs";
 import BoutonFavori from "../components/BoutonFavori";
 import { refChapitre } from "../progression";
+import { urlPdf } from "../contenu";
 import { exercices } from "../data/exercices";
 import { qcms } from "../data/qcm";
 
@@ -275,7 +276,9 @@ export function CoursDetail() {
                         <Icon name="clock" className="size-3.5" />
                         Volume indicatif : {c.duree}
                       </p>
-                      {pret && c.format === "pdf" && c.pdf && (
+                      {/* Le texte écrit dans l'admin passe avant le PDF :
+                          « Lire ici » l'affiche, le PDF reste à télécharger. */}
+                      {pret && !c.contenu && c.pdf && (
                         <LecteurPdf
                           pdf={c.pdf}
                           libelle="Cours en PDF"
@@ -283,17 +286,35 @@ export function CoursDetail() {
                           className="mt-4"
                         />
                       )}
-                      {pret && c.format !== "pdf" && c.contenu && (
-                        <details className="group mt-4 rounded-xl border border-ink-200 dark:border-ink-800">
-                          <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-2.5 text-sm font-semibold text-brand-600 dark:text-brand-300">
-                            <Icon
-                              name="chevron"
-                              className="size-4 -rotate-90 transition-transform group-open:rotate-0"
-                            />
-                            Lire le cours
-                          </summary>
-                          <TexteLibre texte={c.contenu} className="border-t border-ink-200 px-4 py-4 dark:border-ink-800" />
-                        </details>
+                      {pret && c.contenu && (
+                        <div className="mt-4 overflow-hidden rounded-xl border border-ink-200 dark:border-ink-800">
+                          <div className="flex flex-wrap items-center gap-3 px-4 py-2.5">
+                            <Icon name="book" className="size-4 text-brand-500" />
+                            <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink-900 dark:text-white">
+                              Cours
+                            </span>
+                            {c.pdf && (
+                              <a
+                                href={urlPdf(c.pdf.id)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-300"
+                              >
+                                Télécharger le PDF ↗
+                              </a>
+                            )}
+                          </div>
+                          <details className="group border-t border-ink-200 dark:border-ink-800">
+                            <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-2.5 text-sm font-semibold text-brand-600 dark:text-brand-300">
+                              <Icon
+                                name="chevron"
+                                className="size-4 -rotate-90 transition-transform group-open:rotate-0"
+                              />
+                              Lire ici
+                            </summary>
+                            <TexteLibre texte={c.contenu} className="border-t border-ink-200 px-4 py-4 dark:border-ink-800" />
+                          </details>
+                        </div>
                       )}
                     </div>
                   </li>
