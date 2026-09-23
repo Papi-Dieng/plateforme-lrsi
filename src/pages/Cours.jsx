@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import TexteLibre from "../components/TexteLibre";
 import LecteurPdf from "../components/LecteurPdf";
+import PleinEcran from "../components/PleinEcran";
 import {
   Badge,
   Bouton,
@@ -312,7 +313,9 @@ export function CoursDetail() {
                               />
                               Lire ici
                             </summary>
-                            <TexteLibre texte={c.contenu} className="border-t border-ink-200 px-4 py-4 dark:border-ink-800" />
+                            <PleinEcran titre={`Cours : ${c.titre}`} className="border-t border-ink-200 px-4 py-4 dark:border-ink-800">
+                              <TexteLibre texte={c.contenu} className="mt-3" />
+                            </PleinEcran>
                           </details>
                         </div>
                       )}

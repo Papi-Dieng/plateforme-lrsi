@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import LecteurPdf from "../components/LecteurPdf";
+import PleinEcran from "../components/PleinEcran";
 import VerifierReponse from "../components/VerifierReponse";
 import {
   Badge,
@@ -277,9 +278,11 @@ function DetailExercice({ exerciceId }) {
                 className="mt-4"
               />
             ) : (
-              <p className="mt-4 text-base/7 whitespace-pre-line text-ink-800 dark:text-ink-200">
-                {exercice.enonce}
-              </p>
+              <PleinEcran titre={`Énoncé : ${exercice.titre}`} className="mt-3">
+                <p className="mt-4 text-base/7 whitespace-pre-line text-ink-800 dark:text-ink-200">
+                  {exercice.enonce}
+                </p>
+              </PleinEcran>
             )}
           </section>
 
@@ -355,7 +358,8 @@ function DetailExercice({ exerciceId }) {
                 )}
               </div>
             ) : correctionVisible ? (
-              <div className="space-y-6 px-6 py-6">
+              <PleinEcran titre={`Correction : ${exercice.titre}`} className="px-6 py-6">
+              <div className="mt-3 space-y-6">
                 <div>
                   <h3 className="text-sm font-semibold text-ink-900 dark:text-white">
                     Méthode, étape par étape
@@ -391,6 +395,7 @@ function DetailExercice({ exerciceId }) {
                   </p>
                 </div>
               </div>
+              </PleinEcran>
             ) : (
               <p className="px-6 py-8 text-center text-sm text-ink-500 dark:text-ink-400">
                 Prends le temps de chercher avant d'ouvrir la correction. C'est
