@@ -26,9 +26,7 @@ const SEUIL_REUSSITE = 70; // en pourcentage
 
 export function QcmListe() {
   const [matiere, setMatiere] = useState("toutes");
-  const [scores, setScores] = useState({});
-
-  useEffect(() => setScores(lireScores()), []);
+  const [scores] = useState(lireScores);
 
   const options = [
     { value: "toutes", label: "Toutes les matières" },
@@ -312,8 +310,15 @@ function Navigateur({ questions, reponses, marquees, index, aller, onTerminer })
 /* Session de QCM                                                      */
 /* ================================================================== */
 
+// Même route d'un questionnaire à l'autre : la clé fait repartir la
+// session de zéro, au lieu de reprendre le suivant au milieu, avec les
+// réponses du précédent.
 export function QcmSession() {
   const { qcmId } = useParams();
+  return <SessionQcm key={qcmId} qcmId={qcmId} />;
+}
+
+function SessionQcm({ qcmId }) {
   const qcm = getQcm(qcmId);
 
   const total = qcm?.questions.length ?? 0;
@@ -346,12 +351,6 @@ export function QcmSession() {
     setDetailsVisibles(false);
     setAlerteFin(false);
   }, [total, tempsImparti]);
-
-  // Même route d'un questionnaire à l'autre : sans cette remise à zéro, on
-  // reprendrait le suivant au milieu, avec les réponses du précédent.
-  useEffect(() => {
-    recommencer();
-  }, [qcmId, recommencer]);
 
   const score = useMemo(() => {
     if (!qcm) return 0;

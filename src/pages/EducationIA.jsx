@@ -472,14 +472,14 @@ export default function EducationIA() {
   const deconnecter = (message = "") => {
     ecrireSession("");
     setMotDePasse("");
+    setFiche(null);
+    setModifie(false);
     setEtat({ type: message ? "erreur" : "", texte: message });
   };
 
   useEffect(() => {
     if (!motDePasse) return;
     let annule = false;
-    setFiche(null);
-    setModifie(false);
     lireFiche(matiereId, motDePasse)
       .then((f) => {
         if (annule) return;
@@ -510,6 +510,9 @@ export default function EducationIA() {
     if (modifie && !window.confirm("Des modifications ne sont pas enregistrées. Les abandonner ?")) {
       return;
     }
+    // La fiche de l'ancienne matière disparaît pendant le chargement.
+    setFiche(null);
+    setModifie(false);
     setMatiereId(id);
   };
 

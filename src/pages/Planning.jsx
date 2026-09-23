@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Icon from "../components/Icon";
 import { Badge, Container, EnTetePage, EtatVide, cx } from "../components/ui";
@@ -131,21 +131,17 @@ function Tache({ tache, faite, onBasculer }) {
 
 export default function Planning() {
   const [planning, setPlanning] = useState(lirePlanning);
-  const [contexte, setContexte] = useState(null);
-
-  // La progression se lit au montage : elle change quand l'étudiant
-  // fait un QCM ou ouvre une correction, puis revient ici.
-  useEffect(() => {
-    setContexte({
-      matieres,
-      competences,
-      exercices,
-      qcms,
-      devoirs,
-      analyse: analyserCompetences(lireScores()),
-      exercicesTravailles: lireExercicesTravailles(),
-    });
-  }, []);
+  // La progression se lit à l'ouverture de la page : elle change quand
+  // l'étudiant fait un QCM ou ouvre une correction, puis revient ici.
+  const [contexte] = useState(() => ({
+    matieres,
+    competences,
+    exercices,
+    qcms,
+    devoirs,
+    analyse: analyserCompetences(lireScores()),
+    exercicesTravailles: lireExercicesTravailles(),
+  }));
 
   const modifier = (suite) => {
     setPlanning(suite);

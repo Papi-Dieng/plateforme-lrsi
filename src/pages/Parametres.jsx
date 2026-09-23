@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Icon from "../components/Icon";
 import { Badge, Bouton, Container, EnTetePage, cx } from "../components/ui";
@@ -32,6 +32,8 @@ const entreesStockage = [
   { cle: CLE_PLANNING, libelle: "Planning de révision", detail: "Évaluations à préparer" },
   { cle: CLE_THEME, libelle: "Thème", detail: "Clair ou sombre" },
 ];
+
+const mesurer = () => Object.fromEntries(entreesStockage.map((e) => [e.cle, poids(e.cle)]));
 
 function poids(cle) {
   try {
@@ -154,22 +156,13 @@ export default function Parametres() {
   const { session, sortir } = useSession();
   const navigate = useNavigate();
 
-  const [theme, setTheme] = useState("light");
-  const [tailles, setTailles] = useState({});
+  const [theme, setTheme] = useState(() =>
+    document.documentElement.classList.contains("dark") ? "dark" : "light"
+  );
+  const [tailles, setTailles] = useState(mesurer);
   const [confirmation, setConfirmation] = useState(false);
 
-  const relever = () => {
-    const suite = {};
-    entreesStockage.forEach((e) => {
-      suite[e.cle] = poids(e.cle);
-    });
-    setTailles(suite);
-  };
-
-  useEffect(() => {
-    setTheme(document.documentElement.classList.contains("dark") ? "dark" : "light");
-    relever();
-  }, []);
+  const relever = () => setTailles(mesurer());
 
   const changerTheme = (suivant) => {
     setTheme(suivant);

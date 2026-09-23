@@ -74,7 +74,7 @@ function Compteur({ valeur, libelle, alerte }) {
 }
 
 export default function Admin() {
-  const couverture = useMemo(couvertureCompetences, []);
+  const couverture = useMemo(() => couvertureCompetences(), []);
 
   const nbQuestions = qcms.reduce((n, q) => n + q.questions.length, 0);
   const nbChapitres = matieres.reduce((n, m) => n + m.chapitres.length, 0);

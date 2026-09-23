@@ -1,4 +1,3 @@
-import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import { Bouton, EtatVide, NoteDemo, cx } from "../components/ui";
@@ -32,9 +31,10 @@ export default function Accueil() {
 
   /* ---- Filtrage ---- */
 
-  const matieresFiltrees = useMemo(() => {
-    const q = normalise(recherche.trim());
-    return matieres.filter((m) => {
+  // Quelques dizaines d'éléments : filtrer à chaque rendu coûte moins que
+  // de mémoriser, et laisse le compilateur React optimiser la page.
+  const q = normalise(recherche.trim());
+  const matieresFiltrees = matieres.filter((m) => {
       if (matiereActive !== "toutes" && m.id !== matiereActive) return false;
       if (!q) return true;
       const corpus = normalise(
@@ -44,12 +44,10 @@ export default function Accueil() {
       );
       return corpus.includes(q);
     });
-  }, [recherche, matiereActive]);
 
   /* ---- Prochains chapitres disponibles ---- */
 
-  const prochainsChapitres = useMemo(() => {
-    const q = normalise(recherche.trim());
+  const prochainsChapitres = (() => {
     const liste = [];
     for (const m of matieresFiltrees) {
       for (const c of m.chapitres) {
@@ -60,14 +58,12 @@ export default function Accueil() {
       }
     }
     return liste.slice(0, 5);
-  }, [matieresFiltrees, recherche]);
+  })();
 
   /* ---- QCM mis en avant ---- */
 
-  const qcmEnAvant = useMemo(() => {
-    const ids = matieresFiltrees.map((m) => m.id);
-    return qcms.find((q) => ids.includes(q.matiere)) ?? qcms[0];
-  }, [matieresFiltrees]);
+  const idsFiltres = matieresFiltrees.map((m) => m.id);
+  const qcmEnAvant = qcms.find((x) => idsFiltres.includes(x.matiere)) ?? qcms[0];
 
   const matiereDuQcm = matieres.find((m) => m.id === qcmEnAvant.matiere);
 

@@ -36,15 +36,11 @@ const lecteurUrl = (id) =>
 /* ------------------------------------------------------------------ */
 
 export function useVideos() {
-  const [perso, setPerso] = useState([]);
-  const [vues, setVues] = useState([]);
+  const [perso, setPerso] = useState(lireVideos);
+  const [vues, setVues] = useState(lireVideosVues);
   const [enLecture, setEnLecture] = useState(null);
   const [formulaire, setFormulaire] = useState(null);
 
-  useEffect(() => {
-    setPerso(lireVideos());
-    setVues(lireVideosVues());
-  }, []);
 
   const toutes = useMemo(() => [...perso, ...videosSuggerees], [perso]);
 

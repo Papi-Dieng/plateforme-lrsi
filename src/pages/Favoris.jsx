@@ -115,14 +115,14 @@ function resoudre(favori, videosPerso) {
 /* ================================================================== */
 
 export default function Favoris() {
-  const [favoris, setFavoris] = useState([]);
-  const [videosPerso, setVideosPerso] = useState([]);
+  const [favoris, setFavoris] = useState(lireFavoris);
+  const [videosPerso] = useState(lireVideos);
   const [type, setType] = useState("tous");
 
+  // Lus à la création de l'état ; l'effet ne fait que suivre les
+  // changements faits ailleurs sur la page.
   useEffect(() => {
     const charger = () => setFavoris(lireFavoris());
-    charger();
-    setVideosPerso(lireVideos());
     window.addEventListener("lrsi-favoris", charger);
     return () => window.removeEventListener("lrsi-favoris", charger);
   }, []);

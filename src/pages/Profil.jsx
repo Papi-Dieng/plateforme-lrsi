@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import Icon from "../components/Icon";
 import { Bouton, cx } from "../components/ui";
@@ -8,7 +8,6 @@ import {
   enregistrerProfil,
   lireProfil,
   niveaux,
-  profilVide,
   verifierProfil,
 } from "../profil";
 
@@ -141,12 +140,11 @@ function ChoixAvatar({ avatarId, onChoisir }) {
 /* ================================================================== */
 
 export default function Profil() {
-  const [profil, setProfil] = useState(profilVide);
+  const [profil, setProfil] = useState(lireProfil);
   const [erreurs, setErreurs] = useState({});
   const [enregistre, setEnregistre] = useState(false);
   const [confirmation, setConfirmation] = useState(false);
 
-  useEffect(() => setProfil(lireProfil()), []);
 
   const modifier = (champ) => (e) => {
     setProfil((p) => ({ ...p, [champ]: e.target.value }));

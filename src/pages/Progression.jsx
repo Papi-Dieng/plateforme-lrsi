@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Icon from "../components/Icon";
 import { Bouton, NoteDemo, cx } from "../components/ui";
@@ -150,9 +150,9 @@ function MiniStat({ valeur, unite, libelle }) {
 /* ================================================================== */
 
 export default function Progression() {
-  const [scores, setScores] = useState({});
-  const [exercicesFaits, setExercicesFaits] = useState({});
-  const [favoris, setFavoris] = useState([]);
+  const [scores, setScores] = useState(lireScores);
+  const [exercicesFaits, setExercicesFaits] = useState(lireExercicesTravailles);
+  const [favoris, setFavoris] = useState(lireFavoris);
   const [confirmation, setConfirmation] = useState(false);
 
   const charger = () => {
@@ -161,7 +161,6 @@ export default function Progression() {
     setFavoris(lireFavoris());
   };
 
-  useEffect(charger, []);
 
   /* ---- Synthèse ---- */
 
@@ -280,11 +279,6 @@ export default function Progression() {
     setConfirmation(false);
   };
 
-  let rang = 0;
-  const suivant = () => {
-    rang += 1;
-    return rang - 1;
-  };
 
   return (
     <div className="px-4 py-6 sm:px-7 sm:py-8">
@@ -327,7 +321,7 @@ export default function Progression() {
       <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
         {/* Vue d'ensemble */}
         <CarteBento
-          rang={suivant()}
+          rang={0}
           large
           icone="grid"
           ton="brand"
@@ -355,7 +349,7 @@ export default function Progression() {
 
         {/* Précision */}
         <CarteBento
-          rang={suivant()}
+          rang={1}
           icone="target"
           ton="accent"
           titre="Précision"
@@ -387,7 +381,7 @@ export default function Progression() {
 
         {/* Régularité */}
         <CarteBento
-          rang={suivant()}
+          rang={2}
           icone="clock"
           ton="flame"
           titre="Régularité"
@@ -424,7 +418,7 @@ export default function Progression() {
 
         {/* Progression par matière */}
         <CarteBento
-          rang={suivant()}
+          rang={3}
           large
           icone="layers"
           ton="violet"
@@ -471,7 +465,7 @@ export default function Progression() {
 
         {/* Résultats des QCM */}
         <CarteBento
-          rang={suivant()}
+          rang={4}
           large
           icone="graduation"
           ton="brand"
@@ -534,7 +528,7 @@ export default function Progression() {
 
         {/* Forces et faiblesses */}
         <CarteBento
-          rang={suivant()}
+          rang={5}
           large
           icone="target"
           ton="accent"
@@ -610,7 +604,7 @@ export default function Progression() {
 
         {/* Modules à améliorer */}
         <CarteBento
-          rang={suivant()}
+          rang={6}
           large
           icone="book"
           ton="flame"
@@ -668,7 +662,7 @@ export default function Progression() {
         {/* À reprendre */}
         {aReprendre.length > 0 && (
           <CarteBento
-            rang={suivant()}
+            rang={7}
             large
             icone="bulb"
             ton="sun"
@@ -693,7 +687,7 @@ export default function Progression() {
 
         {/* Données */}
         <CarteBento
-          rang={suivant()}
+          rang={aReprendre.length > 0 ? 8 : 7}
           large
           icone="lock"
           ton="ink"

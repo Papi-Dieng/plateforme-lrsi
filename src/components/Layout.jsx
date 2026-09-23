@@ -254,11 +254,14 @@ function MenuProfil() {
   const conteneur = useRef(null);
 
   // La fiche peut changer sur la page profil : on la relit à chaque
-  // navigation plutôt que de la recharger en permanence.
-  useEffect(() => {
+  // navigation plutôt que de la recharger en permanence. Comparer
+  // l'adresse pendant le rendu évite un second rendu par un effet.
+  const [chemin, setChemin] = useState(pathname);
+  if (chemin !== pathname) {
+    setChemin(pathname);
     setProfil(lireProfil());
     setOuvert(false);
-  }, [pathname]);
+  }
 
   useEffect(() => {
     if (!ouvert) return undefined;
@@ -553,7 +556,12 @@ export default function Layout() {
   const [ouvert, setOuvert] = useState(false);
   const { pathname } = useLocation();
 
-  useEffect(() => setOuvert(false), [pathname]);
+  // Le menu mobile se referme à chaque navigation.
+  const [chemin, setChemin] = useState(pathname);
+  if (chemin !== pathname) {
+    setChemin(pathname);
+    setOuvert(false);
+  }
 
   return (
     <div className="min-h-screen bg-ink-200 lg:p-5 dark:bg-ink-950">

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import LecteurPdf from "../components/LecteurPdf";
@@ -199,19 +199,19 @@ export function Exercices() {
 /* Détail d'un exercice                                                */
 /* ================================================================== */
 
+// La route est la même d'un exercice à l'autre : la clé recrée la page à
+// chaque exercice, sans quoi l'indice et la correction resteraient ouverts
+// sur le suivant.
 export function ExerciceDetail() {
   const { exerciceId } = useParams();
+  return <DetailExercice key={exerciceId} exerciceId={exerciceId} />;
+}
+
+function DetailExercice({ exerciceId }) {
   const exercice = getExercice(exerciceId);
 
   const [indiceVisible, setIndiceVisible] = useState(false);
   const [correctionVisible, setCorrectionVisible] = useState(false);
-
-  // La route est la même d'un exercice à l'autre, donc le composant n'est pas
-  // remonté : sans cela, la correction resterait ouverte sur l'exercice suivant.
-  useEffect(() => {
-    setIndiceVisible(false);
-    setCorrectionVisible(false);
-  }, [exerciceId]);
 
   // Ouvrir la correction compte comme « exercice travaillé » dans le profil.
   const basculerCorrection = () => {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Icon from "../components/Icon";
 import {
@@ -187,16 +187,12 @@ function Liens({ liens }) {
 /* ================================================================== */
 
 export default function Assistant() {
-  const [scores, setScores] = useState({});
-  const [exercicesTravailles, setExercicesTravailles] = useState([]);
+  // Lus une fois, à l'ouverture de la page.
+  const [scores] = useState(lireScores);
+  const [exercicesTravailles] = useState(lireExercicesTravailles);
   const [saisie, setSaisie] = useState("");
   const [messages, setMessages] = useState([]);
   const compteur = useRef(0);
-
-  useEffect(() => {
-    setScores(lireScores());
-    setExercicesTravailles(lireExercicesTravailles());
-  }, []);
 
   const analyse = useMemo(() => analyserCompetences(scores), [scores]);
 
@@ -290,9 +286,10 @@ export default function Assistant() {
     },
     {
       icone: "pencil",
-      valeur: exercicesTravailles.length,
+      // { identifiant: { date } } : un objet, pas une liste.
+      valeur: Object.keys(exercicesTravailles).length,
       label:
-        exercicesTravailles.length > 1
+        Object.keys(exercicesTravailles).length > 1
           ? "exercices travaillés"
           : "exercice travaillé",
       detail: "pour éviter de reproposer ce qui est déjà maîtrisé",
