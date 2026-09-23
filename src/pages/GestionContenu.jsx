@@ -9,6 +9,7 @@ import ConnexionAdmin, {
   messageErreurAdmin,
 } from "../components/ConnexionAdmin";
 import { themesMatiere } from "../data/couleurs";
+import { typesRessource } from "../data/bibliotheque";
 import { iaActive } from "../ia";
 import {
   copieContenu,
@@ -33,7 +34,8 @@ import {
 
 /* ==================================================================
    Gérer le contenu : matières et cours, compétences, exercices, QCM,
-   vidéos, examens blancs et annales.
+   vidéos, devoirs et examens (`examens` et `annales` dans le code :
+   les noms internes datent d'avant le renommage).
 
    On modifie un BROUILLON, gardé dans la page. Rien ne change pour les
    étudiants tant qu'on n'a pas cliqué « Publier » : le brouillon part
@@ -54,8 +56,9 @@ const ONGLETS = [
   { cle: "exercices", label: "Exercices", icone: "pencil" },
   { cle: "qcms", label: "QCM", icone: "target" },
   { cle: "videos", label: "Vidéos", icone: "video" },
-  { cle: "examens", label: "Examens blancs", icone: "clock" },
-  { cle: "annales", label: "Annales", icone: "file" },
+  { cle: "examens", label: "Devoirs", icone: "clock" },
+  { cle: "annales", label: "Examens", icone: "file" },
+  { cle: "ressources", label: "Bibliothèque", icone: "book" },
 ];
 
 const ICONES_MATIERE = ["network", "terminal", "code", "cpu", "database", "shield", "book", "graduation", "layers"];
@@ -885,7 +888,7 @@ function EditeurExamen({ element: x, changer, matieres, motDePasse }) {
               libelle="Corrigé (PDF)"
               pdf={x.pdfCorrige}
               motDePasse={motDePasse}
-              aide="Affiché seulement à la fin de l'examen."
+              aide="Affiché seulement à la fin du devoir."
               onChange={(pdf) => changer({ pdfCorrige: pdf })}
               onRetirer={() => changer({ pdfCorrige: null })}
             />
@@ -917,7 +920,7 @@ function EditeurExamen({ element: x, changer, matieres, motDePasse }) {
                   <Champ label="Points" type="number" min={0} max={100} value={p.points} onChange={(e) => changerPartie(i, { points: Number(e.target.value) })} />
                 </div>
                 <Zone label="Énoncé" rows={5} value={p.enonce} maxLength={8000} onChange={(e) => changerPartie(i, { enonce: e.target.value })} />
-                <Zone label="Corrigé" aide="Affiché seulement à la fin de l'examen." rows={5} value={p.corrige} maxLength={8000} onChange={(e) => changerPartie(i, { corrige: e.target.value })} />
+                <Zone label="Corrigé" aide="Affiché seulement à la fin du devoir." rows={5} value={p.corrige} maxLength={8000} onChange={(e) => changerPartie(i, { corrige: e.target.value })} />
               </div>
               <Ordre
                 index={i}
@@ -957,7 +960,7 @@ function EditeurAnnale({ element: a, changer, matieres }) {
         <p>
           {visible
             ? "Visible par les étudiants après publication."
-            : "En attente : une annale n'est montrée aux étudiants qu'avec une autorisation écrite déclarée et un lien vers le sujet."}
+            : "En attente : un examen n'est montré aux étudiants qu'avec une autorisation écrite déclarée et un lien vers le sujet."}
         </p>
       </div>
       <Champ label="Titre" value={a.titre} maxLength={150} placeholder="Examen de réseaux, session 1" onChange={(e) => changer({ titre: e.target.value })} />
@@ -988,13 +991,99 @@ function EditeurAnnale({ element: a, changer, matieres }) {
         <Champ
           className="mt-3"
           label="De qui, et quand ?"
-          aide="Affiché sous l'annale. Garde la preuve écrite (courriel, courrier)."
+          aide="Affiché sous l'examen. Garde la preuve écrite (courriel, courrier)."
           value={auto.detail}
           maxLength={500}
           placeholder="Accord de M. X, responsable du module, par courriel du 12/03/2026"
           onChange={(e) => changer({ autorisation: { ...auto, detail: e.target.value } })}
         />
       </fieldset>
+    </div>
+  );
+}
+
+/* Une ressource de la bibliothèque : un lien vers le site de l'auteur,
+   ou un PDF téléversé. Tant que sa diffusion n'est pas autorisée, elle
+   reste « en attente » : annoncée, mais sans lien ni fichier. */
+function EditeurRessource({ element: r, changer, matieres, motDePasse }) {
+  const source = r.pdf && !r.url ? "pdf" : r.source ?? (r.pdf ? "pdf" : "lien");
+  const libre = r.statut === "libre";
+
+  return (
+    <div className="space-y-4">
+      <div
+        className={cx(
+          "flex gap-3 rounded-xl px-4 py-3 text-sm/6",
+          libre
+            ? "bg-accent-50 text-accent-800 dark:bg-accent-500/10 dark:text-accent-300"
+            : "bg-sun-100/60 text-sun-900 dark:bg-sun-500/10 dark:text-sun-300"
+        )}
+      >
+        <Icon name={libre ? "check" : "lock"} className="mt-0.5 size-4.5 shrink-0" />
+        <p>
+          {libre
+            ? "Accès libre : les étudiants voient la ressource et peuvent l'ouvrir."
+            : "En attente : les étudiants voient seulement qu'elle est prévue, sans lien ni fichier."}
+        </p>
+      </div>
+
+      <Champ label="Titre" value={r.titre} maxLength={200} onChange={(e) => changer({ titre: e.target.value })} />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Champ label="Auteurs" value={r.auteurs} maxLength={200} onChange={(e) => changer({ auteurs: e.target.value })} />
+        <Choix label="Matière" value={r.matiere} options={optionsMatieres(matieres)} onChange={(e) => changer({ matiere: e.target.value })} />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Choix
+          label="Type"
+          value={typesRessource.includes(r.type) ? r.type : typesRessource[0]}
+          options={typesRessource.map((t) => ({ value: t, label: t }))}
+          onChange={(e) => changer({ type: e.target.value })}
+        />
+        <Champ label="Langue" value={r.langue} maxLength={30} placeholder="Français" onChange={(e) => changer({ langue: e.target.value })} />
+        <Champ label="Licence" value={r.licence} maxLength={80} placeholder="CC BY, accord de l'auteur…" onChange={(e) => changer({ licence: e.target.value })} />
+      </div>
+      <Zone label="Présentation" rows={2} value={r.note} maxLength={600} onChange={(e) => changer({ note: e.target.value })} />
+
+      <fieldset className="space-y-3 rounded-xl border border-ink-200 p-4 dark:border-ink-800">
+        <legend className="px-1 text-xs font-semibold text-ink-600 dark:text-ink-300">Document</legend>
+        <ChoixFormat
+          valeur={source}
+          onChange={(s) => changer({ source: s })}
+          options={[
+            { valeur: "lien", label: "Lien vers le site de l'auteur", icone: "external" },
+            { valeur: "pdf", label: "Téléverser un PDF", icone: "file" },
+          ]}
+        />
+        {source === "lien" ? (
+          <Champ
+            label="Adresse"
+            placeholder="https://…"
+            value={r.url ?? ""}
+            aide="Une adresse https : le site officiel de l'auteur, jamais une copie."
+            onChange={(e) => changer({ url: e.target.value, pdf: null })}
+          />
+        ) : (
+          <ChampPdf
+            libelle="Document en PDF"
+            pdf={r.pdf}
+            motDePasse={motDePasse}
+            aide="Seulement un document que tu as le droit de diffuser : le tien, sous licence libre, ou avec l'accord écrit de son auteur."
+            onChange={(pdf) => changer({ pdf, url: null })}
+            onRetirer={() => changer({ pdf: null })}
+          />
+        )}
+      </fieldset>
+
+      <label className="flex items-start gap-3 rounded-xl border border-ink-200 p-4 text-sm text-ink-700 dark:border-ink-800 dark:text-ink-300">
+        <input
+          type="checkbox"
+          checked={libre}
+          onChange={(e) => changer({ statut: e.target.checked ? "libre" : "attente" })}
+          className="mt-1 size-4 accent-brand-600"
+        />
+        Sa diffusion est autorisée : licence libre, ou accord écrit de son auteur. Sinon, elle reste en
+        attente et les étudiants n'y ont pas accès.
+      </label>
     </div>
   );
 }
@@ -1071,14 +1160,14 @@ const TYPES = {
   },
   examens: {
     Editeur: EditeurExamen,
-    nouveau: (tous, matiere) => ({ id: identifiant("examen", tous), titre: "", matiere, dureeMinutes: 60, consignes: "", parties: [] }),
+    nouveau: (tous, matiere) => ({ id: identifiant("devoir", tous), titre: "", matiere, dureeMinutes: 60, consignes: "", parties: [] }),
     titre: (x) => x.titre,
     detail: (x) => `${x.dureeMinutes} min · ${x.format === "pdf" ? "sujet PDF" : `${x.parties.length} parties`}`,
   },
   annales: {
     Editeur: EditeurAnnale,
     nouveau: (tous, matiere) => ({
-      id: identifiant("annale", tous),
+      id: identifiant("examen-passe", tous),
       titre: "",
       matiere,
       annee: "",
@@ -1089,6 +1178,24 @@ const TYPES = {
     }),
     titre: (a) => a.titre,
     detail: (a) => (a.autorisation?.obtenue && a.lienSujet ? "visible" : "en attente"),
+  },
+  ressources: {
+    Editeur: EditeurRessource,
+    nouveau: (tous, matiere) => ({
+      id: identifiant("ressource", tous),
+      titre: "",
+      auteurs: "",
+      type: typesRessource[0],
+      langue: "Français",
+      matiere,
+      licence: "",
+      statut: "attente",
+      url: null,
+      pdf: null,
+      note: "",
+    }),
+    titre: (r) => r.titre,
+    detail: (r) => `${r.type} · ${r.statut === "libre" ? "accès libre" : "en attente"}${r.pdf ? " · PDF" : ""}`,
   },
 };
 
@@ -1112,19 +1219,25 @@ function problemes(b) {
     ["exercices", "L'exercice"],
     ["qcms", "Le QCM"],
     ["videos", "La vidéo"],
-    ["examens", "L'examen"],
-    ["annales", "L'annale"],
+    ["examens", "Le devoir"],
+    ["annales", "L'examen"],
+    ["ressources", "La ressource"],
   ]) {
     for (const e of b[cle]) {
       if (!e.titre.trim()) liste.push(`${nom} « ${e.id} » n'a pas de titre : il serait supprimé.`);
       else if (!ids.has(e.matiere)) liste.push(`${nom} « ${e.titre} » n'a pas de matière.`);
     }
   }
+  for (const r of b.ressources) {
+    if (r.statut === "libre" && !r.url && !r.pdf) {
+      liste.push(`La ressource « ${r.titre || r.id} » est en accès libre sans lien ni PDF : les étudiants ne pourraient pas l'ouvrir.`);
+    }
+  }
   for (const e of b.exercices) {
     if (e.format === "pdf" && !e.pdfEnonce) liste.push(`L'exercice « ${e.titre || e.id} » est en PDF sans énoncé : il repasserait en texte, vide.`);
   }
   for (const x of b.examens) {
-    if (x.format === "pdf" && !x.pdfEnonce) liste.push(`L'examen « ${x.titre || x.id} » est en PDF sans sujet : il repasserait en parties, vides.`);
+    if (x.format === "pdf" && !x.pdfEnonce) liste.push(`Le devoir « ${x.titre || x.id} » est en PDF sans sujet : il repasserait en parties, vides.`);
   }
   for (const q of b.qcms) {
     q.questions.forEach((x, i) => {
@@ -1139,6 +1252,8 @@ function problemes(b) {
 /* Ce qui part au relais : les étapes et réponses vides sont retirées. */
 const pourPublier = (b) => ({
   ...b,
+  // `source` ne sert qu'à l'éditeur (lien ou PDF) : il ne part pas.
+  ressources: b.ressources.map(({ source: _source, ...r }) => r),
   exercices: b.exercices.map((e) => ({ ...e, etapes: e.etapes.map((s) => s.trim()).filter(Boolean) })),
   qcms: b.qcms.map((q) => ({
     ...q,
@@ -1273,7 +1388,7 @@ export default function GestionContenu() {
 
   const supprimer = () => {
     if (onglet === "matieres") {
-      const lies = ["competences", "exercices", "qcms", "videos", "examens", "annales"].reduce(
+      const lies = ["competences", "exercices", "qcms", "videos", "examens", "annales", "ressources"].reduce(
         (n, cle) => n + brouillon[cle].filter((e) => e.matiere === selectionne.id).length,
         0
       );

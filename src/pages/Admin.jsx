@@ -159,9 +159,9 @@ export default function Admin() {
                 Gérer le contenu
               </span>
               <span className="mt-0.5 block text-sm text-ink-500 dark:text-ink-400">
-                Matières et cours, exercices, QCM, vidéos, examens blancs et
-                annales. Publié en un clic, visible tout de suite par les
-                étudiants.
+                Matières et cours, compétences, exercices, QCM, vidéos,
+                devoirs, examens et bibliothèque. Publié en un clic, visible
+                tout de suite par les étudiants.
               </span>
             </span>
             <Icon name="chevron" className="size-5 shrink-0 -rotate-90 text-ink-400" />

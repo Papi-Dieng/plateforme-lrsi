@@ -306,7 +306,7 @@ lrsi-platform/
 │   │   ├── Admin.jsx             page d'auteur, hors parcours étudiant
 │   │   ├── EducationIA.jsx       éduquer l'IA par matière (admin)
 │   │   ├── GestionContenu.jsx    gérer tout le contenu (admin)
-│   │   └── Examens.jsx           examens blancs et annales
+│   │   └── Examens.jsx           devoirs et examens
 │   ├── session.js            contexte et hook de session (voir section 7)
 │   ├── FournisseurSession.jsx  le fournisseur, séparé du hook
 │   ├── assistant.js          moteur du guide de révision
@@ -343,8 +343,14 @@ réécrire les pages.
 ### Depuis l'espace admin (recommandé)
 
 *Administration*, puis *Gérer le contenu* (`/#/admin/contenu`), avec le mot de
-passe admin. Sept onglets : matières et cours (le texte de chaque chapitre),
-compétences, exercices, QCM, vidéos, examens blancs et annales.
+passe admin. Neuf onglets : matières et cours (le texte de chaque chapitre),
+compétences, exercices, QCM, vidéos, devoirs, examens et bibliothèque.
+
+Vocabulaire : un **devoir** est un sujet rédigé pour la plateforme, fait avec
+un minuteur et corrigé à la fin ; un **examen** est un sujet passé de
+l'établissement, publié seulement avec autorisation. Dans le code, ils
+s'appellent encore `examens` et `annales` : les noms internes datent d'avant
+le renommage et restent, pour que le contenu déjà publié fonctionne.
 
 On modifie un **brouillon** : rien ne change pour les étudiants avant
 **« Publier »**. Le contenu publié est gardé par le relais (Cloudflare KV,
@@ -360,7 +366,11 @@ recompilation, pas de push.
 - Les **identifiants** (adresse d'un exercice ou d'un QCM) sont fabriqués à
   la création et ne changent plus : la progression et les favoris y sont
   attachés. Renommer un chapitre détache en revanche les favoris posés dessus.
-- Une **annale** n'est montrée aux étudiants qu'avec une autorisation écrite
+- La **bibliothèque** : un lien vers le site de l'auteur, ou un PDF
+  téléversé. Une ressource « en attente » est annoncée sans lien ni fichier ;
+  le relais applique cette règle. Ne cocher « diffusion autorisée » que pour
+  une licence libre ou un accord écrit de l'auteur.
+- Un **examen** (sujet passé) n'est montré aux étudiants qu'avec une autorisation écrite
   déclarée et un lien https vers le sujet. Le relais applique cette règle, pas
   seulement la page. La plateforme n'héberge aucun fichier : sujets et
   corrigés sont des liens.
@@ -379,7 +389,7 @@ recompilation, pas de push.
   correction : l'énoncé s'affiche tout de suite, la correction seulement quand
   l'étudiant clique « voir la correction ». Un indice écrit reste possible.
   L'assistant IA lit le texte des deux, et donne l'indice avant la correction.
-- Un **examen blanc** peut se donner en deux PDF, le sujet et le corrigé : le
+- Un **devoir** peut se donner en deux PDF, le sujet et le corrigé : le
   sujet s'affiche au lancement du minuteur, le corrigé à la fin, et
   l'étudiant se note sur le total indiqué.
 - Ce qui est caché (correction, corrigé) l'est dans la page, pas sur le

@@ -1,8 +1,9 @@
 /* ==================================================================
    Le contenu pédagogique publié depuis l'espace admin.
 
-   Matières et cours, compétences, exercices, QCM, vidéos, examens
-   blancs et annales : un seul document JSON dans Cloudflare KV, sous la clé
+   Matières et cours, compétences, exercices, QCM, vidéos, devoirs
+   (`examens`), examens passés (`annales`) et bibliothèque
+   (`ressources`) : un seul document JSON dans Cloudflare KV, sous la clé
    `contenu`. Le site le charge à l'ouverture ; tant que rien n'est
    publié, il garde le contenu écrit dans `src/data/`.
 
@@ -205,6 +206,24 @@ const nettoyerAnnale = (a) => ({
   },
 });
 
+/* Une ressource de la bibliothèque : un lien vers le site de l'auteur,
+   ou un PDF téléversé. « libre » : sa diffusion est autorisée (licence
+   libre ou accord écrit). « attente » : elle est seulement annoncée, et
+   ni son lien ni son fichier ne sont montrés aux étudiants. */
+const nettoyerRessource = (r) => ({
+  id: id(r?.id),
+  titre: texte(r?.titre, 200),
+  auteurs: texte(r?.auteurs, 200),
+  type: texte(r?.type, 40) || "Document",
+  langue: texte(r?.langue, 30),
+  matiere: id(r?.matiere),
+  licence: texte(r?.licence, 80),
+  statut: unParmi(r?.statut, ["libre", "attente"], "attente"),
+  url: lien(r?.url) || null,
+  pdf: pdfValide(r?.pdf),
+  note: texte(r?.note, 600),
+});
+
 export function nettoyerContenu(brut) {
   return {
     matieres: uniques(liste(brut?.matieres, 30).map(nettoyerMatiere).filter((m) => m.nom)),
@@ -219,6 +238,11 @@ export function nettoyerContenu(brut) {
     videos: uniques(liste(brut?.videos, 500).map(nettoyerVideo).filter((v) => v.titre)),
     examens: uniques(liste(brut?.examens, 100).map(nettoyerExamen).filter((x) => x.titre)),
     annales: uniques(liste(brut?.annales, 300).map(nettoyerAnnale).filter((a) => a.titre)),
+    // Absente d'une publication plus ancienne : la clé est omise, et le
+    // site garde sa bibliothèque.
+    ressources: Array.isArray(brut?.ressources)
+      ? uniques(liste(brut.ressources, 300).map(nettoyerRessource).filter((r) => r.titre))
+      : undefined,
   };
 }
 
@@ -228,6 +252,9 @@ export function nettoyerContenu(brut) {
 export const versionPublique = (c) => ({
   ...c,
   annales: c.annales.filter((a) => a.autorisation.obtenue && a.lienSujet),
+  ...(c.ressources && {
+    ressources: c.ressources.map((r) => (r.statut === "libre" ? r : { ...r, url: null, pdf: null })),
+  }),
 });
 
 export const lireContenu = (env) => env.EDUCATION.get(CLE, "json");

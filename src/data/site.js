@@ -41,7 +41,7 @@ export const navigation = [
   { label: "Cours", to: "/cours" },
   { label: "Exercices", to: "/exercices" },
   { label: "QCM", to: "/qcm" },
-  { label: "Examens", to: "/examens" },
+  { label: "Devoirs et examens", to: "/examens" },
   { label: "Vidéos", to: "/videos" },
   { label: "Bibliothèque", to: "/bibliotheque" },
   { label: "Mes favoris", to: "/favoris" },

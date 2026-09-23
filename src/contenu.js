@@ -5,6 +5,7 @@ import { exercices } from "./data/exercices";
 import { qcms } from "./data/qcm";
 import { videosSuggerees } from "./data/videos";
 import { annales, examens } from "./data/examens";
+import { ressources } from "./data/bibliotheque";
 
 /* ==================================================================
    Le contenu pédagogique : celui du code, ou celui publié en ligne.
@@ -35,7 +36,22 @@ const TABLEAUX = {
   videos: videosSuggerees,
   examens,
   annales,
+  ressources,
 };
+
+// Les ressources écrites dans le code n'ont pas d'identifiant : on leur
+// en donne un, stable, tiré du titre, pour que l'admin puisse les gérer.
+for (const r of ressources) {
+  r.id ??=
+    "ressource-" +
+    r.titre
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 50);
+}
 
 // Le contenu du code, gardé à part : l'admin peut repartir de lui
 // tant que rien n'est publié.
@@ -114,7 +130,19 @@ async function appel(chemin, motDePasse, options = {}) {
   return donnees;
 }
 
-/* La version publiée complète, annales en attente comprises ; `null`
+/* Ce qu'un étudiant voit d'une version complète : le même filtre que le
+   relais (examens sans autorisation retirés, ressources en attente sans
+   lien ni fichier). Sert à afficher tout de suite ce qu'on vient de
+   publier, comme les étudiants le verront. */
+const versionVisible = (c) => ({
+  ...c,
+  annales: c.annales.filter((a) => a.autorisation.obtenue && a.lienSujet),
+  ...(c.ressources && {
+    ressources: c.ressources.map((r) => (r.statut === "libre" ? r : { ...r, url: null, pdf: null })),
+  }),
+});
+
+/* La version publiée complète, examens en attente compris ; `null`
    si rien n'a encore été publié. */
 export const lireContenuAdmin = (motDePasse) => appel("/admin/contenu", motDePasse);
 
@@ -126,7 +154,7 @@ export async function publierContenu(contenu, motDePasse) {
     method: "PUT",
     body: JSON.stringify(contenu),
   });
-  remplacer({ ...publie, annales: publie.annales.filter((a) => a.autorisation.obtenue && a.lienSujet) });
+  remplacer(versionVisible(publie));
   origineContenu = "en-ligne";
   dateContenu = publie.publieLe;
   return publie;
@@ -134,7 +162,7 @@ export async function publierContenu(contenu, motDePasse) {
 
 export async function restaurerContenu(motDePasse) {
   const restaure = await appel("/admin/contenu/restaurer", motDePasse, { method: "POST" });
-  remplacer({ ...restaure, annales: restaure.annales.filter((a) => a.autorisation.obtenue && a.lienSujet) });
+  remplacer(versionVisible(restaure));
   dateContenu = restaure.publieLe;
   return restaure;
 }

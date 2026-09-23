@@ -9,16 +9,21 @@ import { getMatiere, matieres, nomMatiere } from "../data/matieres";
 import { themeMatiere } from "../data/couleurs";
 
 /* ==================================================================
-   Examens : examens blancs et annales.
+   Devoirs et examens.
 
-   Un examen blanc se passe en conditions réelles : le sujet complet,
+   Côté code, `examens` désigne les devoirs (rédigés pour la
+   plateforme) et `annales` les examens (sujets passés de
+   l'établissement) : les noms internes datent d'avant le renommage et
+   restent, pour que le contenu déjà publié continue de fonctionner.
+
+   Un devoir se passe en conditions réelles : le sujet complet,
    un minuteur, et le corrigé seulement à la fin. L'étudiant se note
    alors lui-même, partie par partie, en comparant sa copie au
    corrigé : une copie rédigée ne se corrige pas automatiquement, et
    une note inventée par la machine serait pire que pas de note.
 
-   Les annales ne sont que des liens vers des sujets dont la
-   publication a été autorisée ; la plateforme n'en héberge aucune.
+   Les examens ne sont que des liens vers des sujets dont la
+   publication a été autorisée ; la plateforme n'en héberge aucun.
    ================================================================== */
 
 const formatMinutes = (m) =>
@@ -53,8 +58,8 @@ export function ExamensListe() {
     <>
       <EnTetePage
         surtitre="Préparer les partiels"
-        titre="Examens"
-        texte="Des examens blancs à passer en conditions réelles, avec minuteur et corrigé à la fin, et les sujets d'annales dont la publication a été autorisée."
+        titre="Devoirs et examens"
+        texte="Des devoirs à faire en conditions réelles, avec minuteur et corrigé à la fin, et les sujets d'examens passés dont la publication a été autorisée."
       />
 
       <Container className="space-y-12 py-10">
@@ -65,11 +70,11 @@ export function ExamensListe() {
         <section>
           <h2 className="flex items-center gap-2 text-lg font-semibold text-ink-900 dark:text-white">
             <Icon name="clock" className="size-5 text-brand-500" />
-            Examens blancs
+            Devoirs
           </h2>
           {blancs.length === 0 ? (
             <p className="mt-4 text-sm text-ink-500 dark:text-ink-400">
-              Aucun examen blanc pour le moment.
+              Aucun devoir pour le moment.
             </p>
           ) : (
             <div className="mt-5 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -111,11 +116,11 @@ export function ExamensListe() {
         <section>
           <h2 className="flex items-center gap-2 text-lg font-semibold text-ink-900 dark:text-white">
             <Icon name="file" className="size-5 text-brand-500" />
-            Annales
+            Examens
           </h2>
           {sujets.length === 0 ? (
             <div className="mt-4 card p-5 text-sm/6 text-ink-600 dark:text-ink-400">
-              Aucune annale publiée pour le moment. Les sujets d'examens
+              Aucun examen publié pour le moment. Les sujets d'examens
               appartiennent à l'établissement et aux enseignants : ils ne sont
               publiés ici qu'avec leur autorisation écrite.
             </div>
@@ -171,7 +176,7 @@ export function ExamensListe() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Passer un examen blanc                                              */
+/* Faire un devoir                                                     */
 /* ------------------------------------------------------------------ */
 
 export function ExamenSession() {
@@ -200,7 +205,7 @@ export function ExamenSession() {
   if (!examen) {
     return (
       <Container className="py-16">
-        <EtatVide titre="Examen introuvable" texte="Il a peut-être été retiré ou renommé.">
+        <EtatVide titre="Devoir introuvable" texte="Il a peut-être été retiré ou renommé.">
           <Link to="/examens" className="text-sm font-medium text-brand-600 hover:underline">
             Retour aux examens
           </Link>
@@ -229,7 +234,7 @@ export function ExamenSession() {
             className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-500 hover:text-brand-600 dark:text-ink-400"
           >
             <Icon name="arrow" className="size-4 rotate-180" />
-            Tous les examens
+            Tous les devoirs et examens
           </Link>
           <Badge icone="clock">{formatMinutes(examen.dureeMinutes)}</Badge>
           <Badge>Sur {total} points</Badge>
@@ -276,7 +281,7 @@ export function ExamenSession() {
                   {examen.format === "pdf"
                     ? `Sujet en PDF, noté sur ${total} points.`
                     : `${examen.parties.length} parties, ${total} points au total.`}{" "}
-                  Rédige tes réponses sur une feuille, comme le jour de l'examen.
+                  Rédige tes réponses sur une feuille, comme un jour d'examen.
                 </li>
                 <li>
                   Le corrigé ne s'affiche qu'à la fin, et tu te notes toi-même
@@ -286,7 +291,7 @@ export function ExamenSession() {
               {examen.consignes && (
                 <div className="mt-4 rounded-xl bg-sun-100/60 p-4 dark:bg-sun-500/10">
                   <p className="text-xs font-semibold uppercase tracking-wide text-sun-800 dark:text-sun-400">
-                    Consignes de l'examen
+                    Consignes du devoir
                   </p>
                   <TexteLibre texte={examen.consignes} className="mt-1" />
                 </div>
@@ -297,7 +302,7 @@ export function ExamenSession() {
                 className="mt-5 inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white hover:bg-brand-700"
               >
                 <Icon name="clock" className="size-4" />
-                Commencer l'examen
+                Commencer le devoir
               </button>
             </div>
           )}
@@ -326,7 +331,7 @@ export function ExamenSession() {
                       className="mt-3"
                     />
                   ) : (
-                    <p className="mt-2 text-sm text-ink-500">Le corrigé de cet examen n'a pas encore été publié.</p>
+                    <p className="mt-2 text-sm text-ink-500">Le corrigé de ce devoir n'a pas encore été publié.</p>
                   )}
                   <label className="mt-4 flex items-center gap-3 text-sm text-ink-700 dark:text-ink-300">
                     Mes points

@@ -69,7 +69,8 @@ export async function servirPdf(id, env) {
 }
 
 /* Les identifiants de PDF cités par une version du contenu : cours des
-   chapitres, énoncés et corrections des exercices et des examens. Un
+   chapitres, énoncés et corrections des exercices et des devoirs,
+   documents de la bibliothèque. Un
    PDF absent d'ici serait supprimé par le ménage. */
 export const pdfsCites = (contenu) =>
   [
@@ -78,6 +79,7 @@ export const pdfsCites = (contenu) =>
       e.pdfEnonce,
       e.pdfCorrige,
     ]),
+    ...(contenu?.ressources ?? []).map((r) => r.pdf),
   ]
     .map((p) => p?.id)
     .filter(Boolean);

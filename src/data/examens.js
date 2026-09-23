@@ -16,7 +16,7 @@
 export const examens = [
   {
     id: "blanc-reseaux-1",
-    titre: "Examen blanc : réseaux, les fondamentaux",
+    titre: "Devoir : réseaux, les fondamentaux",
     matiere: "reseaux",
     dureeMinutes: 60,
     consignes:

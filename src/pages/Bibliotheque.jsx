@@ -9,6 +9,7 @@ import {
   cx,
 } from "../components/ui";
 import { ressources } from "../data/bibliotheque";
+import { urlPdf } from "../contenu";
 import { matieres, nomMatiere } from "../data/matieres";
 
 export default function Bibliotheque() {
@@ -36,7 +37,7 @@ export default function Bibliotheque() {
       <EnTetePage
         surtitre="Documents"
         titre="Bibliothèque"
-        texte="Uniquement des ressources dont la diffusion est autorisée par leurs auteurs. Les documents appartenant à l'université ou aux enseignants n'apparaissent ici qu'à titre de projet, sans être hébergés."
+        texte="Uniquement des ressources dont la diffusion est autorisée par leurs auteurs. Un document de l'université ou d'un enseignant n'est mis à disposition qu'avec son accord écrit."
       />
 
       <Container className="py-10">
@@ -51,9 +52,9 @@ export default function Bibliotheque() {
             </h2>
             <p className="mt-1.5 text-sm/6 text-ink-600 dark:text-ink-400">
               Un document n'est publié que si sa licence l'autorise
-              explicitement, ou si son auteur a donné son accord. Les liens
-              ci-dessous pointent vers les sites officiels des auteurs : rien
-              n'est recopié ni réhébergé.
+              explicitement, ou si son auteur a donné son accord écrit. Les
+              liens pointent vers les sites officiels des auteurs ; un PDF
+              n'est déposé sur la plateforme qu'avec cette autorisation.
             </p>
           </div>
         </div>
@@ -85,9 +86,9 @@ export default function Bibliotheque() {
           ) : (
             <ul className="mt-4 grid gap-4 md:grid-cols-2">
               {libres.map((r) => (
-                <li key={r.titre}>
+                <li key={r.id ?? r.titre}>
                   <a
-                    href={r.url}
+                    href={r.url || (r.pdf ? urlPdf(r.pdf.id) : undefined)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="card group flex h-full flex-col p-5 transition-shadow hover:shadow-md"
@@ -111,8 +112,8 @@ export default function Bibliotheque() {
                     </p>
 
                     <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 dark:text-brand-400">
-                      Consulter sur le site de l'auteur
-                      <Icon name="external" className="size-3.5" />
+                      {r.url ? "Consulter sur le site de l'auteur" : "Ouvrir le PDF"}
+                      <Icon name={r.url ? "external" : "file"} className="size-3.5" />
                     </span>
                   </a>
                 </li>
@@ -130,7 +131,7 @@ export default function Bibliotheque() {
               <Badge ton="sun">{attente.length}</Badge>
             </h2>
             <p className="mt-2 max-w-2xl text-sm/6 text-ink-600 dark:text-ink-400">
-              Ces ressources ne sont pas hébergées et ne le seront qu'après un
+              Ces ressources ne sont pas accessibles et ne le seront qu'après un
               accord écrit. Elles figurent ici pour montrer la structure prévue
               et rester transparent sur la démarche.
             </p>
