@@ -302,6 +302,7 @@ export function CoursDetail() {
                           libelle="Cours en PDF"
                           titre={`Cours : ${c.titre}`}
                           onLu={lu ? undefined : marquerLu}
+                          lu={lu}
                           className="mt-4"
                         />
                       )}
@@ -311,6 +312,7 @@ export function CoursDetail() {
                           titre={`Cours : ${c.titre}`}
                           pdf={c.pdf}
                           onLu={lu ? undefined : marquerLu}
+                          lu={lu}
                           tempsMin={tempsMinimumTexte(c.contenu)}
                           className="mt-4"
                         >

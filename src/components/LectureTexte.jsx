@@ -2,7 +2,7 @@ import Icon from "./Icon";
 import PleinEcran from "./PleinEcran";
 import { cx } from "./ui";
 import { urlPdf } from "../contenu";
-import { useLectureDetectee } from "./detectionLecture";
+import { EtatLecture, useLectureDetectee } from "./detectionLecture";
 
 /* ==================================================================
    Un texte écrit dans l'espace admin, côté étudiant : cours, énoncé ou
@@ -13,11 +13,11 @@ import { useLectureDetectee } from "./detectionLecture";
    déplie le texte, avec son bouton « Plein écran ».
 
    `onLu` (cours) : appelé quand l'étudiant a lu le texte jusqu'au bout,
-   assez longtemps (`tempsMin` secondes) ; voir `detectionLecture.js`.
+   assez longtemps (`tempsMin` secondes) ; voir `detectionLecture.jsx`. `lu` : déjà compté.
    ================================================================== */
 
-export default function LectureTexte({ libelle, titre, pdf, icone = "book", ouvert = false, onLu, tempsMin = 15, className, children }) {
-  const { refFin, surBascule, marquerLu } = useLectureDetectee({ onLu, tempsMin, ouvertAuDepart: ouvert });
+export default function LectureTexte({ libelle, titre, pdf, icone = "book", ouvert = false, onLu, lu = false, tempsMin = 15, className, children }) {
+  const { refFin, surBascule, marquerLu, finVue, restant } = useLectureDetectee({ onLu, tempsMin, ouvertAuDepart: ouvert });
   return (
     <div className={cx("overflow-hidden rounded-xl border border-ink-200 dark:border-ink-800", className)}>
       <div className="flex flex-wrap items-center gap-3 px-4 py-2.5">
@@ -44,6 +44,7 @@ export default function LectureTexte({ libelle, titre, pdf, icone = "book", ouve
           <div className="mt-3">{children}</div>
           {/* Repère de fin de texte, pour savoir que tout a été lu. */}
           <div ref={refFin} aria-hidden="true" className="h-px" />
+          <EtatLecture lu={lu} suivi={Boolean(onLu)} finVue={finVue} restant={restant} />
         </PleinEcran>
       </details>
     </div>

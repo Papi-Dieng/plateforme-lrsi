@@ -1,7 +1,7 @@
 import Icon from "./Icon";
 import { cx } from "./ui";
 import { urlPdf } from "../contenu";
-import { TEMPS_MINIMUM_PDF, useLectureDetectee } from "./detectionLecture";
+import { EtatLecture, TEMPS_MINIMUM_PDF, useLectureDetectee } from "./detectionLecture";
 
 /* ==================================================================
    Un PDF téléversé depuis l'espace admin, côté étudiant : cours,
@@ -12,11 +12,11 @@ import { TEMPS_MINIMUM_PDF, useLectureDetectee } from "./detectionLecture";
    replie ou s'ouvre selon `ouvert`.
 
    `onLu` (cours) : appelé quand le PDF est resté ouvert ici assez
-   longtemps, ou a été ouvert ou téléchargé ; voir `detectionLecture.js`.
+   longtemps, ou a été ouvert ou téléchargé ; voir `detectionLecture.jsx`. `lu` : déjà compté.
    ================================================================== */
 
-export default function LecteurPdf({ pdf, titre, libelle = "Document en PDF", ouvert = false, onLu, className }) {
-  const { surBascule, marquerLu } = useLectureDetectee({ onLu, tempsMin: TEMPS_MINIMUM_PDF, ouvertAuDepart: ouvert, avecFin: false });
+export default function LecteurPdf({ pdf, titre, libelle = "Document en PDF", ouvert = false, onLu, lu = false, className }) {
+  const { surBascule, marquerLu, restant } = useLectureDetectee({ onLu, tempsMin: TEMPS_MINIMUM_PDF, ouvertAuDepart: ouvert, avecFin: false });
   if (!pdf) return null;
   const url = urlPdf(pdf.id);
 
@@ -48,6 +48,11 @@ export default function LecteurPdf({ pdf, titre, libelle = "Document en PDF", ou
           loading="lazy"
           className="h-[75vh] w-full border-t border-ink-200 bg-white dark:border-ink-800"
         />
+        {(lu || onLu) && (
+          <div className="px-4 pb-3">
+            <EtatLecture lu={lu} suivi={Boolean(onLu)} restant={restant} pdf />
+          </div>
+        )}
       </details>
     </div>
   );
