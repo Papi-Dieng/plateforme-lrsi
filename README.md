@@ -24,7 +24,29 @@ Autres commandes :
 ```bash
 npm run build     # génère la version de production dans docs/
 npm run preview   # sert la version de production en local
+npm test          # lance les tests automatisés
+npm run lint      # vérifie le code
 ```
+
+### Les tests automatisés
+
+Ils utilisent **Vitest**, l'outil de test de Vite : il reprend la
+configuration du projet, rien d'autre à régler. Chaque fichier de test vit
+à côté du fichier qu'il vérifie, avec le suffixe `.test.js` :
+
+| Fichier testé | Ce qui est vérifié |
+| --- | --- |
+| `src/verification.js` | nombres (`62` = `62,0`), adresses IP octet par octet, accents et majuscules ignorés, écritures séparées par `\|` |
+| `src/quizTexte.js` | toutes les façons d'écrire un QCM en texte, erreurs signalées sans rien deviner, aller-retour texte → questions → texte |
+| `src/sauvegarde.js` | aller-retour complet sur un autre appareil, fichiers refusés (autre application, version plus récente, trop gros), aucune donnée de session ou d'admin |
+
+`npm run test:suivi` relance les tests à chaque enregistrement, pratique
+pendant qu'on modifie l'un de ces fichiers. Les tests ne font aucun appel
+réseau : ils ne touchent ni au relais IA ni au site en ligne.
+
+Quand on ajoute une donnée à la sauvegarde, le test « toutes les données de
+l'étudiant y sont » échoue tant que `src/sauvegarde.test.js` ne la connaît
+pas : c'est voulu, pour ne jamais en oublier une sans le voir.
 
 ### Ouvrir index.html directement ne marche pas
 
