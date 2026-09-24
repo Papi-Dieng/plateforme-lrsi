@@ -25,6 +25,7 @@ Autres commandes :
 npm run build     # génère la version de production dans docs/
 npm run preview   # sert la version de production en local
 npm test          # lance les tests automatisés
+npm run test:navigateur  # recompile, puis teste le site dans un vrai navigateur
 npm run lint      # vérifie le code
 ```
 
@@ -52,10 +53,39 @@ ils ne font aucun appel réseau et ne consomment aucun quota.
 `npm run test:suivi` relance les tests à chaque enregistrement, pratique
 pendant qu'on modifie l'un de ces fichiers.
 
+### Les tests dans un vrai navigateur
+
+Ils utilisent **Playwright** et vivent dans `e2e/` (fichiers `.e2e.js`).
+Ils ouvrent la version compilée, servie par `vite preview`, et la
+parcourent comme un étudiant, deux fois : écran d'ordinateur et écran de
+téléphone.
+
+| Fichier | Ce qui est parcouru |
+| --- | --- |
+| `e2e/parcours.e2e.js` | entrer en invité, pages réservées, page introuvable, thème gardé ; un QCM tout juste puis tout faux (score, révision dans 2 jours, progression, statistiques anonymes et leur refus) ; « Vérifier ma réponse » jusqu'à l'indice ; favori, sauvegarde téléchargée puis restaurée dans un navigateur vierge, fichier étranger refusé |
+| `e2e/pages.e2e.js` | chaque page s'ouvre, sans défilement horizontal ; menu du téléphone et barre latérale ; assistant qui répond sans IA ; mot de passe admin refusé ; vues du planning |
+
+Le relais IA n'est jamais appelé : `e2e/outils.js` le remplace par de
+fausses réponses (rien de publié, IA indisponible). Un test échoue aussi
+si la page produit une erreur JavaScript.
+
+La première fois, il faut télécharger le navigateur de test (environ
+115 Mo, une seule fois) :
+
+```bash
+npx playwright install chromium
+```
+
+Puis `npm run test:navigateur`. En cas d'échec, `test-results/` contient
+une trace de chaque test raté, à ouvrir avec
+`npx playwright show-trace <fichier trace.zip>` : on y revoit la page
+étape par étape.
+
 **Sur GitHub, à chaque push** (`.github/workflows/verifications.yml`) :
 lint, tests, compilation, puis une dernière vérification : que `docs/`
-correspond bien au code. Si on a oublié `npm run build` avant de commiter,
-le site en ligne serait en retard ; la vérification échoue et le dit. Le
+correspond bien au code, et enfin les tests dans le navigateur. Si on a
+oublié `npm run build` avant de commiter, le site en ligne serait en
+retard ; la vérification échoue et le dit. Le
 résultat s'affiche à côté du commit, dans l'onglet *Actions* du dépôt :
 coche verte, ou croix rouge avec l'étape en cause. Rien n'est publié par
 cette vérification, GitHub Pages continue de servir `docs/` tel quel.

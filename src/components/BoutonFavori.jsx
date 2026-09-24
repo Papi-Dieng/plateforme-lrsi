@@ -53,7 +53,10 @@ export default function BoutonFavori({
     e.preventDefault();
     e.stopPropagation();
     basculerFavori(type, reference);
-    setActif((v) => !v);
+    // Relu dans le stockage plutôt qu'inversé : `basculerFavori` prévient
+    // déjà tous les boutons (événement « lrsi-favoris »), celui-ci
+    // compris, et inverser en plus annulait ce changement.
+    setActif(estFavori(type, reference));
   };
 
   const style = variantes[variante] ?? variantes.clair;

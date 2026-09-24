@@ -31,3 +31,8 @@ hors-ligne
 
 # Réponses du banc de test IA : elles changent à chaque lancement.
 scripts/banc-ia-resultats.md
+
+# Résultats des tests dans le navigateur (Playwright) : traces et rapports
+# de la dernière exécution, refaits à chaque lancement.
+test-results
+playwright-report
