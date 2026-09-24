@@ -44,6 +44,7 @@ import { API_GEMINI, interrogerGemini, listeModeles } from "./gemini.js";
 import { executerTacheAdmin } from "./agent-admin.js";
 import { avisRedaction } from "./avis.js";
 import { effacerStats, enregistrerStats, lireStats } from "./stats.js";
+import { composerPlanning } from "./planning-ia.js";
 
 const MAX_MESSAGES = 10;
 const MAX_CARACTERES = 1500;
@@ -285,6 +286,24 @@ export default {
     }
 
     if (requete.method !== "POST") return json({ erreur: "methode" }, 405, cors);
+
+    // Le programme de révision composé par l'IA (`planning-ia.js`) :
+    // soumis, comme l'assistant, à la limite par visiteur.
+    if (chemin === "/planning-ia") {
+      let corps;
+      try {
+        corps = await requete.json();
+      } catch {
+        return json({ erreur: "format" }, 400, cors);
+      }
+      try {
+        const r = await composerPlanning(corps, env);
+        return r.erreur ? json({ erreur: r.erreur }, r.statut, cors) : json(r.resultat, 200, cors);
+      } catch (e) {
+        console.log("Programme de révision", e);
+        return json({ erreur: "reseau" }, 502, cors);
+      }
+    }
 
     // Les réponses anonymes d'un QCM terminé (`stats.js`) : soumises à la
     // limite par visiteur, comme le reste.

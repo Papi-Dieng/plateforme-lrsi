@@ -144,6 +144,28 @@ function taches(evaluation, { matieres, competences, exercices, qcms, analyse, e
   return liste;
 }
 
+/* Toutes les tâches utiles pour une évaluation, par ordre de priorité,
+   plus le devoir blanc et les QCM de la veille : ce que l'IA organise
+   dans l'emploi du temps (src/programmeIA.js). */
+export function tachesPourEvaluation(evaluation, contexte) {
+  const liste = taches(evaluation, contexte);
+  const devoir = (contexte.devoirs ?? []).find((d) => d.matiere === evaluation.matiere);
+  if (devoir) {
+    liste.push({
+      cle: `devoir:${devoir.id}`,
+      type: "devoir",
+      titre: `Faire le devoir « ${devoir.titre} » en conditions réelles`,
+      detail: "À faire deux ou trois jours avant l'examen, minuteur lancé, sans le cours.",
+      to: `/examens/${devoir.id}`,
+    });
+  }
+  for (const q of contexte.qcms.filter((x) => x.matiere === evaluation.matiere)) {
+    if (liste.some((t) => t.cle === `qcm:${q.id}`)) continue;
+    liste.push({ cle: `qcm:${q.id}`, type: "qcm", titre: `Refaire le QCM « ${q.titre} »`, detail: "Pour vérifier que tout est acquis, la veille de préférence.", to: `/qcm/${q.id}` });
+  }
+  return liste;
+}
+
 /* Le programme d'une évaluation : [{ jour, taches }], plus les tâches
    « en plus » qui n'ont pas trouvé de place, et un message quand il n'y
    a plus de jour de révision. */

@@ -637,6 +637,11 @@ qui fait la différence entre un questionnaire et un vrai outil de révision.
 - Rappels de révision par notification (`src/rappels.js`), activés depuis
   « Mon planning » : un par jour au plus, à l'ouverture du site, et en
   arrière-plan quand Chrome le permet (application installée).
+- Emploi du temps (« Mon planning ») : vues mois, semaine, jour et liste,
+  cours répétés chaque semaine. Un assistant compose le programme de révision
+  d'un examen dans les créneaux libres de l'étudiant (`src/programmeIA.js`,
+  relais `serveur-ia/planning-ia.js`), avec une répartition automatique si
+  l'IA ne répond pas. Réinitialisation partielle ou complète.
 - Banc de test de l'IA pour tout le site, depuis « Éduquer l'IA » : les
   questions de `src/banc-ia-questions.js` et les tests de chaque fiche.
 

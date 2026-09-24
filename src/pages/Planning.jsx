@@ -10,7 +10,6 @@ import { examens as devoirs } from "../data/examens";
 import { analyserCompetences } from "../competences";
 import { lireChapitresLus, lireExercicesTravailles, lireScores } from "../progression";
 import {
-  ajouterJours,
   aujourdhui,
   construirePlan,
   ecrirePlanning,
@@ -19,6 +18,7 @@ import {
 } from "../planning";
 import { INTERVALLES, revisionsDues } from "../revisions";
 import EmploiDuTemps from "../components/EmploiDuTemps";
+import AssistantProgramme from "../components/AssistantProgramme";
 import {
   activerRappels,
   desactiverRappels,
@@ -45,70 +45,6 @@ const formatJour = (jour) => {
 const majuscule = (t) => t.charAt(0).toUpperCase() + t.slice(1);
 
 const dans = (n) => (n === 0 ? "aujourd'hui" : n === 1 ? "demain" : n < 0 ? "passée" : `dans ${n} jours`);
-
-function Formulaire({ onAjouter }) {
-  const demain = ajouterJours(aujourdhui(), 1);
-  const [titre, setTitre] = useState("");
-  const [matiere, setMatiere] = useState(matieres[0]?.id ?? "");
-  const [date, setDate] = useState(ajouterJours(aujourdhui(), 7));
-  const [parJour, setParJour] = useState(2);
-
-  const champ =
-    "mt-1.5 w-full rounded-xl border border-ink-200 bg-white px-3.5 py-2.5 text-sm text-ink-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-ink-700 dark:bg-ink-950 dark:text-white";
-
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        onAjouter({
-          id: `eval-${Date.now().toString(36)}`,
-          titre: titre.trim() || `Évaluation de ${nomMatiere(matiere)}`,
-          matiere,
-          date,
-          parJour,
-        });
-        setTitre("");
-      }}
-      className="card grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_auto_auto] lg:items-end"
-    >
-      <label className="text-xs font-semibold text-ink-600 dark:text-ink-300">
-        Évaluation
-        <input value={titre} maxLength={80} onChange={(e) => setTitre(e.target.value)} placeholder="Partiel de réseaux" className={champ} />
-      </label>
-      <label className="text-xs font-semibold text-ink-600 dark:text-ink-300">
-        Matière
-        <select value={matiere} onChange={(e) => setMatiere(e.target.value)} className={champ}>
-          {matieres.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.nom}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="text-xs font-semibold text-ink-600 dark:text-ink-300">
-        Date
-        <input type="date" required min={demain} value={date} onChange={(e) => setDate(e.target.value)} className={champ} />
-      </label>
-      <label className="text-xs font-semibold text-ink-600 dark:text-ink-300">
-        Tâches par jour
-        <select value={parJour} onChange={(e) => setParJour(Number(e.target.value))} className={champ}>
-          {[1, 2, 3, 4].map((n) => (
-            <option key={n} value={n}>
-              {n}
-            </option>
-          ))}
-        </select>
-      </label>
-      <button
-        type="submit"
-        disabled={!matiere || !date || date < demain}
-        className="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
-      >
-        Construire mon planning
-      </button>
-    </form>
-  );
-}
 
 function Tache({ tache, faite, onBasculer }) {
   return (
@@ -295,7 +231,40 @@ export default function Planning() {
   const supprimer = (evaluation) => {
     if (!window.confirm(`Retirer « ${evaluation.titre} » et son planning ?`)) return;
     const faites = Object.fromEntries(Object.entries(planning.faites).filter(([k]) => !k.startsWith(`${evaluation.id}|`)));
-    modifier({ ...planning, evaluations: planning.evaluations.filter((e) => e.id !== evaluation.id), faites });
+    modifier({
+      ...planning,
+      evaluations: planning.evaluations.filter((e) => e.id !== evaluation.id),
+      faites,
+      evenements: planning.evenements.filter((e) => e.genere !== evaluation.id),
+    });
+  };
+
+  /* L'assistant IA a composé un programme : l'évaluation est ajoutée (ou
+     mise à jour), et ses séances remplacent celles d'un programme précédent. */
+  const [assistant, setAssistant] = useState(null); // null, ou { evaluation }
+  const validerProgramme = ({ evaluation, evenements }) => {
+    const existe = planning.evaluations.some((e) => e.id === evaluation.id);
+    modifier({
+      ...planning,
+      evaluations: existe
+        ? planning.evaluations.map((e) => (e.id === evaluation.id ? evaluation : e))
+        : [...planning.evaluations, evaluation],
+      evenements: [...planning.evenements.filter((e) => e.genere !== evaluation.id), ...evenements],
+    });
+    setAssistant(null);
+  };
+
+  /* Réinitialiser : seulement les programmes de l'IA, ou tout. */
+  const reinitialiser = (tout) => {
+    const message = tout
+      ? "Tout effacer : tes cours, tes évaluations et tes programmes de révision ? C'est définitif."
+      : "Effacer les séances créées par l'IA ? Tes cours et tes évaluations restent.";
+    if (!window.confirm(message)) return;
+    modifier(
+      tout
+        ? { evaluations: [], faites: {}, evenements: [] }
+        : { ...planning, evenements: planning.evenements.filter((e) => !e.genere) }
+    );
   };
 
   /* Le programme calculé, jour par jour, pour l'emploi du temps :
@@ -303,7 +272,9 @@ export default function Planning() {
   const programme = useMemo(() => {
     const parJour = new Map();
     const ajouter = (jour, element) => parJour.set(jour, [...(parJour.get(jour) ?? []), element]);
+    const programmees = new Set(planning.evenements.map((e) => e.genere).filter(Boolean));
     for (const { ev, plan } of plans) {
+      if (programmees.has(ev.id)) continue;
       ajouter(ev.date, {
         cle: `eval:${ev.id}`,
         type: "evaluation",
@@ -327,7 +298,7 @@ export default function Planning() {
       });
     }
     return parJour;
-  }, [plans, auj]);
+  }, [plans, auj, planning.evenements]);
 
   const elementsDuJour = (jour) =>
     (programme.get(jour) ?? []).map((p) =>
@@ -347,6 +318,26 @@ export default function Planning() {
       <Container className="space-y-8 py-10">
         <Rappels />
 
+        <section className="card flex flex-wrap items-center gap-4 bg-gradient-to-br from-brand-600 to-violet-600 p-5 text-white">
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-white/15">
+            <Icon name="sparkles" className="size-5.5" />
+          </span>
+          <div className="min-w-60 flex-1">
+            <h2 className="font-semibold">Un examen approche ?</h2>
+            <p className="mt-0.5 text-sm text-white/85">
+              Donne la matière, la date et tes heures libres : l&apos;IA place tes séances de révision dans ton
+              emploi du temps, en commençant par tes points faibles.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setAssistant({ evaluation: null })}
+            className="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-brand-700 hover:bg-brand-50"
+          >
+            Créer mon programme avec l&apos;IA
+          </button>
+        </section>
+
         <section className="card p-4 sm:p-6">
           <EmploiDuTemps
             evenements={planning.evenements}
@@ -359,16 +350,15 @@ export default function Planning() {
         <div>
           <h2 className="text-lg font-semibold text-ink-900 dark:text-white">Mes évaluations</h2>
           <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">
-            Note tes partiels et contrôles : le site prépare un programme jour par jour jusqu'à la veille,
-            en commençant par tes points faibles. Il apparaît aussi dans l'emploi du temps.
+            Chaque examen ajouté avec l&apos;IA, et le détail de ce qu&apos;il faut revoir. Tu peux refaire son
+            programme si tes disponibilités changent.
           </p>
         </div>
-        <Formulaire onAjouter={(e) => modifier({ ...planning, evaluations: [...planning.evaluations, e] })} />
 
         {evaluations.length === 0 && (
           <EtatVide
             titre="Aucune évaluation pour le moment"
-            texte="Ajoute ton prochain partiel ou ton prochain contrôle ci-dessus pour obtenir ton programme."
+            texte="Clique sur « Créer mon programme avec l'IA » pour ajouter ton prochain examen."
           />
         )}
 
@@ -394,6 +384,16 @@ export default function Planning() {
                     {faites} / {toutes.length} fait{faites > 1 ? "s" : ""}
                   </Badge>
                 )}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setAssistant({ evaluation: ev });
+                  }}
+                  className="text-xs font-medium text-brand-600 hover:underline dark:text-brand-300"
+                >
+                  {planning.evenements.some((x) => x.genere === ev.id) ? "Refaire le programme" : "Programme avec l'IA"}
+                </button>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -445,6 +445,41 @@ export default function Planning() {
         })}
 
         <Revisions />
+
+        <section className="card flex flex-wrap items-center gap-3 p-5">
+          <div className="min-w-60 flex-1">
+            <h2 className="font-semibold text-ink-900 dark:text-white">Réinitialiser le planning</h2>
+            <p className="mt-0.5 text-sm text-ink-500 dark:text-ink-400">
+              Repartir de zéro : effacer seulement les séances créées par l&apos;IA, ou tout ton planning.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => reinitialiser(false)}
+            disabled={!planning.evenements.some((e) => e.genere)}
+            className="rounded-xl px-3.5 py-2 text-sm font-semibold text-ink-700 ring-1 ring-ink-200 ring-inset hover:bg-ink-50 disabled:opacity-40 dark:text-ink-200 dark:ring-ink-700 dark:hover:bg-ink-800"
+          >
+            Effacer les séances de l&apos;IA
+          </button>
+          <button
+            type="button"
+            onClick={() => reinitialiser(true)}
+            disabled={!planning.evenements.length && !planning.evaluations.length}
+            className="rounded-xl px-3.5 py-2 text-sm font-semibold text-flame-600 ring-1 ring-flame-300 ring-inset hover:bg-flame-50 disabled:opacity-40 dark:text-flame-400 dark:ring-flame-500/40 dark:hover:bg-flame-500/10"
+          >
+            Tout effacer
+          </button>
+        </section>
+
+        {assistant && (
+          <AssistantProgramme
+            contexte={contexte}
+            evenements={planning.evenements}
+            evaluation={assistant.evaluation}
+            onValider={validerProgramme}
+            onFermer={() => setAssistant(null)}
+          />
+        )}
 
         <p className="text-xs text-ink-400">
           Le programme se recalcule à chaque visite : fais un QCM, et tes nouveaux résultats changent

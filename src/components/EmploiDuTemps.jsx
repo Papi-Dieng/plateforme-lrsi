@@ -274,6 +274,7 @@ function GrilleHoraire({ jours, evenements, elementsDuJour, onCreer, onOuvrir, o
                     <span className="block truncate text-[10px] opacity-90">
                       {e.debut}–{e.fin}
                       {e.hebdo ? " · ↻" : ""}
+                      {e.genere ? " · ✦" : ""}
                     </span>
                     {jours.length === 1 && e.description && <span className="mt-0.5 block truncate text-[11px] opacity-90">{e.description}</span>}
                   </button>
@@ -389,6 +390,16 @@ function FenetreEvenement({ evenement, nouveau, matieres, onEnregistrer, onSuppr
 
   return (
     <Fenetre titre={nouveau ? "Nouvel événement" : "Modifier l'événement"} onFermer={onFermer}>
+      {(e.genere || e.lien) && (
+        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl bg-accent-50 px-3 py-2.5 text-sm text-accent-800 dark:bg-accent-500/10 dark:text-accent-200">
+          {e.genere && <span>✦ Séance de ton programme de révision.</span>}
+          {e.lien && (
+            <Link to={e.lien} className="font-semibold underline">
+              Ouvrir le contenu
+            </Link>
+          )}
+        </div>
+      )}
       <form
         className="mt-4 space-y-4"
         onSubmit={(ev) => {
