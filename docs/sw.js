@@ -18,8 +18,8 @@
      les anciennes copies sont effacées.
    ================================================================== */
 
-const VERSION = "3a7e59bc2b94";
-const FICHIERS = ["./","./index.html","./assets/index-DqiNDFs6.js","./assets/App-AqVBrmOc.js","./assets/examens-qPrg0vHc.js","./assets/installation-rW-Aqqtp.js","./assets/rappels-DXzhHW8u.js","./assets/rappels-TU6qAA8H.js","./assets/index-Dv2AkQNb.css","./logo.svg","./manifest.webmanifest","./icones/apple-touch-icon.png","./icones/icone-192.png","./icones/icone-512.png","./icones/icone-masquable-512.png"];
+const VERSION = "4ba522831a42";
+const FICHIERS = ["./","./index.html","./assets/index-gGOonzQf.js","./assets/App-yfXoyzus.js","./assets/examens-qPrg0vHc.js","./assets/installation-rW-Aqqtp.js","./assets/rappels-DXzhHW8u.js","./assets/rappels-TU6qAA8H.js","./assets/index-y4usGgbk.css","./logo.svg","./manifest.webmanifest","./icones/apple-touch-icon.png","./icones/icone-192.png","./icones/icone-512.png","./icones/icone-masquable-512.png"];
 const CACHE = `sunu-cours-${VERSION}`;
 
 self.addEventListener("install", (e) => {

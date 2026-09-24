@@ -235,24 +235,38 @@ export default function Planning() {
       ...planning,
       evaluations: planning.evaluations.filter((e) => e.id !== evaluation.id),
       faites,
-      evenements: planning.evenements.filter((e) => e.genere !== evaluation.id),
+      evenements: planning.evenements.filter((e) => e.evaluation !== evaluation.id && e.genere !== evaluation.id),
     });
   };
 
   /* L'assistant IA a composé un programme : l'évaluation est ajoutée (ou
      mise à jour), et ses séances remplacent celles d'un programme précédent. */
-  const [assistant, setAssistant] = useState(null); // null, ou { evaluation }
-  const validerProgramme = ({ evaluation, evenements }) => {
-    const existe = planning.evaluations.some((e) => e.id === evaluation.id);
+  const [assistant, setAssistant] = useState(null); // null, ou { session }
+  const validerProgramme = ({ sessionId, evaluations: nouvelles, evenements }) => {
+    const ids = new Set(nouvelles.map((e) => e.id));
     modifier({
       ...planning,
-      evaluations: existe
-        ? planning.evaluations.map((e) => (e.id === evaluation.id ? evaluation : e))
-        : [...planning.evaluations, evaluation],
-      evenements: [...planning.evenements.filter((e) => e.genere !== evaluation.id), ...evenements],
+      evaluations: [...planning.evaluations.filter((e) => e.session !== sessionId && !ids.has(e.id)), ...nouvelles],
+      evenements: [
+        ...planning.evenements.filter((e) => e.genere !== sessionId && !ids.has(e.genere) && !ids.has(e.evaluation)),
+        ...evenements,
+      ],
     });
     setAssistant(null);
   };
+
+  /* Rouvrir l'assistant sur la session d'une évaluation, pour refaire son programme. */
+  const sessionDe = (ev) => {
+    const soeurs = ev.session ? planning.evaluations.filter((e) => e.session === ev.session) : [ev];
+    return {
+      id: ev.session,
+      semestre: ev.semestre ?? 0,
+      debut: ev.sessionDebut ?? soeurs.reduce((m, e) => (e.date < m ? e.date : m), ev.date),
+      fin: ev.sessionFin ?? soeurs.reduce((m, e) => (e.date > m ? e.date : m), ev.date),
+      evaluations: soeurs,
+    };
+  };
+  const aUnProgramme = (ev) => planning.evenements.some((x) => x.evaluation === ev.id || x.genere === ev.id);
 
   /* Réinitialiser : seulement les programmes de l'IA, ou tout. */
   const reinitialiser = (tout) => {
@@ -272,7 +286,7 @@ export default function Planning() {
   const programme = useMemo(() => {
     const parJour = new Map();
     const ajouter = (jour, element) => parJour.set(jour, [...(parJour.get(jour) ?? []), element]);
-    const programmees = new Set(planning.evenements.map((e) => e.genere).filter(Boolean));
+    const programmees = new Set(planning.evenements.filter((e) => e.genere).map((e) => e.evaluation || e.genere));
     for (const { ev, plan } of plans) {
       if (programmees.has(ev.id)) continue;
       ajouter(ev.date, {
@@ -323,15 +337,15 @@ export default function Planning() {
             <Icon name="sparkles" className="size-5.5" />
           </span>
           <div className="min-w-60 flex-1">
-            <h2 className="font-semibold">Un examen approche ?</h2>
+            <h2 className="font-semibold">Des examens approchent ?</h2>
             <p className="mt-0.5 text-sm text-white/85">
-              Donne la matière, la date et tes heures libres : l&apos;IA place tes séances de révision dans ton
-              emploi du temps, en commençant par tes points faibles.
+              Donne ton semestre, les dates de ta session, tes matières et tes heures libres : l&apos;IA place
+              tes séances de révision dans ton emploi du temps, matière par matière, avant chaque examen.
             </p>
           </div>
           <button
             type="button"
-            onClick={() => setAssistant({ evaluation: null })}
+            onClick={() => setAssistant({ session: null })}
             className="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-brand-700 hover:bg-brand-50"
           >
             Créer mon programme avec l&apos;IA
@@ -374,6 +388,9 @@ export default function Planning() {
                   <h2 className="font-semibold text-ink-900 dark:text-white">{ev.titre}</h2>
                   <p className="text-sm text-ink-500 dark:text-ink-400">
                     {nomMatiere(ev.matiere)} · {formatJour(ev.date)}
+                    {ev.heure ? ` à ${ev.heure}` : ""}
+                    {ev.difficulte ? ` · ${ev.difficulte.toLowerCase()}` : ""}
+                    {ev.semestre ? ` · semestre ${ev.semestre}` : ""}
                   </p>
                 </div>
                 <Badge ton={restant <= 2 && restant >= 0 ? "sun" : "brand"} icone="clock">
@@ -388,11 +405,11 @@ export default function Planning() {
                   type="button"
                   onClick={(e) => {
                     e.preventDefault();
-                    setAssistant({ evaluation: ev });
+                    setAssistant({ session: sessionDe(ev) });
                   }}
                   className="text-xs font-medium text-brand-600 hover:underline dark:text-brand-300"
                 >
-                  {planning.evenements.some((x) => x.genere === ev.id) ? "Refaire le programme" : "Programme avec l'IA"}
+                  {aUnProgramme(ev) ? "Refaire le programme" : "Programme avec l'IA"}
                 </button>
                 <button
                   type="button"
@@ -475,7 +492,7 @@ export default function Planning() {
           <AssistantProgramme
             contexte={contexte}
             evenements={planning.evenements}
-            evaluation={assistant.evaluation}
+            session={assistant.session}
             onValider={validerProgramme}
             onFermer={() => setAssistant(null)}
           />
