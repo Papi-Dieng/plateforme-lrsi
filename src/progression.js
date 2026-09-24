@@ -104,7 +104,8 @@ export function marquerExerciceTravaille(id) {
 /* ---------------------------------------------------------------- */
 /* Chapitres lus                                                     */
 /*                                                                   */
-/* L'étudiant coche « J'ai lu ce chapitre ». { refChapitre: { date } } */
+/* Détecté tout seul à la lecture du cours                           */
+/* (`components/detectionLecture.js`). { refChapitre: { date } }     */
 /* ---------------------------------------------------------------- */
 
 export function lireChapitresLus() {
@@ -112,11 +113,12 @@ export function lireChapitresLus() {
   return typeof brut === "object" && brut !== null && !Array.isArray(brut) ? brut : {};
 }
 
-export function basculerChapitreLu(reference) {
+export function marquerChapitreLu(reference) {
   const lus = lireChapitresLus();
-  if (lus[reference]) delete lus[reference];
-  else lus[reference] = { date: new Date().toISOString() };
-  ecrire(CLES.chapitresLus, lus);
+  if (!lus[reference]) {
+    lus[reference] = { date: new Date().toISOString() };
+    ecrire(CLES.chapitresLus, lus);
+  }
   return lus;
 }
 

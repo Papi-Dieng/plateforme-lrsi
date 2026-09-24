@@ -27,7 +27,7 @@ const entreesStockage = [
   { cle: CLE_PROFIL, libelle: "Fiche profil", detail: "Avatar, nom d'utilisateur, coordonnées" },
   { cle: CLES.scores, libelle: "Scores des QCM", detail: "Meilleur score et tentatives" },
   { cle: CLES.exercices, libelle: "Exercices travaillés", detail: "Corrections déjà ouvertes" },
-  { cle: CLES.chapitresLus, libelle: "Chapitres lus", detail: "Cochés « J'ai lu ce chapitre »" },
+  { cle: CLES.chapitresLus, libelle: "Chapitres lus", detail: "Cours lus jusqu'au bout, détectés tout seuls" },
   { cle: CLES.favoris, libelle: "Matières en favori", detail: "Marque-pages du tableau de bord" },
   { cle: CLES.videos, libelle: "Vidéos ajoutées", detail: "Identifiants YouTube collés" },
   { cle: CLES.videosVues, libelle: "Vidéos ouvertes", detail: "Pour la barre de lecture" },

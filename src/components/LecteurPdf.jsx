@@ -1,6 +1,7 @@
 import Icon from "./Icon";
 import { cx } from "./ui";
 import { urlPdf } from "../contenu";
+import { TEMPS_MINIMUM_PDF, useLectureDetectee } from "./detectionLecture";
 
 /* ==================================================================
    Un PDF téléversé depuis l'espace admin, côté étudiant : cours,
@@ -9,9 +10,13 @@ import { urlPdf } from "../contenu";
    Toujours un lien « Ouvrir ou télécharger » : sur téléphone, beaucoup
    de navigateurs n'affichent pas un PDF intégré. Le lecteur intégré se
    replie ou s'ouvre selon `ouvert`.
+
+   `onLu` (cours) : appelé quand le PDF est resté ouvert ici assez
+   longtemps, ou a été ouvert ou téléchargé ; voir `detectionLecture.js`.
    ================================================================== */
 
-export default function LecteurPdf({ pdf, titre, libelle = "Document en PDF", ouvert = false, className }) {
+export default function LecteurPdf({ pdf, titre, libelle = "Document en PDF", ouvert = false, onLu, className }) {
+  const { surBascule, marquerLu } = useLectureDetectee({ onLu, tempsMin: TEMPS_MINIMUM_PDF, ouvertAuDepart: ouvert, avecFin: false });
   if (!pdf) return null;
   const url = urlPdf(pdf.id);
 
@@ -26,12 +31,13 @@ export default function LecteurPdf({ pdf, titre, libelle = "Document en PDF", ou
           href={url}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={marquerLu}
           className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-300"
         >
           Ouvrir ou télécharger ↗
         </a>
       </div>
-      <details open={ouvert} className="group border-t border-ink-200 dark:border-ink-800">
+      <details open={ouvert} onToggle={surBascule} className="group border-t border-ink-200 dark:border-ink-800">
         <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-2.5 text-sm font-semibold text-brand-600 dark:text-brand-300">
           <Icon name="chevron" className="size-4 -rotate-90 transition-transform group-open:rotate-0" />
           Lire ici

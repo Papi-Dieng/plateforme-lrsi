@@ -18,7 +18,8 @@ import {
 import { getMatiere, matieres } from "../data/matieres";
 import { themeMatiere } from "../data/couleurs";
 import BoutonFavori from "../components/BoutonFavori";
-import { basculerChapitreLu, lireChapitresLus, refChapitre } from "../progression";
+import { lireChapitresLus, marquerChapitreLu, refChapitre } from "../progression";
+import { tempsMinimumTexte } from "../components/detectionLecture";
 import { exercices } from "../data/exercices";
 import { qcms } from "../data/qcm";
 
@@ -240,6 +241,7 @@ export function CoursDetail() {
                 const pret = c.statut === "disponible";
                 const ref = refChapitre(matiere.id, c.titre);
                 const lu = Boolean(lus[ref]);
+                const marquerLu = () => setLus(marquerChapitreLu(ref));
                 return (
                   <li
                     key={c.titre}
@@ -270,8 +272,12 @@ export function CoursDetail() {
                           libelle={`le chapitre ${c.titre}`}
                           taille="sm"
                         />
-                        {pret ? (
+                        {pret && lu ? (
                           <Badge ton="accent" icone="check">
+                            Lu
+                          </Badge>
+                        ) : pret ? (
+                          <Badge ton="brand">
                             Disponible
                           </Badge>
                         ) : (
@@ -288,35 +294,28 @@ export function CoursDetail() {
                         Volume indicatif : {c.duree}
                       </p>
                       {/* Le texte écrit dans l'admin passe avant le PDF :
-                          « Lire ici » l'affiche, le PDF reste à télécharger. */}
+                          « Lire ici » l'affiche, le PDF reste à télécharger.
+                          La lecture est détectée toute seule (`onLu`). */}
                       {pret && !c.contenu && c.pdf && (
                         <LecteurPdf
                           pdf={c.pdf}
                           libelle="Cours en PDF"
                           titre={`Cours : ${c.titre}`}
+                          onLu={lu ? undefined : marquerLu}
                           className="mt-4"
                         />
                       )}
                       {pret && c.contenu && (
-                        <LectureTexte libelle="Cours" titre={`Cours : ${c.titre}`} pdf={c.pdf} className="mt-4">
+                        <LectureTexte
+                          libelle="Cours"
+                          titre={`Cours : ${c.titre}`}
+                          pdf={c.pdf}
+                          onLu={lu ? undefined : marquerLu}
+                          tempsMin={tempsMinimumTexte(c.contenu)}
+                          className="mt-4"
+                        >
                           <TexteLibre texte={c.contenu} />
                         </LectureTexte>
-                      )}
-                      {pret && (c.contenu || c.pdf) && (
-                        <button
-                          type="button"
-                          aria-pressed={lu}
-                          onClick={() => setLus(basculerChapitreLu(ref))}
-                          className={cx(
-                            "mt-3 inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors",
-                            lu
-                              ? "bg-accent-50 text-accent-700 ring-1 ring-accent-300 ring-inset hover:bg-accent-100 dark:bg-accent-500/15 dark:text-accent-300 dark:ring-accent-500/30"
-                              : "text-ink-600 ring-1 ring-ink-200 ring-inset hover:bg-ink-50 dark:text-ink-300 dark:ring-ink-700 dark:hover:bg-ink-800"
-                          )}
-                        >
-                          <Icon name="check" className="size-4" />
-                          {lu ? "Chapitre lu" : "J'ai lu ce chapitre"}
-                        </button>
                       )}
                     </div>
                   </li>

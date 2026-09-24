@@ -350,8 +350,9 @@ export default function Accueil() {
 
       <div className="mt-5">
         <NoteDemo>
-          La progression compte les chapitres que tu as marqués « J'ai lu ce
-          chapitre ». Elle reste dans ton navigateur, comme tes favoris.
+          La progression compte les chapitres que tu as lus : le site le voit
+          tout seul quand tu lis un cours jusqu'au bout. Elle reste dans ton
+          navigateur, comme tes favoris.
           Le suivi par compte arrivera en version 3.
         </NoteDemo>
       </div>
