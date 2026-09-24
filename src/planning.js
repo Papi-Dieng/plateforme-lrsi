@@ -42,13 +42,19 @@ export function joursEntre(debut, fin) {
 
 /* ---- Stockage ---- */
 
-const vide = () => ({ evaluations: [], faites: {} });
+// `evenements` : l'emploi du temps de l'étudiant (cours, TD, séances de
+// révision…), voir src/emploiDuTemps.js.
+const vide = () => ({ evaluations: [], faites: {}, evenements: [] });
 
 export function lirePlanning() {
   try {
     const brut = JSON.parse(localStorage.getItem(CLE_PLANNING) ?? "null");
     if (!brut || !Array.isArray(brut.evaluations)) return vide();
-    return { evaluations: brut.evaluations, faites: brut.faites && typeof brut.faites === "object" ? brut.faites : {} };
+    return {
+      evaluations: brut.evaluations,
+      faites: brut.faites && typeof brut.faites === "object" ? brut.faites : {},
+      evenements: Array.isArray(brut.evenements) ? brut.evenements : [],
+    };
   } catch {
     return vide();
   }
