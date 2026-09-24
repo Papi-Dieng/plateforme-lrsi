@@ -36,6 +36,10 @@ export const JOURS_SEMAINE = [
 const MAX_TACHES_PAR_MATIERE = 20;
 const DUREE_EXAMEN = 120;
 
+// Les créneaux libres de l'étudiant, gardés dans le navigateur et
+// repris dans la sauvegarde (src/sauvegarde.js).
+export const CLE_DISPONIBILITES = "lrsi-disponibilites";
+
 export const disponibilitesParDefaut = () => ({
   1: { actif: true, debut: "18:00", fin: "20:00" },
   2: { actif: true, debut: "18:00", fin: "20:00" },

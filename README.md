@@ -247,12 +247,16 @@ latérale laisse place à un menu dans la barre du haut.
 | `/profil` | Mon profil | Avatar, nom d'utilisateur, coordonnées |
 | `/favoris` | Mes favoris | Matières, chapitres, exercices, QCM et vidéos mis de côté |
 | `/progression` | Ma progression | Tableau de bord en grille : vue d'ensemble, précision, régularité, matières, QCM |
-| `/examens` | Examens | Examens blancs chronométrés avec corrigé à la fin, et annales autorisées |
-| `/planning` | Mon planning | Programme de révision jusqu'à une évaluation, d'après les résultats |
+| `/examens` | Devoirs et examens | Devoirs chronométrés avec corrigé à la fin, et examens passés autorisés |
+| `/examens/:id` | Session de devoir | Sujet, minuteur, puis corrigé et avis de l'IA sur la rédaction |
+| `/planning` | Mon planning | Emploi du temps (mois, semaine, jour, liste) et programme de révision composé par l'IA |
 | `/assistant` | Assistant de révision | Guide qui retrouve chapitres, exercices et QCM, et dit par où commencer |
 | `/parametres` | Paramètres | Thème, session, données conservées sur l'appareil |
 | `/conditions` | Conditions d'utilisation | Cadre d'usage, droits, données personnelles |
 | `/admin` | Administration | Page d'auteur : inventaire, couverture, liste de rédaction |
+| `/admin/contenu` | Gérer le contenu | Brouillon et publication de tout le contenu, agent IA admin (mot de passe) |
+| `/admin/ia` | Éduquer l'IA | Consignes, cours, exemples et tests par matière, banc de test (mot de passe) |
+| `/admin/stats` | Statistiques des QCM | Réponses anonymes par question (mot de passe) |
 
 Toute autre adresse affiche une page « introuvable » avec un retour à l'accueil.
 
@@ -263,29 +267,56 @@ Toute autre adresse affiche une page « introuvable » avec un retour à l'accue
 ```
 lrsi-platform/
 ├── serveur-ia/               relais IA gratuit (Cloudflare Workers), garde la clé
+│   ├── index.js              point d'entrée : origines, limites, routes
 │   ├── consignes.js          règles générales et exemples de l'IA
-│   ├── contenu.js            contenu publié depuis l'espace admin
-│   ├── fichiers.js           cours en PDF téléversés
 │   ├── gemini.js             appel à Gemini, partagé par les deux agents
+│   ├── education.js          fiches par matière saisies dans l'espace admin
+│   ├── contenu.js            contenu publié depuis l'espace admin
+│   ├── fichiers.js           PDF téléversés (cours, exercices, devoirs)
 │   ├── agent-admin.js        l'agent IA de l'espace admin
 │   ├── avis.js               avis de l'IA sur une réponse rédigée (devoirs)
-│   └── education.js          fiches par matière saisies dans l'espace admin
-├── scripts/                  banc de test de l'IA (npm run banc-ia)
+│   ├── planning-ia.js        programme de révision composé par l'IA
+│   ├── stats.js              statistiques anonymes des QCM
+│   └── wrangler.toml         réglages : origines, modèles, limites, KV
+├── scripts/
+│   ├── banc-ia.mjs           banc de test de l'IA (npm run banc-ia)
+│   └── icones-pwa.mjs        icônes de l'application installable
+├── pwa/sw-modele.js          modèle du service worker (docs/sw.js)
+├── design/                   source SVG de l'aperçu de partage
 ├── public/
 │   ├── apercu-partage.png    image affichée au partage du lien
+│   ├── icones/               icônes de l'application installable
 │   └── logo.svg              icône d'onglet
+├── docs/                     site compilé, publié par GitHub Pages
 ├── src/
 │   ├── components/
 │   │   ├── Icon.jsx          jeu d'icônes SVG, sans dépendance externe
 │   │   ├── Layout.jsx        en-tête, navigation, thème, pied de page
+│   │   ├── ui.jsx            briques réutilisables (boutons, badges, filtres…)
 │   │   ├── videos.jsx        briques vidéo : carte, lecteur, formulaire
 │   │   ├── BoutonFavori.jsx  marque-page commun à tous les contenus
-│   │   └── ui.jsx            briques réutilisables (boutons, badges, filtres…)
+│   │   ├── AffichageExercice.jsx  énoncé et correction d'un exercice
+│   │   ├── VerifierReponse.jsx    « Vérifier ma réponse » d'un exercice
+│   │   ├── AvisRedaction.jsx      « Demander l'avis de l'IA » d'un devoir
+│   │   ├── LecteurPdf.jsx         un PDF téléversé, côté étudiant
+│   │   ├── LectureTexte.jsx       un texte écrit dans l'admin, côté étudiant
+│   │   ├── TexteLibre.jsx         mise en forme simple, jamais de HTML
+│   │   ├── PleinEcran.jsx         lecture en plein écran, taille du texte
+│   │   ├── detectionLecture.jsx   chapitre lu, détecté sans bouton
+│   │   ├── EmploiDuTemps.jsx      vues mois, semaine, jour et liste
+│   │   ├── AssistantProgramme.jsx programme de révision d'une session
+│   │   ├── Installation.jsx       bouton « Installer l'application »
+│   │   ├── ConnexionAdmin.jsx     mot de passe de l'espace admin
+│   │   ├── AssistantAdmin.jsx     propositions de l'agent admin
+│   │   ├── QuizEnTexte.jsx        écrire un QCM en texte (admin)
+│   │   ├── BancSite.jsx           banc de test IA de tout le site (admin)
+│   │   └── Apercu.jsx             aperçu avant publication (admin)
 │   ├── data/
-│   │   ├── site.js           nom, navigation, objectifs, feuille de route
+│   │   ├── site.js           nom, navigation, adresse du relais IA (urlIA)
 │   │   ├── matieres.js       matières et chapitres
 │   │   ├── exercices.js      exercices et corrections
 │   │   ├── qcm.js            questionnaires
+│   │   ├── examens.js        devoirs et examens passés
 │   │   ├── couleurs.js       une couleur par matière
 │   │   ├── competences.js    compétences et chapitres associés
 │   │   ├── avatars.jsx       six vignettes dessinées en SVG
@@ -298,36 +329,47 @@ lrsi-platform/
 │   │   ├── Cours.jsx             liste et détail
 │   │   ├── Exercices.jsx         liste et détail
 │   │   ├── Qcm.jsx               liste et session
+│   │   ├── Examens.jsx           devoirs et examens
+│   │   ├── Videos.jsx            galerie filtrable
 │   │   ├── Bibliotheque.jsx
 │   │   ├── Projet.jsx
+│   │   ├── Assistant.jsx         assistant de révision (guide + IA)
+│   │   ├── Planning.jsx          emploi du temps et programme de révision
 │   │   ├── Profil.jsx            fiche : avatar, pseudo, coordonnées
 │   │   ├── Progression.jsx       suivi des acquis
-│   │   ├── Videos.jsx            galerie filtrable
 │   │   ├── Favoris.jsx           tout ce qui est mis de côté
-│   │   ├── Parametres.jsx        thème et données locales
+│   │   ├── Parametres.jsx        thème, sauvegarde, données locales
 │   │   ├── Conditions.jsx        conditions d'utilisation
 │   │   ├── Admin.jsx             page d'auteur, hors parcours étudiant
-│   │   ├── EducationIA.jsx       éduquer l'IA par matière (admin)
 │   │   ├── GestionContenu.jsx    gérer tout le contenu (admin)
-│   │   └── Examens.jsx           devoirs et examens
+│   │   ├── EducationIA.jsx       éduquer l'IA par matière (admin)
+│   │   └── StatsAdmin.jsx        statistiques des QCM (admin)
 │   ├── session.js            contexte et hook de session (voir section 7)
 │   ├── FournisseurSession.jsx  le fournisseur, séparé du hook
 │   ├── assistant.js          moteur du guide de révision
 │   ├── ia.js                 appel au relais IA, si `urlIA` est renseignée
+│   ├── banc-ia-questions.js  questions du banc de test de l'IA
 │   ├── contenu.js            charge le contenu publié avant le premier affichage
 │   ├── extrairePdf.js        lit le texte d'un PDF pour l'assistant (admin)
 │   ├── quizTexte.js          lit et écrit un QCM au format texte (admin)
 │   ├── verification.js       compare la réponse d'un étudiant à la réponse attendue
-│   ├── sauvegarde.js         sauvegarde et restauration des données de l'étudiant
-│   ├── planning.js           programme de révision jour par jour
-│   ├── progression.js        exercices travaillés, scores, favoris, vidéos
+│   ├── progression.js        exercices travaillés, chapitres lus, scores, favoris, vidéos
 │   ├── competences.js        analyse : forces, faiblesses, modules
+│   ├── revisions.js          révision espacée des QCM
+│   ├── planning.js           programme de révision jour par jour
+│   ├── emploiDuTemps.js      événements de l'emploi du temps, sans affichage
+│   ├── programmeIA.js        programme d'une session d'examens, disponibilités
+│   ├── rappels.js            rappels de révision par notification
+│   ├── stats.js              envoi des statistiques anonymes des QCM
+│   ├── sauvegarde.js         sauvegarde et restauration des données de l'étudiant
+│   ├── installation.js       service worker et proposition d'installation
 │   ├── profil.js             fiche profil et vérifications
 │   ├── App.jsx               déclaration des routes
 │   ├── main.jsx              point d'entrée
 │   └── index.css             thème, couleurs, styles de base
 ├── index.html
-└── vite.config.js
+├── vite.config.js            compilation du site et de l'application installable
+└── vite.config.hors-ligne.js compilation du fichier hors ligne
 ```
 
 **Un mot de vocabulaire.** Dans cette version, une filière correspond à une
@@ -647,9 +689,10 @@ qui fait la différence entre un questionnaire et un vrai outil de révision.
 
 ## 7. Ce qui viendra ensuite
 
-**Version 2 — ressources pédagogiques.** Remplacer les fichiers de `src/data/`
-par une API Node.js et Express, avec une base de données. Ajouter une interface
-d'administration pour créer cours, exercices et QCM sans toucher au code.
+**Version 2 — ressources pédagogiques : en grande partie faite.** L'espace
+admin crée cours, exercices, QCM, devoirs et bibliothèque sans toucher au code,
+et le relais Cloudflare les publie (voir section 5). Les fichiers de
+`src/data/` ne servent plus que de contenu par défaut.
 
 ### L'assistant de révision
 
@@ -683,22 +726,36 @@ l'IA » plus bas.
 
 ### Où vit la progression
 
-Trois clés dans le navigateur, toutes écrites au même endroit,
-`src/progression.js` :
+Tout est rangé dans le navigateur (`localStorage`), sous des clés qui
+commencent par `lrsi-`. Celles qui décrivent le travail de l'étudiant partent
+dans la sauvegarde (liste `DONNEES` de `src/sauvegarde.js`) :
 
-| Clé | Contenu | Alimentée par |
+| Clé | Contenu | Écrite par |
 | --- | --- | --- |
-| `lrsi-exercices` | exercices dont la correction a été ouverte | page d'un exercice |
-| `lrsi-scores` | meilleur score et nombre de tentatives par QCM | fin d'un QCM |
-| `lrsi-favoris` | favoris, tous types confondus | marque-page de chaque carte |
-| `lrsi-videos` | vidéos YouTube ajoutées par l'étudiant | tableau de bord |
-| `lrsi-videos-vues` | vidéos déjà ouvertes | lecteur vidéo |
-| `lrsi-profil` | avatar, nom d'utilisateur, coordonnées | page profil |
+| `lrsi-profil` | avatar, nom d'utilisateur, coordonnées | `src/profil.js` |
+| `lrsi-scores` | meilleur score, tentatives et détail par QCM | `src/progression.js` |
+| `lrsi-exercices` | exercices travaillés | `src/progression.js` |
+| `lrsi-chapitres-lus` | chapitres lus, détectés sans bouton | `src/progression.js` |
+| `lrsi-favoris` | favoris, tous types confondus | `src/progression.js` |
+| `lrsi-videos` | vidéos YouTube ajoutées par l'étudiant | `src/progression.js` |
+| `lrsi-videos-vues` | vidéos déjà ouvertes | `src/progression.js` |
+| `lrsi-planning` | planning de révision et emploi du temps | `src/planning.js` |
+| `lrsi-disponibilites` | créneaux libres de la semaine | `src/programmeIA.js` |
+| `lrsi-revisions` | révision espacée des QCM | `src/revisions.js` |
+| `lrsi-theme` | thème clair ou sombre | `Layout.jsx`, `Parametres.jsx` |
 
-Aucune de ces données ne quitte l'appareil, et elles ne suivent pas l'étudiant
-d'un ordinateur à l'autre. Pour passer au suivi par compte en version 3, il
-suffira de remplacer le contenu de ce fichier par des appels à l'API : aucune
-page n'a besoin de changer.
+Les autres sont des réglages de l'appareil, volontairement hors de la
+sauvegarde : `lrsi-session` (nom affiché), `lrsi-contenu` (dernière version
+publiée, pour le mode sans réseau), `lrsi-rappels` et `lrsi-rappels-dernier`
+(notifications), `lrsi-stats-refus` (refus des statistiques anonymes),
+`lrsi-taille-lecture` (taille du texte en plein écran) et
+`lrsi-installation-masquee`. Le mot de passe admin (`lrsi-admin-ia`) vit dans
+`sessionStorage` et disparaît à la fermeture de l'onglet.
+
+Aucune de ces données ne quitte l'appareil, sauf les statistiques anonymes
+des QCM, et elles ne suivent pas l'étudiant d'un ordinateur à l'autre. Pour
+passer au suivi par compte en version 3, la liste `DONNEES` de
+`src/sauvegarde.js` dit exactement ce qu'il faudra synchroniser.
 
 ### Le planning de révision
 
@@ -718,7 +775,8 @@ sauvegarde.
 
 Sans compte, tout vit dans le navigateur. Dans *Paramètres*, « Télécharger ma
 sauvegarde » produit un fichier `sunu-cours-sauvegarde-AAAA-MM-JJ.json` :
-profil, scores, exercices travaillés, favoris, vidéos, planning et thème. Ni
+profil, scores, exercices travaillés, chapitres lus, favoris, vidéos,
+planning, disponibilités, révisions espacées et thème. Ni
 la session ni le mot de passe admin n'y figurent. « Restaurer une sauvegarde »
 le relit sur n'importe quel appareil, après un aperçu de ce qui sera remplacé.
 

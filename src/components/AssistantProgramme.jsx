@@ -4,6 +4,7 @@ import { cx } from "./ui";
 import { ajouterJours, aujourdhui } from "../planning";
 import { versDate } from "../emploiDuTemps";
 import {
+  CLE_DISPONIBILITES,
   JOURS_SEMAINE,
   creneauxLibres,
   demanderProgramme,
@@ -31,11 +32,9 @@ import {
    La logique est dans src/programmeIA.js.
    ================================================================== */
 
-const CLE_DISPOS = "lrsi-disponibilites";
-
 function lireDispos() {
   try {
-    const brut = JSON.parse(localStorage.getItem(CLE_DISPOS) ?? "null");
+    const brut = JSON.parse(localStorage.getItem(CLE_DISPONIBILITES) ?? "null");
     return brut && typeof brut === "object" ? { ...disponibilitesParDefaut(), ...brut } : disponibilitesParDefaut();
   } catch {
     return disponibilitesParDefaut();
@@ -145,7 +144,7 @@ export default function AssistantProgramme({ contexte, evenements, session: exis
   /* ---- Générer ---- */
   const generer = async () => {
     try {
-      localStorage.setItem(CLE_DISPOS, JSON.stringify(dispos));
+      localStorage.setItem(CLE_DISPONIBILITES, JSON.stringify(dispos));
     } catch {
       /* les disponibilités seront redemandées */
     }
