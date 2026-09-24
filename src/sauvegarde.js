@@ -1,6 +1,7 @@
 import { CLES } from "./progression";
 import { CLE_PROFIL } from "./profil";
 import { CLE_PLANNING } from "./planning";
+import { CLE_REVISIONS } from "./revisions";
 
 /* ==================================================================
    Sauvegarder et restaurer ses données.
@@ -40,6 +41,7 @@ export const DONNEES = [
   { cle: CLES.videos, libelle: (n) => `${n} vidéo${n > 1 ? "s" : ""} ajoutée${n > 1 ? "s" : ""}`, valide: Array.isArray, compter: (v) => v.length },
   { cle: CLES.videosVues, libelle: (n) => `${n} vidéo${n > 1 ? "s" : ""} vue${n > 1 ? "s" : ""}`, valide: Array.isArray, compter: (v) => v.length },
   { cle: CLE_PLANNING, libelle: () => "ton planning de révision", valide: estObjet, compter: () => 1 },
+  { cle: CLE_REVISIONS, libelle: (n) => `${n} QCM à revoir`, valide: estObjet, compter: (v) => Object.keys(v).length },
   // Le thème est rangé tel quel (« dark » ou « light »), pas en JSON.
   { cle: CLE_THEME, libelle: () => "ton thème (clair ou sombre)", valide: (v) => v === "dark" || v === "light", compter: () => 1, brut: true },
 ];

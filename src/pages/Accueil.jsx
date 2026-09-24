@@ -4,6 +4,8 @@ import { lireChapitresLus, refChapitre } from "../progression";
 import Icon from "../components/Icon";
 import { Bouton, EtatVide, NoteDemo, cx } from "../components/ui";
 import SectionVideos from "../components/videos";
+import Installation from "../components/Installation";
+import { revisionsDues } from "../revisions";
 import BoutonFavori from "../components/BoutonFavori";
 import { matieres } from "../data/matieres";
 import { surCarte, themeMatiere } from "../data/couleurs";
@@ -24,6 +26,7 @@ export default function Accueil() {
   const recherche = params.get("q") ?? "";
   const matiereActive = params.get("m") ?? "toutes";
   const [lus] = useState(lireChapitresLus);
+  const [aRefaire] = useState(() => revisionsDues(qcms).aFaire.length);
 
   const choisirMatiere = (id) => {
     const suite = {};
@@ -112,6 +115,26 @@ export default function Accueil() {
           })}
         </div>
       </div>
+
+      {/* Révision espacée : des QCM à refaire aujourd'hui. */}
+      {aRefaire > 0 && (
+        <Link
+          to="/planning"
+          className="mt-6 flex items-center gap-3 rounded-2xl bg-sun-100 px-5 py-3.5 text-sm text-sun-900 transition-colors hover:bg-sun-400/30 dark:bg-sun-500/15 dark:text-sun-100"
+        >
+          <Icon name="clock" className="size-5 shrink-0" />
+          <span className="min-w-0 flex-1">
+            <strong className="font-semibold">
+              {aRefaire} QCM à refaire aujourd&apos;hui
+            </strong>{" "}
+            pour bien retenir ce que tu avais raté.
+          </span>
+          <span className="font-semibold underline">Mon planning</span>
+        </Link>
+      )}
+
+      {/* Proposition d'installation, seulement quand elle est possible. */}
+      <Installation compacte className="mt-6" />
 
       {/* ---------------------------------------------------------- */}
       {/* Cartes de matières                                          */}

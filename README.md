@@ -627,6 +627,18 @@ qui fait la différence entre un questionnaire et un vrai outil de révision.
   d'autorisation.
 - Liens externes en `noopener noreferrer`, lien d'évitement vers le contenu,
   libellés accessibles sur les boutons d'icône.
+- Application installable (PWA) : manifeste et service worker produits à
+  chaque `npm run build` par l'extension `applicationInstallable` de
+  `vite.config.js` (modèle : `pwa/sw-modele.js`). Le site s'ouvre ensuite
+  sans réseau. Les icônes se refont avec `node scripts/icones-pwa.mjs`
+  quand le logo change.
+- Révision espacée des QCM (`src/revisions.js`) : un QCM raté revient dans
+  2 jours, puis 5, 12 et 30 jours à chaque réussite.
+- Rappels de révision par notification (`src/rappels.js`), activés depuis
+  « Mon planning » : un par jour au plus, à l'ouverture du site, et en
+  arrière-plan quand Chrome le permet (application installée).
+- Banc de test de l'IA pour tout le site, depuis « Éduquer l'IA » : les
+  questions de `src/banc-ia-questions.js` et les tests de chaque fiche.
 
 ## 7. Ce qui viendra ensuite
 
@@ -849,7 +861,7 @@ modifier pour changer son comportement, suivi de `npx wrangler deploy`.
    npm run banc-ia
    ```
 
-   Il pose les questions de `scripts/banc-ia-questions.js` au relais en ligne,
+   Il pose les questions de `src/banc-ia-questions.js` au relais en ligne,
    par le même chemin que le site, vérifie chaque réponse et donne un score.
    Les réponses complètes sont écrites dans `scripts/banc-ia-resultats.md`,
    à relire : un mot-clé présent ne prouve pas qu'une explication est bonne.

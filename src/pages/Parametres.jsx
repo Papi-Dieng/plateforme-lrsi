@@ -6,6 +6,8 @@ import { useSession } from "../session";
 import { CLES } from "../progression";
 import { CLE_PROFIL } from "../profil";
 import { choisirStats, statsRefusees } from "../stats";
+import Installation from "../components/Installation";
+import { CLE_REVISIONS } from "../revisions";
 import { site } from "../data/site";
 import {
   CLE_PLANNING,
@@ -32,6 +34,7 @@ const entreesStockage = [
   { cle: CLES.videos, libelle: "Vidéos ajoutées", detail: "Identifiants YouTube collés" },
   { cle: CLES.videosVues, libelle: "Vidéos ouvertes", detail: "Pour la barre de lecture" },
   { cle: CLE_PLANNING, libelle: "Planning de révision", detail: "Évaluations à préparer" },
+  { cle: CLE_REVISIONS, libelle: "Révisions espacées", detail: "QCM à refaire, et quand" },
   { cle: CLE_THEME, libelle: "Thème", detail: "Clair ou sombre" },
 ];
 
@@ -274,6 +277,13 @@ export default function Parametres() {
                 Modifier mon profil
               </Bouton>
             </div>
+          </section>
+
+          {/* ------------------------------------------------ */}
+          {/* Application installable                           */}
+          {/* ------------------------------------------------ */}
+          <section className="card p-6">
+            <Installation />
           </section>
 
           {/* ------------------------------------------------ */}

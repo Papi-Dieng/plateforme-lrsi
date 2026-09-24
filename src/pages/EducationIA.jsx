@@ -11,6 +11,7 @@ import ConnexionAdmin, {
 import { matieres } from "../data/matieres";
 import { themeMatiere } from "../data/couleurs";
 import { repondre } from "../assistant";
+import BancSite from "../components/BancSite";
 import {
   decouperReponse,
   demanderIA,
@@ -569,6 +570,9 @@ export default function EducationIA() {
           </>
         ) : (
           <>
+            {/* ---- Tout le site d'un coup : banc général et tests des matières ---- */}
+            <BancSite motDePasse={motDePasse} Reponse={ReponseIA} />
+
             {/* ---- Choix de la matière ---- */}
             <div>
               <p className="text-sm font-semibold text-ink-900 dark:text-white">Matière</p>

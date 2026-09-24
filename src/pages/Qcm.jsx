@@ -17,6 +17,7 @@ import { themeMatiere } from "../data/couleurs";
 import BoutonFavori from "../components/BoutonFavori";
 import { dureeLisible, enregistrerScore, lireScores } from "../progression";
 import { envoyerStats } from "../stats";
+import { noterTentative } from "../revisions";
 
 const POINTS_PAR_QUESTION = 10;
 const SEUIL_REUSSITE = 70; // en pourcentage
@@ -333,6 +334,8 @@ function SessionQcm({ qcmId }) {
   const [marquees, setMarquees] = useState(() => Array(total).fill(false));
   const [restant, setRestant] = useState(tempsImparti);
   const [termine, setTermine] = useState(false);
+  // Révision espacée : ce que cette tentative change (voir src/revisions.js).
+  const [revision, setRevision] = useState(null);
   const [tempsFinal, setTempsFinal] = useState(0);
   const [detailsVisibles, setDetailsVisibles] = useState(false);
   const [alerteFin, setAlerteFin] = useState(false);
@@ -351,6 +354,7 @@ function SessionQcm({ qcmId }) {
     setTempsFinal(0);
     setDetailsVisibles(false);
     setAlerteFin(false);
+    setRevision(null);
   }, [total, tempsImparti]);
 
   const score = useMemo(() => {
@@ -374,6 +378,7 @@ function SessionQcm({ qcmId }) {
     enregistrerScore(qcm.id, score, total, ecoule, detail);
     // Les réponses, anonymes, pour les statistiques de l'admin (sauf refus).
     envoyerStats(qcm, qcm.questions.map((_, i) => reponses[i]));
+    setRevision(noterTentative(qcm.id, total > 0 && (score / total) * 100 >= SEUIL_REUSSITE));
     setTermine(true);
     setAlerteFin(false);
   }, [qcm, termine, tempsImparti, restant, score, total, reponses]);
@@ -417,6 +422,7 @@ function SessionQcm({ qcmId }) {
         detailsVisibles={detailsVisibles}
         basculerDetails={() => setDetailsVisibles((v) => !v)}
         recommencer={recommencer}
+        revision={revision}
       />
     );
   }
@@ -675,6 +681,32 @@ const confettis = [
   { x: "94%", y: "68%", c: "bg-violet-500", r: "-rotate-12", d: ".3s" },
 ];
 
+/* Révision espacée : quand refaire ce QCM. */
+const formatJourCourt = (jour) => {
+  const [a, m, j] = jour.split("-").map(Number);
+  return new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long" }).format(new Date(a, m - 1, j));
+};
+
+function MessageRevision({ revision }) {
+  if (!revision || revision.action === "inchange") return null;
+  const textes = {
+    programme: "À refaire dans 2 jours, le " + (revision.du ? formatJourCourt(revision.du) : "") + ". Revoir une notion après un petit temps aide à la retenir.",
+    avance: "Bien retenu ! Prochaine révision le " + (revision.du ? formatJourCourt(revision.du) : "") + ", un peu plus tard cette fois.",
+    acquis: "Réussi après un mois : ce QCM est acquis, il sort de tes révisions.",
+  };
+  return (
+    <div className="mx-auto mt-6 flex max-w-lg items-start gap-3 rounded-2xl bg-brand-50 px-4 py-3 text-left text-sm/6 text-brand-900 dark:bg-brand-500/10 dark:text-brand-100">
+      <Icon name="clock" className="mt-0.5 size-4.5 shrink-0 text-brand-600 dark:text-brand-300" />
+      <p>
+        {textes[revision.action]}{" "}
+        <Link to="/planning" className="font-semibold underline">
+          Voir mon planning
+        </Link>
+      </p>
+    </div>
+  );
+}
+
 function EcranResultat({
   qcm,
   score,
@@ -684,6 +716,7 @@ function EcranResultat({
   detailsVisibles,
   basculerDetails,
   recommencer,
+  revision,
 }) {
   const taux = total > 0 ? Math.round((score / total) * 100) : 0;
   const reussi = taux >= SEUIL_REUSSITE;
@@ -774,6 +807,8 @@ function EcranResultat({
                 </div>
               </div>
             </dl>
+
+            <MessageRevision revision={revision} />
 
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Bouton variante="secondaire" onClick={basculerDetails}>

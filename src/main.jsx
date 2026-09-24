@@ -4,7 +4,12 @@ import { HashRouter } from "react-router-dom";
 import { FournisseurSession } from "./FournisseurSession";
 import { chargerContenu } from "./contenu";
 import { site } from "./data/site";
+import { demarrerApplication } from "./installation";
 import "./index.css";
+
+// Application installable : service worker et proposition
+// d'installation, écoutée dès le lancement (voir src/installation.js).
+demarrerApplication();
 
 // Routeur à dièse : les adresses contiennent un « # », par exemple
 // /#/cours. Cela évite les erreurs 404 au rechargement d'une page sur
@@ -36,6 +41,10 @@ try {
 // bloque jamais : en cas d'échec, le contenu du code s'affiche.
 await chargerContenu();
 const { default: App } = await import("./App.jsx");
+
+// Rappels de révision : une notification par jour au plus, si
+// l'étudiant les a activés dans son planning (src/rappels.js).
+import("./rappels.js").then((m) => m.demarrerRappels()).catch(() => {});
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

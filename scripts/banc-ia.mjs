@@ -1,7 +1,7 @@
 /* ==================================================================
    Banc de test de l'assistant IA : `npm run banc-ia`.
 
-   Il pose chaque question de `banc-ia-questions.js` au relais EN
+   Il pose chaque question de `src/banc-ia-questions.js` au relais EN
    LIGNE, par le même chemin que le site : le guide cherche les
    contenus, `construireExtraits` y joint les exercices, puis le relais
    interroge le modèle. On teste donc exactement ce que voit un
@@ -19,7 +19,7 @@
 
 import { writeFileSync } from "node:fs";
 import { createServer } from "vite";
-import { cas } from "./banc-ia-questions.js";
+import { cas } from "../src/banc-ia-questions.js";
 
 const PAUSE_ENTRE_QUESTIONS = 7000;
 const FICHIER_RESULTATS = "scripts/banc-ia-resultats.md";
