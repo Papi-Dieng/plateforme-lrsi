@@ -24,10 +24,23 @@ Autres commandes :
 ```bash
 npm run build     # génère la version de production dans docs/
 npm run preview   # sert la version de production en local
-npm test          # lance les tests automatisés
+npm test                 # tests automatisés de la logique (Vitest)
+npm run test:suivi       # les mêmes, relancés à chaque enregistrement
 npm run test:navigateur  # recompile, puis teste le site dans un vrai navigateur
-npm run lint      # vérifie le code
+npm run lint             # vérifie le code (les dossiers compilés sont ignorés)
 ```
+
+Le projet a deux sortes de tests, et GitHub les relance à chaque push :
+
+- les **tests de la logique** (Vitest) vérifient les fichiers sans
+  affichage : comparaison des réponses, QCM en texte, sauvegarde, révision
+  espacée, planning, relais IA… Ils tournent en moins d'une seconde ;
+- les **tests dans un vrai navigateur** (Playwright) ouvrent le site
+  compilé et le parcourent comme un étudiant, sur écran d'ordinateur et de
+  téléphone. Ils prennent une trentaine de secondes.
+
+Ni les uns ni les autres ne touchent au relais IA en ligne : ils ne
+consomment aucun quota et marchent sans connexion, une fois installés.
 
 ### Les tests automatisés
 
@@ -81,18 +94,87 @@ une trace de chaque test raté, à ouvrir avec
 `npx playwright show-trace <fichier trace.zip>` : on y revoit la page
 étape par étape.
 
-**Sur GitHub, à chaque push** (`.github/workflows/verifications.yml`) :
-lint, tests, compilation, puis une dernière vérification : que `docs/`
-correspond bien au code, et enfin les tests dans le navigateur. Si on a
-oublié `npm run build` avant de commiter, le site en ligne serait en
-retard ; la vérification échoue et le dit. Le
-résultat s'affiche à côté du commit, dans l'onglet *Actions* du dépôt :
-coche verte, ou croix rouge avec l'étape en cause. Rien n'est publié par
-cette vérification, GitHub Pages continue de servir `docs/` tel quel.
-
 Quand on ajoute une donnée à la sauvegarde, le test « toutes les données de
 l'étudiant y sont » échoue tant que `src/sauvegarde.test.js` ne la connaît
 pas : c'est voulu, pour ne jamais en oublier une sans le voir.
+
+### La vérification sur GitHub, à chaque push
+
+Le fichier `.github/workflows/verifications.yml` lance, dans l'ordre :
+
+1. le lint ;
+2. les tests de la logique ;
+3. la compilation ;
+4. une comparaison de `docs/` avec ce que la compilation vient de
+   produire : si `npm run build` a été oublié avant le commit, le site en
+   ligne serait en retard sur le code, et cette étape échoue en le disant ;
+5. les tests dans le navigateur.
+
+Le résultat s'affiche à côté du commit et dans l'onglet *Actions* du
+dépôt : coche verte, ou croix rouge avec l'étape en cause. Quand les tests
+dans le navigateur échouent, un rapport avec captures et traces se
+télécharge depuis la page de l'exécution, rubrique *Artifacts*
+(`rapport-playwright`, gardé 14 jours).
+
+Cette vérification ne publie rien : GitHub Pages sert toujours `docs/` tel
+qu'il est versionné. Une croix rouge n'empêche donc pas la mise en ligne,
+elle prévient seulement que quelque chose est cassé.
+
+### Quand un test échoue
+
+Le message dit ce qui était attendu et ce qui a été obtenu. Deux cas :
+
+- **le code a un défaut** : c'est le but, on corrige le code. C'est ainsi
+  qu'a été trouvé le bouton de favori qui se rééteignait juste après le
+  clic ;
+- **le changement était voulu** (un texte reformulé, une nouvelle règle) :
+  on met le test à jour pour qu'il décrive le nouveau comportement.
+
+Ne jamais supprimer ou affaiblir un test seulement pour obtenir la coche
+verte : il ne protégerait plus rien.
+
+### Écrire un nouveau test
+
+**Pour de la logique**, créer `mon-fichier.test.js` à côté du fichier
+testé, sur le modèle des existants :
+
+```js
+import { describe, expect, test } from "vitest";
+import { reponseJuste } from "./verification";
+
+describe("reponseJuste", () => {
+  test("compare les nombres par leur valeur", () => {
+    expect(reponseJuste("62,0", "62")).toBe(true);
+  });
+});
+```
+
+Un fichier qui lit `localStorage` se teste plus facilement quand sa règle
+est dans une fonction pure, qui reçoit les données en paramètre : c'est le
+cas de `construirePlan` (`src/planning.js`) ou de `suite`
+(`src/revisions.js`).
+
+**Pour un parcours dans le navigateur**, ajouter un test dans `e2e/`, en
+important `test` et `expect` depuis `e2e/outils.js` (et non directement
+depuis Playwright) : c'est ce qui remplace le relais IA et relève les
+erreurs JavaScript de la page.
+
+```js
+import { aller, entrerEnInvite, expect, test } from "./outils.js";
+
+test("la page des vidéos s'ouvre", async ({ page }) => {
+  await entrerEnInvite(page);
+  await aller(page, "/videos");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Vidéos");
+});
+```
+
+Chercher les éléments comme un utilisateur les voit (`getByRole`,
+`getByLabel`, `getByText`) plutôt que par leurs classes CSS : le test
+survit alors à un changement de style, et il vérifie au passage que la
+page reste accessible. Les tests peuvent importer le contenu de
+`src/data/` pour connaître les bonnes réponses d'un QCM ou d'un exercice,
+comme le fait `e2e/parcours.e2e.js`.
 
 ### Ouvrir index.html directement ne marche pas
 
@@ -165,10 +247,15 @@ dans notre cas <https://papi-dieng.github.io/plateforme-lrsi/>.
 **À chaque mise en ligne** :
 
 ```bash
-npm run build
-git add docs && git commit -m "Mettre le site en ligne à jour"
+npm test
+npm run test:navigateur
+git add -A && git commit -m "Ce qui a changé"
 git push
 ```
+
+`npm run test:navigateur` recompile le site dans `docs/` avant de le
+tester : pas besoin de lancer `npm run build` en plus. Après le push, la
+vérification GitHub refait tout, et signale un `docs/` oublié.
 
 Trois détails qui expliquent pourquoi cela fonctionne :
 
@@ -334,8 +421,15 @@ Toute autre adresse affiche une page « introuvable » avec un retour à l'accue
 
 ```
 lrsi-platform/
+├── .github/workflows/
+│   └── verifications.yml     lint, tests et compilation à chaque push
+├── e2e/                      tests dans un vrai navigateur (Playwright)
+│   ├── outils.js             faux relais IA, entrée en invité, erreurs relevées
+│   ├── parcours.e2e.js       QCM, exercice, favoris, sauvegarde…
+│   └── pages.e2e.js          chaque page, menus, assistant sans IA, admin
 ├── serveur-ia/               relais IA gratuit (Cloudflare Workers), garde la clé
 │   ├── index.js              point d'entrée : origines, limites, routes
+│   ├── relais.test.js        tests du relais, sans Cloudflare ni Gemini
 │   ├── consignes.js          règles générales et exemples de l'IA
 │   ├── gemini.js             appel à Gemini, partagé par les deux agents
 │   ├── education.js          fiches par matière saisies dans l'espace admin
@@ -436,9 +530,14 @@ lrsi-platform/
 │   ├── main.jsx              point d'entrée
 │   └── index.css             thème, couleurs, styles de base
 ├── index.html
+├── playwright.config.js      tests dans le navigateur : ordinateur et téléphone
 ├── vite.config.js            compilation du site et de l'application installable
 └── vite.config.hors-ligne.js compilation du fichier hors ligne
 ```
+
+Les tests de la logique vivent à côté du fichier qu'ils vérifient, avec le
+suffixe `.test.js` (`src/verification.test.js`, `src/data/donnees.test.js`…),
+et ne sont pas repris dans l'arbre ci-dessus.
 
 **Un mot de vocabulaire.** Dans cette version, une filière correspond à une
 matière : il n'y a pas de niveau intermédiaire. Chaque matière porte un
@@ -754,6 +853,9 @@ qui fait la différence entre un questionnaire et un vrai outil de révision.
   l'IA ne répond pas. Réinitialisation partielle ou complète.
 - Banc de test de l'IA pour tout le site, depuis « Éduquer l'IA » : les
   questions de `src/banc-ia-questions.js` et les tests de chaque fiche.
+- Tests automatisés de la logique (Vitest) et tests dans un vrai navigateur
+  (Playwright), relancés par GitHub à chaque push avec le lint et la
+  compilation (voir section 1).
 
 ## 7. Ce qui viendra ensuite
 
