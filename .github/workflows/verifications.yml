@@ -1,0 +1,47 @@
+# Vérifications lancées par GitHub à chaque push et à chaque pull request :
+# lint, tests automatisés, compilation, et site en ligne (docs/) à jour.
+# Rien n'est publié ici : GitHub Pages sert toujours docs/ tel qu'il est
+# versionné. Une croix rouge sur le commit signale ce qui a cassé.
+name: Vérifications
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests automatisés
+        run: npm test
+
+      - name: Compilation
+        run: npm run build
+
+      # Si le code a changé sans que `npm run build` ait été relancé avant
+      # le commit, le site en ligne n'est pas à jour.
+      - name: Site en ligne à jour (docs/)
+        run: |
+          if [ -n "$(git status --porcelain docs)" ]; then
+            git status --short docs
+            echo "::error::docs/ n'est pas à jour : lancer npm run build, puis commiter docs/."
+            exit 1
+          fi

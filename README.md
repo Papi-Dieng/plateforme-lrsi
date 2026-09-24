@@ -39,10 +39,26 @@ configuration du projet, rien d'autre à régler. Chaque fichier de test vit
 | `src/verification.js` | nombres (`62` = `62,0`), adresses IP octet par octet, accents et majuscules ignorés, écritures séparées par `\|` |
 | `src/quizTexte.js` | toutes les façons d'écrire un QCM en texte, erreurs signalées sans rien deviner, aller-retour texte → questions → texte |
 | `src/sauvegarde.js` | aller-retour complet sur un autre appareil, fichiers refusés (autre application, version plus récente, trop gros), aucune donnée de session ou d'admin |
+| `src/revisions.js` | intervalles 2, 5, 12, 30 jours, retour à 2 jours après un échec, rien ne change si on refait un QCM en avance |
+| `src/competences.js` | aucun verdict sous `MINIMUM_REPONSES`, seuils de force et de faiblesse, chapitres à relire sans doublon |
+| `src/planning.js` | dates (fins de mois, années bissextiles), points faibles d'abord, QCM la veille et devoir l'avant-veille, tâches par jour bornées |
+| `src/programmeIA.js` | créneaux libres (cours hebdomadaires, heures d'examen, heure déjà passée), répartition sans IA, événements de l'emploi du temps |
+| `src/data/` | contenu par défaut cohérent : identifiants uniques, chapitres des compétences écrits mot pour mot, bonne réponse existante, explication présente |
+| `serveur-ia/` | origines refusées, consignes impossibles à remplacer, messages tronqués, limite par visiteur (mots de passe compris), espace admin fermé sans mot de passe, examens non autorisés cachés, vrais PDF seulement, liens https seulement, modèle de secours |
+
+Les tests du relais simulent Cloudflare (stockage KV, limiteur) et Gemini :
+ils ne font aucun appel réseau et ne consomment aucun quota.
 
 `npm run test:suivi` relance les tests à chaque enregistrement, pratique
-pendant qu'on modifie l'un de ces fichiers. Les tests ne font aucun appel
-réseau : ils ne touchent ni au relais IA ni au site en ligne.
+pendant qu'on modifie l'un de ces fichiers.
+
+**Sur GitHub, à chaque push** (`.github/workflows/verifications.yml`) :
+lint, tests, compilation, puis une dernière vérification : que `docs/`
+correspond bien au code. Si on a oublié `npm run build` avant de commiter,
+le site en ligne serait en retard ; la vérification échoue et le dit. Le
+résultat s'affiche à côté du commit, dans l'onglet *Actions* du dépôt :
+coche verte, ou croix rouge avec l'étape en cause. Rien n'est publié par
+cette vérification, GitHub Pages continue de servir `docs/` tel quel.
 
 Quand on ajoute une donnée à la sauvegarde, le test « toutes les données de
 l'étudiant y sont » échoue tant que `src/sauvegarde.test.js` ne la connaît
