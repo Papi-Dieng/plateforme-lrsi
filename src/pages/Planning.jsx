@@ -389,7 +389,6 @@ export default function Planning() {
                   <p className="text-sm text-ink-500 dark:text-ink-400">
                     {nomMatiere(ev.matiere)} · {formatJour(ev.date)}
                     {ev.heure ? ` à ${ev.heure}` : ""}
-                    {ev.difficulte ? ` · ${ev.difficulte.toLowerCase()}` : ""}
                     {ev.semestre ? ` · semestre ${ev.semestre}` : ""}
                   </p>
                 </div>

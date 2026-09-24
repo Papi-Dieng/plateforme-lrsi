@@ -4,7 +4,6 @@ import { cx } from "./ui";
 import { ajouterJours, aujourdhui } from "../planning";
 import { versDate } from "../emploiDuTemps";
 import {
-  DIFFICULTES,
   JOURS_SEMAINE,
   creneauxLibres,
   demanderProgramme,
@@ -21,9 +20,10 @@ import {
 /* ==================================================================
    « Créer mon programme avec l'IA », pour une session d'examens, en
    trois étapes :
-   1. la session : semestre, dates de début et de fin, nombre de
-      matières, puis pour chacune le jour, l'heure et la difficulté
-      ressentie de son examen ;
+   1. la session : dates de début et de fin, nombre de matières, puis
+      pour chacune son semestre (qui limite la liste aux matières de ce
+      semestre, donc à leurs cours et exercices), le jour et l'heure de
+      son examen ;
    2. les disponibilités : jours de la semaine, heures, et le jour où
       l'étudiant veut commencer ;
    3. le programme proposé, séance par séance, à ajouter à l'emploi du
@@ -53,26 +53,26 @@ const plusTot = (a, b) => (a < b ? a : b);
 
 /* Une ligne d'examen neuve : la prochaine matière pas encore choisie,
    un jour réparti dans la période. */
-function nouvelleLigne(disponibles, prises, debut, fin, rang) {
-  const matiere = disponibles.find((m) => !prises.includes(m.id))?.id ?? "";
-  return { matiere, date: plusTot(ajouterJours(debut, rang * 2), fin), heure: "08:00", difficulte: "Moyen" };
+function nouvelleLigne(matieres, semestre, prises, debut, fin, rang) {
+  const matiere = matieresDuSemestre(matieres, semestre).find((m) => !prises.includes(m.id))?.id ?? "";
+  return { semestre, matiere, date: plusTot(ajouterJours(debut, rang * 2), fin), heure: "08:00" };
 }
 
 export default function AssistantProgramme({ contexte, evenements, session: existante, onValider, onFermer }) {
   const { matieres } = contexte;
   const demain = ajouterJours(aujourdhui(), 1);
   const listeSemestres = semestres(matieres);
+  const premierSemestre = listeSemestres[0] ?? 0;
 
   const [etape, setEtape] = useState(1);
-  const [semestre, setSemestre] = useState(existante?.semestre ?? 0);
   const [periode, setPeriode] = useState(() => ({
     debut: existante?.debut ?? ajouterJours(aujourdhui(), 14),
     fin: existante?.fin ?? ajouterJours(aujourdhui(), 21),
   }));
   const [lignes, setLignes] = useState(() =>
     existante?.evaluations?.length
-      ? existante.evaluations.map((ev) => ({ matiere: ev.matiere, date: ev.date, heure: ev.heure ?? "08:00", difficulte: ev.difficulte ?? "Moyen", id: ev.id }))
-      : [nouvelleLigne(matieres, [], ajouterJours(aujourdhui(), 14), ajouterJours(aujourdhui(), 21), 0)]
+      ? existante.evaluations.map((ev) => ({ semestre: ev.semestre ?? 0, matiere: ev.matiere, date: ev.date, heure: ev.heure ?? "08:00", id: ev.id }))
+      : [nouvelleLigne(matieres, premierSemestre, [], ajouterJours(aujourdhui(), 14), ajouterJours(aujourdhui(), 21), 0)]
   );
   const [dispos, setDispos] = useState(lireDispos);
   const [depuis, setDepuis] = useState(aujourdhui);
@@ -90,9 +90,8 @@ export default function AssistantProgramme({ contexte, evenements, session: exis
     return () => window.removeEventListener("keydown", surTouche);
   }, [onFermer]);
 
-  const disponibles = matieresDuSemestre(matieres, semestre);
   const nomDe = (id) => matieres.find((m) => m.id === id)?.nom ?? "";
-  const nomSession = `${semestre ? `Semestre ${semestre}` : "Session"} · du ${fmt(periode.debut, { day: "numeric", month: "long" })} au ${fmt(periode.fin, { day: "numeric", month: "long" })}`;
+  const nomSession = `Session du ${fmt(periode.debut, { day: "numeric", month: "long" })} au ${fmt(periode.fin, { day: "numeric", month: "long" })}`;
 
   const evaluations = lignes.map((l, i) => ({
     id: l.id ?? ids.evaluation(i),
@@ -100,10 +99,9 @@ export default function AssistantProgramme({ contexte, evenements, session: exis
     matiere: l.matiere,
     date: l.date,
     heure: l.heure,
-    difficulte: l.difficulte,
     parJour: 2,
     session: ids.session,
-    semestre,
+    semestre: l.semestre,
     sessionDebut: periode.debut,
     sessionFin: periode.fin,
   }));
@@ -112,25 +110,29 @@ export default function AssistantProgramme({ contexte, evenements, session: exis
   const nbJours = new Set(creneaux.map((c) => c.jour)).size;
 
   /* ---- Modifier la session ---- */
-  const changerSemestre = (n) => {
-    setSemestre(n);
-    const liste = matieresDuSemestre(matieres, n);
-    setLignes((ls) =>
-      ls.slice(0, Math.max(liste.length, 1)).map((l, i) => ({ ...l, matiere: liste.some((m) => m.id === l.matiere) ? l.matiere : liste[i]?.id ?? "" }))
-    );
-  };
   const changerNombre = (n) => {
-    const voulu = Math.min(Math.max(Number(n) || 1, 1), Math.max(disponibles.length, 1));
+    const voulu = Math.min(Math.max(Number(n) || 1, 1), Math.max(matieres.length, 1));
     setLignes((ls) => {
       if (voulu <= ls.length) return ls.slice(0, voulu);
       const suite = [...ls];
       while (suite.length < voulu) {
-        suite.push(nouvelleLigne(disponibles, suite.map((l) => l.matiere), periode.debut, periode.fin, suite.length));
+        const semestre = suite.at(-1)?.semestre ?? premierSemestre;
+        suite.push(nouvelleLigne(matieres, semestre, suite.map((l) => l.matiere), periode.debut, periode.fin, suite.length));
       }
       return suite;
     });
   };
   const changerLigne = (i, modif) => setLignes((ls) => ls.map((l, j) => (j === i ? { ...l, ...modif } : l)));
+  // Un autre semestre : la matière se remet sur la première libre de ce semestre.
+  const changerSemestreLigne = (i, semestre) =>
+    setLignes((ls) =>
+      ls.map((l, j) => {
+        if (j !== i) return l;
+        const prises = ls.filter((_, k) => k !== i).map((x) => x.matiere);
+        const matiere = matieresDuSemestre(matieres, semestre).find((m) => !prises.includes(m.id))?.id ?? "";
+        return { ...l, semestre, matiere };
+      })
+    );
   const changerDispo = (num, modif) => setDispos((d) => ({ ...d, [num]: { ...d[num], ...modif } }));
 
   const erreurs1 = [];
@@ -156,7 +158,7 @@ export default function AssistantProgramme({ contexte, evenements, session: exis
     try {
       const r = await demanderProgramme({
         session: nomSession,
-        examens: evaluations.map((ev) => ({ matiere: nomDe(ev.matiere), date: ev.date, heure: ev.heure, difficulte: ev.difficulte })),
+        examens: evaluations.map((ev) => ({ matiere: nomDe(ev.matiere), semestre: ev.semestre ? `semestre ${ev.semestre}` : "", date: ev.date, heure: ev.heure })),
         creneaux,
         taches,
       });
@@ -166,7 +168,7 @@ export default function AssistantProgramme({ contexte, evenements, session: exis
       parIA = false;
       seances = repartirSansIA(creneaux, taches, evaluations);
       resume =
-        "L'IA n'a pas pu répondre : le site a réparti les séances lui-même, en donnant plus de temps aux matières difficiles et à celles qui passent en premier.";
+        "L'IA n'a pas pu répondre : le site a réparti les séances lui-même, entre toutes les matières, en commençant par celles qui passent en premier.";
     }
     setResultat({ seances, resume, parIA, taches, evaluations });
     setOccupe(false);
@@ -229,18 +231,7 @@ export default function AssistantProgramme({ contexte, evenements, session: exis
           {/* ---- 1. La session ---- */}
           {etape === 1 && (
             <div className="space-y-5">
-              <div className="grid gap-3 sm:grid-cols-3">
-                <label className={etiquette}>
-                  Semestre
-                  <select value={semestre} onChange={(e) => changerSemestre(Number(e.target.value))} className={champ}>
-                    <option value={0}>Toutes les matières</option>
-                    {listeSemestres.map((n) => (
-                      <option key={n} value={n}>
-                        Semestre {n}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+              <div className="grid gap-3 sm:grid-cols-2">
                 <label className={etiquette}>
                   Début de la session
                   <input type="date" min={demain} value={periode.debut} onChange={(e) => setPeriode((p) => ({ ...p, debut: e.target.value }))} className={champ} />
@@ -256,24 +247,34 @@ export default function AssistantProgramme({ contexte, evenements, session: exis
                 <input
                   type="number"
                   min={1}
-                  max={Math.max(disponibles.length, 1)}
+                  max={Math.max(matieres.length, 1)}
                   value={lignes.length}
                   onChange={(e) => changerNombre(e.target.value)}
                   className={champ}
                 />
                 <span className="mt-1 block font-normal text-ink-400">
-                  {disponibles.length} matière{disponibles.length > 1 ? "s" : ""} {semestre ? `au semestre ${semestre}` : "sur le site"}.
+                  Pour chacune, choisis son semestre : la liste ne propose que ses matières, et le programme reprend leurs cours et exercices.
                 </span>
               </label>
 
               <div className="space-y-3">
                 {lignes.map((l, i) => (
-                  <div key={i} className="grid gap-3 rounded-xl border border-ink-200 p-3 sm:grid-cols-[1.6fr_1fr_0.8fr_1fr] dark:border-ink-800">
+                  <div key={i} className="grid gap-3 rounded-xl border border-ink-200 p-3 sm:grid-cols-[0.9fr_1.6fr_1fr_0.8fr] dark:border-ink-800">
+                    <label className={etiquette}>
+                      Semestre
+                      <select value={l.semestre} onChange={(e) => changerSemestreLigne(i, Number(e.target.value))} className={champ}>
+                        {listeSemestres.map((n) => (
+                          <option key={n} value={n}>
+                            Semestre {n}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                     <label className={etiquette}>
                       Matière {lignes.length > 1 ? i + 1 : ""}
                       <select value={l.matiere} onChange={(e) => changerLigne(i, { matiere: e.target.value })} className={champ}>
                         <option value="">Choisir…</option>
-                        {disponibles.map((m) => (
+                        {matieresDuSemestre(matieres, l.semestre).map((m) => (
                           <option key={m.id} value={m.id} disabled={lignes.some((x, j) => j !== i && x.matiere === m.id)}>
                             {m.nom}
                           </option>
@@ -287,14 +288,6 @@ export default function AssistantProgramme({ contexte, evenements, session: exis
                     <label className={etiquette}>
                       Heure
                       <input type="time" value={l.heure} onChange={(e) => changerLigne(i, { heure: e.target.value })} className={champ} />
-                    </label>
-                    <label className={etiquette}>
-                      Difficulté ressentie
-                      <select value={l.difficulte} onChange={(e) => changerLigne(i, { difficulte: e.target.value })} className={champ}>
-                        {DIFFICULTES.map((d) => (
-                          <option key={d}>{d}</option>
-                        ))}
-                      </select>
                     </label>
                   </div>
                 ))}
@@ -412,7 +405,7 @@ export default function AssistantProgramme({ contexte, evenements, session: exis
                         .sort((a, b) => (a.date + a.heure).localeCompare(b.date + b.heure))
                         .map((ev) => (
                           <li key={ev.id}>
-                            {majuscule(fmt(ev.date))} à {ev.heure} : {nomDe(ev.matiere)} ({ev.difficulte.toLowerCase()})
+                            {majuscule(fmt(ev.date))} à {ev.heure} : {nomDe(ev.matiere)}{ev.semestre ? ` (semestre ${ev.semestre})` : ""}
                           </li>
                         ))}
                     </ul>

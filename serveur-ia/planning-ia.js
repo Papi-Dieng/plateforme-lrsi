@@ -2,10 +2,10 @@
    Programme de révision composé par l'IA, pour l'emploi du temps.
 
    Pour toute une session d'examens : plusieurs matières, chacune avec
-   la date de son examen et sa difficulté ressentie. Le site envoie tout
+   son semestre et la date de son examen. Le site envoie tout
    ce qu'il faut, et l'IA ORGANISE sans rien inventer :
    - les créneaux libres de l'étudiant, datés (jour, début, fin) ;
-   - les examens (matière, date, heure, difficulté) ;
+   - les examens (matière, semestre, date, heure) ;
    - les tâches possibles de chaque matière, dans l'ordre de priorité
      calculé par le site (compétences faibles d'abord), avec la date
      avant laquelle elles doivent être faites : l'examen de leur matière.
@@ -31,14 +31,13 @@ const liste = (v, max) => (Array.isArray(v) ? v.slice(0, max) : []);
 const JOUR = /^\d{4}-\d{2}-\d{2}$/;
 const HEURE = /^([01]\d|2[0-3]):[0-5]\d$/;
 const minutes = (h) => Number(h.slice(0, 2)) * 60 + Number(h.slice(3));
-const DIFFICULTES = ["Facile", "Moyen", "Difficile"];
 
 const CONSIGNES = `Tu organises le programme de révision d'un étudiant de Licence Réseaux et Systèmes Informatiques pour une session d'examens, qui peut compter plusieurs matières.
 
 Règles :
 - Place les séances UNIQUEMENT dans les créneaux fournis, sans en dépasser les heures ; plusieurs séances peuvent se suivre dans un même créneau, sans se chevaucher.
 - Utilise les tâches fournies, par leur identifiant. Une tâche doit être placée AVANT le jour de l'examen de sa matière (champ « avant ») : jamais ce jour-là ni après.
-- Répartis le temps entre les matières : celles dont l'examen arrive en premier passent d'abord, et une matière « Difficile » reçoit nettement plus de séances qu'une matière « Facile ».
+- Répartis le temps équitablement entre les matières, en tenant compte du nombre de tâches de chacune : celles dont l'examen arrive en premier passent d'abord.
 - Alterne les matières d'un jour à l'autre plutôt que de faire une matière entière d'un bloc, sauf juste avant son examen.
 - Dans chaque matière, respecte à peu près l'ordre de priorité donné : les premières tâches sont les points faibles de l'étudiant.
 - Une séance dure de 30 à 90 minutes. Au-delà de 90 minutes de suite dans un créneau, laisse 10 minutes de pause.
@@ -80,7 +79,7 @@ export async function composerPlanning(corps, env) {
       matiere: texte(x?.matiere, 120),
       date: texte(x?.date, 10),
       heure: HEURE.test(x?.heure ?? "") ? x.heure : "",
-      difficulte: DIFFICULTES.includes(x?.difficulte) ? x.difficulte : "Moyen",
+      semestre: texte(x?.semestre, 20),
     }))
     .filter((x) => x.matiere && JOUR.test(x.date));
   const taches = liste(corps?.taches, MAX_TACHES)
@@ -97,7 +96,7 @@ export async function composerPlanning(corps, env) {
   const consigne = `Session d'examens : ${texte(corps?.session, 120) || "non précisée"}.
 
 Examens :
-${examens.map((x) => `- ${x.matiere} : le ${x.date}${x.heure ? ` à ${x.heure}` : ""}, difficulté ressentie « ${x.difficulte} »`).join("\n")}
+${examens.map((x) => `- ${x.matiere}${x.semestre ? ` (${x.semestre})` : ""} : le ${x.date}${x.heure ? ` à ${x.heure}` : ""}`).join("\n")}
 
 Créneaux libres de l'étudiant (identifiant : jour, heures) :
 ${creneaux.map((c) => `- ${c.id} : ${c.jour}, ${c.debut}–${c.fin}`).join("\n")}

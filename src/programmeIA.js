@@ -6,8 +6,8 @@ import { enHeure, enMinutes, evenementsDuJour, versDate } from "./emploiDuTemps"
    Programme de révision d'une session d'examens, composé par l'IA et
    placé dans l'emploi du temps.
 
-   Une session : un semestre, une période (début et fin), et plusieurs
-   examens — une matière, un jour, une heure, une difficulté ressentie.
+   Une session : une période (début et fin), et plusieurs examens —
+   pour chacun, un semestre, une matière de ce semestre, un jour, une heure.
 
    1. `creneauxLibres` : à partir des disponibilités de l'étudiant (jours
       de la semaine et heures) et du jour où il veut commencer, les
@@ -33,8 +33,6 @@ export const JOURS_SEMAINE = [
   { num: 0, nom: "Dimanche" },
 ];
 
-export const DIFFICULTES = ["Facile", "Moyen", "Difficile"];
-const POIDS = { Facile: 1, Moyen: 1.6, Difficile: 2.4 };
 const MAX_TACHES_PAR_MATIERE = 20;
 const DUREE_EXAMEN = 120;
 
@@ -111,7 +109,7 @@ export const heuresTotales = (creneaux) =>
 
 /* Les tâches de toutes les matières de la session, chacune rattachée à
    son examen (`evaluation`, `avant`). `evaluations` : celles de la
-   session, avec `difficulte`. */
+   session. */
 export function tachesDeSession(evaluations, contexte) {
   return evaluations.flatMap((ev) => {
     const nom = contexte.matieres.find((m) => m.id === ev.matiere)?.nom ?? ev.matiere;
@@ -123,9 +121,10 @@ export function tachesDeSession(evaluations, contexte) {
 
 /* ---- Sans IA : une répartition simple ---- */
 
-/* Séance par séance, la matière choisie est celle qui a le moins de
-   temps par rapport à son besoin (difficulté), parmi celles dont
-   l'examen n'est pas encore passé ; la veille d'un examen, ses QCM.
+/* Séance par séance, la matière choisie est celle qui a eu le moins de
+   séances, en avançant celles dont l'examen arrive en premier, parmi
+   celles dont l'examen n'est pas encore passé ; la veille d'un examen,
+   ses QCM.
    Dans chaque matière : points faibles d'abord, devoir blanc, puis un
    second passage « Revoir » sur les premières tâches. */
 export function repartirSansIA(creneaux, taches, evaluations) {
@@ -141,7 +140,6 @@ export function repartirSansIA(creneaux, taches, evaluations) {
           file: [...autres, ...(devoir ? [devoir] : []), ...autres.map((t) => ({ ...t, revoir: true }))],
           qcms: siennes.filter((t) => t.type === "qcm"),
           seances: 0,
-          poids: POIDS[ev.difficulte] ?? POIDS.Moyen,
           nom: siennes[0]?.nomMatiere ?? ev.titre,
         },
       ];
@@ -165,7 +163,7 @@ export function repartirSansIA(creneaux, taches, evaluations) {
         tache = veille.qcms.shift();
       } else {
         const joursRestants = (s) => Math.max((versDate(s.ev.date) - versDate(c.jour)) / 86_400_000, 1);
-        choisie = ouvertes.reduce((a, b) => (b.seances / b.poids + joursRestants(b) * 0.15 < a.seances / a.poids + joursRestants(a) * 0.15 ? b : a));
+        choisie = ouvertes.reduce((a, b) => (b.seances + joursRestants(b) * 0.15 < a.seances + joursRestants(a) * 0.15 ? b : a));
         tache = choisie.file.shift();
       }
       choisie.seances++;
@@ -270,7 +268,7 @@ export function evenementsExamens(evaluations, sessionId) {
   return evaluations.map((ev) => ({
     id: `ia-${sessionId}-examen-${ev.id}`,
     titre: ev.titre,
-    description: `Examen${ev.difficulte ? ` · difficulté ressentie : ${ev.difficulte.toLowerCase()}` : ""}`,
+    description: `Examen${ev.semestre ? ` · semestre ${ev.semestre}` : ""}`,
     jour: ev.date,
     debut: ev.heure,
     fin: enHeure(Math.min(enMinutes(ev.heure) + DUREE_EXAMEN, 23 * 60 + 59)),
