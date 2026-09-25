@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import Icon from "./Icon";
-import { cx } from "./ui";
+import { cx } from "./classes";
 import { champAdmin } from "./ConnexionAdmin";
 import { EXEMPLE_QUIZ, ecrireQuizTexte, lireQuizTexte } from "../quizTexte";
 

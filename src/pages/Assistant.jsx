@@ -8,8 +8,8 @@ import {
   EnTetePage,
   NoteDemo,
   TitreSection,
-  cx,
 } from "../components/ui";
+import { cx } from "../components/classes";
 import { lireExercicesTravailles, lireScores } from "../progression";
 import {
   MINIMUM_REPONSES,

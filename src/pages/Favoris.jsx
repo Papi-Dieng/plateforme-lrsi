@@ -9,8 +9,8 @@ import {
   EtatVide,
   Filtres,
   NoteDemo,
-  cx,
 } from "../components/ui";
+import { cx } from "../components/classes";
 import {
   dateLisible,
   lireFavoris,

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import Icon from "../components/Icon";
-import { Bouton, cx } from "../components/ui";
+import { Bouton } from "../components/ui";
+import { cx } from "../components/classes";
 import { avatars, getAvatar } from "../data/avatars";
 import {
   effacerProfil,

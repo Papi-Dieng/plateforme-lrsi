@@ -11,7 +11,7 @@ import TexteLibre, { EnLigne } from "./TexteLibre";
    Le texte écrit passe avant le PDF, qui reste alors à télécharger.
    ================================================================== */
 
-export const aCorrectionEcrite = (e) => Boolean(e?.etapes?.some((s) => s.trim()) || e?.reponse || e?.explication);
+const aCorrectionEcrite = (e) => Boolean(e?.etapes?.some((s) => s.trim()) || e?.reponse || e?.explication);
 
 export function EnonceExercice({ exercice, className = "mt-4" }) {
   if (exercice.enonce) {

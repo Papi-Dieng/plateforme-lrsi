@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import Icon from "../components/Icon";
-import { Badge, Container, EnTetePage, cx } from "../components/ui";
+import { Badge, Container, EnTetePage } from "../components/ui";
+import { cx } from "../components/classes";
 import {
   MINIMUM_REPONSES,
   couvertureCompetences,

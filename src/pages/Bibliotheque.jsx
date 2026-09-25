@@ -6,8 +6,8 @@ import {
   EnTetePage,
   EtatVide,
   Filtres,
-  cx,
 } from "../components/ui";
+import { cx } from "../components/classes";
 import { ressources } from "../data/bibliotheque";
 import { urlPdf } from "../contenu";
 import { matieres, nomMatiere } from "../data/matieres";

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Icon from "../components/Icon";
-import { Badge, Bouton, Container, EnTetePage, cx } from "../components/ui";
+import { Badge, Bouton, Container, EnTetePage } from "../components/ui";
+import { cx } from "../components/classes";
 import { useSession } from "../session";
 import { CLES } from "../progression";
 import { CLE_PROFIL } from "../profil";

@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Icon from "../components/Icon";
-import { Badge, Container, EnTetePage, cx } from "../components/ui";
+import { Badge, Container, EnTetePage } from "../components/ui";
+import { cx } from "../components/classes";
 import ConnexionAdmin, {
   champAdmin,
+} from "../components/ConnexionAdmin";
+import {
   ecrireSessionAdmin as ecrireSession,
   lireSessionAdmin as lireSession,
   messageErreurAdmin as messageErreur,
-} from "../components/ConnexionAdmin";
+} from "../sessionAdmin";
 import { matieres } from "../data/matieres";
 import { themeMatiere } from "../data/couleurs";
 import { repondre } from "../assistant";

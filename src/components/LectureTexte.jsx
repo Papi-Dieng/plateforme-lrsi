@@ -1,8 +1,9 @@
 import Icon from "./Icon";
 import PleinEcran from "./PleinEcran";
-import { cx } from "./ui";
+import { cx } from "./classes";
 import { urlPdf } from "../contenu";
-import { EtatLecture, useLectureDetectee } from "./detectionLecture";
+import EtatLecture from "./EtatLecture";
+import { useLectureDetectee } from "./detectionLecture";
 
 /* ==================================================================
    Un texte écrit dans l'espace admin, côté étudiant : cours, énoncé ou

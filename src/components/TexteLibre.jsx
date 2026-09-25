@@ -1,4 +1,4 @@
-import { cx } from "./ui";
+import { cx } from "./classes";
 
 /* ==================================================================
    Un texte saisi dans l'espace admin (cours, énoncé, corrigé).
@@ -27,7 +27,7 @@ const PUCE = /^\s*[-*•]\s+(.*)$/;
 const NUMERO = /^\s*\d+[.)]\s+(.*)$/;
 const CLOTURE = /^\s*```/;
 
-export function decouperBlocs(texte) {
+function decouperBlocs(texte) {
   const lignes = String(texte ?? "").replace(/\r\n?/g, "\n").split("\n");
   const blocs = [];
   let courant = null;

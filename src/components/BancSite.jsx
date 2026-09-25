@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import Icon from "./Icon";
-import { cx } from "./ui";
-import { messageErreurAdmin } from "./ConnexionAdmin";
+import { cx } from "./classes";
+import { messageErreurAdmin } from "../sessionAdmin";
 import { repondre } from "../assistant";
 import { demanderIA, lireFiche, raisonEchec, verifierReponse } from "../ia";
 import { matieres } from "../data/matieres";

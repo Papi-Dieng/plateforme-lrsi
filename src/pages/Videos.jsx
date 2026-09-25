@@ -15,8 +15,8 @@ import {
   FormulaireVideo,
   Lecteur,
   Modale,
-  useVideos,
 } from "../components/videos";
+import { useVideos } from "../components/useVideos";
 import { getMatiere, matieres } from "../data/matieres";
 
 const normalise = (s) =>

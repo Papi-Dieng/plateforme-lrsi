@@ -9,8 +9,8 @@ import {
   EtatVide,
   Filtres,
   NoteDemo,
-  cx,
 } from "../components/ui";
+import { cx } from "../components/classes";
 import { getQcm, qcms } from "../data/qcm";
 import { getMatiere, matieres, nomMatiere } from "../data/matieres";
 import { themeMatiere } from "../data/couleurs";

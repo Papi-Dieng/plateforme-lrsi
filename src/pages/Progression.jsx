@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Icon from "../components/Icon";
-import { Bouton, NoteDemo, cx } from "../components/ui";
+import { Bouton, NoteDemo } from "../components/ui";
+import { cx } from "../components/classes";
 import {
   dateLisible,
   lireExercicesTravailles,

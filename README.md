@@ -27,7 +27,7 @@ npm run preview   # sert la version de production en local
 npm test                 # tests automatisés de la logique (Vitest)
 npm run test:suivi       # les mêmes, relancés à chaque enregistrement
 npm run test:navigateur  # recompile, puis teste le site dans un vrai navigateur
-npm run lint             # vérifie le code (les dossiers compilés sont ignorés)
+npm run lint             # vérifie le code, dont les imports oubliés (dossiers compilés ignorés)
 ```
 
 Le projet a deux sortes de tests, et GitHub les relance à chaque push :
@@ -41,6 +41,13 @@ Le projet a deux sortes de tests, et GitHub les relance à chaque push :
 
 Ni les uns ni les autres ne touchent au relais IA en ligne : ils ne
 consomment aucun quota et marchent sans connexion, une fois installés.
+
+Le lint (`.oxlintrc.json`) signale en erreur une variable utilisée sans
+être déclarée ni importée : la compilation laisse passer cet oubli, qui ne
+se verrait qu'à l'ouverture de la page. Il avertit aussi quand un fichier
+de composants exporte autre chose que des composants, ce qui empêche Vite
+de recharger la page à chaud pendant le développement : ces fonctions vont
+alors dans un fichier `.js` à part (`classes.js`, `sessionAdmin.js`…).
 
 ### Les tests automatisés
 
@@ -57,6 +64,7 @@ configuration du projet, rien d'autre à régler. Chaque fichier de test vit
 | `src/competences.js` | aucun verdict sous `MINIMUM_REPONSES`, seuils de force et de faiblesse, chapitres à relire sans doublon |
 | `src/planning.js` | dates (fins de mois, années bissextiles), points faibles d'abord, QCM la veille et devoir l'avant-veille, tâches par jour bornées |
 | `src/programmeIA.js` | créneaux libres (cours hebdomadaires, heures d'examen, heure déjà passée), répartition sans IA, événements de l'emploi du temps |
+| `src/pages/gestionContenu/` | problèmes signalés avant publication (titre manquant, chapitre renommé, énoncé absent…), nettoyage de ce qui part au relais, identifiants, liens YouTube |
 | `src/data/` | contenu par défaut cohérent : identifiants uniques, chapitres des compétences écrits mot pour mot, bonne réponse existante, explication présente |
 | `serveur-ia/` | origines refusées, consignes impossibles à remplacer, messages tronqués, limite par visiteur (mots de passe compris), espace admin fermé sans mot de passe, examens non autorisés cachés, vrais PDF seulement, liens https seulement, modèle de secours |
 
@@ -77,9 +85,11 @@ téléphone.
 | --- | --- |
 | `e2e/parcours.e2e.js` | entrer en invité, pages réservées, page introuvable, thème gardé ; un QCM tout juste puis tout faux (score, révision dans 2 jours, progression, statistiques anonymes et leur refus) ; « Vérifier ma réponse » jusqu'à l'indice ; favori, sauvegarde téléchargée puis restaurée dans un navigateur vierge, fichier étranger refusé |
 | `e2e/pages.e2e.js` | chaque page s'ouvre, sans défilement horizontal ; menu du téléphone et barre latérale ; assistant qui répond sans IA ; mot de passe admin refusé ; vues du planning |
+| `e2e/admin.e2e.js` | « Gérer le contenu » avec le bon mot de passe : chaque onglet, une modification publiée (seul le brouillon modifié part au relais), un exercice sans titre signalé avant de publier |
 
 Le relais IA n'est jamais appelé : `e2e/outils.js` le remplace par de
-fausses réponses (rien de publié, IA indisponible). Un test échoue aussi
+fausses réponses (rien de publié, IA indisponible, espace admin ouvert
+seulement avec `MOT_DE_PASSE_ADMIN`, un mot de passe propre aux tests). Un test échoue aussi
 si la page produit une erreur JavaScript.
 
 La première fois, il faut télécharger le navigateur de test (environ
@@ -426,7 +436,8 @@ lrsi-platform/
 ├── e2e/                      tests dans un vrai navigateur (Playwright)
 │   ├── outils.js             faux relais IA, entrée en invité, erreurs relevées
 │   ├── parcours.e2e.js       QCM, exercice, favoris, sauvegarde…
-│   └── pages.e2e.js          chaque page, menus, assistant sans IA, admin
+│   ├── pages.e2e.js          chaque page, menus, assistant sans IA, admin
+│   └── admin.e2e.js          « Gérer le contenu » : onglets, publication
 ├── serveur-ia/               relais IA gratuit (Cloudflare Workers), garde la clé
 │   ├── index.js              point d'entrée : origines, limites, routes
 │   ├── relais.test.js        tests du relais, sans Cloudflare ni Gemini
@@ -453,9 +464,12 @@ lrsi-platform/
 ├── src/
 │   ├── components/
 │   │   ├── Icon.jsx          jeu d'icônes SVG, sans dépendance externe
+│   │   ├── VignetteAvatar.jsx     le dessin SVG d'un avatar
 │   │   ├── Layout.jsx        en-tête, navigation, thème, pied de page
 │   │   ├── ui.jsx            briques réutilisables (boutons, badges, filtres…)
+│   │   ├── classes.js        `cx`, qui assemble des classes CSS
 │   │   ├── videos.jsx        briques vidéo : carte, lecteur, formulaire
+│   │   ├── useVideos.js      état partagé des vidéos (ajoutées, vues, en lecture)
 │   │   ├── BoutonFavori.jsx  marque-page commun à tous les contenus
 │   │   ├── AffichageExercice.jsx  énoncé et correction d'un exercice
 │   │   ├── VerifierReponse.jsx    « Vérifier ma réponse » d'un exercice
@@ -464,7 +478,8 @@ lrsi-platform/
 │   │   ├── LectureTexte.jsx       un texte écrit dans l'admin, côté étudiant
 │   │   ├── TexteLibre.jsx         mise en forme simple, jamais de HTML
 │   │   ├── PleinEcran.jsx         lecture en plein écran, taille du texte
-│   │   ├── detectionLecture.jsx   chapitre lu, détecté sans bouton
+│   │   ├── detectionLecture.js    chapitre lu, détecté sans bouton
+│   │   ├── EtatLecture.jsx        « Encore 20 s de lecture… », sous le cours
 │   │   ├── EmploiDuTemps.jsx      vues mois, semaine, jour et liste
 │   │   ├── AssistantProgramme.jsx programme de révision d'une session
 │   │   ├── Installation.jsx       bouton « Installer l'application »
@@ -481,7 +496,7 @@ lrsi-platform/
 │   │   ├── examens.js        devoirs et examens passés
 │   │   ├── couleurs.js       une couleur par matière
 │   │   ├── competences.js    compétences et chapitres associés
-│   │   ├── avatars.jsx       six vignettes dessinées en SVG
+│   │   ├── avatars.jsx       les six avatars (couleurs et formes)
 │   │   ├── videos.js         emplacements de vidéos d'explication
 │   │   └── bibliotheque.js   ressources et leur statut d'autorisation
 │   ├── pages/
@@ -503,7 +518,15 @@ lrsi-platform/
 │   │   ├── Parametres.jsx        thème, sauvegarde, données locales
 │   │   ├── Conditions.jsx        conditions d'utilisation
 │   │   ├── Admin.jsx             page d'auteur, hors parcours étudiant
-│   │   ├── GestionContenu.jsx    gérer tout le contenu (admin)
+│   │   ├── GestionContenu.jsx    gérer tout le contenu (admin) : onglets, publication
+│   │   ├── gestionContenu/       ses morceaux :
+│   │   │   ├── types.js              les onglets et ce que chaque type sait faire
+│   │   │   ├── editeursCours.jsx     matières (avec le cours), compétences
+│   │   │   ├── editeursExercices.jsx exercices, QCM
+│   │   │   ├── editeursDocuments.jsx vidéos, devoirs, examens, bibliothèque
+│   │   │   ├── champs.jsx            champs de saisie, champ de PDF
+│   │   │   ├── brouillon.js          problèmes avant publication, ce qui part au relais
+│   │   │   └── outils.js             identifiants, liens YouTube, listes de choix
 │   │   ├── EducationIA.jsx       éduquer l'IA par matière (admin)
 │   │   └── StatsAdmin.jsx        statistiques des QCM (admin)
 │   ├── session.js            contexte et hook de session (voir section 7)
@@ -513,6 +536,8 @@ lrsi-platform/
 │   ├── banc-ia-questions.js  questions du banc de test de l'IA
 │   ├── contenu.js            charge le contenu publié avant le premier affichage
 │   ├── extrairePdf.js        lit le texte d'un PDF pour l'assistant (admin)
+│   ├── sessionAdmin.js       mot de passe admin (le temps de l'onglet), messages d'erreur
+│   ├── textesAgent.js        ce que l'agent admin reçoit d'un exercice ou d'une question
 │   ├── quizTexte.js          lit et écrit un QCM au format texte (admin)
 │   ├── verification.js       compare la réponse d'un étudiant à la réponse attendue
 │   ├── progression.js        exercices travaillés, chapitres lus, scores, favoris, vidéos

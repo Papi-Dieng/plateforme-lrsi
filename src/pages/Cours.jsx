@@ -13,8 +13,8 @@ import {
   EtatVide,
   Filtres,
   NoteDemo,
-  cx,
 } from "../components/ui";
+import { cx } from "../components/classes";
 import { getMatiere, matieres } from "../data/matieres";
 import { themeMatiere } from "../data/couleurs";
 import BoutonFavori from "../components/BoutonFavori";

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Icon from "./Icon";
-import { cx } from "./ui";
+import { cx } from "./classes";
 import { ajouterJours, aujourdhui } from "../planning";
 import {
   CATEGORIES,

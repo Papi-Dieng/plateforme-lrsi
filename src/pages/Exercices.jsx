@@ -12,8 +12,8 @@ import {
   EtatVide,
   Filtres,
   NoteDemo,
-  cx,
 } from "../components/ui";
+import { cx } from "../components/classes";
 import { difficultes, exercices, getExercice } from "../data/exercices";
 import { matieres, nomMatiere } from "../data/matieres";
 import { marquerExerciceTravaille } from "../progression";

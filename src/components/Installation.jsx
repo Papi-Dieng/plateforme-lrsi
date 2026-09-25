@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Icon from "./Icon";
-import { cx } from "./ui";
+import { cx } from "./classes";
 import { installer, useInstallation } from "../installation";
 import { site } from "../data/site";
 

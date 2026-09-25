@@ -1,8 +1,10 @@
 import { useState } from "react";
 import Icon from "./Icon";
-import { cx } from "./ui";
-import { champAdmin, messageErreurAdmin } from "./ConnexionAdmin";
+import { cx } from "./classes";
+import { champAdmin } from "./ConnexionAdmin";
+import { messageErreurAdmin } from "../sessionAdmin";
 import { demanderAgentAdmin } from "../ia";
+import { couper, texteExercice, texteQuestion } from "../textesAgent";
 
 /* ==================================================================
    Les propositions de l'agent admin, dans « Gérer le contenu ».
@@ -19,17 +21,6 @@ import { demanderAgentAdmin } from "../ia";
    ================================================================== */
 
 const TAILLE_LOT = 40;
-const couper = (t, max) => String(t ?? "").slice(0, max);
-
-/* Le texte qu'on montre à l'agent pour un exercice ou une question. */
-export const texteExercice = (e) =>
-  couper(`Exercice : ${e.titre}\n${e.enonce || e.texteEnonce || ""}`, 1100);
-
-export const texteQuestion = (x) =>
-  couper(
-    `Question de QCM : ${x.enonce}\nRéponses proposées : ${x.options.filter(Boolean).join(" | ")}\nBonne réponse : ${x.options[x.bonne] ?? ""}`,
-    1100
-  );
 
 const pourAgent = (competences) =>
   competences.map((c) => ({ id: c.id, nom: c.nom, chapitres: c.chapitres }));

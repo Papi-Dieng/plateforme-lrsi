@@ -8,7 +8,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import Icon from "./Icon";
-import { cx } from "./ui";
+import { cx } from "./classes";
 import { initiales, useSession } from "../session";
 import { lireProfil, nomAffiche } from "../profil";
 import { getAvatar } from "../data/avatars";

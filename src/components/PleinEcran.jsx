@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
-import { cx } from "./ui";
+import { cx } from "./classes";
 
 /* ==================================================================
    Lire un texte en plein écran : un cours, un énoncé, une correction.

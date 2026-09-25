@@ -1,18 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Icon from "./Icon";
-import { Badge, Bouton, cx } from "./ui";
+import { Badge, Bouton } from "./ui";
+import { cx } from "./classes";
 import BoutonFavori from "./BoutonFavori";
 import { getMatiere, matieres, nomMatiere } from "../data/matieres";
 import { themeMatiere } from "../data/couleurs";
-import { videosSuggerees } from "../data/videos";
-import {
-  ajouterVideo,
-  lireVideos,
-  lireVideosVues,
-  marquerVideoVue,
-  supprimerVideo,
-} from "../progression";
+import { ajouterVideo } from "../progression";
+import { useVideos } from "./useVideos";
 
 /* ==================================================================
    Vidéos d'explication.
@@ -22,44 +17,14 @@ import {
    aucune requête n'est envoyée à YouTube tant qu'on ne lance rien.
 
    Ce fichier fournit les briques communes au tableau de bord et à la
-   page dédiée : la carte, la fenêtre, le formulaire et le crochet qui
-   tient la liste à jour.
+   page dédiée : la carte, la fenêtre et le formulaire. Le crochet qui
+   tient la liste à jour est dans useVideos.js.
    ================================================================== */
 
 const miniature = (id) => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 
 const lecteurUrl = (id) =>
   `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1`;
-
-/* ------------------------------------------------------------------ */
-/* État partagé                                                        */
-/* ------------------------------------------------------------------ */
-
-export function useVideos() {
-  const [perso, setPerso] = useState(lireVideos);
-  const [vues, setVues] = useState(lireVideosVues);
-  const [enLecture, setEnLecture] = useState(null);
-  const [formulaire, setFormulaire] = useState(null);
-
-
-  const toutes = useMemo(() => [...perso, ...videosSuggerees], [perso]);
-
-  return {
-    toutes,
-    vues,
-    enLecture,
-    formulaire,
-    ouvrirFormulaire: (prefill = {}) => setFormulaire(prefill),
-    fermerFormulaire: () => setFormulaire(null),
-    fermerLecteur: () => setEnLecture(null),
-    majPerso: setPerso,
-    lire: (video) => {
-      setEnLecture(video);
-      setVues(marquerVideoVue(video.id));
-    },
-    retirer: (video) => setPerso(supprimerVideo(video.id)),
-  };
-}
 
 /* ------------------------------------------------------------------ */
 /* Carte                                                               */

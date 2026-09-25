@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Icon from "../components/Icon";
 import { Logo, Signature } from "../components/Layout";
-import { cx } from "../components/ui";
+import { cx } from "../components/classes";
 import { useSession } from "../session";
 import { site } from "../data/site";
 

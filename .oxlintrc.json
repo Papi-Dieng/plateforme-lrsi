@@ -1,9 +1,29 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "oxc"],
-  "ignorePatterns": ["docs/**", "hors-ligne/**"],
+  "plugins": [
+    "react",
+    "oxc"
+  ],
+  "ignorePatterns": [
+    "docs/**",
+    "hors-ligne/**"
+  ],
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2024": true
+  },
+  "globals": {
+    "__FICHIERS__": "readonly"
+  },
   "rules": {
+    "no-undef": "error",
     "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
+    "react/only-export-components": [
+      "warn",
+      {
+        "allowConstantExport": true
+      }
+    ]
   }
 }

@@ -9,6 +9,9 @@ import { site } from "../src/data/site.js";
      contenu de src/data/ ;
    - POST /stats est accepté, et chaque envoi est gardé dans
      `relais.stats` pour que les tests puissent le relire ;
+   - l'espace admin (/admin/…) n'accepte que MOT_DE_PASSE_ADMIN : rien
+     n'y est publié au départ, et chaque publication est gardée dans
+     `relais.publications` ;
    - tout le reste répond 503 : l'IA est indisponible, le site doit
      alors se débrouiller seul (guide, répartition sans IA).
 
@@ -17,12 +20,13 @@ import { site } from "../src/data/site.js";
    ================================================================== */
 
 const RELAIS = new URL(site.urlIA).origin;
+export const MOT_DE_PASSE_ADMIN = "mot-de-passe-des-tests";
 
 export const test = base.extend({
   // Playwright exige ce `{}` : une fixture reçoit toujours les autres en premier.
   // oxlint-disable-next-line no-empty-pattern
   relais: async ({}, utiliser) => {
-    await utiliser({ stats: [], appels: [] });
+    await utiliser({ stats: [], appels: [], publications: [] });
   },
   page: async ({ page, relais }, utiliser) => {
     await page.route(`${RELAIS}/**`, async (route) => {
@@ -36,7 +40,20 @@ export const test = base.extend({
         relais.stats.push(requete.postDataJSON());
         return route.fulfill({ json: { ok: true }, headers: entetes });
       }
-      if (chemin.startsWith("/admin/")) return route.fulfill({ status: 401, json: { erreur: "mot-de-passe" }, headers: entetes });
+      if (chemin.startsWith("/admin/")) {
+        if (requete.headers()["x-admin"] !== MOT_DE_PASSE_ADMIN) {
+          return route.fulfill({ status: 401, json: { erreur: "mot-de-passe" }, headers: entetes });
+        }
+        if (chemin === "/admin/verifier") return route.fulfill({ json: { ok: true }, headers: entetes });
+        if (chemin === "/admin/contenu" && requete.method() === "GET") {
+          return route.fulfill({ json: relais.publications.at(-1) ?? null, headers: entetes });
+        }
+        if (chemin === "/admin/contenu" && requete.method() === "PUT") {
+          const publie = { ...requete.postDataJSON(), publieLe: new Date().toISOString() };
+          relais.publications.push(publie);
+          return route.fulfill({ json: publie, headers: entetes });
+        }
+      }
       return route.fulfill({ status: 503, json: { erreur: "surcharge" }, headers: entetes });
     });
 

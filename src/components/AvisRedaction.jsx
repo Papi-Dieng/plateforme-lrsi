@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Icon from "./Icon";
-import { cx } from "./ui";
+import { cx } from "./classes";
 import { demanderAvisRedaction, iaActive, raisonEchec } from "../ia";
 
 /* ==================================================================

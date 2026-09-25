@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Icon from "../components/Icon";
-import { Badge, Container, EnTetePage, cx } from "../components/ui";
+import { Badge, Container, EnTetePage } from "../components/ui";
+import { cx } from "../components/classes";
 import ConnexionAdmin, {
   champAdmin,
-  ecrireSessionAdmin,
-  lireSessionAdmin,
-  messageErreurAdmin,
 } from "../components/ConnexionAdmin";
+import { ecrireSessionAdmin, lireSessionAdmin, messageErreurAdmin } from "../sessionAdmin";
 import { effacerStatsAdmin, lireStatsAdmin } from "../ia";
 import { matieres, nomMatiere } from "../data/matieres";
 

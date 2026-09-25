@@ -1,7 +1,8 @@
 import Icon from "./Icon";
-import { cx } from "./ui";
+import { cx } from "./classes";
 import { urlPdf } from "../contenu";
-import { EtatLecture, TEMPS_MINIMUM_PDF, useLectureDetectee } from "./detectionLecture";
+import EtatLecture from "./EtatLecture";
+import { TEMPS_MINIMUM_PDF, useLectureDetectee } from "./detectionLecture";
 
 /* ==================================================================
    Un PDF téléversé depuis l'espace admin, côté étudiant : cours,

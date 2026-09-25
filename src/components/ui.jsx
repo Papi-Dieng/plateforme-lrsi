@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import Icon from "./Icon";
-
-export const cx = (...c) => c.filter(Boolean).join(" ");
+import { cx } from "./classes";
 
 /* ------------------------------------------------------------------ */
 /* Conteneur de page                                                   */
