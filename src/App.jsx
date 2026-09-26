@@ -16,6 +16,8 @@ import Progression from "./pages/Progression";
 import Videos from "./pages/Videos";
 import Parametres from "./pages/Parametres";
 import Conditions from "./pages/Conditions";
+import Confidentialite from "./pages/Confidentialite";
+import MentionsLegales from "./pages/MentionsLegales";
 import Admin from "./pages/Admin";
 import EducationIA from "./pages/EducationIA";
 import GestionContenu from "./pages/GestionContenu";
@@ -106,6 +108,8 @@ export default function App() {
         <Route path="videos" element={<Videos />} />
         <Route path="bibliotheque" element={<Bibliotheque />} />
         <Route path="conditions" element={<Conditions />} />
+        <Route path="confidentialite" element={<Confidentialite />} />
+        <Route path="mentions-legales" element={<MentionsLegales />} />
         <Route path="projet" element={<Projet />} />
         <Route
           path="profil"

@@ -86,6 +86,7 @@ téléphone.
 | `e2e/parcours.e2e.js` | entrer en invité, pages réservées, page introuvable, thème gardé ; un QCM tout juste puis tout faux (score, révision dans 2 jours, progression, statistiques anonymes et leur refus) ; « Vérifier ma réponse » jusqu'à l'indice ; favori, sauvegarde téléchargée puis restaurée dans un navigateur vierge, fichier étranger refusé |
 | `e2e/pages.e2e.js` | chaque page s'ouvre, sans défilement horizontal ; menu du téléphone et barre latérale ; assistant qui répond sans IA ; mot de passe admin refusé ; vues du planning |
 | `e2e/admin.e2e.js` | « Gérer le contenu » avec le bon mot de passe : chaque onglet, une modification publiée (seul le brouillon modifié part au relais), un exercice sans titre signalé avant de publier |
+| `e2e/devoirs-planning.e2e.js` | un devoir : consignes, minuteur jusqu'à « Temps écoulé », corrigé seulement à la fin, auto-correction bornée au barème, avis de l'IA (ce qui part au relais) et son échec sans IA ; un programme de révision réparti sans IA, ajouté à l'emploi du temps et toujours là après rechargement |
 
 Le relais IA n'est jamais appelé : `e2e/outils.js` le remplace par de
 fausses réponses (rien de publié, IA indisponible, espace admin ouvert
@@ -333,6 +334,28 @@ nom.
 
 Baseline actuelle : *Apprendre, réviser, s'entraîner.*
 
+### Pages juridiques : à compléter avant l'ouverture
+
+Trois pages, reliées entre elles et depuis chaque pied de page :
+conditions d'utilisation, politique de confidentialité et mentions
+légales. Elles décrivent ce que fait réellement le code ; leur mise en
+page commune est `src/components/PageJuridique.jsx`.
+
+Trois choses à faire dans `src/data/site.js` avant d'ouvrir la plateforme
+à de vrais étudiants :
+
+- `editeur` : le nom de la personne (ou des personnes) qui publie le site.
+  Tant qu'il est vide, les pages disent « l'équipe étudiante du projet » ;
+- `contact` : l'adresse est encore l'exemple `contact@exemple.sn`, affichée
+  telle quelle sur le site en ligne ;
+- `pagesJuridiquesMisesAJour` : la date, à changer à chaque modification.
+
+**Règle à tenir** : toute nouvelle donnée qui quitte le navigateur (un
+nouvel appel au relais, un nouveau service extérieur, les futurs comptes)
+doit être ajoutée à `src/pages/Confidentialite.jsx` avant la mise en ligne.
+Ces textes ne remplacent pas l'avis d'un juriste : à faire relire avant
+l'arrivée des comptes, qui enregistreront des données sur un serveur.
+
 ### Logo
 
 Trois nœuds reliés en triangle : un schéma réseau lisible à petite taille.
@@ -417,7 +440,9 @@ latérale laisse place à un menu dans la barre du haut.
 | `/planning` | Mon planning | Emploi du temps (mois, semaine, jour, liste) et programme de révision composé par l'IA |
 | `/assistant` | Assistant de révision | Guide qui retrouve chapitres, exercices et QCM, et dit par où commencer |
 | `/parametres` | Paramètres | Thème, session, données conservées sur l'appareil |
-| `/conditions` | Conditions d'utilisation | Cadre d'usage, droits, données personnelles |
+| `/conditions` | Conditions d'utilisation | Cadre d'usage, droits d'auteur, IA, usage attendu, responsabilité |
+| `/confidentialite` | Politique de confidentialité | Ce qui reste sur l'appareil, ce qui en sort et vers qui, droits (loi n° 2008-12) |
+| `/mentions-legales` | Mentions légales | Éditeur, hébergeurs, propriété intellectuelle |
 | `/admin` | Administration | Page d'auteur : inventaire, couverture, liste de rédaction |
 | `/admin/contenu` | Gérer le contenu | Brouillon et publication de tout le contenu, agent IA admin (mot de passe) |
 | `/admin/ia` | Éduquer l'IA | Consignes, cours, exemples et tests par matière, banc de test (mot de passe) |
@@ -437,7 +462,8 @@ lrsi-platform/
 │   ├── outils.js             faux relais IA, entrée en invité, erreurs relevées
 │   ├── parcours.e2e.js       QCM, exercice, favoris, sauvegarde…
 │   ├── pages.e2e.js          chaque page, menus, assistant sans IA, admin
-│   └── admin.e2e.js          « Gérer le contenu » : onglets, publication
+│   ├── admin.e2e.js          « Gérer le contenu » : onglets, publication
+│   └── devoirs-planning.e2e.js  un devoir complet, un programme de révision
 ├── serveur-ia/               relais IA gratuit (Cloudflare Workers), garde la clé
 │   ├── index.js              point d'entrée : origines, limites, routes
 │   ├── relais.test.js        tests du relais, sans Cloudflare ni Gemini
@@ -471,6 +497,7 @@ lrsi-platform/
 │   │   ├── videos.jsx        briques vidéo : carte, lecteur, formulaire
 │   │   ├── useVideos.js      état partagé des vidéos (ajoutées, vues, en lecture)
 │   │   ├── BoutonFavori.jsx  marque-page commun à tous les contenus
+│   │   ├── PageJuridique.jsx mise en page des trois pages juridiques
 │   │   ├── AffichageExercice.jsx  énoncé et correction d'un exercice
 │   │   ├── VerifierReponse.jsx    « Vérifier ma réponse » d'un exercice
 │   │   ├── AvisRedaction.jsx      « Demander l'avis de l'IA » d'un devoir
@@ -517,6 +544,8 @@ lrsi-platform/
 │   │   ├── Favoris.jsx           tout ce qui est mis de côté
 │   │   ├── Parametres.jsx        thème, sauvegarde, données locales
 │   │   ├── Conditions.jsx        conditions d'utilisation
+│   │   ├── Confidentialite.jsx   politique de confidentialité
+│   │   ├── MentionsLegales.jsx   éditeur et hébergeurs
 │   │   ├── Admin.jsx             page d'auteur, hors parcours étudiant
 │   │   ├── GestionContenu.jsx    gérer tout le contenu (admin) : onglets, publication
 │   │   ├── gestionContenu/       ses morceaux :
@@ -805,7 +834,8 @@ l'identifiant est `AbCdEf12345`.
 
 Aucune vidéo n'est hébergée par la plateforme : seul l'identifiant est
 conservé, la lecture se fait chez YouTube, et le lecteur ne se charge qu'au
-moment où l'on clique. Ne publier que des liens qu'on a le droit de partager.
+moment où l'on clique. Les miniatures, elles, viennent de YouTube dès qu'une
+carte vidéo s'affiche : la politique de confidentialité le dit. Ne publier que des liens qu'on a le droit de partager.
 
 ### Un QCM
 

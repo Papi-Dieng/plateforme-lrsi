@@ -711,9 +711,9 @@ export default function Assistant() {
             le relais de la plateforme, pour rédiger la réponse. Ton profil, ta
             progression et tes scores ne sont jamais envoyés. Le relais
             n'enregistre rien, mais Google peut conserver les échanges de
-            l'offre gratuite : n'écris rien de personnel. Détails dans les{" "}
-            <Link to="/conditions" className="underline underline-offset-2">
-              conditions d'utilisation
+            l'offre gratuite : n'écris rien de personnel. Détails dans la{" "}
+            <Link to="/confidentialite" className="underline underline-offset-2">
+              politique de confidentialité
             </Link>
             .
           </NoteDemo>

@@ -1,6 +1,4 @@
-import { Link } from "react-router-dom";
-import Icon from "../components/Icon";
-import { Badge, Container, EnTetePage } from "../components/ui";
+import PageJuridique from "../components/PageJuridique";
 import { site } from "../data/site";
 import { iaActive } from "../ia";
 
@@ -9,6 +7,8 @@ import { iaActive } from "../ia";
 
    Texte volontairement court et lisible. Il décrit ce que fait
    réellement la plateforme aujourd'hui, pas ce qu'elle fera peut-être.
+   Les données personnelles ont leur propre page (Confidentialite.jsx),
+   l'éditeur et les hébergeurs aussi (MentionsLegales.jsx).
    ================================================================== */
 
 const articles = [
@@ -16,134 +16,101 @@ const articles = [
     icone: "graduation",
     titre: "Ce qu'est cette plateforme",
     paragraphes: [
-      `${site.nom} est un projet étudiant, gratuit et sans objectif commercial. Il rassemble des cours, des exercices corrigés, des QCM et des liens vidéo pour la filière Réseaux et Systèmes Informatiques.`,
-      "Ce n'est pas un service officiel de l'établissement. Les contenus n'engagent que leur auteur et ne remplacent ni les cours ni les consignes des enseignants.",
+      `${site.nom} est un projet étudiant, gratuit et sans objectif commercial. Il rassemble des cours, des exercices corrigés, des QCM, des devoirs et des liens vidéo pour la filière Réseaux et Systèmes Informatiques.`,
+      "Ce n'est pas un service officiel de l'établissement. Les contenus n'engagent que leurs auteurs et ne remplacent ni les cours ni les consignes des enseignants.",
+      "Utiliser la plateforme, c'est accepter ces conditions. Si tu n'es pas d'accord avec l'une d'elles, n'utilise pas le site.",
+    ],
+  },
+  {
+    icone: "users",
+    titre: "Accès",
+    paragraphes: [
+      "L'accès est libre et gratuit, sans inscription : le mode invité suffit. Les formulaires de connexion et d'inscription sont pour l'instant des maquettes, qui ne créent aucun compte.",
+      "Le site est fourni tel quel. Il peut être interrompu, modifié ou arrêté à tout moment, notamment pour une mise à jour ou si un service dont il dépend (hébergeur, relais, intelligence artificielle) est indisponible.",
     ],
   },
   {
     icone: "file",
     titre: "Contenus et droits d'auteur",
     paragraphes: [
-      "Les énoncés d'exercices et les questions de QCM ont été rédigés pour la plateforme. Les ressources externes renvoient vers le site de leur auteur, avec leur licence indiquée ; un document n'est déposé sur la plateforme que sous licence libre ou avec l'accord écrit de son auteur.",
+      "Les cours, énoncés, corrigés et questions de QCM rédigés pour la plateforme appartiennent à leurs auteurs. Tu peux les consulter, les imprimer et les utiliser pour réviser ; les reproduire ou les diffuser ailleurs demande l'accord de leurs auteurs.",
+      "Les ressources externes renvoient vers le site de leur auteur, avec leur licence indiquée. Un document n'est déposé sur la plateforme que sous licence libre ou avec l'accord écrit de son auteur.",
       "Aucun cours, support ou sujet d'examen appartenant à l'université ou à un enseignant n'est publié sans autorisation écrite. Toute ressource est retirée à la simple demande de son auteur.",
     ],
   },
   {
     icone: "video",
-    titre: "Vidéos",
+    titre: "Vidéos et liens externes",
     paragraphes: [
-      "Les vidéos ne sont pas hébergées ici. La plateforme conserve uniquement l'identifiant d'une vidéo YouTube, et la lecture se fait chez YouTube, avec ses propres conditions.",
-      "Le lecteur n'est chargé qu'au moment où tu cliques. Chacun reste responsable des liens qu'il ajoute et doit avoir le droit de les partager.",
-    ],
-  },
-  {
-    icone: "lock",
-    titre: "Données personnelles",
-    paragraphes: [
-      "Il n'y a pas de compte étudiant. Ton profil, ta progression, tes scores et tes vidéos sont enregistrés uniquement dans ton navigateur, sur cet appareil.",
-      iaActive
-        ? "Rien de tout cela n'est transmis, et aucun traceur publicitaire n'est utilisé. Deux exceptions, décrites ci-dessous : l'assistant de révision, et les statistiques anonymes des QCM. Tu peux tout effacer à tout moment depuis les paramètres."
-        : "Rien de tout cela n'est transmis, et aucun traceur publicitaire n'est utilisé. Une exception, décrite ci-dessous : les statistiques anonymes des QCM. Tu peux tout effacer à tout moment depuis les paramètres.",
-      "Statistiques anonymes des QCM : quand tu termines un QCM, la réponse choisie à chaque question est envoyée au relais de la plateforme (hébergé chez Cloudflare), sans ton nom ni aucun identifiant. Il ne garde ni ton adresse IP ni la date de ton envoi : seulement des compteurs par question, pour que l'équipe voie quelles questions sont le plus ratées. Ton score n'est pas envoyé. Tu peux refuser à tout moment dans les paramètres.",
-      "Les formulaires de connexion et d'inscription sont des maquettes : ils ne vérifient rien et n'enregistrent aucun mot de passe. La véritable authentification arrivera en version 3, avec les règles de protection des données qui s'imposent.",
+      "Les vidéos ne sont pas hébergées ici : la plateforme ne garde que l'identifiant d'une vidéo YouTube, et la lecture se fait chez YouTube, selon ses propres conditions.",
+      "Les liens vers d'autres sites sont donnés pour aider à réviser. La plateforme ne contrôle pas ces sites et n'est pas responsable de leur contenu.",
+      "Chacun reste responsable des liens qu'il ajoute lui-même, et doit avoir le droit de les partager.",
     ],
   },
   ...(iaActive
     ? [
         {
           icone: "sparkles",
-          titre: "Assistant de révision et intelligence artificielle",
+          titre: "Intelligence artificielle",
           paragraphes: [
-            "Quand tu poses une question à l'assistant, elle est envoyée à Google Gemini, un service d'intelligence artificielle, pour rédiger la réponse. Partent avec elle : les autres messages de la conversation en cours, et les titres et résumés des contenus de la plateforme liés à ta question.",
-            "Ne partent jamais : ton profil, ton nom, ta progression, tes scores ni tes favoris. La question « par où commencer » est calculée dans ton navigateur, sans IA.",
-            "Le relais de la plateforme, hébergé chez Cloudflare, n'enregistre ni les questions ni les réponses. Google, en revanche, peut conserver et utiliser les échanges de son offre gratuite pour améliorer ses services : n'écris donc rien de personnel ou de confidentiel dans l'assistant.",
-            "Dans un devoir, « Demander l'avis de l'IA » envoie aussi à Google Gemini la réponse que tu recopies, avec l'énoncé et le corrigé de la partie, pour les comparer. Rien n'est envoyé tant que tu ne cliques pas, et l'IA ne met pas de note.",
-            "Une IA peut se tromper avec assurance. Ses réponses sont signalées comme telles ; en cas de doute, le cours et l'enseignant font foi.",
+            "L'assistant de révision, l'avis sur une réponse rédigée dans un devoir et le programme de révision peuvent faire appel à Google Gemini, un service d'intelligence artificielle. Ce qui lui est envoyé est détaillé dans la politique de confidentialité.",
+            "Une IA peut se tromper avec assurance. Ses réponses sont signalées comme telles ; l'avis sur une rédaction ne met jamais de note. En cas de doute, le cours, le corrigé et l'enseignant font foi.",
+            "N'écris dans ces outils ni information personnelle (la tienne ou celle de quelqu'un d'autre), ni contenu illégal, injurieux ou sans rapport avec tes révisions.",
           ],
+          liens: [{ to: "/confidentialite", label: "Ce qui est envoyé à l'IA" }],
         },
       ]
     : []),
   {
-    icone: "users",
+    icone: "target",
     titre: "Usage attendu",
     paragraphes: [
       "La plateforme sert à apprendre. Les corrections sont là pour comprendre une méthode, pas pour rendre un devoir sans l'avoir travaillé.",
+      "Sont interdits : tenter de contourner les protections du site ou de son relais, envoyer des requêtes en masse, chercher à entrer dans l'espace d'administration sans y être autorisé, et se servir du site pour diffuser des contenus illicites.",
       "Si tu contribues, propose des contenus originaux ou libres de droits, et signale toute erreur repérée dans un corrigé.",
+    ],
+  },
+  {
+    icone: "shield",
+    titre: "Espace d'administration",
+    paragraphes: [
+      "L'espace d'administration est réservé aux auteurs du projet. Il est protégé par un mot de passe vérifié par le relais de la plateforme, jamais par le site lui-même.",
+      "Les auteurs s'engagent à ne publier que des contenus qu'ils ont le droit de diffuser, et à retirer sans délai toute ressource contestée par son auteur.",
     ],
   },
   {
     icone: "info",
     titre: "Limites et responsabilité",
     paragraphes: [
-      "Les contenus sont fournis en l'état, sans garantie d'exactitude ni de disponibilité. Une erreur reste toujours possible dans un corrigé ou une explication.",
-      "En cas de doute sur une notion, l'enseignant et le support officiel du cours font foi.",
+      "Les contenus sont fournis en l'état, sans garantie d'exactitude, d'exhaustivité ni de disponibilité. Une erreur reste toujours possible dans un corrigé ou une explication.",
+      "La plateforme ne peut être tenue responsable d'une mauvaise note, d'une perte de données enregistrées dans ton navigateur (pense à télécharger ta sauvegarde) ni du contenu des sites extérieurs.",
+    ],
+  },
+  {
+    icone: "lock",
+    titre: "Données personnelles",
+    paragraphes: [
+      "Il n'y a pas de compte : ta progression reste dans ton navigateur. Ce que la plateforme conserve, ce qui sort de ton appareil, vers qui, et tes droits sont décrits dans la politique de confidentialité.",
+    ],
+    liens: [{ to: "/confidentialite", label: "Politique de confidentialité" }],
+  },
+  {
+    icone: "clock",
+    titre: "Modifications",
+    paragraphes: [
+      "Ces conditions peuvent évoluer avec la plateforme, en particulier à l'arrivée des comptes étudiants. La date de la dernière mise à jour figure en haut de la page ; continuer d'utiliser le site après une modification vaut acceptation de la nouvelle version.",
+      "Le projet est mené au Sénégal : ces conditions relèvent du droit sénégalais.",
     ],
   },
 ];
 
 export default function Conditions() {
   return (
-    <>
-      <EnTetePage
-        surtitre="Cadre d'usage"
-        titre="Conditions d'utilisation"
-        texte="Ce que fait la plateforme, ce qu'elle ne fait pas, et ce qu'elle conserve."
-      >
-        <Badge ton="accent" icone="check">
-          Version 1 — mise à jour continue
-        </Badge>
-      </EnTetePage>
-
-      <Container className="py-10">
-        <div className="max-w-3xl space-y-5">
-          {articles.map((a, i) => (
-            <section key={a.titre} className="card p-6 sm:p-7">
-              <h2 className="flex items-center gap-3 text-lg font-semibold text-ink-900 dark:text-white">
-                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300">
-                  <Icon name={a.icone} className="size-4.5" />
-                </span>
-                <span>
-                  <span className="mr-2 font-mono text-sm text-ink-400">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  {a.titre}
-                </span>
-              </h2>
-              <div className="mt-4 space-y-3">
-                {a.paragraphes.map((p) => (
-                  <p key={p} className="text-sm/7 text-ink-600 dark:text-ink-400">
-                    {p}
-                  </p>
-                ))}
-              </div>
-            </section>
-          ))}
-
-          <section className="card p-6 sm:p-7">
-            <h2 className="text-lg font-semibold text-ink-900 dark:text-white">
-              Une question, une remarque ?
-            </h2>
-            <p className="mt-2 text-sm/6 text-ink-600 dark:text-ink-400">
-              Pour signaler une erreur, demander le retrait d'une ressource ou
-              proposer une contribution, écris à l'adresse de contact du projet.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-4">
-              <a
-                href={`mailto:${site.contact}`}
-                className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-400"
-              >
-                {site.contact}
-              </a>
-              <Link
-                to="/projet"
-                className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-400"
-              >
-                La démarche du projet
-              </Link>
-            </div>
-          </section>
-        </div>
-      </Container>
-    </>
+    <PageJuridique
+      surtitre="Cadre d'usage"
+      titre="Conditions d'utilisation"
+      texte="Ce que fait la plateforme, ce qu'elle ne fait pas, et ce qu'on attend de chacun."
+      articles={articles}
+    />
   );
 }

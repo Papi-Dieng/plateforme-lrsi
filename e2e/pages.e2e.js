@@ -21,6 +21,8 @@ const PAGES = [
   ["/profil", "profil"],
   ["/parametres", "Paramètres"],
   ["/conditions", "Conditions"],
+  ["/confidentialite", "confidentialité"],
+  ["/mentions-legales", "Mentions légales"],
   ["/projet", "Une plateforme"],
   ["/admin", "Administration"],
 ];
@@ -92,5 +94,29 @@ test.describe("planning", () => {
       await onglet.click();
       await expect(onglet).toHaveAttribute("aria-selected", "true");
     }
+  });
+});
+
+test.describe("pages juridiques", () => {
+  test("lisibles sans entrer, depuis le pied de page de l'accueil, et reliées entre elles", async ({ page }) => {
+    await page.goto("./");
+    await page.getByRole("link", { name: "Confidentialité" }).click();
+    await expect(page).toHaveURL(/#\/confidentialite$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Politique de confidentialité" })).toBeVisible();
+
+    const onglets = page.getByRole("navigation", { name: "Pages juridiques" });
+    await onglets.getByRole("link", { name: "Mentions légales" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Mentions légales" })).toBeVisible();
+    await onglets.getByRole("link", { name: "Conditions d'utilisation" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Conditions d'utilisation" })).toBeVisible();
+  });
+
+  test("la politique de confidentialité nomme chaque service contacté par le site", async ({ page }) => {
+    await aller(page, "/confidentialite");
+    const texte = await page.locator("main").innerText();
+    for (const service of ["GitHub Pages", "Cloudflare", "Google Gemini", "YouTube", "statistiques anonymes"]) {
+      expect(texte, service).toContain(service);
+    }
+    expect(texte).toContain("n° 2008-12");
   });
 });

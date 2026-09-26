@@ -201,12 +201,22 @@ export default function Bienvenue() {
               contenus de démonstration. Aucun document universitaire n'est publié
               sans autorisation.
             </p>
-            <Link
-              to="/projet"
-              className="text-xs font-medium text-ink-500 hover:text-brand-600 dark:text-ink-400"
-            >
-              La démarche du projet
-            </Link>
+            <div className="flex flex-wrap items-center gap-4">
+              {[
+                ["/conditions", "Conditions d'utilisation"],
+                ["/confidentialite", "Confidentialité"],
+                ["/mentions-legales", "Mentions légales"],
+                ["/projet", "La démarche du projet"],
+              ].map(([to, label]) => (
+                <Link
+                  key={to}
+                  to={to}
+                  className="text-xs font-medium text-ink-500 hover:text-brand-600 dark:text-ink-400"
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
           </div>
         </footer>
       </div>

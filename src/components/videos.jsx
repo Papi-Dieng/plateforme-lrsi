@@ -13,8 +13,9 @@ import { useVideos } from "./useVideos";
    Vidéos d'explication.
 
    Aucune vidéo n'est hébergée ici : la plateforme ne garde que
-   l'identifiant YouTube. Le lecteur n'est chargé qu'au clic, donc
-   aucune requête n'est envoyée à YouTube tant qu'on ne lance rien.
+   l'identifiant YouTube. Le lecteur n'est chargé qu'au clic ; les
+   miniatures, elles, viennent de YouTube (i.ytimg.com) dès qu'une carte
+   s'affiche, ce que dit la politique de confidentialité.
 
    Ce fichier fournit les briques communes au tableau de bord et à la
    page dédiée : la carte, la fenêtre et le formulaire. Le crochet qui

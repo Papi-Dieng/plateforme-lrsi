@@ -524,6 +524,18 @@ function PiedDePage() {
             Conditions d'utilisation
           </Link>
           <Link
+            to="/confidentialite"
+            className="text-xs font-medium text-ink-500 hover:text-brand-600 dark:text-ink-400"
+          >
+            Confidentialité
+          </Link>
+          <Link
+            to="/mentions-legales"
+            className="text-xs font-medium text-ink-500 hover:text-brand-600 dark:text-ink-400"
+          >
+            Mentions légales
+          </Link>
+          <Link
             to="/projet"
             className="text-xs font-medium text-ink-500 hover:text-brand-600 dark:text-ink-400"
           >

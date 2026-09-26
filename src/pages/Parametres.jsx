@@ -443,6 +443,12 @@ export default function Parametres() {
                 Conditions d'utilisation
               </Link>
               <Link
+                to="/confidentialite"
+                className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-400"
+              >
+                Politique de confidentialité
+              </Link>
+              <Link
                 to="/projet"
                 className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-400"
               >
