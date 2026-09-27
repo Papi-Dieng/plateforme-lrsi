@@ -64,7 +64,7 @@ export default function Installation({ compacte = false, className }) {
           <Icon name="plus" className="size-4" />
           Installer l&apos;application
         </button>
-        {refus && <span className="text-xs text-ink-500">Installation annulée. Tu pourras la relancer depuis les paramètres.</span>}
+        {refus && <span className="text-xs text-ink-500 dark:text-ink-400">Installation annulée. Tu pourras la relancer depuis les paramètres.</span>}
       </div>
     );
   } else if (etat === "ios") {
@@ -114,7 +114,7 @@ export default function Installation({ compacte = false, className }) {
           type="button"
           onClick={masquer}
           aria-label="Masquer cette proposition"
-          className="grid size-8 shrink-0 place-items-center rounded-lg text-ink-500 hover:bg-white/60 dark:hover:bg-ink-800"
+          className="grid size-8 shrink-0 place-items-center rounded-lg text-ink-500 dark:text-ink-400 hover:bg-white/60 dark:hover:bg-ink-800"
         >
           <Icon name="close" className="size-4" />
         </button>

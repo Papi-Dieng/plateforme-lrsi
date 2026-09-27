@@ -215,7 +215,7 @@ export default function AssistantProgramme({ contexte, evenements, session: exis
                 {etape === 1 ? "Étape 1 sur 3 : ta session d'examens" : etape === 2 ? "Étape 2 sur 3 : tes disponibilités" : "Étape 3 sur 3 : ton programme"}
               </p>
             </div>
-            <button type="button" onClick={onFermer} aria-label="Fermer" className="grid size-9 shrink-0 place-items-center rounded-xl text-ink-500 hover:bg-ink-100 dark:hover:bg-ink-800">
+            <button type="button" onClick={onFermer} aria-label="Fermer" className="grid size-9 shrink-0 place-items-center rounded-xl text-ink-500 dark:text-ink-400 hover:bg-ink-100 dark:hover:bg-ink-800">
               <Icon name="close" className="size-4.5" />
             </button>
           </div>
@@ -251,7 +251,7 @@ export default function AssistantProgramme({ contexte, evenements, session: exis
                   onChange={(e) => changerNombre(e.target.value)}
                   className={champ}
                 />
-                <span className="mt-1 block font-normal text-ink-400">
+                <span className="mt-1 block font-normal text-ink-500 dark:text-ink-400">
                   Pour chacune, choisis son semestre : la liste ne propose que ses matières, et le programme reprend leurs cours et exercices.
                 </span>
               </label>
@@ -367,7 +367,7 @@ export default function AssistantProgramme({ contexte, evenements, session: exis
                     const examensDuJour = resultat.evaluations.filter((ev) => ev.date === jour);
                     return (
                       <div key={jour}>
-                        <h3 className="text-xs font-semibold tracking-wide text-ink-500 uppercase">{majuscule(fmt(jour))}</h3>
+                        <h3 className="text-xs font-semibold tracking-wide text-ink-500 dark:text-ink-400 uppercase">{majuscule(fmt(jour))}</h3>
                         <ul className="mt-2 space-y-2">
                           {examensDuJour.map((ev) => (
                             <li key={ev.id} className="rounded-xl bg-flame-50 px-3 py-2 text-sm font-semibold text-flame-800 dark:bg-flame-500/10 dark:text-flame-300">

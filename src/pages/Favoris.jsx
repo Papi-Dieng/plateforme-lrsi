@@ -199,7 +199,7 @@ export default function Favoris() {
                       <span
                         className={cx(
                           "grid size-10 shrink-0 place-items-center rounded-xl",
-                          f.contenu ? theme.pastille : "bg-ink-100 text-ink-400 dark:bg-ink-800"
+                          f.contenu ? theme.pastille : "bg-ink-100 text-ink-500 dark:text-ink-400 dark:bg-ink-800"
                         )}
                       >
                         <Icon name={info.icone} className="size-5" />
@@ -249,7 +249,7 @@ export default function Favoris() {
                               Cette référence n'existe plus. Elle a sans doute
                               été renommée ou retirée.
                             </p>
-                            <p className="mt-2 font-mono text-[11px] text-ink-400">
+                            <p className="mt-2 font-mono text-[11px] text-ink-500 dark:text-ink-400">
                               {f.type} · {f.reference}
                             </p>
                           </>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import {
   Link,
   NavLink,
@@ -8,6 +8,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import Icon from "./Icon";
+import FiletErreur from "./FiletErreur";
 import { cx } from "./classes";
 import { initiales, useSession } from "../session";
 import { lireProfil, nomAffiche } from "../profil";
@@ -38,12 +39,13 @@ export function Logo({ className = "size-9" }) {
 
 // Le nom vient de src/data/site.js. `nomAccent`, s'il est renseigné et qu'il
 // correspond au début du nom, s'affiche en orange : c'est purement décoratif
-// et le laisser vide fonctionne aussi bien.
+// et le laisser vide fonctionne aussi bien. Le nom est en `text-xl` gras :
+// à cette taille, l'orange atteint le contraste demandé pour un grand texte.
 export function Signature() {
   const accent = site.nomAccent ?? "";
   const colore = accent && site.nom.startsWith(accent);
   return (
-    <span className="text-lg font-bold tracking-tight text-ink-900 dark:text-white">
+    <span className="text-xl font-bold tracking-tight text-ink-900 dark:text-white">
       {colore ? (
         <>
           <span className="text-flame-500">{accent}</span>
@@ -141,7 +143,7 @@ function BarreLaterale() {
                 "grid size-11 place-items-center rounded-xl transition-colors",
                 isActive
                   ? "bg-flame-500 text-white shadow-sm"
-                  : "text-ink-400 hover:bg-ink-200 hover:text-ink-700 dark:hover:bg-ink-800 dark:hover:text-white"
+                  : "text-ink-500 dark:text-ink-400 hover:bg-ink-200 hover:text-ink-700 dark:hover:bg-ink-800 dark:hover:text-white"
               )
             }
           >
@@ -376,7 +378,7 @@ function MenuProfil() {
           {menuProfil.some((item) => item.auteur) && (
             <>
               <div className="my-2 h-px bg-gradient-to-r from-transparent via-ink-200 to-transparent dark:via-ink-800" />
-              <p className="px-3 pb-1 text-[11px] font-semibold tracking-wide text-ink-400 uppercase">
+              <p className="px-3 pb-1 text-[11px] font-semibold tracking-wide text-ink-500 dark:text-ink-400 uppercase">
                 Coulisses
               </p>
               <ul className="space-y-1">
@@ -487,7 +489,7 @@ function BarreDuHaut({ ouvert, setOuvert }) {
                     cx(
                       "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium",
                       isActive
-                        ? "bg-flame-500 text-white"
+                        ? "bg-flame-500 text-ink-950"
                         : "text-ink-600 hover:bg-ink-100 dark:text-ink-300 dark:hover:bg-ink-800"
                     )
                   }
@@ -512,7 +514,7 @@ function PiedDePage() {
   return (
     <footer className="border-t border-ink-200 px-4 py-6 sm:px-7 dark:border-ink-800">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs text-ink-400 dark:text-ink-500">
+        <p className="text-xs text-ink-500 dark:text-ink-400">
           © {site.annee} {site.nom} — {site.filiere}. Contenus de démonstration.
           Aucun document universitaire n'est publié sans autorisation.
         </p>
@@ -564,6 +566,18 @@ function RetourEnHaut() {
   return null;
 }
 
+/* Pendant qu'une page chargée à la demande arrive (voir App.jsx). Il
+   n'apparaît qu'après un court délai : sur une bonne connexion, la
+   page arrive avant et rien ne clignote. */
+function ChargementPage() {
+  return (
+    <div role="status" className="flex animate-[apparition_0s_0.3s_both] items-center justify-center gap-3 py-24 text-sm text-ink-500 dark:text-ink-400">
+      <span className="size-4 animate-spin rounded-full border-2 border-ink-300 border-t-brand-600 dark:border-ink-700 dark:border-t-brand-400" />
+      Chargement de la page…
+    </div>
+  );
+}
+
 export default function Layout() {
   const [ouvert, setOuvert] = useState(false);
   const { pathname } = useLocation();
@@ -590,7 +604,13 @@ export default function Layout() {
         <div className="flex min-w-0 flex-1 flex-col">
           <BarreDuHaut ouvert={ouvert} setOuvert={setOuvert} />
           <main id="contenu" className="flex-1">
-            <Outlet />
+            {/* Une page qui plante n'emporte pas la coque ; le filet se
+                remet à zéro à chaque changement de page. */}
+            <FiletErreur key={pathname}>
+              <Suspense fallback={<ChargementPage />}>
+                <Outlet />
+              </Suspense>
+            </FiletErreur>
           </main>
           <PiedDePage />
         </div>

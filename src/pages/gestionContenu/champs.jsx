@@ -17,7 +17,7 @@ export function Champ({ label, aide, className, ...props }) {
     <label className={cx("block text-xs font-semibold text-ink-600 dark:text-ink-300", className)}>
       {label}
       <input {...props} className={cx(champ, "mt-1.5 font-normal")} />
-      {aide && <span className="mt-1 block font-normal text-ink-400">{aide}</span>}
+      {aide && <span className="mt-1 block font-normal text-ink-500 dark:text-ink-400">{aide}</span>}
     </label>
   );
 }
@@ -30,7 +30,7 @@ export function Zone({ label, aide, className, mono, ...props }) {
         {...props}
         className={cx(champ, "mt-1.5 font-normal", mono && "font-mono text-[13px]")}
       />
-      {aide && <span className="mt-1 block font-normal text-ink-400">{aide}</span>}
+      {aide && <span className="mt-1 block font-normal text-ink-500 dark:text-ink-400">{aide}</span>}
     </label>
   );
 }
@@ -81,7 +81,7 @@ export function Ordre({ index, taille, onDeplacer, onSupprimer, libelle }) {
         disabled={index === 0}
         onClick={() => onDeplacer(index, index - 1)}
         aria-label={`Monter ${libelle}`}
-        className="rounded-lg p-1.5 text-ink-500 hover:bg-ink-100 disabled:opacity-30 dark:hover:bg-ink-800"
+        className="rounded-lg p-1.5 text-ink-500 dark:text-ink-400 hover:bg-ink-100 disabled:opacity-30 dark:hover:bg-ink-800"
       >
         <Icon name="chevron" className="size-4 rotate-180" />
       </button>
@@ -90,7 +90,7 @@ export function Ordre({ index, taille, onDeplacer, onSupprimer, libelle }) {
         disabled={index === taille - 1}
         onClick={() => onDeplacer(index, index + 1)}
         aria-label={`Descendre ${libelle}`}
-        className="rounded-lg p-1.5 text-ink-500 hover:bg-ink-100 disabled:opacity-30 dark:hover:bg-ink-800"
+        className="rounded-lg p-1.5 text-ink-500 dark:text-ink-400 hover:bg-ink-100 disabled:opacity-30 dark:hover:bg-ink-800"
       >
         <Icon name="chevron" className="size-4" />
       </button>
@@ -166,7 +166,7 @@ export function ChampPdf({ libelle, pdf, onChange, onRetirer, motDePasse, lireTe
           <Icon name="file" className="size-5 text-flame-500" />
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-medium text-ink-900 dark:text-white">{pdf.nom}</span>
-            <span className="text-xs text-ink-500">
+            <span className="text-xs text-ink-500 dark:text-ink-400">
               {formatTaille(pdf.taille)}
               {lireTexte &&
                 ` · ${texte ? `${texte.length.toLocaleString("fr-FR")} caractères lus par l'IA` : "texte non lisible par l'IA"}`}
@@ -208,7 +208,7 @@ export function ChampPdf({ libelle, pdf, onChange, onRetirer, motDePasse, lireTe
           }}
         />
       </label>
-      {aide && <p className="text-xs text-ink-400">{aide}</p>}
+      {aide && <p className="text-xs text-ink-500 dark:text-ink-400">{aide}</p>}
 
       {etat.texte && (
         <p
@@ -221,7 +221,7 @@ export function ChampPdf({ libelle, pdf, onChange, onRetirer, motDePasse, lireTe
                 ? "text-sun-700 dark:text-sun-400"
                 : etat.type === "ok"
                   ? "text-accent-700 dark:text-accent-400"
-                  : "text-ink-500"
+                  : "text-ink-500 dark:text-ink-400"
           )}
         >
           {etat.texte}

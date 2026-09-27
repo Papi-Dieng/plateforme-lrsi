@@ -165,7 +165,7 @@ export default function Admin() {
                 tout de suite par les étudiants.
               </span>
             </span>
-            <Icon name="chevron" className="size-5 shrink-0 -rotate-90 text-ink-400" />
+            <Icon name="chevron" className="size-5 shrink-0 -rotate-90 text-ink-500 dark:text-ink-400" />
           </Link>
 
           {/* ---- Éduquer l'IA ---- */}
@@ -185,7 +185,7 @@ export default function Admin() {
                 de l'assistant. Protégé par le mot de passe admin.
               </span>
             </span>
-            <Icon name="chevron" className="size-5 shrink-0 -rotate-90 text-ink-400" />
+            <Icon name="chevron" className="size-5 shrink-0 -rotate-90 text-ink-500 dark:text-ink-400" />
           </Link>
 
           {/* ---- Statistiques des QCM ---- */}
@@ -205,7 +205,7 @@ export default function Admin() {
                 d'échec de chaque question et le piège le plus choisi.
               </span>
             </span>
-            <Icon name="chevron" className="size-5 shrink-0 -rotate-90 text-ink-400" />
+            <Icon name="chevron" className="size-5 shrink-0 -rotate-90 text-ink-500 dark:text-ink-400" />
           </Link>
 
           {/* ---- Inventaire ---- */}
@@ -244,7 +244,7 @@ export default function Admin() {
               <div className="lg:col-span-2">
                 <p className="text-2xl font-bold text-ink-900 dark:text-white">
                   {couverture.avecQuestion}
-                  <span className="ml-1 text-sm font-medium text-ink-400">
+                  <span className="ml-1 text-sm font-medium text-ink-500 dark:text-ink-400">
                     / {couverture.total} compétences
                   </span>
                 </p>
@@ -264,7 +264,7 @@ export default function Admin() {
                   <li className="flex gap-2">
                     <Icon
                       name="check"
-                      className="mt-1 size-3.5 shrink-0 text-ink-400"
+                      className="mt-1 size-3.5 shrink-0 text-ink-500 dark:text-ink-400"
                     />
                     {couverture.evaluables}{" "}
                     {couverture.evaluables > 1 ? "atteignent" : "atteint"} le
@@ -285,7 +285,7 @@ export default function Admin() {
                   <li className="flex gap-2">
                     <Icon
                       name="info"
-                      className="mt-1 size-3.5 shrink-0 text-ink-400"
+                      className="mt-1 size-3.5 shrink-0 text-ink-500 dark:text-ink-400"
                     />
                     Le seuil est fixé à {MINIMUM_REPONSES} pendant la création.
                     À relever vers 8 ou 10 quand chaque filière approchera la
@@ -295,12 +295,12 @@ export default function Admin() {
               </div>
 
               <div className="rounded-2xl bg-ink-50 p-4 dark:bg-ink-950">
-                <p className="text-xs font-semibold tracking-wide text-ink-500 uppercase">
+                <p className="text-xs font-semibold tracking-wide text-ink-500 dark:text-ink-400 uppercase">
                   Objectif d'écriture
                 </p>
                 <p className="mt-2 text-2xl font-bold text-ink-900 dark:text-white">
                   {manquantes}
-                  <span className="ml-1 text-sm font-medium text-ink-400">
+                  <span className="ml-1 text-sm font-medium text-ink-500 dark:text-ink-400">
                     questions
                   </span>
                 </p>
@@ -323,7 +323,7 @@ export default function Admin() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="text-xs text-ink-400 dark:text-ink-500">
+                  <tr className="text-xs text-ink-500 dark:text-ink-400">
                     <th scope="col" className="pb-3 font-medium">
                       Compétence
                     </th>
@@ -348,7 +348,7 @@ export default function Admin() {
                         <span className="font-medium text-ink-900 dark:text-white">
                           {c.nom}
                         </span>
-                        <span className="mt-0.5 block font-mono text-[11px] text-ink-400">
+                        <span className="mt-0.5 block font-mono text-[11px] text-ink-500 dark:text-ink-400">
                           {c.id}
                         </span>
                       </td>
@@ -463,7 +463,7 @@ export default function Admin() {
                 >
                   <Icon
                     name="chevron"
-                    className="mt-1 size-3.5 shrink-0 -rotate-90 text-ink-400"
+                    className="mt-1 size-3.5 shrink-0 -rotate-90 text-ink-500 dark:text-ink-400"
                   />
                   {t}
                 </li>

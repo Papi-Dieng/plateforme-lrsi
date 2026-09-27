@@ -353,14 +353,14 @@ export default function Parametres() {
                         <span className="font-medium text-ink-900 dark:text-white">
                           {e.libelle}
                         </span>
-                        <span className="mt-0.5 block text-xs text-ink-500">
+                        <span className="mt-0.5 block text-xs text-ink-500 dark:text-ink-400">
                           {e.detail}
                         </span>
                       </td>
-                      <td className="hidden px-4 py-3 font-mono text-xs text-ink-500 sm:table-cell">
+                      <td className="hidden px-4 py-3 font-mono text-xs text-ink-500 dark:text-ink-400 sm:table-cell">
                         {e.cle}
                       </td>
-                      <td className="px-4 py-3 text-right text-xs whitespace-nowrap text-ink-500">
+                      <td className="px-4 py-3 text-right text-xs whitespace-nowrap text-ink-500 dark:text-ink-400">
                         {tailles[e.cle] ?? "vide"}
                       </td>
                     </tr>

@@ -94,7 +94,7 @@ export default function PageJuridique({ surtitre, titre, texte, articles }) {
                   <Icon name={a.icone} className="size-4.5" />
                 </span>
                 <span>
-                  <span className="mr-2 font-mono text-sm text-ink-400">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="mr-2 font-mono text-sm text-ink-500 dark:text-ink-400">{String(i + 1).padStart(2, "0")}</span>
                   {a.titre}
                 </span>
               </h2>

@@ -1,3 +1,4 @@
+import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import { Bouton, Container, EtatVide } from "./components/ui";
@@ -5,26 +6,40 @@ import { useSession } from "./session";
 import Bienvenue from "./pages/Bienvenue";
 import { Connexion, Inscription } from "./pages/Authentification";
 import TableauDeBord from "./pages/Accueil";
-import { Cours, CoursDetail } from "./pages/Cours";
-import { Exercices, ExerciceDetail } from "./pages/Exercices";
-import { QcmListe, QcmSession } from "./pages/Qcm";
-import { ExamenSession, ExamensListe } from "./pages/Examens";
-import Bibliotheque from "./pages/Bibliotheque";
-import Projet from "./pages/Projet";
-import Profil from "./pages/Profil";
-import Progression from "./pages/Progression";
-import Videos from "./pages/Videos";
-import Parametres from "./pages/Parametres";
-import Conditions from "./pages/Conditions";
-import Confidentialite from "./pages/Confidentialite";
-import MentionsLegales from "./pages/MentionsLegales";
-import Admin from "./pages/Admin";
-import EducationIA from "./pages/EducationIA";
-import GestionContenu from "./pages/GestionContenu";
-import StatsAdmin from "./pages/StatsAdmin";
-import Favoris from "./pages/Favoris";
-import Assistant from "./pages/Assistant";
-import Planning from "./pages/Planning";
+/* Pages chargées à la demande : chacune devient un petit fichier à part,
+   téléchargé à sa première ouverture. Le premier affichage est plus
+   rapide, surtout sur téléphone, et les pages d'administration ne sont
+   jamais téléchargées par les étudiants. L'accueil, la connexion et le
+   tableau de bord restent dans le fichier principal : on y arrive en
+   premier. Pendant le chargement, Layout.jsx affiche un indicateur ;
+   si le fichier n'existe plus (nouvelle version en ligne), le filet de
+   components/FiletErreur.jsx propose de recharger. */
+const aLaDemande = (charger, nom = "default") => lazy(() => charger().then((m) => ({ default: m[nom] })));
+
+const Cours = aLaDemande(() => import("./pages/Cours"), "Cours");
+const CoursDetail = aLaDemande(() => import("./pages/Cours"), "CoursDetail");
+const Exercices = aLaDemande(() => import("./pages/Exercices"), "Exercices");
+const ExerciceDetail = aLaDemande(() => import("./pages/Exercices"), "ExerciceDetail");
+const QcmListe = aLaDemande(() => import("./pages/Qcm"), "QcmListe");
+const QcmSession = aLaDemande(() => import("./pages/Qcm"), "QcmSession");
+const ExamensListe = aLaDemande(() => import("./pages/Examens"), "ExamensListe");
+const ExamenSession = aLaDemande(() => import("./pages/Examens"), "ExamenSession");
+const Bibliotheque = aLaDemande(() => import("./pages/Bibliotheque"));
+const Projet = aLaDemande(() => import("./pages/Projet"));
+const Profil = aLaDemande(() => import("./pages/Profil"));
+const Progression = aLaDemande(() => import("./pages/Progression"));
+const Videos = aLaDemande(() => import("./pages/Videos"));
+const Parametres = aLaDemande(() => import("./pages/Parametres"));
+const Conditions = aLaDemande(() => import("./pages/Conditions"));
+const Confidentialite = aLaDemande(() => import("./pages/Confidentialite"));
+const MentionsLegales = aLaDemande(() => import("./pages/MentionsLegales"));
+const Favoris = aLaDemande(() => import("./pages/Favoris"));
+const Assistant = aLaDemande(() => import("./pages/Assistant"));
+const Planning = aLaDemande(() => import("./pages/Planning"));
+const Admin = aLaDemande(() => import("./pages/Admin"));
+const EducationIA = aLaDemande(() => import("./pages/EducationIA"));
+const GestionContenu = aLaDemande(() => import("./pages/GestionContenu"));
+const StatsAdmin = aLaDemande(() => import("./pages/StatsAdmin"));
 
 /* ------------------------------------------------------------------ */
 /* Aiguillage selon la session                                         */

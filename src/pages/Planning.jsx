@@ -57,13 +57,13 @@ function Tache({ tache, faite, onBasculer }) {
         aria-label={`Fait : ${tache.titre}`}
         className="mt-1 size-4 shrink-0 accent-brand-600"
       />
-      <Icon name={ICONES[tache.type] ?? "file"} className="mt-0.5 size-4 shrink-0 text-ink-400" />
+      <Icon name={ICONES[tache.type] ?? "file"} className="mt-0.5 size-4 shrink-0 text-ink-500 dark:text-ink-400" />
       <span className="min-w-0 flex-1">
         <Link
           to={tache.to}
           className={cx(
             "text-sm font-medium hover:underline",
-            faite ? "text-ink-400 line-through" : "text-ink-900 dark:text-white"
+            faite ? "text-ink-500 dark:text-ink-400 line-through" : "text-ink-900 dark:text-white"
           )}
         >
           {tache.titre}
@@ -116,7 +116,7 @@ function Rappels() {
             await desactiverRappels();
             setEtat("inactifs");
           }}
-          className="text-sm font-medium text-ink-500 hover:underline"
+          className="text-sm font-medium text-ink-500 dark:text-ink-400 hover:underline"
         >
           Désactiver
         </button>
@@ -144,7 +144,7 @@ function Revisions() {
 
   const ligne = (r, du) => (
     <li key={r.qcm.id} className="flex flex-wrap items-center gap-3">
-      <Icon name="target" className="size-4 shrink-0 text-ink-400" />
+      <Icon name="target" className="size-4 shrink-0 text-ink-500 dark:text-ink-400" />
       <span className="min-w-0 flex-1">
         <Link to={`/qcm/${r.qcm.id}`} className="text-sm font-medium text-ink-900 hover:underline dark:text-white">
           {r.qcm.titre}
@@ -175,13 +175,13 @@ function Revisions() {
       </p>
       {aFaire.length > 0 && (
         <>
-          <p className="mt-4 text-xs font-semibold tracking-wide text-ink-500 uppercase">À faire maintenant</p>
+          <p className="mt-4 text-xs font-semibold tracking-wide text-ink-500 dark:text-ink-400 uppercase">À faire maintenant</p>
           <ul className="mt-2 space-y-2.5">{aFaire.map((r) => ligne(r, true))}</ul>
         </>
       )}
       {aVenir.length > 0 && (
         <>
-          <p className="mt-4 text-xs font-semibold tracking-wide text-ink-500 uppercase">Prochainement</p>
+          <p className="mt-4 text-xs font-semibold tracking-wide text-ink-500 dark:text-ink-400 uppercase">Prochainement</p>
           <ul className="mt-2 space-y-2.5">{aVenir.map((r) => ligne(r, false))}</ul>
         </>
       )}
@@ -384,7 +384,7 @@ export default function Planning() {
           return (
             <details key={ev.id} className="card group overflow-hidden">
               <summary className="flex cursor-pointer list-none flex-wrap items-center gap-3 px-5 py-4">
-                <Icon name="chevron" className="size-4 shrink-0 -rotate-90 text-ink-400 transition-transform group-open:rotate-0" />
+                <Icon name="chevron" className="size-4 shrink-0 -rotate-90 text-ink-500 dark:text-ink-400 transition-transform group-open:rotate-0" />
                 <div className="min-w-0 flex-1">
                   <h2 className="font-semibold text-ink-900 dark:text-white">{ev.titre}</h2>
                   <p className="text-sm text-ink-500 dark:text-ink-400">
@@ -417,7 +417,7 @@ export default function Planning() {
                     e.preventDefault();
                     supprimer(ev);
                   }}
-                  className="text-xs text-ink-500 hover:text-flame-600 hover:underline"
+                  className="text-xs text-ink-500 dark:text-ink-400 hover:text-flame-600 hover:underline"
                 >
                   Retirer
                 </button>
@@ -439,7 +439,7 @@ export default function Planning() {
                           ))}
                         </ul>
                       ) : (
-                        <p className="text-sm text-ink-400">Repos, ou reprends ce qui t'a posé problème.</p>
+                        <p className="text-sm text-ink-500 dark:text-ink-400">Repos, ou reprends ce qui t'a posé problème.</p>
                       )}
                     </div>
                   ))}
@@ -498,7 +498,7 @@ export default function Planning() {
           />
         )}
 
-        <p className="text-xs text-ink-400">
+        <p className="text-xs text-ink-500 dark:text-ink-400">
           Le programme se recalcule à chaque visite : fais un QCM, et tes nouveaux résultats changent
           les priorités. Ton emploi du temps et ton planning restent dans ce navigateur ; pense à{" "}
           <Link to="/parametres" className="underline">

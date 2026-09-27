@@ -147,7 +147,7 @@ export default function BancSite({ motDePasse, Reponse }) {
       </div>
 
       {etat.texte && (
-        <p role="status" className={cx("text-xs/5", etat.type === "erreur" ? "text-flame-600 dark:text-flame-400" : "text-ink-500")}>
+        <p role="status" className={cx("text-xs/5", etat.type === "erreur" ? "text-flame-600 dark:text-flame-400" : "text-ink-500 dark:text-ink-400")}>
           {etat.texte}
         </p>
       )}
@@ -157,7 +157,7 @@ export default function BancSite({ motDePasse, Reponse }) {
           <div className="flex flex-wrap items-center gap-3">
             <p className="text-sm font-semibold text-ink-900 dark:text-white">
               {reussis} / {termines.length} réussis
-              {termines.length < lignes.length && <span className="font-normal text-ink-500"> · {lignes.length} au total</span>}
+              {termines.length < lignes.length && <span className="font-normal text-ink-500 dark:text-ink-400"> · {lignes.length} au total</span>}
             </p>
             {!enCours && termines.length > 0 && (
               <button type="button" onClick={telecharger} className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-300">
@@ -183,14 +183,14 @@ export default function BancSite({ motDePasse, Reponse }) {
                     <span className="shrink-0">{l.attente ? "…" : l.problemes?.length === 0 ? "✅" : "❌"}</span>
                     <span className="min-w-0 flex-1">
                       <span className="font-medium text-ink-900 dark:text-white">{l.nom}</span>
-                      <span className="text-xs text-ink-500"> · {l.source}</span>
+                      <span className="text-xs text-ink-500 dark:text-ink-400"> · {l.source}</span>
                       {l.problemes?.length > 0 && (
                         <span className="block text-xs text-flame-600 dark:text-flame-400">{l.erreur ?? l.problemes.join(" ; ")}</span>
                       )}
                     </span>
                   </summary>
                   <div className="mt-2 space-y-2 border-t border-ink-200 pt-2 dark:border-ink-800">
-                    <p className="text-xs text-ink-500">Question : {l.question}</p>
+                    <p className="text-xs text-ink-500 dark:text-ink-400">Question : {l.question}</p>
                     {l.texte && <Reponse texte={l.texte} />}
                   </div>
                 </details>

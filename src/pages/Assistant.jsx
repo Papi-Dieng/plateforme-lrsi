@@ -165,7 +165,7 @@ function Liens({ liens }) {
                       "mt-1 block text-[11px] font-medium",
                       l.indisponible
                         ? "text-sun-700 dark:text-sun-400"
-                        : "text-ink-500 dark:text-ink-500"
+                        : "text-ink-500 dark:text-ink-400"
                     )}
                   >
                     {l.meta}
@@ -174,7 +174,7 @@ function Liens({ liens }) {
               </span>
               <Icon
                 name="chevron"
-                className="mt-1 size-4 shrink-0 -rotate-90 text-ink-400"
+                className="mt-1 size-4 shrink-0 -rotate-90 text-ink-500 dark:text-ink-400"
               />
             </Link>
           </li>

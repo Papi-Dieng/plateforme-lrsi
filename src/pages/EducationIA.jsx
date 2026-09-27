@@ -102,7 +102,7 @@ function Compteur({ valeur, max }) {
     <p
       className={cx(
         "mt-1 text-right text-[11px]",
-        valeur.length > max * 0.9 ? "text-sun-700 dark:text-sun-400" : "text-ink-400"
+        valeur.length > max * 0.9 ? "text-sun-700 dark:text-sun-400" : "text-ink-500 dark:text-ink-400"
       )}
     >
       {valeur.length} / {max}
@@ -311,7 +311,7 @@ function OngletTests({ fiche, modifier, matiere, motDePasse, modifie }) {
         {reponseEssai && (
           <div className="mt-3 rounded-xl bg-white p-4 dark:bg-ink-900">
             {reponseEssai.attente ? (
-              <p className="text-sm text-ink-500">L'IA rédige sa réponse…</p>
+              <p className="text-sm text-ink-500 dark:text-ink-400">L'IA rédige sa réponse…</p>
             ) : reponseEssai.erreur ? (
               <p className="text-sm text-flame-600 dark:text-flame-400">{reponseEssai.erreur}</p>
             ) : (
@@ -386,7 +386,7 @@ function OngletTests({ fiche, modifier, matiere, motDePasse, modifie }) {
                 {r && (
                   <div className="mt-3 rounded-xl bg-ink-50 p-3 dark:bg-ink-950">
                     {r.attente ? (
-                      <p className="text-sm text-ink-500">Test en cours…</p>
+                      <p className="text-sm text-ink-500 dark:text-ink-400">Test en cours…</p>
                     ) : r.erreur ? (
                       <p className="text-sm text-flame-600 dark:text-flame-400">{r.erreur}</p>
                     ) : (
@@ -624,7 +624,7 @@ export default function EducationIA() {
                       "inline-flex shrink-0 items-center gap-2 rounded-t-lg border-b-2 px-3.5 py-2.5 text-sm transition-colors",
                       onglet === o.cle
                         ? "border-brand-500 font-semibold text-brand-700 dark:text-brand-300"
-                        : "border-transparent text-ink-500 hover:text-ink-800 dark:hover:text-ink-200"
+                        : "border-transparent text-ink-500 dark:text-ink-400 hover:text-ink-800 dark:hover:text-ink-200"
                     )}
                   >
                     <Icon name={o.icone} className="size-4" />
@@ -635,7 +635,7 @@ export default function EducationIA() {
 
               <div className="p-5 sm:p-6">
                 {!fiche ? (
-                  <p className="text-sm text-ink-500">
+                  <p className="text-sm text-ink-500 dark:text-ink-400">
                     {etat.type === "erreur" ? etat.texte : "Chargement de la fiche…"}
                   </p>
                 ) : onglet === "consignes" ? (

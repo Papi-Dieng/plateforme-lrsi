@@ -268,7 +268,7 @@ export default function Accueil() {
             </h2>
             <Link
               to="/cours"
-              className="text-sm font-medium text-flame-600 hover:text-flame-700 dark:text-flame-400"
+              className="text-sm font-medium text-flame-700 hover:text-flame-800 dark:text-flame-400"
             >
               Voir tous les cours
             </Link>
@@ -281,7 +281,7 @@ export default function Accueil() {
           ) : (
             <table className="mt-5 w-full text-left">
               <thead>
-                <tr className="text-xs text-ink-400 dark:text-ink-500">
+                <tr className="text-xs text-ink-500 dark:text-ink-400">
                   <th scope="col" className="pb-3 font-medium">
                     Chapitre
                   </th>
@@ -365,7 +365,7 @@ export default function Accueil() {
 
           <Link
             to={`/qcm/${qcmEnAvant.id}`}
-            className="mt-auto block rounded-2xl bg-flame-500 px-5 py-3.5 text-center text-sm font-semibold text-white transition-colors hover:bg-flame-600"
+            className="mt-auto block rounded-2xl bg-flame-500 px-5 py-3.5 text-center text-sm font-semibold text-ink-950 transition-colors hover:bg-flame-400"
           >
             Commencer le QCM
           </Link>

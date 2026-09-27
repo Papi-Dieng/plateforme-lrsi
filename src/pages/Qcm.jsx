@@ -105,7 +105,7 @@ export function QcmListe() {
                   {q.description}
                 </p>
 
-                <div className="mt-4 flex items-center gap-3 border-t border-ink-200 pt-4 text-xs text-ink-500 dark:border-ink-800">
+                <div className="mt-4 flex items-center gap-3 border-t border-ink-200 pt-4 text-xs text-ink-500 dark:text-ink-400 dark:border-ink-800">
                   <span className="flex items-center gap-1">
                     <Icon name="layers" className="size-3.5" />
                     {q.questions.length} questions
@@ -129,7 +129,7 @@ export function QcmListe() {
                         style={{ width: `${pourcentage}%` }}
                       />
                     </div>
-                    <span className="font-mono text-[11px] text-ink-500">
+                    <span className="font-mono text-[11px] text-ink-500 dark:text-ink-400">
                       record {meilleur.score}/{meilleur.total}
                     </span>
                   </div>
@@ -475,7 +475,7 @@ function SessionQcm({ qcmId }) {
                     restant <= 60 ? "stroke-flame-500" : "stroke-brand-600"
                   }
                 />
-                <span className="absolute inset-0 grid place-items-center font-mono text-[11px] font-semibold text-ink-500">
+                <span className="absolute inset-0 grid place-items-center font-mono text-[11px] font-semibold text-ink-500 dark:text-ink-400">
                   {Math.ceil((restant / tempsImparti) * 100)}%
                 </span>
               </div>
@@ -491,7 +491,7 @@ function SessionQcm({ qcmId }) {
                 >
                   {chrono(restant)}
                 </p>
-                <p className="text-[11px] tracking-wide text-ink-500 uppercase">
+                <p className="text-[11px] tracking-wide text-ink-500 dark:text-ink-400 uppercase">
                   Temps restant
                 </p>
               </div>
@@ -502,7 +502,7 @@ function SessionQcm({ qcmId }) {
                 <span className="font-medium text-ink-700 dark:text-ink-300">
                   Question {index + 1} sur {total}
                 </span>
-                <span className="font-mono text-ink-500 tabular-nums">
+                <span className="font-mono text-ink-500 dark:text-ink-400 tabular-nums">
                   {repondues}/{total}
                 </span>
               </div>
@@ -774,7 +774,7 @@ function EcranResultat({
                 </dt>
                 <dd className="mt-1 text-xl font-bold text-ink-900 dark:text-white">
                   {points}
-                  <span className="ml-1 text-xs font-medium text-ink-400">
+                  <span className="ml-1 text-xs font-medium text-ink-500 dark:text-ink-400">
                     points
                   </span>
                 </dd>
@@ -800,7 +800,7 @@ function EcranResultat({
                   </dt>
                   <dd className="mt-1 text-xl font-bold text-ink-900 dark:text-white">
                     {taux}
-                    <span className="ml-0.5 text-xs font-medium text-ink-400">
+                    <span className="ml-0.5 text-xs font-medium text-ink-500 dark:text-ink-400">
                       %
                     </span>
                   </dd>

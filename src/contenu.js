@@ -67,7 +67,18 @@ function remplacer(contenu) {
   }
 }
 
-const valide = (c) => c && Array.isArray(c.matieres) && c.matieres.length > 0;
+/* Le relais vérifie déjà tout ce qu'il publie. On contrôle quand même
+   la forme générale ici : une version en cache d'avant une mise à jour,
+   ou un relais d'une autre version, ne doit jamais empêcher le site de
+   s'afficher. Au moindre doute, c'est le contenu du code qui s'affiche. */
+const estListe = (v) => v === undefined || Array.isArray(v);
+const valide = (c) =>
+  Boolean(c) &&
+  Array.isArray(c.matieres) &&
+  c.matieres.length > 0 &&
+  c.matieres.every((m) => m && typeof m.id === "string" && Array.isArray(m.chapitres)) &&
+  ["competences", "exercices", "qcms", "videos", "examens", "annales", "ressources"].every((cle) => estListe(c[cle])) &&
+  (c.qcms ?? []).every((q) => q && Array.isArray(q.questions));
 
 export async function chargerContenu() {
   if (!site.urlIA) return;

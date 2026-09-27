@@ -136,13 +136,13 @@ export function Cours() {
                       {m.resume}
                     </p>
                     <div className="mt-4 flex items-center justify-between border-t border-ink-200 pt-4 dark:border-ink-800">
-                      <span className="flex items-center gap-1.5 text-xs text-ink-500">
+                      <span className="flex items-center gap-1.5 text-xs text-ink-500 dark:text-ink-400">
                         <Icon name="layers" className="size-3.5" />
                         {m.chapitres.length} chapitres · {dispo} disponibles
                       </span>
                       <Icon
                         name="arrow"
-                        className="size-4 text-ink-400 transition-transform group-hover:translate-x-0.5"
+                        className="size-4 text-ink-500 dark:text-ink-400 transition-transform group-hover:translate-x-0.5"
                       />
                     </div>
                   </Link>
@@ -247,7 +247,7 @@ export function CoursDetail() {
                     key={c.titre}
                     className={cx(
                       "card flex gap-4 p-5",
-                      !pret && "opacity-75"
+                      !pret && "border-dashed bg-ink-50/70 shadow-none dark:bg-ink-900/60"
                     )}
                   >
                     <span
@@ -255,7 +255,7 @@ export function CoursDetail() {
                         "grid size-8 shrink-0 place-items-center rounded-lg font-mono text-xs font-semibold",
                         pret
                           ? theme.pastille
-                          : "bg-ink-100 text-ink-400 dark:bg-ink-800"
+                          : "bg-ink-100 text-ink-600 dark:text-ink-400 dark:bg-ink-800"
                       )}
                     >
                       {String(i + 1).padStart(2, "0")}
@@ -289,7 +289,7 @@ export function CoursDetail() {
                       <p className="mt-1.5 text-sm/6 text-ink-600 dark:text-ink-400">
                         {c.resume}
                       </p>
-                      <p className="mt-2.5 flex items-center gap-1.5 text-xs text-ink-500">
+                      <p className="mt-2.5 flex items-center gap-1.5 text-xs text-ink-500 dark:text-ink-400">
                         <Icon name="clock" className="size-3.5" />
                         Volume indicatif : {c.duree}
                       </p>
@@ -347,7 +347,7 @@ export function CoursDetail() {
                       >
                         <Icon
                           name="arrow"
-                          className="mt-0.5 size-3.5 shrink-0 text-ink-400"
+                          className="mt-0.5 size-3.5 shrink-0 text-ink-500 dark:text-ink-400"
                         />
                         <span className="text-sm text-ink-700 group-hover:text-brand-600 dark:text-ink-300 dark:group-hover:text-brand-300">
                           {e.titre}
@@ -378,11 +378,11 @@ export function CoursDetail() {
                       >
                         <Icon
                           name="arrow"
-                          className="mt-0.5 size-3.5 shrink-0 text-ink-400"
+                          className="mt-0.5 size-3.5 shrink-0 text-ink-500 dark:text-ink-400"
                         />
                         <span className="text-sm text-ink-700 group-hover:text-brand-600 dark:text-ink-300 dark:group-hover:text-brand-300">
                           {q.titre}
-                          <span className="block text-xs text-ink-500">
+                          <span className="block text-xs text-ink-500 dark:text-ink-400">
                             {q.questions.length} questions · {q.duree}
                           </span>
                         </span>

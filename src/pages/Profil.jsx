@@ -34,7 +34,7 @@ function Champ({ id, label, erreur, aide, facultatif, ...rest }) {
       >
         {label}
         {facultatif && (
-          <span className="ml-1 font-normal text-ink-400">(facultatif)</span>
+          <span className="ml-1 font-normal text-ink-500 dark:text-ink-400">(facultatif)</span>
         )}
       </label>
       <input
@@ -58,7 +58,7 @@ function Champ({ id, label, erreur, aide, facultatif, ...rest }) {
           {erreur}
         </p>
       ) : aide ? (
-        <p id={`${id}-aide`} className="mt-1.5 text-xs text-ink-500">
+        <p id={`${id}-aide`} className="mt-1.5 text-xs text-ink-500 dark:text-ink-400">
           {aide}
         </p>
       ) : null}
@@ -213,7 +213,7 @@ export default function Profil() {
                   "text-xs tabular-nums",
                   profil.pseudo.length >= LONGUEUR_PSEUDO - 2
                     ? "text-sun-600 dark:text-sun-400"
-                    : "text-ink-400"
+                    : "text-ink-500 dark:text-ink-400"
                 )}
               >
                 {profil.pseudo.length}/{LONGUEUR_PSEUDO}
@@ -223,7 +223,7 @@ export default function Profil() {
             <div className="relative mt-1.5">
               <Icon
                 name="users"
-                className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ink-400"
+                className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ink-500 dark:text-ink-400"
               />
               <input
                 id="pseudo"
@@ -253,7 +253,7 @@ export default function Profil() {
                 {erreurs.pseudo}
               </p>
             )}
-            <p className="mt-1.5 text-xs text-ink-500">
+            <p className="mt-1.5 text-xs text-ink-500 dark:text-ink-400">
               C'est ce nom qui apparaît en haut de l'écran.
             </p>
           </div>
@@ -436,7 +436,7 @@ export default function Profil() {
               Exercices travaillés, scores des QCM et matières à reprendre.
             </span>
           </span>
-          <Icon name="arrow" className="size-4 shrink-0 text-ink-400" />
+          <Icon name="arrow" className="size-4 shrink-0 text-ink-500 dark:text-ink-400" />
         </Link>
       </div>
     </div>

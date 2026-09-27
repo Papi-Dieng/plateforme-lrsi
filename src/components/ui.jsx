@@ -57,7 +57,7 @@ const stylesBouton = {
   fantome:
     "text-ink-600 hover:bg-ink-100 hover:text-ink-900 dark:text-ink-300 dark:hover:bg-ink-800 dark:hover:text-white",
   accent:
-    "bg-accent-600 text-white shadow-sm hover:bg-accent-700 dark:bg-accent-500 dark:hover:bg-accent-400",
+    "bg-accent-700 text-white shadow-sm hover:bg-accent-900 dark:bg-accent-700 dark:hover:bg-accent-900",
 };
 
 const taillesBouton = {
@@ -178,7 +178,7 @@ export function NoteDemo({ children }) {
 export function EtatVide({ titre, texte, children }) {
   return (
     <div className="card flex flex-col items-center px-6 py-14 text-center">
-      <div className="mb-4 grid size-12 place-items-center rounded-full bg-ink-100 text-ink-400 dark:bg-ink-800">
+      <div className="mb-4 grid size-12 place-items-center rounded-full bg-ink-100 text-ink-500 dark:text-ink-400 dark:bg-ink-800">
         <Icon name="search" className="size-5" />
       </div>
       <p className="font-semibold text-ink-900 dark:text-white">{titre}</p>
@@ -201,7 +201,7 @@ export function ChampRecherche({ valeur, onChange, placeholder, id }) {
     <div className="relative">
       <Icon
         name="search"
-        className="pointer-events-none absolute top-1/2 left-3.5 size-4.5 -translate-y-1/2 text-ink-400"
+        className="pointer-events-none absolute top-1/2 left-3.5 size-4.5 -translate-y-1/2 text-ink-500 dark:text-ink-400"
       />
       <input
         id={id}

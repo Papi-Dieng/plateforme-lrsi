@@ -113,6 +113,8 @@ test.describe("pages juridiques", () => {
 
   test("la politique de confidentialité nomme chaque service contacté par le site", async ({ page }) => {
     await aller(page, "/confidentialite");
+    // La page arrive à la demande : attendre son titre avant de lire.
+    await expect(page.getByRole("heading", { level: 1, name: "Politique de confidentialité" })).toBeVisible();
     const texte = await page.locator("main").innerText();
     for (const service of ["GitHub Pages", "Cloudflare", "Google Gemini", "YouTube", "statistiques anonymes"]) {
       expect(texte, service).toContain(service);

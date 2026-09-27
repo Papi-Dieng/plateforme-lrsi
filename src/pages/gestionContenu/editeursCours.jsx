@@ -110,8 +110,8 @@ export function EditeurMatiere({ element: m, changer, motDePasse }) {
           {chapitres.map((c, i) => (
             <details key={i} className="group rounded-xl border border-ink-200 dark:border-ink-800">
               <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3">
-                <Icon name="chevron" className="size-4 shrink-0 -rotate-90 text-ink-400 transition-transform group-open:rotate-0" />
-                <span className="font-mono text-xs text-ink-400">{String(i + 1).padStart(2, "0")}</span>
+                <Icon name="chevron" className="size-4 shrink-0 -rotate-90 text-ink-500 dark:text-ink-400 transition-transform group-open:rotate-0" />
+                <span className="font-mono text-xs text-ink-500 dark:text-ink-400">{String(i + 1).padStart(2, "0")}</span>
                 <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink-900 dark:text-white">
                   {c.titre || "Chapitre sans titre"}
                 </span>
@@ -209,7 +209,7 @@ export function EditeurCompetence({ element: c, changer, matieres, usages }) {
           Chapitres à relire quand cette compétence est faible
         </legend>
         {titres.length === 0 ? (
-          <p className="mt-2 text-sm text-ink-500">Choisis d'abord une matière qui a des chapitres.</p>
+          <p className="mt-2 text-sm text-ink-500 dark:text-ink-400">Choisis d'abord une matière qui a des chapitres.</p>
         ) : (
           <div className="mt-2 space-y-1">
             {titres.map((t) => (

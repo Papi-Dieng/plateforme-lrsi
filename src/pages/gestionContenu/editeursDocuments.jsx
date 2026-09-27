@@ -114,13 +114,13 @@ export function EditeurExamen({ element: x, changer, matieres, motDePasse }) {
       ) : (
       <>
       <h3 className="text-sm font-semibold text-ink-900 dark:text-white">
-        Parties <span className="font-normal text-ink-500">· total {total} points</span>
+        Parties <span className="font-normal text-ink-500 dark:text-ink-400">· total {total} points</span>
       </h3>
       <div className="space-y-3">
         {parties.map((p, i) => (
           <div key={i} className="rounded-xl border border-ink-200 p-4 dark:border-ink-800">
             <div className="flex items-start gap-3">
-              <span className="mt-8 font-mono text-xs text-ink-400">{i + 1}</span>
+              <span className="mt-8 font-mono text-xs text-ink-500 dark:text-ink-400">{i + 1}</span>
               <div className="min-w-0 flex-1 space-y-3">
                 <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
                   <Champ label="Titre de la partie" value={p.titre} maxLength={150} onChange={(e) => changerPartie(i, { titre: e.target.value })} />

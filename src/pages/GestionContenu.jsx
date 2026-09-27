@@ -253,7 +253,7 @@ export default function GestionContenu() {
             />
           </>
         ) : !brouillon ? (
-          <p className="text-sm text-ink-500">Chargement du contenu…</p>
+          <p className="text-sm text-ink-500 dark:text-ink-400">Chargement du contenu…</p>
         ) : (
           <>
             {/* ---- Barre de publication ---- */}
@@ -302,12 +302,12 @@ export default function GestionContenu() {
                     "inline-flex shrink-0 items-center gap-2 border-b-2 px-3.5 py-2.5 text-sm transition-colors",
                     onglet === o.cle
                       ? "border-brand-500 font-semibold text-brand-700 dark:text-brand-300"
-                      : "border-transparent text-ink-500 hover:text-ink-800 dark:hover:text-ink-200"
+                      : "border-transparent text-ink-500 dark:text-ink-400 hover:text-ink-800 dark:hover:text-ink-200"
                   )}
                 >
                   <Icon name={o.icone} className="size-4" />
                   {o.label}
-                  <span className="rounded-full bg-ink-100 px-1.5 text-[11px] text-ink-500 dark:bg-ink-800">
+                  <span className="rounded-full bg-ink-100 px-1.5 text-[11px] text-ink-500 dark:text-ink-400 dark:bg-ink-800">
                     {brouillon[o.cle].length}
                   </span>
                 </button>
@@ -371,13 +371,13 @@ export default function GestionContenu() {
                         )}
                       >
                         <span className="block truncate text-sm font-medium">{type.titre(e) || "Sans titre"}</span>
-                        <span className={cx("block text-[11px]", e.id === selectionne?.id ? "text-white/70" : "text-ink-500")}>
+                        <span className={cx("block text-[11px]", e.id === selectionne?.id ? "text-white/70" : "text-ink-500 dark:text-ink-400")}>
                           {type.detail(e)}
                         </span>
                       </button>
                     </li>
                   ))}
-                  {visibles.length === 0 && <li className="px-3 py-2 text-sm text-ink-500">Rien pour le moment.</li>}
+                  {visibles.length === 0 && <li className="px-3 py-2 text-sm text-ink-500 dark:text-ink-400">Rien pour le moment.</li>}
                 </ul>
                 <Bouton icone="plus" onClick={ajouter} disabled={onglet !== "matieres" && brouillon.matieres.length === 0}>
                   Ajouter
@@ -393,7 +393,7 @@ export default function GestionContenu() {
                 ) : (
                   <>
                     <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-ink-200 pb-4 dark:border-ink-800">
-                      <p className="text-xs text-ink-500">
+                      <p className="text-xs text-ink-500 dark:text-ink-400">
                         Identifiant : <code className="font-mono">{selectionne.id}</code>
                       </p>
                       <Bouton variante="danger" icone="trash" onClick={supprimer}>
@@ -426,7 +426,7 @@ export default function GestionContenu() {
             )}
 
             {dateContenu && (
-              <p className="text-xs text-ink-400">
+              <p className="text-xs text-ink-500 dark:text-ink-400">
                 Contenu affiché sur ce site : version publiée le {new Date(dateContenu).toLocaleString("fr-FR")}.
               </p>
             )}

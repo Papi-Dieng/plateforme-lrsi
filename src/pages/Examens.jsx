@@ -98,7 +98,7 @@ export function ExamensListe() {
                     {x.titre}
                   </h3>
                   <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">{nomMatiere(x.matiere)}</p>
-                  <div className="mt-auto flex items-center gap-3 border-t border-ink-200 pt-4 text-xs text-ink-500 dark:border-ink-800">
+                  <div className="mt-auto flex items-center gap-3 border-t border-ink-200 pt-4 text-xs text-ink-500 dark:text-ink-400 dark:border-ink-800">
                     <span className="flex items-center gap-1">
                       <Icon name="clock" className="size-3.5" />
                       {formatMinutes(x.dureeMinutes)}
@@ -164,7 +164,7 @@ export function ExamensListe() {
                       )}
                     </div>
                     {a.autorisation?.detail && (
-                      <p className="mt-2 text-[11px] text-ink-400">Publié avec l'accord : {a.autorisation.detail}</p>
+                      <p className="mt-2 text-[11px] text-ink-500 dark:text-ink-400">Publié avec l'accord : {a.autorisation.detail}</p>
                     )}
                   </div>
                 </li>
@@ -333,7 +333,7 @@ export function ExamenSession() {
                       className="mt-3"
                     />
                   ) : (
-                    <p className="mt-2 text-sm text-ink-500">Le corrigé de ce devoir n'a pas encore été publié.</p>
+                    <p className="mt-2 text-sm text-ink-500 dark:text-ink-400">Le corrigé de ce devoir n'a pas encore été publié.</p>
                   )}
                   <label className="mt-4 flex items-center gap-3 text-sm text-ink-700 dark:text-ink-300">
                     Mes points
@@ -348,7 +348,7 @@ export function ExamenSession() {
                       }
                       className="w-20 rounded-lg border border-ink-200 bg-white px-2 py-1.5 text-sm dark:border-ink-700 dark:bg-ink-950"
                     />
-                    <span className="text-ink-500">/ {total}</span>
+                    <span className="text-ink-500 dark:text-ink-400">/ {total}</span>
                   </label>
                 </section>
               )}
@@ -361,10 +361,10 @@ export function ExamenSession() {
               <section key={i} className="card p-6">
                 <h2 className="flex flex-wrap items-baseline justify-between gap-2 font-semibold text-ink-900 dark:text-white">
                   <span>
-                    <span className="mr-2 font-mono text-sm text-ink-400">Partie {i + 1}</span>
+                    <span className="mr-2 font-mono text-sm text-ink-500 dark:text-ink-400">Partie {i + 1}</span>
                     {p.titre}
                   </span>
-                  <span className="text-sm font-medium text-ink-500">{p.points} points</span>
+                  <span className="text-sm font-medium text-ink-500 dark:text-ink-400">{p.points} points</span>
                 </h2>
                 <TexteLibre texte={p.enonce} className="mt-3" />
 
@@ -391,7 +391,7 @@ export function ExamenSession() {
                         }
                         className="w-20 rounded-lg border border-ink-200 bg-white px-2 py-1.5 text-sm dark:border-ink-700 dark:bg-ink-950"
                       />
-                      <span className="text-ink-500">/ {p.points}</span>
+                      <span className="text-ink-500 dark:text-ink-400">/ {p.points}</span>
                     </label>
                   </div>
                 )}
@@ -403,9 +403,9 @@ export function ExamenSession() {
               <div>
                 <p className="text-sm text-ink-500 dark:text-ink-400">Ma note, d'après mon auto-correction</p>
                 <p className="mt-1 text-3xl font-bold text-ink-900 dark:text-white">
-                  {obtenu} <span className="text-lg font-medium text-ink-400">/ {total}</span>
+                  {obtenu} <span className="text-lg font-medium text-ink-500 dark:text-ink-400">/ {total}</span>
                   {total > 0 && total !== 20 && (
-                    <span className="ml-3 text-lg font-medium text-ink-500">
+                    <span className="ml-3 text-lg font-medium text-ink-500 dark:text-ink-400">
                       soit {Math.round((obtenu / total) * 200) / 10} / 20
                     </span>
                   )}

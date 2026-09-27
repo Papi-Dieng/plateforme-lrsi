@@ -118,7 +118,7 @@ function CadreAuth({ titre, texte, children, pied }) {
             <div className="mt-7">
               <div className="flex items-center gap-4">
                 <span className="h-px flex-1 bg-ink-200 dark:bg-ink-800" />
-                <span className="text-xs font-medium text-ink-400">ou</span>
+                <span className="text-xs font-medium text-ink-500 dark:text-ink-400">ou</span>
                 <span className="h-px flex-1 bg-ink-200 dark:bg-ink-800" />
               </div>
 
@@ -180,7 +180,7 @@ function Champ({ id, label, erreur, aide, ...rest }) {
           {erreur}
         </p>
       ) : aide ? (
-        <p id={`${id}-aide`} className="mt-1.5 text-xs text-ink-500">
+        <p id={`${id}-aide`} className="mt-1.5 text-xs text-ink-500 dark:text-ink-400">
           {aide}
         </p>
       ) : null}
@@ -222,7 +222,7 @@ function ChampMotDePasse({ id, label, erreur, aide, valeur, onChange }) {
           aria-label={
             visible ? "Masquer le mot de passe" : "Afficher le mot de passe"
           }
-          className="absolute top-1/2 right-2 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-ink-400 hover:bg-ink-100 hover:text-ink-700 dark:hover:bg-ink-800"
+          className="absolute top-1/2 right-2 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-ink-500 dark:text-ink-400 hover:bg-ink-100 hover:text-ink-700 dark:hover:bg-ink-800"
         >
           <Icon name={visible ? "sun" : "lock"} className="size-4" />
         </button>
@@ -236,7 +236,7 @@ function ChampMotDePasse({ id, label, erreur, aide, valeur, onChange }) {
           {erreur}
         </p>
       ) : aide ? (
-        <p id={`${id}-aide`} className="mt-1.5 text-xs text-ink-500">
+        <p id={`${id}-aide`} className="mt-1.5 text-xs text-ink-500 dark:text-ink-400">
           {aide}
         </p>
       ) : null}

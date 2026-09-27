@@ -26,7 +26,7 @@ npm run build     # génère la version de production dans docs/
 npm run preview   # sert la version de production en local
 npm test                 # tests automatisés de la logique (Vitest)
 npm run test:suivi       # les mêmes, relancés à chaque enregistrement
-npm run test:navigateur  # recompile, puis teste le site dans un vrai navigateur
+npm run test:navigateur  # recompile, puis teste le site dans un vrai navigateur (~2 min)
 npm run lint             # vérifie le code, dont les imports oubliés (dossiers compilés ignorés)
 ```
 
@@ -87,6 +87,8 @@ téléphone.
 | `e2e/pages.e2e.js` | chaque page s'ouvre, sans défilement horizontal ; menu du téléphone et barre latérale ; assistant qui répond sans IA ; mot de passe admin refusé ; vues du planning |
 | `e2e/admin.e2e.js` | « Gérer le contenu » avec le bon mot de passe : chaque onglet, une modification publiée (seul le brouillon modifié part au relais), un exercice sans titre signalé avant de publier |
 | `e2e/devoirs-planning.e2e.js` | un devoir : consignes, minuteur jusqu'à « Temps écoulé », corrigé seulement à la fin, auto-correction bornée au barème, avis de l'IA (ce qui part au relais) et son échec sans IA ; un programme de révision réparti sans IA, ajouté à l'emploi du temps et toujours là après rechargement |
+| `e2e/filet.e2e.js` | une page qui plante affiche un message et la coque tient ; une page ou l'application introuvable après une mise en ligne invite à recharger ; un contenu publié mal formé est ignoré |
+| `e2e/accessibilite.e2e.js` | axe (règles WCAG 2.1 A et AA) sur chaque page, en thème clair et en thème sombre : contrastes, libellés, structure, navigation au clavier |
 
 Le relais IA n'est jamais appelé : `e2e/outils.js` le remplace par de
 fausses réponses (rien de publié, IA indisponible, espace admin ouvert
@@ -143,6 +145,23 @@ Le message dit ce qui était attendu et ce qui a été obtenu. Deux cas :
 
 Ne jamais supprimer ou affaiblir un test seulement pour obtenir la coche
 verte : il ne protégerait plus rien.
+
+### Accessibilité : les règles de couleur
+
+`e2e/accessibilite.e2e.js` échoue dès qu'un texte n'a pas assez de
+contraste (4,5:1, ou 3:1 pour un grand texte). Pour ne pas se faire
+prendre :
+
+- texte secondaire : `text-ink-500 dark:text-ink-400`, jamais `text-ink-400`
+  seul sur fond clair (2,96:1) ;
+- texte blanc : sur une nuance 700 (`bg-flame-700`, `bg-emerald-700`…) ;
+  sur l'orange vif `flame-500`, écrire en `text-ink-950` ;
+- pas d'`opacity` sur un bloc qui contient du texte : elle l'éclaircit
+  aussi. Pour un élément « pas encore disponible », une bordure en
+  pointillé et un fond doux suffisent.
+
+Le message d'échec donne l'élément, les deux couleurs mesurées et le
+contraste obtenu.
 
 ### Écrire un nouveau test
 
@@ -463,7 +482,9 @@ lrsi-platform/
 │   ├── parcours.e2e.js       QCM, exercice, favoris, sauvegarde…
 │   ├── pages.e2e.js          chaque page, menus, assistant sans IA, admin
 │   ├── admin.e2e.js          « Gérer le contenu » : onglets, publication
-│   └── devoirs-planning.e2e.js  un devoir complet, un programme de révision
+│   ├── devoirs-planning.e2e.js  un devoir complet, un programme de révision
+│   ├── filet.e2e.js          une page qui plante, une version périmée
+│   └── accessibilite.e2e.js  axe sur chaque page, thème clair et sombre
 ├── serveur-ia/               relais IA gratuit (Cloudflare Workers), garde la clé
 │   ├── index.js              point d'entrée : origines, limites, routes
 │   ├── relais.test.js        tests du relais, sans Cloudflare ni Gemini
@@ -498,6 +519,7 @@ lrsi-platform/
 │   │   ├── useVideos.js      état partagé des vidéos (ajoutées, vues, en lecture)
 │   │   ├── BoutonFavori.jsx  marque-page commun à tous les contenus
 │   │   ├── PageJuridique.jsx mise en page des trois pages juridiques
+│   │   ├── FiletErreur.jsx   message à la place d'une page qui plante
 │   │   ├── AffichageExercice.jsx  énoncé et correction d'un exercice
 │   │   ├── VerifierReponse.jsx    « Vérifier ma réponse » d'un exercice
 │   │   ├── AvisRedaction.jsx      « Demander l'avis de l'IA » d'un devoir
@@ -910,7 +932,14 @@ qui fait la différence entre un questionnaire et un vrai outil de révision.
   questions de `src/banc-ia-questions.js` et les tests de chaque fiche.
 - Tests automatisés de la logique (Vitest) et tests dans un vrai navigateur
   (Playwright), relancés par GitHub à chaque push avec le lint et la
-  compilation (voir section 1).
+  compilation (voir section 1), dont un contrôle d'accessibilité de chaque
+  page en thème clair et sombre.
+- Pages chargées à la demande (`src/App.jsx`) : le tableau de bord n'attend
+  plus les pages d'administration ni le planning, et un étudiant ne
+  télécharge jamais l'espace admin.
+- Filet en cas de plantage (`src/components/FiletErreur.jsx`) : une page qui
+  plante affiche un message au lieu d'une page blanche, et une version
+  périmée après une mise en ligne invite à recharger.
 
 ## 7. Ce qui viendra ensuite
 

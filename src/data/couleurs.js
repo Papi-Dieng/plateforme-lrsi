@@ -29,7 +29,7 @@ export const themesMatiere = {
   },
   emeraude: {
     nom: "Émeraude",
-    carte: "bg-emerald-600",
+    carte: "bg-emerald-700",
     badgeCarte: "bg-black/25 text-white",
     pastille:
       "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300",
@@ -41,7 +41,7 @@ export const themesMatiere = {
   },
   violet: {
     nom: "Violet",
-    carte: "bg-violet-600",
+    carte: "bg-violet-700",
     badgeCarte: "bg-black/25 text-white",
     pastille:
       "bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300",
@@ -65,8 +65,8 @@ export const themesMatiere = {
   },
   orange: {
     nom: "Orange",
-    carte: "bg-flame-500",
-    badgeCarte: "bg-black/75 text-white",
+    carte: "bg-flame-700",
+    badgeCarte: "bg-black/40 text-white",
     pastille:
       "bg-flame-100 text-flame-600 dark:bg-flame-500/15 dark:text-flame-400",
     barre: "bg-flame-500",
@@ -77,7 +77,7 @@ export const themesMatiere = {
   },
   framboise: {
     nom: "Framboise",
-    carte: "bg-rose-600",
+    carte: "bg-rose-700",
     badgeCarte: "bg-black/25 text-white",
     pastille: "bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300",
     barre: "bg-rose-600 dark:bg-rose-500",
@@ -90,11 +90,14 @@ export const themesMatiere = {
 
 // Partie commune à toutes les cartes du tableau de bord : le texte y est
 // blanc, donc les nuances se font à l'opacité, quelle que soit la couleur.
+// Les fonds des cartes sont assez foncés (nuance 700) pour que ce texte
+// blanc, même atténué, reste lisible : contraste d'au moins 4,5:1,
+// vérifié par e2e/accessibilite.e2e.js.
 export const surCarte = {
   piste: "bg-white/25",
   barre: "bg-white",
-  attenue: "text-white/75",
-  puce: "bg-white/15 text-white",
+  attenue: "text-white/90",
+  puce: "bg-black/25 text-white",
 };
 
 export const themeMatiere = (matiere) =>

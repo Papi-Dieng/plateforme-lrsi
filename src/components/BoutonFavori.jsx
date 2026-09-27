@@ -15,7 +15,7 @@ const variantes = {
   // Sur fond clair : la pastille se remplit quand le favori est posé.
   clair: {
     inactif:
-      "text-ink-400 hover:bg-ink-100 hover:text-ink-700 dark:hover:bg-ink-800 dark:hover:text-white",
+      "text-ink-500 dark:text-ink-400 hover:bg-ink-100 hover:text-ink-700 dark:hover:bg-ink-800 dark:hover:text-white",
     actif: "text-sun-600 hover:bg-sun-100 dark:text-sun-400 dark:hover:bg-sun-500/15",
   },
   // Sur une carte colorée, où tout est déjà blanc.

@@ -32,7 +32,7 @@ function Message({ etat }) {
       role="status"
       className={cx(
         "text-xs/5",
-        etat.type === "erreur" ? "text-flame-600 dark:text-flame-400" : "text-ink-500"
+        etat.type === "erreur" ? "text-flame-600 dark:text-flame-400" : "text-ink-500 dark:text-ink-400"
       )}
     >
       {etat.texte}
@@ -175,7 +175,7 @@ export function SuggestionARetenir({ exercice: e, matiere, onAppliquer, motDePas
             >
               {e.explication?.trim() ? "Remplacer" : "Utiliser"}
             </button>
-            <button type="button" onClick={() => setProposition(null)} className="text-ink-500 underline">
+            <button type="button" onClick={() => setProposition(null)} className="text-ink-500 dark:text-ink-400 underline">
               Ignorer
             </button>
           </div>
@@ -382,8 +382,8 @@ export function PanneauCompetencesIA({ brouillon, appliquer, motDePasse, identif
                   />
                   <span className="min-w-0 flex-1 text-sm">
                     <span className="font-semibold text-ink-900 dark:text-white">{c.nom}</span>
-                    <span className="block text-xs text-ink-500">{c.raison}</span>
-                    <span className="block text-xs text-ink-400">
+                    <span className="block text-xs text-ink-500 dark:text-ink-400">{c.raison}</span>
+                    <span className="block text-xs text-ink-500 dark:text-ink-400">
                       Chapitres : {c.chapitres.length ? c.chapitres.join(", ") : "aucun"}
                     </span>
                   </span>
@@ -406,7 +406,7 @@ export function PanneauCompetencesIA({ brouillon, appliquer, motDePasse, identif
       {rattachements?.length > 0 && (
         <div className="space-y-2">
           <p className="text-sm font-semibold text-ink-900 dark:text-white">
-            Rattachements proposés <span className="font-normal text-ink-500">· relis, corrige si besoin, puis applique</span>
+            Rattachements proposés <span className="font-normal text-ink-500 dark:text-ink-400">· relis, corrige si besoin, puis applique</span>
           </p>
           <ul className="max-h-[50vh] space-y-2 overflow-y-auto">
             {rattachements.map((l, i) => (
@@ -421,8 +421,8 @@ export function PanneauCompetencesIA({ brouillon, appliquer, motDePasse, identif
                   />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-ink-900 dark:text-white">{l.libelle}</p>
-                    <p className="line-clamp-2 text-xs text-ink-500">{l.texte}</p>
-                    <p className="mt-1 text-xs text-ink-400">IA : {l.raison}</p>
+                    <p className="line-clamp-2 text-xs text-ink-500 dark:text-ink-400">{l.texte}</p>
+                    <p className="mt-1 text-xs text-ink-500 dark:text-ink-400">IA : {l.raison}</p>
                   </div>
                   <select
                     value={l.competence}
@@ -551,7 +551,7 @@ export function GenerateurQcm({ qcm, matiere, competences, motDePasse, onAjouter
           <Icon name="sparkles" className="size-4 text-brand-500" />
           Générer des questions avec l'IA
         </h3>
-        <button type="button" onClick={() => setOuvert(false)} className="text-xs text-ink-500 hover:underline">
+        <button type="button" onClick={() => setOuvert(false)} className="text-xs text-ink-500 dark:text-ink-400 hover:underline">
           Fermer
         </button>
       </div>
@@ -667,8 +667,8 @@ export function GenerateurQcm({ qcm, matiere, competences, motDePasse, onAjouter
                     </li>
                   ))}
                 </ol>
-                <p className="mt-2 pl-7 text-xs/5 text-ink-500">{x.explication}</p>
-                <p className="mt-1 pl-7 text-[11px] text-ink-400">
+                <p className="mt-2 pl-7 text-xs/5 text-ink-500 dark:text-ink-400">{x.explication}</p>
+                <p className="mt-1 pl-7 text-[11px] text-ink-500 dark:text-ink-400">
                   Compétence : {nomCompetence(x.competence) ?? "aucune"}
                 </p>
               </li>
@@ -762,7 +762,7 @@ export function RemplirDepuisPdf({ exercice: e, matiere, onAppliquer, motDePasse
       {proposition && (
         <div className="space-y-3 rounded-lg bg-white p-4 text-sm/6 text-ink-700 ring-1 ring-ink-200 dark:bg-ink-900 dark:text-ink-200 dark:ring-ink-800">
           <p className="font-semibold text-ink-900 dark:text-white">
-            {proposition.titre} <span className="font-normal text-ink-500">· {proposition.difficulte} · {proposition.duree}</span>
+            {proposition.titre} <span className="font-normal text-ink-500 dark:text-ink-400">· {proposition.difficulte} · {proposition.duree}</span>
           </p>
           {proposition.correctionParIA && (
             <p className="rounded-md bg-sun-100 px-2.5 py-1.5 text-xs text-sun-900 dark:bg-sun-500/15 dark:text-sun-200">
@@ -785,7 +785,7 @@ export function RemplirDepuisPdf({ exercice: e, matiere, onAppliquer, motDePasse
             <button type="button" onClick={remplir} className="rounded-lg bg-brand-600 px-3 py-1.5 text-white hover:bg-brand-700">
               Remplir les champs
             </button>
-            <button type="button" onClick={() => setProposition(null)} className="text-ink-500 underline">
+            <button type="button" onClick={() => setProposition(null)} className="text-ink-500 dark:text-ink-400 underline">
               Ignorer
             </button>
           </div>
@@ -941,7 +941,7 @@ export function PanneauImportTD({ brouillon, appliquer, motDePasse, identifiant,
       {proposes?.length > 0 && (
         <div className="space-y-2">
           <p className="text-sm font-semibold text-ink-900 dark:text-white">
-            {proposes.length} exercice(s) trouvé(s) <span className="font-normal text-ink-500">· coche ceux à garder</span>
+            {proposes.length} exercice(s) trouvé(s) <span className="font-normal text-ink-500 dark:text-ink-400">· coche ceux à garder</span>
           </p>
           <ul className="max-h-[50vh] space-y-2 overflow-y-auto">
             {proposes.map((x, i) => (
@@ -955,7 +955,7 @@ export function PanneauImportTD({ brouillon, appliquer, motDePasse, identifiant,
                   />
                   <span className="min-w-0 flex-1 text-sm">
                     <span className="font-semibold text-ink-900 dark:text-white">{x.titre}</span>
-                    <span className="text-xs text-ink-500"> · {x.difficulte} · {x.duree}</span>
+                    <span className="text-xs text-ink-500 dark:text-ink-400"> · {x.difficulte} · {x.duree}</span>
                     <span className="mt-1 line-clamp-3 block text-xs/5 whitespace-pre-line text-ink-600 dark:text-ink-400">{x.enonce}</span>
                     {x.correctionParIA && (
                       <span className="mt-1 block text-xs text-sun-700 dark:text-sun-400">

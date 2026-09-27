@@ -53,7 +53,7 @@ const champ =
 /* ------------------------------------------------------------------ */
 
 const STYLE_PROGRAMME = {
-  evaluation: "bg-flame-500 text-white",
+  evaluation: "bg-flame-500 text-ink-950",
   tache: "bg-ink-100 text-ink-800 ring-1 ring-ink-200 ring-inset dark:bg-ink-800 dark:text-ink-100 dark:ring-ink-700",
   revision: "bg-sun-100 text-sun-900 ring-1 ring-sun-400/50 ring-inset dark:bg-sun-500/15 dark:text-sun-200",
 };
@@ -141,7 +141,7 @@ function VueMois({ reference, evenements, elementsDuJour, onChoisirJour, onOuvri
                   )
                 )}
                 {tout.length > 3 && (
-                  <button type="button" onClick={() => onChoisirJour(jour)} className="text-[11px] text-ink-500 hover:underline">
+                  <button type="button" onClick={() => onChoisirJour(jour)} className="text-[11px] text-ink-500 dark:text-ink-400 hover:underline">
                     +{tout.length - 3} de plus
                   </button>
                 )}
@@ -201,7 +201,7 @@ function GrilleHoraire({ jours, evenements, elementsDuJour, onCreer, onOuvrir, o
         {/* Le programme du jour (sans heure) */}
         {jours.some((j) => elementsDuJour(j).length) && (
           <div className={cx("grid border-b border-ink-200 dark:border-ink-800", colonnes)}>
-            <div className="px-1 py-1.5 text-right text-[10px] leading-tight text-ink-400">Au pro&shy;gramme</div>
+            <div className="px-1 py-1.5 text-right text-[10px] leading-tight text-ink-500 dark:text-ink-400">Au pro&shy;gramme</div>
             {jours.map((jour) => (
               <div key={jour} className="space-y-0.5 border-l border-ink-200 p-1 dark:border-ink-800">
                 {elementsDuJour(jour).map((p) => (
@@ -213,10 +213,11 @@ function GrilleHoraire({ jours, evenements, elementsDuJour, onCreer, onOuvrir, o
         )}
 
         {/* Les heures */}
-        <div className={cx("grid max-h-[70vh] overflow-y-auto", colonnes)}>
+        {/* Zone qui défile : focalisable, pour la parcourir au clavier. */}
+        <div tabIndex={0} aria-label="Heures de la journée" className={cx("grid max-h-[70vh] overflow-y-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500", colonnes)}>
           <div className="relative" style={{ height: heures.length * HAUTEUR_HEURE }}>
             {heures.map((h, i) => (
-              <span key={h} className="absolute right-1.5 -translate-y-1/2 text-[11px] text-ink-400" style={{ top: i * HAUTEUR_HEURE }}>
+              <span key={h} className="absolute right-1.5 -translate-y-1/2 text-[11px] text-ink-500 dark:text-ink-400" style={{ top: i * HAUTEUR_HEURE }}>
                 {i === 0 ? "" : `${String(h).padStart(2, "0")}:00`}
               </span>
             ))}
@@ -299,7 +300,7 @@ function VueListe({ depuis, evenements, elementsDuJour, onOuvrir, onOuvrirProgra
 
   if (jours.length === 0) {
     return (
-      <p className="rounded-2xl border border-ink-200 py-12 text-center text-sm text-ink-500 dark:border-ink-800">
+      <p className="rounded-2xl border border-ink-200 py-12 text-center text-sm text-ink-500 dark:text-ink-400 dark:border-ink-800">
         Rien de prévu dans les 30 prochains jours.
       </p>
     );
@@ -329,7 +330,7 @@ function VueListe({ depuis, evenements, elementsDuJour, onOuvrir, onOuvrirProgra
                   <span className="min-w-0 flex-1">
                     <span className="block font-semibold text-ink-900 dark:text-white">{e.titre || "Sans titre"}</span>
                     {e.description && <span className="mt-0.5 block text-sm text-ink-600 dark:text-ink-400">{e.description}</span>}
-                    <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink-500">
+                    <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink-500 dark:text-ink-400">
                       <Icon name="clock" className="size-3.5" />
                       {e.debut}–{e.fin}
                       <span className={cx("rounded px-1.5 py-0.5", couleur(e.couleur).clair)}>{e.categorie}</span>
@@ -371,7 +372,7 @@ function Fenetre({ titre, onFermer, children }) {
             type="button"
             onClick={onFermer}
             aria-label="Fermer"
-            className="grid size-9 shrink-0 place-items-center rounded-xl text-ink-500 hover:bg-ink-100 dark:hover:bg-ink-800"
+            className="grid size-9 shrink-0 place-items-center rounded-xl text-ink-500 dark:text-ink-400 hover:bg-ink-100 dark:hover:bg-ink-800"
           >
             <Icon name="close" className="size-4.5" />
           </button>
@@ -669,7 +670,7 @@ export default function EmploiDuTemps({ evenements, onChange, elementsDuJour, ma
       {/* ---- Recherche et filtres ---- */}
       <div className="space-y-2">
         <div className="relative">
-          <Icon name="search" className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ink-400" />
+          <Icon name="search" className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ink-500 dark:text-ink-400" />
           <input
             value={recherche}
             onChange={(e) => setRecherche(e.target.value)}
@@ -698,7 +699,7 @@ export default function EmploiDuTemps({ evenements, onChange, elementsDuJour, ma
                 setCategories([]);
                 setMatieresFiltre([]);
               }}
-              className="shrink-0 px-2 text-xs font-medium text-ink-500 hover:underline"
+              className="shrink-0 px-2 text-xs font-medium text-ink-500 dark:text-ink-400 hover:underline"
             >
               Effacer les filtres
             </button>
@@ -721,7 +722,7 @@ export default function EmploiDuTemps({ evenements, onChange, elementsDuJour, ma
       {vue === "jour" && <GrilleHoraire jours={[reference]} {...communs} onCreer={creer} />}
       {vue === "liste" && <VueListe depuis={reference} {...communs} />}
 
-      <p className="text-xs text-ink-400">
+      <p className="text-xs text-ink-500 dark:text-ink-400">
         Clique sur un créneau vide pour y ajouter un cours ; sur ordinateur, fais glisser un événement pour le déplacer.
         En haut de chaque jour : ton programme de révision (🎯 évaluation, ↻ QCM à refaire).
       </p>

@@ -125,7 +125,7 @@ export default function Bienvenue() {
                 <div className="relative flex-1">
                   <Icon
                     name="search"
-                    className="pointer-events-none absolute top-1/2 left-0 size-4.5 -translate-y-1/2 text-ink-400"
+                    className="pointer-events-none absolute top-1/2 left-0 size-4.5 -translate-y-1/2 text-ink-500 dark:text-ink-400"
                   />
                   <input
                     id="recherche-accueil"
@@ -169,26 +169,24 @@ export default function Bienvenue() {
         {/* ------------------------------------------------------ */}
         <section className="border-t border-ink-200 px-5 py-8 sm:px-8 dark:border-ink-800">
           <h2 className="sr-only">La plateforme en chiffres</h2>
-          <dl className="grid gap-6 sm:grid-cols-3">
+          <ul className="grid gap-6 sm:grid-cols-3">
             {reperes.map((r) => (
-              <div key={r.titre} className="flex items-center gap-4">
-                <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-lime-400/25 text-accent-700 dark:bg-lime-400/15 dark:text-lime-300">
+              <li key={r.titre} className="grid grid-cols-[auto_1fr] items-center gap-x-4">
+                <span aria-hidden="true" className="row-span-2 grid size-12 shrink-0 place-items-center rounded-2xl bg-lime-400/25 text-accent-700 dark:bg-lime-400/15 dark:text-lime-300">
                   <Icon name={r.icone} className="size-6" />
                 </span>
-                <div>
-                  <dt className="text-sm text-ink-600 dark:text-ink-400">
-                    <span className="mr-1 text-lg font-bold text-ink-950 dark:text-white">
-                      {r.valeur}
-                    </span>
-                    {r.titre}
-                  </dt>
-                  <dd className="text-xs text-ink-500 dark:text-ink-500">
-                    {r.detail}
-                  </dd>
-                </div>
-              </div>
+                <p className="self-end text-sm text-ink-600 dark:text-ink-400">
+                  <span className="mr-1 text-lg font-bold text-ink-950 dark:text-white">
+                    {r.valeur}
+                  </span>
+                  {r.titre}
+                </p>
+                <p className="self-start text-xs text-ink-500 dark:text-ink-400">
+                  {r.detail}
+                </p>
+              </li>
             ))}
-          </dl>
+          </ul>
         </section>
 
         {/* ------------------------------------------------------ */}
@@ -196,7 +194,7 @@ export default function Bienvenue() {
         {/* ------------------------------------------------------ */}
         <footer className="border-t border-ink-200 px-5 py-6 sm:px-8 dark:border-ink-800">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-xs text-ink-400 dark:text-ink-500">
+            <p className="text-xs text-ink-500 dark:text-ink-400">
               © {site.annee} {site.nom} — {site.filiere}. Projet étudiant gratuit,
               contenus de démonstration. Aucun document universitaire n'est publié
               sans autorisation.

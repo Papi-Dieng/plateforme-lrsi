@@ -5,8 +5,8 @@ import { site } from "../src/data/site.js";
    Ce que partagent les tests dans le navigateur.
 
    `page` est remplacée par une page dont le relais IA est simulé :
-   - GET /contenu répond `null` : rien de publié, le site affiche le
-     contenu de src/data/ ;
+   - GET /contenu répond `relais.contenu`, `null` par défaut : rien de
+     publié, le site affiche le contenu de src/data/ ;
    - POST /stats est accepté, et chaque envoi est gardé dans
      `relais.stats` pour que les tests puissent le relire ;
    - l'espace admin (/admin/…) n'accepte que MOT_DE_PASSE_ADMIN : rien
@@ -26,7 +26,7 @@ export const test = base.extend({
   // Playwright exige ce `{}` : une fixture reçoit toujours les autres en premier.
   // oxlint-disable-next-line no-empty-pattern
   relais: async ({}, utiliser) => {
-    await utiliser({ stats: [], appels: [], publications: [] });
+    await utiliser({ contenu: null, stats: [], appels: [], publications: [] });
   },
   page: async ({ page, relais }, utiliser) => {
     await page.route(`${RELAIS}/**`, async (route) => {
@@ -35,7 +35,7 @@ export const test = base.extend({
       relais.appels.push(`${requete.method()} ${chemin}`);
       if (requete.method() === "OPTIONS") return route.fulfill({ status: 204, headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*" } });
       const entetes = { "Access-Control-Allow-Origin": "*" };
-      if (chemin === "/contenu") return route.fulfill({ json: null, headers: entetes });
+      if (chemin === "/contenu") return route.fulfill({ json: relais.contenu, headers: entetes });
       if (chemin === "/stats") {
         relais.stats.push(requete.postDataJSON());
         return route.fulfill({ json: { ok: true }, headers: entetes });

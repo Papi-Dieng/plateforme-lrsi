@@ -156,7 +156,7 @@ export default function Projet() {
                           >
                             <Icon
                               name="check"
-                              className="mt-1 size-3.5 shrink-0 text-ink-400"
+                              className="mt-1 size-3.5 shrink-0 text-ink-500 dark:text-ink-400"
                             />
                             {p}
                           </li>
@@ -350,7 +350,7 @@ export default function Projet() {
           {/* Note sur le nom                                   */}
           {/* ------------------------------------------------ */}
           <section className="card flex gap-4 p-5">
-            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-ink-100 text-ink-500 dark:bg-ink-800">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-ink-100 text-ink-500 dark:text-ink-400 dark:bg-ink-800">
               <Icon name="bulb" className="size-5" />
             </span>
             <p className="text-sm/6 text-ink-600 dark:text-ink-400">

@@ -137,7 +137,7 @@ export function Exercices() {
                         {e.difficulte}
                       </Badge>
                       <Badge>{nomMatiere(e.matiere)}</Badge>
-                      <span className="flex items-center gap-1 text-xs text-ink-500">
+                      <span className="flex items-center gap-1 text-xs text-ink-500 dark:text-ink-400">
                         <Icon name="clock" className="size-3.5" />
                         {e.duree}
                       </span>

@@ -61,7 +61,7 @@ export function CarteVideo({ video, vue, onLire, onCompleter, onSupprimer }) {
           <span
             className={cx(
               "absolute grid size-12 place-items-center rounded-full shadow-lg transition-transform group-hover:scale-110",
-              pret ? "bg-white/95 text-ink-950" : "bg-white text-ink-400"
+              pret ? "bg-white/95 text-ink-950" : "bg-white text-ink-500 dark:text-ink-400"
             )}
           >
             <Icon
@@ -166,7 +166,7 @@ export function Modale({ titre, onFermer, large = false, children }) {
             type="button"
             onClick={onFermer}
             aria-label="Fermer"
-            className="grid size-9 shrink-0 place-items-center rounded-xl text-ink-500 hover:bg-ink-100 dark:hover:bg-ink-800"
+            className="grid size-9 shrink-0 place-items-center rounded-xl text-ink-500 dark:text-ink-400 hover:bg-ink-100 dark:hover:bg-ink-800"
           >
             <Icon name="close" className="size-4.5" />
           </button>
@@ -261,7 +261,7 @@ export function FormulaireVideo({ prefill, onFermer, onAjoutee }) {
           placeholder="https://www.youtube.com/watch?v=…"
           className={champ}
         />
-        <p className="mt-1.5 text-xs text-ink-500">
+        <p className="mt-1.5 text-xs text-ink-500 dark:text-ink-400">
           L'adresse courte youtu.be et les Shorts fonctionnent aussi.
         </p>
       </div>
@@ -300,7 +300,7 @@ export function FormulaireVideo({ prefill, onFermer, onAjoutee }) {
         </div>
         <div>
           <label htmlFor="video-duree" className={etiquette}>
-            Durée <span className="font-normal text-ink-400">(facultatif)</span>
+            Durée <span className="font-normal text-ink-500 dark:text-ink-400">(facultatif)</span>
           </label>
           <input
             id="video-duree"
@@ -376,7 +376,7 @@ export default function SectionVideos({ matiere = null }) {
           </Bouton>
           <Link
             to={matiere ? `/videos?m=${matiere}` : "/videos"}
-            className="text-sm font-medium text-flame-600 hover:text-flame-700 dark:text-flame-400"
+            className="text-sm font-medium text-flame-700 hover:text-flame-800 dark:text-flame-400"
           >
             Toutes les vidéos
           </Link>

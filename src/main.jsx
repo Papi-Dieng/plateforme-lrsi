@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter } from "react-router-dom";
 import { FournisseurSession } from "./FournisseurSession";
+import FiletErreur from "./components/FiletErreur";
 import { chargerContenu } from "./contenu";
 import { site } from "./data/site";
 import { demarrerApplication } from "./installation";
@@ -40,7 +41,17 @@ try {
 // `chargerContenu` ne dure jamais plus de quatre secondes et ne
 // bloque jamais : en cas d'échec, le contenu du code s'affiche.
 await chargerContenu();
-const { default: App } = await import("./App.jsx");
+
+// Si l'application ne se charge pas (fichier disparu après une mise en
+// ligne, réseau coupé), le filet plein écran s'affiche d'emblée avec
+// cette erreur, plutôt qu'une page blanche.
+let App = null;
+let erreurChargement = null;
+try {
+  ({ default: App } = await import("./App.jsx"));
+} catch (erreur) {
+  erreurChargement = erreur;
+}
 
 // Rappels de révision : une notification par jour au plus, si
 // l'étudiant les a activés dans son planning (src/rappels.js).
@@ -48,10 +59,14 @@ import("./rappels.js").then((m) => m.demarrerRappels()).catch(() => {});
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <HashRouter>
-      <FournisseurSession>
-        <App />
-      </FournisseurSession>
-    </HashRouter>
+    <FiletErreur pleinEcran erreurInitiale={erreurChargement}>
+      {App && (
+        <HashRouter>
+          <FournisseurSession>
+            <App />
+          </FournisseurSession>
+        </HashRouter>
+      )}
+    </FiletErreur>
   </StrictMode>
 );

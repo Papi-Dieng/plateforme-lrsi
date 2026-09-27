@@ -75,7 +75,7 @@ function Question({ l }) {
                   {o}
                   {i === l.piege && <span className="ml-2 text-xs font-semibold text-flame-600 dark:text-flame-400">piège le plus choisi</span>}
                 </span>
-                <span className="w-16 shrink-0 text-right text-xs text-ink-500">
+                <span className="w-16 shrink-0 text-right text-xs text-ink-500 dark:text-ink-400">
                   {l.choix[i]} · {part} %
                 </span>
               </div>
@@ -152,7 +152,7 @@ export default function StatsAdmin() {
 
       <Container className="space-y-6 py-10">
         {etat.texte && (
-          <p className={cx("text-sm", etat.type === "erreur" ? "text-flame-600 dark:text-flame-400" : "text-ink-500")}>{etat.texte}</p>
+          <p className={cx("text-sm", etat.type === "erreur" ? "text-flame-600 dark:text-flame-400" : "text-ink-500 dark:text-ink-400")}>{etat.texte}</p>
         )}
         {!motDePasse ? (
           <ConnexionAdmin
@@ -162,7 +162,7 @@ export default function StatsAdmin() {
             }}
           />
         ) : !qcms ? (
-          <p className="text-sm text-ink-500">Chargement des statistiques…</p>
+          <p className="text-sm text-ink-500 dark:text-ink-400">Chargement des statistiques…</p>
         ) : (
           <>
             <div className="flex flex-wrap items-center gap-3">
@@ -219,7 +219,7 @@ export default function StatsAdmin() {
               </>
             )}
 
-            <p className="text-xs text-ink-400">
+            <p className="text-xs text-ink-500 dark:text-ink-400">
               Anonyme : pour chaque question, seulement des compteurs de réponses. Ni nom, ni
               identifiant, ni adresse IP, ni date par étudiant ne sont gardés. Les étudiants peuvent refuser l&apos;envoi dans leurs paramètres.
             </p>

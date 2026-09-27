@@ -100,7 +100,7 @@ export default function AvisRedaction({ enonce, corrige }) {
               {avis.conseil}
             </p>
           )}
-          <p className="text-[11px] text-ink-400">
+          <p className="text-[11px] text-ink-500 dark:text-ink-400">
             Avis rédigé par une IA : elle peut se tromper. Le corrigé et ton enseignant font foi.
           </p>
         </div>

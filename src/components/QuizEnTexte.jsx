@@ -104,7 +104,7 @@ export default function QuizEnTexte({ qcm, onAjouter, onRemplacer }) {
           <Icon name="pencil" className="size-4 text-brand-500" />
           {mode === "ajouter" ? "Écrire le quiz en texte" : "Modifier le QCM en texte"}
         </h3>
-        <button type="button" onClick={() => setMode(null)} className="text-xs text-ink-500 hover:underline">
+        <button type="button" onClick={() => setMode(null)} className="text-xs text-ink-500 dark:text-ink-400 hover:underline">
           Fermer sans rien changer
         </button>
       </div>
@@ -144,7 +144,7 @@ export default function QuizEnTexte({ qcm, onAjouter, onRemplacer }) {
             Aperçu : {valides.length} question(s) reconnue(s)
             {enErreur > 0 && <span className="text-sun-700 dark:text-sun-400"> · {enErreur} à corriger</span>}
           </p>
-          {lues.length === 0 && <p className="text-sm text-ink-400">Les questions apparaîtront ici pendant que tu écris.</p>}
+          {lues.length === 0 && <p className="text-sm text-ink-500 dark:text-ink-400">Les questions apparaîtront ici pendant que tu écris.</p>}
           {lues.map((q) => (
             <div
               key={q.numero}
@@ -154,7 +154,7 @@ export default function QuizEnTexte({ qcm, onAjouter, onRemplacer }) {
               )}
             >
               <p className="whitespace-pre-line font-medium text-ink-900 dark:text-white">
-                <span className="mr-1 font-mono text-xs text-ink-400">{q.numero}.</span>
+                <span className="mr-1 font-mono text-xs text-ink-500 dark:text-ink-400">{q.numero}.</span>
                 {q.enonce || "(énoncé vide)"}
               </p>
               <ol className="mt-1.5 space-y-0.5">
@@ -171,7 +171,7 @@ export default function QuizEnTexte({ qcm, onAjouter, onRemplacer }) {
                   </li>
                 ))}
               </ol>
-              {q.explication && <p className="mt-1.5 text-xs text-ink-500">{q.explication}</p>}
+              {q.explication && <p className="mt-1.5 text-xs text-ink-500 dark:text-ink-400">{q.explication}</p>}
               {q.erreurs.map((e) => (
                 <p key={e} className="mt-1.5 text-xs font-medium text-sun-800 dark:text-sun-400">
                   ⚠ {e}

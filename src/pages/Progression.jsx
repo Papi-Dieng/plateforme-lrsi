@@ -140,7 +140,7 @@ function MiniStat({ valeur, unite, libelle }) {
       <p className="text-2xl font-bold text-ink-900 dark:text-white">
         {valeur}
         {unite && (
-          <span className="ml-1 text-sm font-medium text-ink-400">{unite}</span>
+          <span className="ml-1 text-sm font-medium text-ink-500 dark:text-ink-400">{unite}</span>
         )}
       </p>
       <p className="mt-0.5 text-xs text-ink-500 dark:text-ink-400">{libelle}</p>
@@ -391,7 +391,7 @@ export default function Progression() {
           <div>
             <p className="text-2xl font-bold text-ink-900 dark:text-white">
               {activite.total}
-              <span className="ml-1 text-sm font-medium text-ink-400">
+              <span className="ml-1 text-sm font-medium text-ink-500 dark:text-ink-400">
                 jour{activite.total > 1 ? "s" : ""} actif
                 {activite.total > 1 ? "s" : ""}
               </span>
@@ -444,7 +444,7 @@ export default function Progression() {
                     </span>
                     {l.m.nom}
                   </Link>
-                  <span className="font-mono text-xs text-ink-500 tabular-nums">
+                  <span className="font-mono text-xs text-ink-500 dark:text-ink-400 tabular-nums">
                     {l.faits}/{l.total}
                   </span>
                 </div>
@@ -498,7 +498,7 @@ export default function Progression() {
                     >
                       {r.q.titre}
                     </Link>
-                    <span className="mt-0.5 block text-xs text-ink-500">
+                    <span className="mt-0.5 block text-xs text-ink-500 dark:text-ink-400">
                       {getMatiere(r.q.matiere)?.nom} ·{" "}
                       {r.tentatives ?? 1} tentative
                       {(r.tentatives ?? 1) > 1 ? "s" : ""} ·{" "}
@@ -573,7 +573,7 @@ export default function Progression() {
                             {n.label}
                           </span>
                         </span>
-                        <span className="font-mono text-xs text-ink-500 tabular-nums">
+                        <span className="font-mono text-xs text-ink-500 dark:text-ink-400 tabular-nums">
                           {c.justes}/{c.total} · {c.taux} %
                         </span>
                       </div>

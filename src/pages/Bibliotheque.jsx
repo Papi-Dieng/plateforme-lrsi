@@ -126,7 +126,7 @@ export default function Bibliotheque() {
         {attente.length > 0 && (
           <section className="mt-12">
             <h2 className="flex items-center gap-2 text-lg font-semibold text-ink-900 dark:text-white">
-              <Icon name="lock" className="size-5 text-ink-400" />
+              <Icon name="lock" className="size-5 text-ink-500 dark:text-ink-400" />
               En attente d'autorisation
               <Badge ton="sun">{attente.length}</Badge>
             </h2>
@@ -147,7 +147,7 @@ export default function Bibliotheque() {
                 >
                   <div className="flex items-center justify-between gap-2">
                     <Badge>{r.type}</Badge>
-                    <Icon name="lock" className="size-4 text-ink-400" />
+                    <Icon name="lock" className="size-4 text-ink-500 dark:text-ink-400" />
                   </div>
                   <h3 className="mt-3 font-semibold text-ink-700 dark:text-ink-200">
                     {r.titre}

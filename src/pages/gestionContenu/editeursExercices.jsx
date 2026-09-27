@@ -254,7 +254,7 @@ export function EditeurQcm({ element: q, changer, matieres, competences, motDePa
         {questions.map((x, i) => (
           <div key={i} className="rounded-xl border border-ink-200 p-4 dark:border-ink-800">
             <div className="flex items-start gap-3">
-              <span className="mt-8 font-mono text-xs text-ink-400">{i + 1}</span>
+              <span className="mt-8 font-mono text-xs text-ink-500 dark:text-ink-400">{i + 1}</span>
               <div className="min-w-0 flex-1 space-y-3">
                 <Zone label="Question" rows={2} value={x.enonce} maxLength={1000} onChange={(e) => changerQuestion(i, { enonce: e.target.value })} />
                 <fieldset>
@@ -291,7 +291,7 @@ export function EditeurQcm({ element: q, changer, matieres, competences, motDePa
                             })
                           }
                           aria-label={`Retirer la réponse ${k + 1}`}
-                          className="rounded-lg p-1.5 text-ink-400 hover:bg-ink-100 disabled:opacity-30 dark:hover:bg-ink-800"
+                          className="rounded-lg p-1.5 text-ink-500 dark:text-ink-400 hover:bg-ink-100 disabled:opacity-30 dark:hover:bg-ink-800"
                         >
                           <Icon name="close" className="size-4" />
                         </button>
