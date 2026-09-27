@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* Tailwind lit les fichiers du projet pour savoir quelles classes
+   produire. La documentation et les tests en citent aussi : sans ces
+   exclusions, modifier le README changerait la feuille de style du
+   site, et donc docs/ (la vérification GitHub le signalerait). */
+@source not "../README.md";
+@source not "../e2e";
+@source not "../scripts";
+
 /* Le mode sombre est pilote par la classe .dark posee sur <html> (voir ThemeToggle). */
 @custom-variant dark (&:where(.dark, .dark *));
 

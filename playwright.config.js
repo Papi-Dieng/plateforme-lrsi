@@ -23,6 +23,10 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
+  // Les pages arrivent à la demande, et la suite complète fait tourner
+  // plusieurs navigateurs à la fois : 10 s de marge au lieu de 5. Cela ne
+  // ralentit rien quand tout va bien, l'attente s'arrête dès que c'est bon.
+  expect: { timeout: 10_000 },
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
   use: {
     baseURL: `http://localhost:${PORT}/`,
