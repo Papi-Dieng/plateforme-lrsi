@@ -578,9 +578,14 @@ function ChargementPage() {
   );
 }
 
+// Pages qui occupent tout l'écran, sans pied de page : seul leur contenu
+// défile (l'assistant, comme une messagerie).
+const PAGES_PLEIN_ECRAN = ["/assistant"];
+
 export default function Layout() {
   const [ouvert, setOuvert] = useState(false);
   const { pathname } = useLocation();
+  const pleinEcran = PAGES_PLEIN_ECRAN.includes(pathname);
 
   // Le menu mobile se referme à chaque navigation.
   const [chemin, setChemin] = useState(pathname);
@@ -590,7 +595,7 @@ export default function Layout() {
   }
 
   return (
-    <div className="min-h-screen bg-ink-200 lg:p-5 dark:bg-ink-950">
+    <div className={cx("bg-ink-200 lg:p-5 dark:bg-ink-950", pleinEcran ? "h-dvh" : "min-h-screen")}>
       <a
         href="#contenu"
         className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-sm focus:text-white"
@@ -599,11 +604,16 @@ export default function Layout() {
       </a>
       <RetourEnHaut />
 
-      <div className="mx-auto flex min-h-screen w-full max-w-[1440px] overflow-hidden bg-white lg:min-h-[calc(100vh-2.5rem)] lg:rounded-3xl lg:shadow-xl lg:ring-1 lg:ring-ink-300/50 dark:bg-ink-900 dark:lg:ring-ink-800">
+      <div
+        className={cx(
+          "mx-auto flex w-full max-w-[1440px] overflow-hidden bg-white lg:rounded-3xl lg:shadow-xl lg:ring-1 lg:ring-ink-300/50 dark:bg-ink-900 dark:lg:ring-ink-800",
+          pleinEcran ? "h-full" : "min-h-screen lg:min-h-[calc(100vh-2.5rem)]"
+        )}
+      >
         <BarreLaterale />
         <div className="flex min-w-0 flex-1 flex-col">
           <BarreDuHaut ouvert={ouvert} setOuvert={setOuvert} />
-          <main id="contenu" className="flex-1">
+          <main id="contenu" className={cx("flex-1", pleinEcran && "min-h-0 overflow-hidden")}>
             {/* Une page qui plante n'emporte pas la coque ; le filet se
                 remet à zéro à chaque changement de page. */}
             <FiletErreur key={pathname}>
@@ -612,7 +622,7 @@ export default function Layout() {
               </Suspense>
             </FiletErreur>
           </main>
-          <PiedDePage />
+          {!pleinEcran && <PiedDePage />}
         </div>
       </div>
     </div>

@@ -4,18 +4,9 @@ import Icon from "../components/Icon";
 import ChargementIA from "../components/ChargementIA";
 import SaisieIA from "../components/SaisieIA";
 import { ETAPES_ASSISTANT } from "../chargementIA";
-import {
-  Badge,
-  Bouton,
-  Container,
-  EnTetePage,
-  NoteDemo,
-  TitreSection,
-} from "../components/ui";
 import { cx } from "../components/classes";
-import { lireExercicesTravailles, lireScores } from "../progression";
+import { lireScores } from "../progression";
 import {
-  MINIMUM_REPONSES,
   analyserCompetences,
   faiblesses,
   modulesAAmeliorer,
@@ -68,41 +59,6 @@ function historiqueAvant(messages, id) {
   }
   return historique;
 }
-
-const capacites = [
-  {
-    icone: "book",
-    titre: "Retrouver un chapitre",
-    texte:
-      "Le cours qui traite la notion, avec les exercices et les QCM qui s'y rattachent.",
-  },
-  {
-    icone: "pencil",
-    titre: "Proposer un exercice",
-    texte:
-      "Sur un sujet précis, ou à défaut sur la compétence où tu es le plus faible.",
-  },
-  {
-    icone: "layers",
-    titre: "Dire par où commencer",
-    texte:
-      "D'après tes résultats de QCM, la compétence la plus basse et les chapitres liés.",
-  },
-];
-
-const cequilNeFaitPas = iaActive
-  ? [
-      "Remplacer le cours : l'IA peut se tromper, le cours et l'enseignant font foi.",
-      "Donner d'emblée la réponse d'un exercice : il commence par la méthode et un indice.",
-      "Proposer en lien un contenu absent de la plateforme : les liens viennent du guide, pas de l'IA.",
-      "Juger ton niveau sur deux réponses : il lui en faut au moins trois.",
-    ]
-  : [
-      "Rédiger une explication : il cite le cours, il ne le réécrit pas.",
-      "Donner la réponse d'un exercice sans que tu ouvres la correction.",
-      "Inventer un contenu absent de la plateforme : il dit qu'il n'a rien trouvé.",
-      "Juger ton niveau sur deux réponses : il lui en faut au moins trois.",
-    ];
 
 /* ---- Texte rédigé par l'IA, affiché comme du texte simple ---- */
 
@@ -192,7 +148,6 @@ function Liens({ liens }) {
 export default function Assistant() {
   // Lus une fois, à l'ouverture de la page.
   const [scores] = useState(lireScores);
-  const [exercicesTravailles] = useState(lireExercicesTravailles);
   const [saisie, setSaisie] = useState("");
   const [messages, setMessages] = useState([]);
   const compteur = useRef(0);
@@ -287,101 +242,46 @@ export default function Assistant() {
     },
   ];
 
-  const detailProgression = [
-    {
-      icone: "target",
-      valeur: reponses,
-      label: reponses > 1 ? "réponses enregistrées" : "réponse enregistrée",
-      detail: "chaque question de QCM terminée alimente l'analyse",
-    },
-    {
-      icone: "layers",
-      valeur: fragiles.length,
-      label: fragiles.length > 1 ? "compétences fragiles" : "compétence fragile",
-      detail: `repérées à partir de ${MINIMUM_REPONSES} réponses au minimum`,
-    },
-    {
-      icone: "book",
-      valeur: modules.length,
-      label: modules.length > 1 ? "chapitres à revoir" : "chapitre à revoir",
-      detail: "déduits des compétences fragiles, pas d'un jugement global",
-    },
-    {
-      icone: "pencil",
-      // { identifiant: { date } } : un objet, pas une liste.
-      valeur: Object.keys(exercicesTravailles).length,
-      label:
-        Object.keys(exercicesTravailles).length > 1
-          ? "exercices travaillés"
-          : "exercice travaillé",
-      detail: "pour éviter de reproposer ce qui est déjà maîtrisé",
-    },
-  ];
-
   return (
-    <>
-      <EnTetePage
-        surtitre="Guide de révision"
-        titre="Assistant de révision"
-        texte={
-          iaActive
-            ? "Pose ta question : l'IA t'explique la notion, et le guide retrouve le chapitre, l'exercice ou le QCM qui la traite. Il sait aussi dire par où commencer d'après tes résultats."
-            : "Pose ta question : il retrouve le chapitre, l'exercice ou le QCM qui traite le sujet, et il sait dire par où commencer d'après tes résultats. Il ne rédige aucune explication lui-même."
-        }
-      >
-        <Badge ton="neutre" icone="info">
-          {iaActive
-            ? "IA générative — peut se tromper"
-            : "Guide, pas une IA générative"}
-        </Badge>
-      </EnTetePage>
-
-      <Container className="space-y-12 py-10">
-        {/* ============================================================
-            La discussion
-            ============================================================ */}
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* ---- Panneau de discussion ---- */}
-          <div className="card flex flex-col overflow-hidden lg:col-span-2">
-            <div className="bg-brand-950 px-6 py-5">
-              <div className="flex items-center gap-3.5">
-                <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-white/10 text-white ring-1 ring-white/15">
-                  <Icon name="sparkles" className="size-5" />
-                </span>
-                <div>
-                  <h2 className="text-lg font-bold tracking-tight text-white">
-                    Assistant de révision
-                  </h2>
-                  <p className="mt-0.5 flex items-center gap-2 text-sm text-white/70">
-                    <span
-                      aria-hidden="true"
-                      className="size-2 rounded-full bg-accent-400"
-                    />
-                    {iaActive
-                      ? "En service — IA Gemini et contenu de la plateforme"
-                      : "En service — cherche dans le contenu de la plateforme"}
-                  </p>
-                </div>
-              </div>
-
-              <dl className="mt-5 flex flex-wrap gap-x-6 gap-y-2 border-t border-white/10 pt-4">
-                {compteurs.map((c) => (
-                  <div key={c.label} className="flex items-center gap-2">
-                    <Icon name={c.icone} className="size-4 text-white/50" />
-                    <dt className="sr-only">{c.label}</dt>
-                    <dd className="text-sm text-white/80">
-                      <span className="font-semibold text-white">
-                        {c.valeur}
-                      </span>{" "}
-                      {c.label}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
+    <div className="flex h-full flex-col">
+      {/* ---- En-tête ---- */}
+      <div className="shrink-0 bg-brand-950 px-4 py-3.5 sm:px-6">
+        <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-6 gap-y-2">
+          <div className="flex items-center gap-3">
+            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white/10 text-white ring-1 ring-white/15">
+              <Icon name="sparkles" className="size-4.5" />
+            </span>
+            <div>
+              <h1 className="font-bold tracking-tight text-white">Assistant de révision</h1>
+              <p className="flex items-center gap-2 text-xs text-white/70">
+                <span aria-hidden="true" className="size-2 rounded-full bg-accent-400" />
+                {iaActive ? "IA Gemini et contenu de la plateforme" : "Cherche dans le contenu de la plateforme"}
+              </p>
             </div>
+          </div>
+          <dl className="flex flex-wrap gap-x-5 gap-y-1 sm:ml-auto">
+            {compteurs.map((c) => (
+              <div key={c.label} className="flex items-center gap-1.5">
+                <Icon name={c.icone} className="size-3.5 text-white/50" />
+                <dt className="sr-only">{c.label}</dt>
+                <dd className="text-xs text-white/80">
+                  <span className="font-semibold text-white">{c.valeur}</span> {c.label}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </div>
 
-            {/* ---- Fil de discussion ---- */}
-            <div className="flex-1 space-y-5 px-6 py-6">
+      {/* ---- Fil de discussion : seul à défiler ---- */}
+      {/* Focalisable : on peut la faire défiler au clavier (flèches, Page suivante). */}
+      <div
+        tabIndex={0}
+        role="region"
+        aria-label="Conversation avec l'assistant"
+        className="min-h-0 flex-1 overflow-y-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500"
+      >
+        <div className="mx-auto max-w-3xl space-y-5 px-4 py-6 sm:px-6">
               {/* Message d'accueil : il dit ce qu'il est avant tout. */}
               <div className="flex gap-3">
                 <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300">
@@ -513,240 +413,33 @@ export default function Assistant() {
                   </div>
                 )
               )}
-            </div>
-
-            {/* ---- Saisie ---- */}
-            <div className="border-t border-ink-200 px-6 py-5 dark:border-ink-800">
-              <SaisieIA
-                id="assistant-question"
-                libelle="Poser une question à l'assistant"
-                valeur={saisie}
-                onChange={setSaisie}
-                onEnvoyer={envoyer}
-                enAttente={enAttente}
-                onArreter={arreter}
-                avecImage={iaActive}
-                placeholder="Une notion, un exercice, un chapitre à réviser…"
-              />
-              <p className="mt-2 text-xs text-ink-500 dark:text-ink-400">
-                Entrée pour envoyer, Maj + Entrée pour aller à la ligne. La
-                conversation n'est pas enregistrée : elle disparaît en quittant
-                la page.
-                {iaActive &&
-                  " Tes questions, et les images que tu joins, sont envoyées à Google Gemini pour rédiger la réponse : pas de photo de personne ni de document personnel."}
-              </p>
-            </div>
-          </div>
-
-          {/* ---- Colonne de droite ---- */}
-          <div className="space-y-6">
-            <div className="card p-5">
-              <h2 className="flex items-center gap-2 font-semibold text-ink-900 dark:text-white">
-                <Icon name="sparkles" className="size-4 text-flame-500" />
-                Ce qu'il sait faire
-              </h2>
-
-              <ul className="mt-4 space-y-3">
-                {capacites.map((c) => (
-                  <li
-                    key={c.titre}
-                    className="flex gap-3 rounded-xl bg-ink-50 p-3.5 dark:bg-ink-950"
-                  >
-                    <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-white text-brand-600 ring-1 ring-ink-200 dark:bg-ink-900 dark:text-brand-300 dark:ring-ink-800">
-                      <Icon name={c.icone} className="size-4.5" />
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold text-ink-900 dark:text-white">
-                        {c.titre}
-                      </p>
-                      <p className="mt-0.5 text-xs/5 text-ink-600 dark:text-ink-400">
-                        {c.texte}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="card p-5">
-              <h2 className="flex items-center gap-2 font-semibold text-ink-900 dark:text-white">
-                <Icon name="bulb" className="size-4 text-flame-500" />
-                Questions rapides
-              </h2>
-              <p className="mt-1 text-xs/5 text-ink-500 dark:text-ink-400">
-                Clique pour envoyer directement.
-              </p>
-
-              <ul className="mt-4 space-y-2.5">
-                {questionsRapides.map((q) => (
-                  <li key={q}>
-                    <button
-                      type="button"
-                      onClick={() => envoyer(q)}
-                      className="block w-full rounded-xl border border-ink-200 px-3.5 py-2.5 text-left text-xs/5 text-ink-600 transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 dark:border-ink-800 dark:text-ink-400 dark:hover:border-brand-500/40 dark:hover:bg-brand-500/10 dark:hover:text-brand-200"
-                    >
-                      {q}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
         </div>
+      </div>
 
-        {/* ============================================================
-            Les données réelles sur lesquelles il s'appuie
-            ============================================================ */}
-        <section>
-          <TitreSection
-            surtitre="Sur quoi il s'appuie"
-            titre="Ce qu'il sait de toi"
-            texte="Ces chiffres ne sont pas des exemples : ils viennent de ta progression, enregistrée dans ce navigateur."
+      {/* ---- Saisie ---- */}
+      <div className="shrink-0 border-t border-ink-200 px-4 py-4 dark:border-ink-800">
+        <div className="mx-auto max-w-3xl">
+          <SaisieIA
+            id="assistant-question"
+            libelle="Poser une question à l'assistant"
+            valeur={saisie}
+            onChange={setSaisie}
+            onEnvoyer={envoyer}
+            enAttente={enAttente}
+            onArreter={arreter}
+            avecImage={iaActive}
+            placeholder="Une notion, un exercice, un chapitre à réviser…"
           />
-
-          {reponses === 0 ? (
-            <div className="mt-6 card p-6">
-              <p className="text-sm/6 text-ink-700 dark:text-ink-300">
-                Tu n'as pas encore terminé de QCM : si tu lui demandes par où
-                commencer, il te le dira franchement plutôt que d'inventer une
-                faiblesse. Il ne devine pas ton niveau, il le lit dans ce que tu
-                as réellement fait. Une compétence n'est jugée qu'à partir de{" "}
-                {MINIMUM_REPONSES} réponses, pour éviter de conclure sur un coup
-                de chance ou un moment d'inattention.
-              </p>
-              <div className="mt-5 flex flex-wrap gap-3">
-                <Bouton to="/qcm">
-                  <Icon name="target" className="size-4" />
-                  Faire un premier QCM
-                </Bouton>
-                <Bouton to="/progression" variante="secondaire">
-                  Voir ma progression
-                </Bouton>
-              </div>
-            </div>
-          ) : (
-            <>
-              <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {detailProgression.map((m) => (
-                  <li key={m.label} className="card p-5">
-                    <span className="grid size-9 place-items-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300">
-                      <Icon name={m.icone} className="size-4.5" />
-                    </span>
-                    <p className="mt-3 text-3xl font-bold tracking-tight text-ink-900 dark:text-white">
-                      {m.valeur}
-                    </p>
-                    <p className="text-sm font-medium text-ink-700 dark:text-ink-300">
-                      {m.label}
-                    </p>
-                    <p className="mt-1.5 text-xs/5 text-ink-500 dark:text-ink-400">
-                      {m.detail}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-
-              {modules.length > 0 && (
-                <div className="mt-4 card p-5">
-                  <p className="text-sm/6 text-ink-700 dark:text-ink-300">
-                    Si tu lui demandes par où commencer, il répondra{" "}
-                    <strong className="font-semibold text-ink-900 dark:text-white">
-                      {modules[0].chapitre}
-                    </strong>{" "}
-                    en {modules[0].nomMatiere}, parce que la compétence «{" "}
-                    {modules[0].motif} » est à {modules[0].taux} %. Ce choix
-                    vient d'un calcul sur tes réponses, pas d'une préférence.
-                  </p>
-                  <div className="mt-4">
-                    <Bouton to="/progression" variante="secondaire">
-                      Voir le détail par compétence
-                    </Bouton>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </section>
-
-        {/* ============================================================
-            Les limites
-            ============================================================ */}
-        <section>
-          <TitreSection
-            surtitre="Le cadre"
-            titre="Ce qu'il ne fait pas"
-            texte="Mieux vaut un outil qui dit « je n'ai rien trouvé » qu'un outil qui répond n'importe quoi avec assurance."
-          />
-
-          <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-            {cequilNeFaitPas.map((t) => (
-              <li key={t} className="card flex gap-3 p-4">
-                <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-flame-100 text-flame-600 dark:bg-flame-500/15 dark:text-flame-400">
-                  <Icon name="close" className="size-4" />
-                </span>
-                <p className="text-sm/6 text-ink-700 dark:text-ink-300">{t}</p>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {/* ============================================================
-            La suite
-            ============================================================ */}
-        {!iaActive && (
-        <section>
-          <TitreSection
-            surtitre="Version 4"
-            titre="Et la vraie IA, alors ?"
-            texte="Elle viendra, mais elle demande une chose que le site n'a pas encore."
-          />
-
-          <div className="mt-6 card p-6">
-            <p className="text-sm/6 text-ink-700 dark:text-ink-300">
-              Brancher un modèle de langage exige une clé d'accès payante. Sur
-              un site statique comme celui-ci, cette clé serait livrée au
-              navigateur de chaque visiteur, donc lisible par tous et utilisable
-              par n'importe qui. Il faudra d'abord un serveur pour la garder,
-              c'est le chantier des versions 3 et 4.
-            </p>
-            <p className="mt-3 text-sm/6 text-ink-700 dark:text-ink-300">
-              En attendant, ce guide fonctionne pour tout le monde, sans compte,
-              sans frais, et même{" "}
-              <Link
-                to="/projet"
-                className="font-medium text-brand-600 underline underline-offset-2 hover:text-brand-700 dark:text-brand-300"
-              >
-                hors connexion
-              </Link>
-              . C'est déjà l'essentiel de ce qu'on attend de lui : savoir où
-              chercher.
-            </p>
-          </div>
-        </section>
-        )}
-
-        {iaActive ? (
-          <NoteDemo>
-            Tes questions, les réponses déjà reçues dans cette conversation et
-            les titres des contenus trouvés sont envoyés à Google Gemini, via
-            le relais de la plateforme, pour rédiger la réponse. Ton profil, ta
-            progression et tes scores ne sont jamais envoyés. Le relais
-            n'enregistre rien, mais Google peut conserver les échanges de
-            l'offre gratuite : n'écris rien de personnel. Détails dans la{" "}
+          <p className="mt-2 text-center text-xs text-ink-500 dark:text-ink-400">
+            {iaActive
+              ? "Tes questions et tes images sont envoyées à Google Gemini : rien de personnel, pas de photo de personne. L'IA peut se tromper, le cours fait foi. "
+              : "Tout se passe dans ton navigateur. "}
             <Link to="/confidentialite" className="underline underline-offset-2">
-              politique de confidentialité
+              Confidentialité
             </Link>
-            .
-          </NoteDemo>
-        ) : (
-          <NoteDemo>
-            Tout se passe dans ton navigateur : ta question n'est envoyée nulle
-            part, et la conversation n'est pas enregistrée. Le jour où un vrai
-            modèle de langage sera branché, ce qui lui sera transmis et ce qui
-            ne le sera pas sera écrit dans les conditions d'utilisation avant la
-            moindre mise en service.
-          </NoteDemo>
-        )}
-      </Container>
-    </>
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

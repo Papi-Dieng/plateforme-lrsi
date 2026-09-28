@@ -40,13 +40,62 @@ const MOTS_VIDES = new Set([
   "revise", "reviser", "salut", "sont", "stp", "tous", "tout", "veux",
   "vraiment", "propose", "proposer", "montre", "montrer", "aide", "aider",
   "niveau", "mien", "sujet", "chose", "truc", "petit", "petite",
+  // Les mots d'une question, qui ne disent rien du sujet : sans eux,
+  // « quelle différence entre un routeur et un commutateur » menait au
+  // chapitre dont le résumé parle de « différence entre processus… ».
+  "quel", "quelle", "quels", "quelles", "difference", "differences",
+  "entre", "comment", "pourquoi", "quand", "combien", "lequel", "laquelle",
+  "exemple", "exemples", "concret", "concrete", "definition", "definir",
+  "signifie", "veut", "dire", "sert", "servent", "utilise", "utiliser",
+  "fonctionne", "marche", "deux", "trois", "autre", "autres", "leur", "leurs",
+  // Les petits mots de trois lettres : les mots de trois lettres sont
+  // gardés pour les sigles (DNS, SQL, TCP, ARP…), pas pour ceux-là.
+  "les", "des", "une", "est", "que", "qui", "sur", "par", "pas", "son", "ses",
+  "aux", "ces", "mes", "tes", "nos", "vos", "ont", "mon", "ton", "moi", "toi",
+  "lui", "elle", "eux", "ils", "cet", "car", "donc", "mais", "ou", "oui", "non",
+  "bon", "fait", "peu", "tres", "trop", "quoi", "cela", "ceci", "tel", "via",
 ]);
 
-const motsUtiles = (texte) =>
-  normalise(texte)
+/* La racine d'un mot, pour rapprocher les formes d'une même famille :
+   « commutateur » et « commutation » (commutat), « routeur » et
+   « routage » (rout), « tris » et « tri ». On retire une terminaison
+   courante, sans descendre sous quatre lettres ; c'est grossier, mais
+   suffisant pour un vocabulaire de cours. */
+const TERMINAISONS = [
+  "ateurs", "atrices", "ations", "ateur", "atrice", "ation",
+  "ements", "ement", "euses", "euse", "eurs", "eur",
+  "iques", "ique", "ages", "age", "ions", "ion", "ite", "ites",
+  "ees", "ee", "er", "es", "e", "s", "x",
+];
+export function racine(mot) {
+  for (const t of TERMINAISONS) {
+    if (mot.endsWith(t) && mot.length - t.length >= 4) return mot.slice(0, -t.length);
+  }
+  return mot;
+}
+
+/* Les sigles de la question (DHCP, OSI, IPv6, SQL…) : au moins deux
+   majuscules, ou des lettres suivies d'un chiffre. Ils désignent presque
+   toujours le sujet, et comptent donc plus qu'un mot long et vague :
+   dans « le protocole DHCP », c'est DHCP qui compte. */
+const RE_SIGLE = /^(?=(?:[^A-Z]*[A-Z]){2})[A-Za-z0-9]{2,8}$|^[A-Za-z]{2,5}\d+$/;
+const POIDS_SIGLE = 10;
+
+function motsUtiles(texte) {
+  const mots = normalise(texte)
     .replace(/[^a-z0-9]+/g, " ")
     .split(" ")
-    .filter((m) => m.length >= 4 && !MOTS_VIDES.has(m));
+    .filter((m) => m.length >= 3 && !MOTS_VIDES.has(m))
+    .map(racine)
+    .filter((m, i, t) => m.length >= 3 && t.indexOf(m) === i);
+  mots.sigles = new Set(
+    String(texte ?? "")
+      .split(/[^A-Za-z0-9]+/)
+      .filter((m) => RE_SIGLE.test(m))
+      .map((m) => m.toLowerCase())
+  );
+  return mots;
+}
 
 /* ---------------------------------------------------------------- */
 /* Intentions                                                        */
@@ -84,9 +133,17 @@ export function detecterIntention(question) {
    correspondances longues comptent davantage : « adressage » est plus
    parlant que « base ». */
 function score(mots, texte) {
-  const t = normalise(texte);
+  // Les mots du texte, ramenés à leur racine comme ceux de la question :
+  // on compare mot à mot, pas des morceaux de mots (« rout » ne doit pas
+  // se retrouver dans « déroute », ni « tri » dans « matrice »).
+  const racines = new Set(
+    normalise(texte)
+      .replace(/[^a-z0-9]+/g, " ")
+      .split(" ")
+      .map(racine)
+  );
   let n = 0;
-  for (const mot of mots) if (t.includes(mot)) n += mot.length;
+  for (const mot of mots) if (racines.has(mot)) n += mots.sigles?.has(mot) ? POIDS_SIGLE : mot.length;
   return n;
 }
 
@@ -101,11 +158,25 @@ const scorePondere = (mots, champs) =>
    courte et juste vaut mieux qu'une liste qui noie la bonne entrée. */
 const PLANCHER = 0.4;
 
+/* Si la question contient un sigle (OSI, DHCP…), seuls les contenus qui
+   le citent sont gardés : un chapitre qui ne parle pas d'OSI n'a rien à
+   faire dans la réponse à une question sur OSI, même s'il partage le mot
+   « modèle ». */
 function meilleurs(liste, mots, champsDe, maximum = 3) {
-  const notes = liste
-    .map((item) => ({ item, points: scorePondere(mots, champsDe(item)) }))
+  const sigles = [...(mots.sigles ?? [])].filter((s) => mots.includes(s));
+  sigles.sigles = mots.sigles;
+  let notes = liste
+    .map((item) => ({
+      item,
+      points: scorePondere(mots, champsDe(item)),
+      sigle: sigles.length > 0 && scorePondere(sigles, champsDe(item)) > 0,
+    }))
     .filter((x) => x.points > 0)
     .sort((a, b) => b.points - a.points);
+  // Un sigle qu'aucun contenu ne cite (« la table ARP ») : c'est le
+  // sujet de la question, et la plateforme n'en parle pas. Mieux vaut ne
+  // rien proposer que des contenus trouvés sur un mot vague (« table »).
+  if (sigles.length > 0) notes = notes.filter((x) => x.sigle);
 
   if (notes.length === 0) return [];
 
