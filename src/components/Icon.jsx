@@ -169,7 +169,16 @@ const paths = {
       <path d="M9.5 14.5 7 12a12 12 0 0 1 9-9.5c2.5 0 4.5 2 4.5 4.5a12 12 0 0 1-9.5 9z" />
       <circle cx="15" cy="9" r="1.6" />
     </>
+  ),  // Zone de saisie de l'assistant (components/SaisieIA.jsx).
+  trombone: <path d="m21 11.5-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.6-8.6a3.67 3.67 0 0 1 5.2 5.2l-8.6 8.6a1.83 1.83 0 0 1-2.6-2.6l7.9-7.9" />,
+  micro: (
+    <>
+      <rect x="9" y="2.5" width="6" height="12" rx="3" />
+      <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7" />
+    </>
   ),
+  stop: <rect x="6.5" y="6.5" width="11" height="11" rx="2" fill="currentColor" />,
+  haut: <path d="M12 19V5M6 11l6-6 6 6" />,
 };
 
 export default function Icon({ name, className = "size-5", ...rest }) {

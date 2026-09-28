@@ -169,7 +169,38 @@
   }
 }
 
+/* L'anneau de l'animation d'attente de l'IA (components/ChargementIA.jsx) :
+   six cercles qui tournent en sens alternés. */
+@keyframes anneau-horaire {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes anneau-antihoraire {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+.anneau-ia circle {
+  transform-origin: 120px 120px;
+  animation: anneau-horaire 8s linear infinite;
+}
+.anneau-ia circle:nth-child(2n) {
+  animation-name: anneau-antihoraire;
+  animation-delay: 0.2s;
+}
+.anneau-ia circle:nth-child(3n) {
+  animation-delay: 0.3s;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  /* Un anneau figé plutôt qu'une rotation accélérée à l'extrême. */
+  .anneau-ia circle {
+    animation: none !important;
+  }
   html {
     scroll-behavior: auto;
   }

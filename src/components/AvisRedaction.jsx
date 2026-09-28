@@ -1,5 +1,7 @@
 import { useState } from "react";
 import Icon from "./Icon";
+import ChargementIA from "./ChargementIA";
+import { ETAPES_AVIS } from "../chargementIA";
 import { cx } from "./classes";
 import { demanderAvisRedaction, iaActive, raisonEchec } from "../ia";
 
@@ -87,6 +89,7 @@ export default function AvisRedaction({ enonce, corrige }) {
           Ta réponse est envoyée à Google Gemini pour être comparée au corrigé. L'IA ne note pas.
         </p>
       </div>
+      {etat.attente && <ChargementIA etapes={ETAPES_AVIS} className="pt-1" />}
       {etat.erreur && <p className="text-sm text-flame-600 dark:text-flame-400">{etat.erreur}</p>}
 
       {avis && (

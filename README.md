@@ -89,6 +89,7 @@ téléphone.
 | `e2e/devoirs-planning.e2e.js` | un devoir : consignes, minuteur jusqu'à « Temps écoulé », corrigé seulement à la fin, auto-correction bornée au barème, avis de l'IA (ce qui part au relais) et son échec sans IA ; un programme de révision réparti sans IA, ajouté à l'emploi du temps et toujours là après rechargement |
 | `e2e/filet.e2e.js` | une page qui plante affiche un message et la coque tient ; une page ou l'application introuvable après une mise en ligne invite à recharger ; un contenu publié mal formé est ignoré |
 | `e2e/accessibilite.e2e.js` | axe (règles WCAG 2.1 A et AA) sur chaque page, en thème clair et en thème sombre : contrastes, libellés, structure, navigation au clavier |
+| `e2e/ia.e2e.js` | saisie de l'assistant (Entrée, Maj + Entrée, rien à vide, hauteur bornée) ; raccourci « Un exercice » ; bouton Stop qui arrête vraiment ; image jointe (agrandir, retirer, envoi, relais pas à jour signalé, fichier refusé) ; dictée avec une fausse reconnaissance vocale ; attente de l'IA et son accessibilité |
 
 Le relais IA n'est jamais appelé : `e2e/outils.js` le remplace par de
 fausses réponses (rien de publié, IA indisponible, espace admin ouvert
@@ -484,7 +485,8 @@ lrsi-platform/
 │   ├── admin.e2e.js          « Gérer le contenu » : onglets, publication
 │   ├── devoirs-planning.e2e.js  un devoir complet, un programme de révision
 │   ├── filet.e2e.js          une page qui plante, une version périmée
-│   └── accessibilite.e2e.js  axe sur chaque page, thème clair et sombre
+│   ├── accessibilite.e2e.js  axe sur chaque page, thème clair et sombre
+│   └── ia.e2e.js             saisie de l'assistant, attente de l'IA
 ├── serveur-ia/               relais IA gratuit (Cloudflare Workers), garde la clé
 │   ├── index.js              point d'entrée : origines, limites, routes
 │   ├── relais.test.js        tests du relais, sans Cloudflare ni Gemini
@@ -520,6 +522,8 @@ lrsi-platform/
 │   │   ├── BoutonFavori.jsx  marque-page commun à tous les contenus
 │   │   ├── PageJuridique.jsx mise en page des trois pages juridiques
 │   │   ├── FiletErreur.jsx   message à la place d'une page qui plante
+│   │   ├── SaisieIA.jsx      zone de saisie de l'assistant : raccourcis, image, dictée, stop
+│   │   ├── ChargementIA.jsx  animation d'attente de l'IA (d'après kokonutUI)
 │   │   ├── AffichageExercice.jsx  énoncé et correction d'un exercice
 │   │   ├── VerifierReponse.jsx    « Vérifier ma réponse » d'un exercice
 │   │   ├── AvisRedaction.jsx      « Demander l'avis de l'IA » d'un devoir
@@ -589,6 +593,9 @@ lrsi-platform/
 │   ├── extrairePdf.js        lit le texte d'un PDF pour l'assistant (admin)
 │   ├── sessionAdmin.js       mot de passe admin (le temps de l'onglet), messages d'erreur
 │   ├── textesAgent.js        ce que l'agent admin reçoit d'un exercice ou d'une question
+│   ├── chargementIA.js       les étapes affichées pendant l'attente de l'IA
+│   ├── images.js             réduit une image jointe avant de l'envoyer à l'IA
+│   ├── dictee.js             dictée vocale par la reconnaissance du navigateur
 │   ├── quizTexte.js          lit et écrit un QCM au format texte (admin)
 │   ├── verification.js       compare la réponse d'un étudiant à la réponse attendue
 │   ├── progression.js        exercices travaillés, chapitres lus, scores, favoris, vidéos
@@ -606,6 +613,7 @@ lrsi-platform/
 │   ├── main.jsx              point d'entrée
 │   └── index.css             thème, couleurs, styles de base
 ├── index.html
+├── LICENCES-TIERS.md         code repris d'autres projets, et sa licence
 ├── playwright.config.js      tests dans le navigateur : ordinateur et téléphone
 ├── vite.config.js            compilation du site et de l'application installable
 └── vite.config.hors-ligne.js compilation du fichier hors ligne
@@ -937,6 +945,13 @@ qui fait la différence entre un questionnaire et un vrai outil de révision.
 - Pages chargées à la demande (`src/App.jsx`) : le tableau de bord n'attend
   plus les pages d'administration ni le planning, et un étudiant ne
   télécharge jamais l'espace admin.
+- Assistant : zone de saisie en pilule (`src/components/SaisieIA.jsx`) avec
+  trois raccourcis qui orientent la réponse (« Expliquer », « Un exercice »,
+  « Me tester »), une image jointe (bouton, coller ou glisser), la dictée
+  vocale quand le navigateur la propose, et un bouton Stop qui arrête
+  vraiment la réponse en cours. Animation d'attente qui décrit les étapes
+  réelles, aussi pour l'avis sur une rédaction et le programme de révision.
+  Origines et licences : `LICENCES-TIERS.md`.
 - Filet en cas de plantage (`src/components/FiletErreur.jsx`) : une page qui
   plante affiche un message au lieu d'une page blanche, et une version
   périmée après une mise en ligne invite à recharger.
@@ -1122,6 +1137,20 @@ AI Studio.
 son quota ou a été retiré par Google, le relais passe à ceux de
 `MODELES_SECOURS`, dans l'ordre. La liste des modèles que la clé peut utiliser
 s'obtient à l'adresse `/modeles` du relais.
+
+### Images jointes à l'assistant : redéployer le relais
+
+Le relais accepte maintenant une image avec la question (JPEG, PNG ou WebP,
+3 Mo au plus ; le site la réduit avant l'envoi). **Tant que le relais en
+ligne n'a pas été redéployé**, il ignore l'image : le site le détecte et
+prévient l'étudiant sous la réponse. Pour l'activer :
+
+```bash
+cd serveur-ia
+npx wrangler deploy
+```
+
+Une image consomme davantage de quota gratuit qu'une question en texte.
 
 ### Éduquer l'assistant
 

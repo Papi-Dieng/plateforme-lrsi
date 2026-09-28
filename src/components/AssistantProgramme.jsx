@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import Icon from "./Icon";
+import ChargementIA from "./ChargementIA";
+import { ETAPES_PROGRAMME } from "../chargementIA";
 import { cx } from "./classes";
 import { ajouterJours, aujourdhui } from "../planning";
 import { versDate } from "../emploiDuTemps";
@@ -347,9 +349,8 @@ export default function AssistantProgramme({ contexte, evenements, session: exis
           {/* ---- 3. Le programme ---- */}
           {etape === 3 &&
             (occupe ? (
-              <div className="py-12 text-center">
-                <span className="mx-auto block size-8 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
-                <p className="mt-4 text-sm text-ink-600 dark:text-ink-400">L&apos;IA compose ton programme…</p>
+              <div className="flex justify-center py-10">
+                <ChargementIA etapes={ETAPES_PROGRAMME} />
               </div>
             ) : (
               resultat && (

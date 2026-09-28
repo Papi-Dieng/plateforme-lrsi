@@ -403,11 +403,14 @@ function repondreRevision(mots) {
 /* Point d'entrée                                                    */
 /* ---------------------------------------------------------------- */
 
-export function repondre(question, analyse = []) {
+/* `intentionChoisie` : l'étudiant a choisi un raccourci dans la zone de
+   saisie (« Un exercice », « Me tester »…) ; il l'emporte sur ce que
+   la phrase laisserait deviner. */
+export function repondre(question, analyse = [], intentionChoisie = null) {
   const brut = String(question ?? "").trim();
   if (brut.length === 0) return RIEN_TROUVE;
 
-  const intention = detecterIntention(brut);
+  const intention = intentionChoisie ?? detecterIntention(brut);
   const mots = motsUtiles(brut);
 
   if (intention === "aide") return repondreAide();
@@ -416,6 +419,34 @@ export function repondre(question, analyse = []) {
   if (intention === "exercice") return repondreExercice(mots, analyse);
   return repondreRevision(mots);
 }
+
+/* Les raccourcis de la zone de saisie (components/SaisieIA.jsx) : chacun
+   impose une des intentions ci-dessus. `consigneIA` précède la question
+   quand elle part à l'IA, pour qu'elle réponde dans le bon registre ;
+   la page affiche le raccourci avec la question. */
+export const RACCOURCIS = {
+  revision: {
+    label: "Expliquer",
+    icone: "bulb",
+    couleur: "sky",
+    placeholder: "Quelle notion veux-tu que je t'explique ?",
+    consigneIA: "Explique-moi : ",
+  },
+  exercice: {
+    label: "Un exercice",
+    icone: "pencil",
+    couleur: "violet",
+    placeholder: "Un exercice sur quel sujet ?",
+    consigneIA: "Propose-moi un exercice, sans donner la correction tout de suite, sur : ",
+  },
+  qcm: {
+    label: "Me tester",
+    icone: "target",
+    couleur: "flame",
+    placeholder: "Sur quelle matière veux-tu être interrogé ?",
+    consigneIA: "Pose-moi quelques questions pour vérifier mes connaissances, sans donner les réponses tout de suite, sur : ",
+  },
+};
 
 /* Les quatre demandes proposées en un clic. Elles couvrent les
    quatre intentions reconnues, pour que rien ne tombe à vide. */

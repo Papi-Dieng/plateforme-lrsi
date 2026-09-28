@@ -70,13 +70,17 @@ const articles = [
             ? [
                 [
                   "Google Gemini, seulement quand tu utilises un outil d'IA",
-                  "Assistant de révision : ta question, les messages précédents de la conversation, et les titres et textes des contenus de la plateforme liés à ta question. Avis sur une rédaction : la réponse que tu recopies, avec l'énoncé et le corrigé. Programme de révision : les matières, dates et heures de tes examens, tes créneaux libres et les tâches proposées. Jamais ton profil, ton nom, tes scores ni tes favoris. Rien ne part tant que tu ne cliques pas.",
+                  "Assistant de révision : ta question, les messages précédents de la conversation, les titres et textes des contenus de la plateforme liés à ta question, et l'image que tu joins, s'il y en a une. Elle est réduite dans ton navigateur avant l'envoi, ce qui retire ses informations cachées (lieu de la prise de vue, modèle du téléphone). Avis sur une rédaction : la réponse que tu recopies, avec l'énoncé et le corrigé. Programme de révision : les matières, dates et heures de tes examens, tes créneaux libres et les tâches proposées. Jamais ton profil, ton nom, tes scores ni tes favoris. Rien ne part tant que tu ne cliques pas.",
                 ],
               ]
             : []),
           [
             "YouTube (Google)",
             "Les miniatures des vidéos sont chargées depuis les serveurs de YouTube dès qu'une vidéo s'affiche dans une liste : YouTube reçoit alors ton adresse IP. La vidéo elle-même ne se charge qu'au clic, en mode de confidentialité renforcée (youtube-nocookie.com) ; en la regardant, tu es soumis aux règles de Google.",
+          ],
+          [
+            "La dictée vocale, seulement quand tu appuies sur le micro",
+            "Ta voix est transcrite par le service de reconnaissance vocale de ton navigateur : dans Chrome, le son part chez Google ; dans Safari, chez Apple. La plateforme ne reçoit que le texte, et seulement si tu l'envoies. Le navigateur te demande d'abord l'autorisation d'utiliser le micro.",
           ],
           [
             "Les rappels de révision",

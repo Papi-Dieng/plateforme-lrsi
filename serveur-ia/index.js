@@ -19,7 +19,8 @@
    Garde-fous, tous appliqués ici et non dans le site, puisque le
    site peut être contourné :
    - seuls les domaines listés dans ORIGINES peuvent l'appeler ;
-   - taille des questions et de l'historique bornée ;
+   - taille des questions et de l'historique bornée ; une image jointe
+     n'est acceptée qu'en JPEG, PNG ou WebP, et de 3 Mo au plus ;
    - nombre de requêtes par minute limité pour chaque visiteur ;
    - les consignes données au modèle sont écrites côté serveur, dans
      `consignes.js` : un visiteur ne peut pas les remplacer.
@@ -54,6 +55,11 @@ const MAX_CARACTERES_DETAIL = 400;
 // au modèle : de quoi s'appuyer sur la plateforme sans exploser le quota.
 const MAX_CARACTERES_CONTENU = 3000;
 const MAX_CARACTERES_CONTENUS = 9000;
+// Une image jointe par l'étudiant (photo d'exercice, schéma) : le site la
+// réduit avant l'envoi, le relais vérifie son type et sa taille.
+const TYPES_IMAGE = ["image/jpeg", "image/png", "image/webp"];
+const MAX_CARACTERES_IMAGE = 4_000_000; // environ 3 Mo une fois décodée
+const BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
 
 function entetesCors(origine, env) {
   const autorisees = (env.ORIGINES ?? "").split(",").map((o) => o.trim());
@@ -107,12 +113,28 @@ function lireDemande(corps) {
     })
     .filter((e) => e.titre);
 
-  return { messages, extraits };
+  // Une image invalide fait refuser la demande plutôt que d'être ignorée
+  // en silence : l'étudiant croirait qu'elle a été lue.
+  let image = null;
+  if (corps?.image !== undefined) {
+    const { type, donnees } = corps.image ?? {};
+    if (!TYPES_IMAGE.includes(type) || typeof donnees !== "string" || donnees.length > MAX_CARACTERES_IMAGE || !BASE64.test(donnees)) {
+      return { invalide: "image" };
+    }
+    image = { type, donnees };
+  }
+
+  return { messages, extraits, image };
 }
 
-function construireConsignes(extraits, education) {
+function construireConsignes(extraits, education, avecImage) {
   const parties = [CONSIGNES];
   if (education) parties.push(education);
+  if (avecImage) {
+    parties.push(
+      "L'étudiant a joint une image à sa dernière question (photo d'un exercice, d'un schéma, d'une capture). Dis en une phrase ce que tu y lis avant de répondre. Si elle est illisible ou sans rapport avec ses révisions, dis-le simplement au lieu de deviner."
+    );
+  }
 
   if (extraits.length === 0) {
     parties.push(
@@ -132,7 +154,7 @@ function construireConsignes(extraits, education) {
   return parties.join("\n\n");
 }
 
-async function appelerGemini({ messages, extraits }, env) {
+async function appelerGemini({ messages, extraits, image }, env) {
   const education = await educationPour(env, extraits).catch((e) => {
     // Une fiche illisible ne doit pas priver l'étudiant de réponse.
     console.log("Éducation illisible, consignes générales seules", e);
@@ -140,8 +162,15 @@ async function appelerGemini({ messages, extraits }, env) {
   });
   return interrogerGemini(
     {
-      systemInstruction: { parts: [{ text: construireConsignes(extraits, education) }] },
-      contents: messages.map((m) => ({ role: m.role, parts: [{ text: m.texte }] })),
+      systemInstruction: { parts: [{ text: construireConsignes(extraits, education, Boolean(image)) }] },
+      // L'image accompagne la dernière question seulement.
+      contents: messages.map((m, i) => ({
+        role: m.role,
+        parts: [
+          ...(image && i === messages.length - 1 ? [{ inlineData: { mimeType: image.type, data: image.donnees } }] : []),
+          { text: m.texte },
+        ],
+      })),
       generationConfig: { temperature: 0.4, maxOutputTokens: 2048 },
     },
     env.GEMINI_API_KEY,
@@ -345,12 +374,14 @@ export default {
 
     const demande = lireDemande(corps);
     if (!demande) return json({ erreur: "format" }, 400, cors);
+    if (demande.invalide) return json({ erreur: demande.invalide }, 400, cors);
 
     try {
       const resultat = await appelerGemini(demande, env);
+      // `image: "lue"` dit au site que l'image a bien été transmise.
       return resultat.erreur
         ? json({ erreur: resultat.erreur }, resultat.statut, cors)
-        : json({ texte: resultat.texte }, 200, cors);
+        : json({ texte: resultat.texte, ...(demande.image && { image: "lue" }) }, 200, cors);
     } catch (e) {
       console.log("Appel au modèle impossible", e);
       return json({ erreur: "reseau" }, 502, cors);

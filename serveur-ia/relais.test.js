@@ -165,6 +165,48 @@ describe("assistant des étudiants", () => {
     expect(await r.json()).toEqual({ erreur: "quota" });
   });
 
+  test("une image jointe part avec la dernière question, et le relais dit qu'elle a été lue", async () => {
+    geminiRepond("Je lis un schéma en étoile.");
+    const corps = {
+      messages: [
+        { role: "user", texte: "Bonjour" },
+        { role: "assistant", texte: "Salut !" },
+        { role: "user", texte: "Que montre ce schéma ?" },
+      ],
+      extraits: [],
+      image: { type: "image/png", donnees: "iVBORw0KGgo=" },
+    };
+    const r = await relais.fetch(demande("/", { corps }), env());
+    expect(await r.json()).toEqual({ texte: "Je lis un schéma en étoile.", image: "lue" });
+    const { contents, systemInstruction } = appelsGemini[0].corps;
+    expect(contents[0].parts).toEqual([{ text: "Bonjour" }]);
+    expect(contents.at(-1).parts).toEqual([
+      { inlineData: { mimeType: "image/png", data: "iVBORw0KGgo=" } },
+      { text: "Que montre ce schéma ?" },
+    ]);
+    expect(JSON.stringify(systemInstruction)).toContain("a joint une image");
+  });
+
+  test("sans image, rien ne change dans la demande ni dans la réponse", async () => {
+    geminiRepond("ok");
+    const r = await relais.fetch(demande("/", { corps: question("salut") }), env());
+    expect(await r.json()).toEqual({ texte: "ok" });
+    expect(JSON.stringify(appelsGemini[0].corps)).not.toContain("inlineData");
+  });
+
+  test.each([
+    ["d'un type refusé", { type: "image/svg+xml", donnees: "PHN2Zz4=" }],
+    ["qui n'est pas du base64", { type: "image/png", donnees: "<script>" }],
+    ["trop lourde", { type: "image/jpeg", donnees: "A".repeat(4_000_004) }],
+    ["vide", {}],
+  ])("refuse une image %s, sans appeler Gemini", async (_nom, image) => {
+    geminiRepond("ne doit pas être appelé");
+    const r = await relais.fetch(demande("/", { corps: { ...question("Que montre cette image ?"), image } }), env());
+    expect(r.status).toBe(400);
+    expect(await r.json()).toEqual({ erreur: "image" });
+    expect(appelsGemini).toHaveLength(0);
+  });
+
   test("n'accepte que POST", async () => {
     const r = await relais.fetch(demande("/", { methode: "GET" }), env());
     expect(r.status).toBe(405);

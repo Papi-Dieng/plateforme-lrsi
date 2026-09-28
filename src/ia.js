@@ -71,11 +71,21 @@ export const construireExtraits = (liens) =>
 
 // `motDePasse` : seulement depuis l'espace admin, pour que les tests
 // ne soient pas freinés par la limite de questions par minute.
-export async function demanderIA(historique, liens, motDePasse) {
+// `options.signal` : l'étudiant a cliqué « Arrêter » (erreur « annule »).
+// `options.image` : { type, donnees } (base64), jointe à la dernière
+// question ; la réponse dit alors si le relais l'a lue (`imageLue`).
+export async function demanderIA(historique, liens, motDePasse, { signal, image } = {}) {
   if (!iaActive) throw new Error("IA non configurée");
 
   const controle = new AbortController();
+  let annule = false;
   const minuteur = setTimeout(() => controle.abort(), DELAI_MAXIMUM);
+  const arreter = () => {
+    annule = true;
+    controle.abort();
+  };
+  if (signal?.aborted) arreter();
+  signal?.addEventListener("abort", arreter);
 
   try {
     const reponse = await fetch(site.urlIA, {
@@ -88,6 +98,7 @@ export async function demanderIA(historique, liens, motDePasse) {
       body: JSON.stringify({
         messages: historique,
         extraits: construireExtraits(liens),
+        ...(image && { image: { type: image.type, donnees: image.donnees } }),
       }),
     });
 
@@ -95,11 +106,16 @@ export async function demanderIA(historique, liens, motDePasse) {
     if (!reponse.ok || !donnees.texte) {
       throw new Error(donnees.erreur ?? `statut ${reponse.status}`);
     }
-    return donnees.texte;
+    // Sans image, on garde l'ancien retour (le texte seul) pour les
+    // pages qui s'en servent déjà ; avec une image, on dit si elle a été
+    // lue : un relais pas encore mis à jour l'ignore sans le dire.
+    return image ? { texte: donnees.texte, imageLue: donnees.image === "lue" } : donnees.texte;
   } catch (e) {
-    throw new Error(controle.signal.aborted ? "delai" : e.message, { cause: e });
+    const code = annule ? "annule" : controle.signal.aborted ? "delai" : e.message;
+    throw new Error(code, { cause: e });
   } finally {
     clearTimeout(minuteur);
+    signal?.removeEventListener("abort", arreter);
   }
 }
 
@@ -115,6 +131,10 @@ export function raisonEchec(code) {
       return "Tu as posé beaucoup de questions d'un coup. Attends une minute avant de réessayer.";
     case "delai":
       return "L'IA a mis trop de temps à répondre. Réessaie.";
+    case "annule":
+      return "Tu as arrêté la réponse.";
+    case "image":
+      return "Cette image n'a pas pu être envoyée : choisis une photo en JPEG, PNG ou WebP.";
     default:
       return "L'IA n'a pas pu répondre (connexion ou service indisponible). Réessaie.";
   }
