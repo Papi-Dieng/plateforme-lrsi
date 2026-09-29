@@ -1,0 +1,1 @@
+var e=[1,2],t=`Semestres 1 et 2`,n=[`Semestre 1`,`Semestre 2`,t],r=e=>(String(e??``).match(/\d+/g)??[]).map(Number);function i(n){let i=[...new Set(r(n))];return i.length===1&&e.includes(i[0])?`Semestre ${i[0]}`:t}export{r as i,e as n,i as r,n as t};

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { CHOIX_SEMESTRE, normaliserSemestre } from "../../semestres";
 import Icon from "../../components/Icon";
 import { Badge } from "../../components/ui";
 import { themesMatiere } from "../../data/couleurs";
@@ -81,7 +82,12 @@ export function EditeurMatiere({ element: m, changer, motDePasse }) {
           maxLength={30}
           onChange={(e) => changer({ nomCourt: e.target.value })}
         />
-        <Champ label="Semestre" value={m.semestre} maxLength={40} onChange={(e) => changer({ semestre: e.target.value })} />
+        <Choix
+          label="Semestre"
+          value={normaliserSemestre(m.semestre)}
+          onChange={(e) => changer({ semestre: e.target.value })}
+          options={CHOIX_SEMESTRE.map((s) => ({ value: s, label: s }))}
+        />
         <div className="grid grid-cols-2 gap-3">
           <Choix
             label="Couleur"

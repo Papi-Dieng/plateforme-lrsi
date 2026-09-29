@@ -159,19 +159,6 @@ export function EnTetePage({ surtitre, titre, texte, children }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Avertissement contenu de démonstration                              */
-/* ------------------------------------------------------------------ */
-
-export function NoteDemo({ children }) {
-  return (
-    <div className="flex gap-3 rounded-xl border border-sun-400/40 bg-sun-100/60 px-4 py-3 text-sm/6 text-sun-900 dark:border-sun-500/30 dark:bg-sun-500/10 dark:text-sun-400">
-      <Icon name="bulb" className="mt-0.5 size-4.5 shrink-0" />
-      <p>{children}</p>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /* État vide                                                           */
 /* ------------------------------------------------------------------ */
 

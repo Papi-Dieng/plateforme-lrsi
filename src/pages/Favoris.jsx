@@ -8,7 +8,6 @@ import {
   EnTetePage,
   EtatVide,
   Filtres,
-  NoteDemo,
 } from "../components/ui";
 import { cx } from "../components/classes";
 import {
@@ -273,13 +272,6 @@ export default function Favoris() {
           </>
         )}
 
-        <div className="mt-8">
-          <NoteDemo>
-            Tes favoris sont enregistrés dans ce navigateur uniquement. Ils ne
-            te suivent pas d'un appareil à l'autre tant que les comptes
-            n'existent pas.
-          </NoteDemo>
-        </div>
       </Container>
     </>
   );

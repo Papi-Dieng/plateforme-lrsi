@@ -14,6 +14,7 @@ import { initiales, useSession } from "../session";
 import { lireProfil, nomAffiche } from "../profil";
 import { getAvatar } from "../data/avatars";
 import { menuProfil, navigation, site } from "../data/site";
+import { lireNotifications } from "../notifications";
 
 /* ------------------------------------------------------------------ */
 /* Logo et signature                                                   */
@@ -247,6 +248,109 @@ function Pastille({ profil, session, taille = "size-10" }) {
 /* Menu déroulant du profil                                            */
 /* ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ */
+/* Cloche : ce qu'il y a à faire aujourd'hui (src/notifications.js)    */
+/* ------------------------------------------------------------------ */
+
+function Cloche() {
+  const { session } = useSession();
+  const { pathname } = useLocation();
+  const [ouvert, setOuvert] = useState(false);
+  const [entrees, setEntrees] = useState(lireNotifications);
+  const conteneur = useRef(null);
+
+  // Relu à chaque changement de page : un QCM terminé ou un examen
+  // ajouté se voit aussitôt.
+  const [chemin, setChemin] = useState(pathname);
+  if (chemin !== pathname) {
+    setChemin(pathname);
+    setEntrees(lireNotifications());
+    setOuvert(false);
+  }
+
+  useEffect(() => {
+    if (!ouvert) return undefined;
+    const surClic = (e) => {
+      if (!conteneur.current?.contains(e.target)) setOuvert(false);
+    };
+    const surTouche = (e) => {
+      if (e.key === "Escape") setOuvert(false);
+    };
+    document.addEventListener("mousedown", surClic);
+    window.addEventListener("keydown", surTouche);
+    return () => {
+      document.removeEventListener("mousedown", surClic);
+      window.removeEventListener("keydown", surTouche);
+    };
+  }, [ouvert]);
+
+  if (!session) return null;
+  const n = entrees.length;
+
+  return (
+    <div ref={conteneur} className="relative hidden shrink-0 sm:block">
+      <button
+        type="button"
+        onClick={() => {
+          setEntrees(lireNotifications());
+          setOuvert((v) => !v);
+        }}
+        aria-expanded={ouvert}
+        aria-label={n ? `Notifications : ${n} à faire aujourd'hui` : "Notifications : rien pour aujourd'hui"}
+        className="relative grid size-10 place-items-center rounded-full text-ink-500 hover:bg-ink-100 dark:text-ink-400 dark:hover:bg-ink-800"
+      >
+        <Icon name="bell" className="size-5" />
+        {n > 0 && (
+          <span className="absolute top-1.5 right-1.5 grid min-w-4 place-items-center rounded-full bg-flame-600 px-1 text-[10px] leading-4 font-bold text-white">
+            {n}
+          </span>
+        )}
+      </button>
+
+      {ouvert && (
+        <div className="absolute top-12 right-0 z-40 w-80 rounded-2xl border border-ink-200 bg-white p-2 shadow-xl dark:border-ink-700 dark:bg-ink-900">
+          <p className="px-3 pt-2 pb-1 text-xs font-semibold tracking-wide text-ink-500 uppercase dark:text-ink-400">
+            Aujourd&apos;hui
+          </p>
+          {n === 0 ? (
+            <p className="px-3 pb-3 text-sm/6 text-ink-600 dark:text-ink-300">
+              Rien pour aujourd&apos;hui. Les QCM à refaire et tes examens des 7 prochains jours
+              s&apos;afficheront ici.
+            </p>
+          ) : (
+            <ul>
+              {entrees.map((e) => (
+                <li key={e.cle}>
+                  <Link
+                    to={e.lien}
+                    onClick={() => setOuvert(false)}
+                    className="flex gap-3 rounded-xl px-3 py-2.5 hover:bg-ink-50 dark:hover:bg-ink-800"
+                  >
+                    <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300">
+                      <Icon name={e.icone} className="size-4" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-medium text-ink-900 dark:text-white">{e.titre}</span>
+                      <span className="block text-xs text-ink-500 dark:text-ink-400">{e.detail}</span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+          <Link
+            to="/planning"
+            onClick={() => setOuvert(false)}
+            className="mt-1 block rounded-xl px-3 py-2 text-sm font-medium text-brand-600 hover:bg-ink-50 dark:text-brand-300 dark:hover:bg-ink-800"
+          >
+            Voir mon planning
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MenuProfil() {
   const { session, sortir } = useSession();
   const navigate = useNavigate();
@@ -461,15 +565,7 @@ function BarreDuHaut({ ouvert, setOuvert }) {
           <Recherche />
         </div>
 
-        <button
-          type="button"
-          aria-label="Notifications"
-          title="Notifications : disponibles avec les comptes, en version 3"
-          className="relative hidden size-10 shrink-0 place-items-center rounded-full text-ink-500 hover:bg-ink-100 sm:grid dark:text-ink-400 dark:hover:bg-ink-800"
-        >
-          <Icon name="bell" className="size-5" />
-          <span className="absolute top-2 right-2.5 size-1.5 rounded-full bg-flame-500" />
-        </button>
+        <Cloche />
 
         <MenuProfil />
       </div>
@@ -515,8 +611,7 @@ function PiedDePage() {
     <footer className="border-t border-ink-200 px-4 py-6 sm:px-7 dark:border-ink-800">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-ink-500 dark:text-ink-400">
-          © {site.annee} {site.nom} — {site.filiere}. Contenus de démonstration.
-          Aucun document universitaire n'est publié sans autorisation.
+          © {site.annee} {site.nom} — {site.filiere}
         </p>
         <div className="flex flex-wrap items-center gap-4">
           <Link

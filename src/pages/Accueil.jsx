@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { lireChapitresLus, refChapitre } from "../progression";
 import Icon from "../components/Icon";
-import { Bouton, EtatVide, NoteDemo } from "../components/ui";
+import { Bouton, EtatVide } from "../components/ui";
 import { cx } from "../components/classes";
 import SectionVideos from "../components/videos";
 import Installation from "../components/Installation";
@@ -372,14 +372,6 @@ export default function Accueil() {
         </aside>
       </div>
 
-      <div className="mt-5">
-        <NoteDemo>
-          La progression compte les chapitres que tu as lus : le site le voit
-          tout seul quand tu lis un cours jusqu'au bout. Elle reste dans ton
-          navigateur, comme tes favoris.
-          Le suivi par compte arrivera en version 3.
-        </NoteDemo>
-      </div>
     </div>
   );
 }

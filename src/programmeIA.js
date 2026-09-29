@@ -1,4 +1,5 @@
 import { site } from "./data/site";
+import { numerosSemestre } from "./semestres";
 import { ajouterJours, tachesPourEvaluation } from "./planning";
 import { enHeure, enMinutes, evenementsDuJour, versDate } from "./emploiDuTemps";
 
@@ -52,8 +53,9 @@ export const disponibilitesParDefaut = () => ({
 
 /* ---- Semestres ---- */
 
-// « Semestre 3 » → [3] ; « Semestres 1 et 2 » → [1, 2].
-export const numerosSemestre = (texte) => (String(texte ?? "").match(/\d+/g) ?? []).map(Number);
+// Les numéros viennent de src/semestres.js, repris ici pour les pages
+// qui les importaient déjà d'ici.
+export { numerosSemestre };
 
 export const semestres = (matieres) =>
   [...new Set(matieres.flatMap((m) => numerosSemestre(m.semestre)))].sort((a, b) => a - b);

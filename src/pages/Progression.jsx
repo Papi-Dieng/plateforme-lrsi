@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Icon from "../components/Icon";
-import { Bouton, NoteDemo } from "../components/ui";
+import { Bouton } from "../components/ui";
 import { cx } from "../components/classes";
 import {
   dateLisible,
@@ -735,12 +735,6 @@ export default function Progression() {
         </CarteBento>
       </div>
 
-      <div className="mt-5">
-        <NoteDemo>
-          Un exercice compte comme travaillé dès que tu en ouvres la correction,
-          et un QCM dès que tu arrives à l'écran de résultat.
-        </NoteDemo>
-      </div>
     </div>
   );
 }

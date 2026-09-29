@@ -66,13 +66,20 @@ const pdfValide = (v) =>
     ? { id: v.id, nom: texte(v.nom, 120) || "document.pdf", taille: entier(v.taille, 0, 30_000_000, 0) }
     : null;
 
+/* Seulement les semestres 1 et 2 : toute autre valeur devient
+   « Semestres 1 et 2 » (même règle que src/semestres.js, côté site). */
+function semestre(v) {
+  const n = [...new Set((String(v ?? "").match(/\d+/g) ?? []).map(Number))];
+  return n.length === 1 && (n[0] === 1 || n[0] === 2) ? `Semestre ${n[0]}` : "Semestres 1 et 2";
+}
+
 const nettoyerMatiere = (m) => ({
   id: id(m?.id),
   nomCourt: texte(m?.nomCourt, 30),
   nom: texte(m?.nom, 120),
   couleur: mot(m?.couleur, "bleu"),
   icone: mot(m?.icone, "book"),
-  semestre: texte(m?.semestre, 40),
+  semestre: semestre(m?.semestre),
   resume: texte(m?.resume, 600),
   chapitres: liste(m?.chapitres, 40)
     .map((c) => {

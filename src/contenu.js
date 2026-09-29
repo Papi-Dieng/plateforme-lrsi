@@ -6,6 +6,7 @@ import { qcms } from "./data/qcm";
 import { videosSuggerees } from "./data/videos";
 import { annales, examens } from "./data/examens";
 import { ressources } from "./data/bibliotheque";
+import { normaliserSemestre } from "./semestres";
 
 /* ==================================================================
    Le contenu pédagogique : celui du code, ou celui publié en ligne.
@@ -65,6 +66,9 @@ function remplacer(contenu) {
   for (const [cle, tableau] of Object.entries(TABLEAUX)) {
     if (Array.isArray(contenu?.[cle])) tableau.splice(0, tableau.length, ...contenu[cle]);
   }
+  // Seulement les semestres 1 et 2 (voir semestres.js), même si une
+  // publication plus ancienne indique un autre semestre.
+  for (const m of matieres) m.semestre = normaliserSemestre(m.semestre);
 }
 
 /* Le relais vérifie déjà tout ce qu'il publie. On contrôle quand même

@@ -380,9 +380,7 @@ export default function Profil() {
           <p className="mt-2 text-sm/6 text-ink-600 dark:text-ink-400">
             Elles restent dans ce navigateur. Rien n'est envoyé sur un serveur,
             personne d'autre n'y a accès, et elles ne te suivent pas d'un
-            appareil à l'autre. Quand les comptes arriveront en version 3, cette
-            fiche sera rattachée à ton identifiant étudiant, avec les règles de
-            protection des données qui vont avec.
+            appareil à l'autre.
           </p>
 
           <div className="mt-5">

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { SEMESTRES, numerosSemestre } from "../semestres";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import TexteLibre from "../components/TexteLibre";
@@ -12,7 +13,6 @@ import {
   EnTetePage,
   EtatVide,
   Filtres,
-  NoteDemo,
 } from "../components/ui";
 import { cx } from "../components/classes";
 import { getMatiere, matieres } from "../data/matieres";
@@ -41,18 +41,16 @@ export function Cours() {
   const setRecherche = (v) => setParams(v ? { q: v } : {}, { replace: true });
   const [semestre, setSemestre] = useState("tous");
 
-  const semestres = useMemo(() => {
-    const uniques = [...new Set(matieres.map((m) => m.semestre))];
-    return [
-      { value: "tous", label: "Tous les semestres" },
-      ...uniques.map((s) => ({ value: s, label: s })),
-    ];
-  }, []);
+  // Semestre 1 ou 2 : une matière des deux semestres apparaît dans les deux.
+  const semestres = [
+    { value: "tous", label: "Tous les semestres" },
+    ...SEMESTRES.map((n) => ({ value: String(n), label: `Semestre ${n}` })),
+  ];
 
   const resultats = useMemo(() => {
     const q = normalise(recherche.trim());
     return matieres.filter((m) => {
-      if (semestre !== "tous" && m.semestre !== semestre) return false;
+      if (semestre !== "tous" && !numerosSemestre(m.semestre).includes(Number(semestre))) return false;
       if (!q) return true;
       const corpus = normalise(
         [m.nom, m.resume, ...m.chapitres.map((c) => c.titre)].join(" ")
@@ -152,14 +150,6 @@ export function Cours() {
           )}
         </div>
 
-        <div className="mt-8">
-          <NoteDemo>
-            Contenu de démonstration. Aucun support de cours appartenant à
-            l'université ou à un enseignant n'est hébergé sur cette plateforme.
-            Les chapitres décrivent la structure prévue, pas des documents
-            publiés.
-          </NoteDemo>
-        </div>
       </Container>
     </>
   );
@@ -393,22 +383,6 @@ export function CoursDetail() {
               )}
             </div>
 
-            <div className="rounded-2xl border border-ink-200 bg-ink-100/60 p-5 dark:border-ink-800 dark:bg-ink-900">
-              <h2 className="flex items-center gap-2 text-sm font-semibold text-ink-900 dark:text-white">
-                <Icon name="lock" className="size-4" />
-                Documents réservés
-              </h2>
-              <p className="mt-2 text-sm/6 text-ink-600 dark:text-ink-400">
-                À partir de la version 3, certains documents pourront être
-                réservés aux étudiants identifiés. Aucun support universitaire ne
-                sera mis en ligne sans l'accord du département et des enseignants
-                concernés.
-              </p>
-              <Bouton to="/projet" variante="fantome" taille="sm" className="mt-3 -ml-3">
-                La démarche du projet
-                <Icon name="arrow" className="size-3.5" />
-              </Bouton>
-            </div>
           </aside>
         </div>
       </Container>

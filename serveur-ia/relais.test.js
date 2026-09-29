@@ -339,6 +339,18 @@ describe("nettoyage de ce qui est publié", () => {
     expect(annales.map((a) => a.lienSujet)).toEqual(["", "", "https://univ.example/sujet.pdf"]);
   });
 
+  test("seulement les semestres 1 et 2 : tout autre semestre devient « Semestres 1 et 2 »", () => {
+    const { matieres } = nettoyerContenu({
+      matieres: [
+        { id: "a", nom: "A", semestre: "Semestre 2", chapitres: [] },
+        { id: "b", nom: "B", semestre: "Semestre 3", chapitres: [] },
+        { id: "c", nom: "C", semestre: "Semestres 1 et 2", chapitres: [] },
+        { id: "d", nom: "D", chapitres: [] },
+      ],
+    });
+    expect(matieres.map((m) => m.semestre)).toEqual(["Semestre 2", "Semestres 1 et 2", "Semestres 1 et 2", "Semestres 1 et 2"]);
+  });
+
   test("un identifiant en double est écarté", () => {
     const { qcms } = nettoyerContenu({
       qcms: [

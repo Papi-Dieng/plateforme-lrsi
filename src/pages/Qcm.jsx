@@ -8,7 +8,6 @@ import {
   EnTetePage,
   EtatVide,
   Filtres,
-  NoteDemo,
 } from "../components/ui";
 import { cx } from "../components/classes";
 import { getQcm, qcms } from "../data/qcm";
@@ -152,13 +151,6 @@ export function QcmListe() {
           </div>
         )}
 
-        <div className="mt-8">
-          <NoteDemo>
-            Les scores sont conservés dans ton navigateur uniquement. Aucun
-            compte n'est nécessaire et aucune donnée n'est envoyée : le suivi de
-            progression par compte arrivera en version 3.
-          </NoteDemo>
-        </div>
       </Container>
     </>
   );

@@ -195,9 +195,7 @@ export default function Bienvenue() {
         <footer className="border-t border-ink-200 px-5 py-6 sm:px-8 dark:border-ink-800">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-ink-500 dark:text-ink-400">
-              © {site.annee} {site.nom} — {site.filiere}. Projet étudiant gratuit,
-              contenus de démonstration. Aucun document universitaire n'est publié
-              sans autorisation.
+              © {site.annee} {site.nom} — {site.filiere}
             </p>
             <div className="flex flex-wrap items-center gap-4">
               {[

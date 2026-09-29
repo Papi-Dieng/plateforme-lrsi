@@ -6,12 +6,7 @@ import SaisieIA from "../components/SaisieIA";
 import { ETAPES_ASSISTANT } from "../chargementIA";
 import { cx } from "../components/classes";
 import { lireScores } from "../progression";
-import {
-  analyserCompetences,
-  faiblesses,
-  modulesAAmeliorer,
-  reponsesEnregistrees,
-} from "../competences";
+import { analyserCompetences } from "../competences";
 import { RACCOURCIS, repondre, questionsRapides } from "../assistant";
 import { decouperReponse, demanderIA, iaActive, raisonEchec } from "../ia";
 import { getMatiere } from "../data/matieres";
@@ -157,10 +152,6 @@ export default function Assistant() {
 
   const analyse = useMemo(() => analyserCompetences(scores), [scores]);
 
-  const reponses = reponsesEnregistrees(analyse);
-  const fragiles = faiblesses(analyse);
-  const modules = modulesAAmeliorer(analyse);
-
   const enAttente = messages.some((m) => m.etat === "attente");
 
   // Le dernier message reste à l'écran : sur téléphone, sans cela, la
@@ -222,25 +213,6 @@ export default function Assistant() {
     interrogerIA(id, question, cible.reponse.liens, messages);
   };
 
-  /* Les trois compteurs de l'en-tête : à la place des statistiques
-     flatteuses d'une maquette, les seuls nombres vérifiables. */
-  const compteurs = [
-    {
-      icone: "target",
-      valeur: reponses,
-      label: reponses > 1 ? "réponses analysées" : "réponse analysée",
-    },
-    {
-      icone: "layers",
-      valeur: fragiles.length,
-      label: fragiles.length > 1 ? "compétences fragiles" : "compétence fragile",
-    },
-    {
-      icone: "book",
-      valeur: modules.length,
-      label: modules.length > 1 ? "chapitres à revoir" : "chapitre à revoir",
-    },
-  ];
 
   return (
     <div className="flex h-full flex-col">
@@ -259,17 +231,6 @@ export default function Assistant() {
               </p>
             </div>
           </div>
-          <dl className="flex flex-wrap gap-x-5 gap-y-1 sm:ml-auto">
-            {compteurs.map((c) => (
-              <div key={c.label} className="flex items-center gap-1.5">
-                <Icon name={c.icone} className="size-3.5 text-white/50" />
-                <dt className="sr-only">{c.label}</dt>
-                <dd className="text-xs text-white/80">
-                  <span className="font-semibold text-white">{c.valeur}</span> {c.label}
-                </dd>
-              </div>
-            ))}
-          </dl>
         </div>
       </div>
 

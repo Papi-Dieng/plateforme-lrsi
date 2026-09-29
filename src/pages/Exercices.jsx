@@ -11,7 +11,6 @@ import {
   EnTetePage,
   EtatVide,
   Filtres,
-  NoteDemo,
 } from "../components/ui";
 import { cx } from "../components/classes";
 import { difficultes, exercices, getExercice } from "../data/exercices";
@@ -183,12 +182,6 @@ export function Exercices() {
           )}
         </div>
 
-        <div className="mt-8">
-          <NoteDemo>
-            Énoncés originaux rédigés pour la plateforme. Aucun sujet d'examen ni
-            document universitaire n'est reproduit ici.
-          </NoteDemo>
-        </div>
       </Container>
     </>
   );

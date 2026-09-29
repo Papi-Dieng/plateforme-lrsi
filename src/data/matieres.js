@@ -14,7 +14,7 @@ export const matieres = [
     nom: "Réseaux informatiques",
     couleur: "bleu",
     icone: "network",
-    semestre: "Semestre 3",
+    semestre: "Semestres 1 et 2",
     resume:
       "Des modèles en couches jusqu'au routage : comprendre comment les données circulent d'une machine à une autre.",
     chapitres: [
@@ -68,7 +68,7 @@ export const matieres = [
     nom: "Systèmes d'exploitation",
     couleur: "emeraude",
     icone: "terminal",
-    semestre: "Semestre 3",
+    semestre: "Semestres 1 et 2",
     resume:
       "Ce que fait réellement le système entre le matériel et les programmes : processus, mémoire, fichiers.",
     chapitres: [
@@ -176,7 +176,7 @@ export const matieres = [
     nom: "Architecture des ordinateurs",
     couleur: "ardoise",
     icone: "cpu",
-    semestre: "Semestre 2",
+    semestre: "Semestres 1 et 2",
     resume:
       "Du bit au processeur : comment une machine représente l'information et exécute des instructions.",
     chapitres: [
@@ -222,7 +222,7 @@ export const matieres = [
     nom: "Bases de données",
     couleur: "orange",
     icone: "database",
-    semestre: "Semestre 4",
+    semestre: "Semestres 1 et 2",
     resume:
       "Modéliser une information, la stocker proprement et l'interroger en SQL.",
     chapitres: [
@@ -261,7 +261,7 @@ export const matieres = [
     nom: "Cybersécurité — introduction",
     couleur: "framboise",
     icone: "shield",
-    semestre: "Semestre 5",
+    semestre: "Semestres 1 et 2",
     resume: "Les bases défensives : protéger des comptes, des données et un réseau.",
     chapitres: [
       {
