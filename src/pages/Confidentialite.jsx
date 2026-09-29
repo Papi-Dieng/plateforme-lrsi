@@ -70,6 +70,10 @@ const articles = [
                   "Supabase héberge les comptes et leur base de données. Il reçoit ton nom, ton niveau, ton adresse email ou ton numéro de téléphone (ou, avec Google, ton nom et ton adresse Gmail), et ton mot de passe, qu'il garde chiffré : personne dans l'équipe ne peut le lire. Il reçoit aussi une copie de ta fiche profil, de ta progression, de ton organisation et de ton thème, pour que tu les retrouves sur un autre appareil. Chaque étudiant ne peut lire que ses propres données. Supabase garde dans ton navigateur de quoi laisser ta session ouverte. Ton numéro ne sert jamais à t'envoyer un SMS, et ton adresse email ne sert qu'à confirmer ton compte et à réinitialiser ton mot de passe.",
                 ],
                 [
+                  "Brevo, pour les emails du compte",
+                  "Quand tu crées un compte avec ton email ou demandes un nouveau mot de passe, l'email est envoyé par Brevo (Sendinblue), un service d'envoi établi en France. Il reçoit ton adresse email et le contenu de ce message, rien d'autre. Aucune lettre d'information ni publicité ne t'est envoyée.",
+                ],
+                [
                   "Google, seulement si tu choisis « Continuer avec Google »",
                   "Google confirme ton identité à Supabase et lui transmet ton nom et ton adresse Gmail. Il n'a accès à rien d'autre sur la plateforme.",
                 ],
@@ -114,7 +118,12 @@ const articles = [
     liens: [
       { href: "https://docs.github.com/fr/site-policy/privacy-policies/github-general-privacy-statement", label: "Confidentialité chez GitHub" },
       { href: "https://www.cloudflare.com/fr-fr/privacypolicy/", label: "Chez Cloudflare" },
-      ...(comptesActifs ? [{ href: "https://supabase.com/privacy", label: "Chez Supabase" }] : []),
+      ...(comptesActifs
+        ? [
+            { href: "https://supabase.com/privacy", label: "Chez Supabase" },
+            { href: "https://www.brevo.com/fr/legal/privacypolicy/", label: "Chez Brevo" },
+          ]
+        : []),
       { href: "https://policies.google.com/privacy?hl=fr", label: "Chez Google" },
     ],
   },

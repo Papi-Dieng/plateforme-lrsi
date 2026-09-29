@@ -1107,6 +1107,13 @@ rejoint le compte. Se déconnecter efface les données de l'appareil.
 
 7. `npm run build`, puis commit et push.
 
+**Emails** : envoyés par Brevo (offre gratuite, 300 par jour), branché dans
+Supabase, *Authentication* → *Emails* → *SMTP Settings* (hôte
+`smtp-relay.brevo.com`, port 587). Les modèles « Confirm signup » et « Reset
+Password » sont traduits en français dans *Templates* ; la limite d'envoi est
+à 100 par heure dans *Rate Limits*. Les premiers emails d'un compte Brevo neuf
+peuvent mettre quelques minutes à arriver.
+
 Les règles d'accès de `schema.sql` sont ce qui protège les données : la clé
 « anon » est publique par nature. La clé `service_role` donne tous les droits,
 elle ne vit que dans le relais.
