@@ -20,7 +20,7 @@ MODELES_SECOURS = "gemini-3.1-flash-lite,gemini-3.5-flash"
 # src/data/comptes.js. Sert seulement à l'inscription par téléphone.
 # La clé « service_role » n'est PAS écrite ici : elle se dépose avec
 #   npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
-SUPABASE_URL = ""
+SUPABASE_URL = "https://coszkdebnemjfxbprmfi.supabase.co"
 
 # 10 questions par minute et par visiteur, au-delà le guide répond seul.
 [[ratelimits]]

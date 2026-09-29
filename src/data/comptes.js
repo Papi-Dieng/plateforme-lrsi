@@ -14,8 +14,9 @@
    ================================================================== */
 
 export const comptes = {
-  url: "",
-  cleAnon: "",
+  url: "https://coszkdebnemjfxbprmfi.supabase.co",
+  cleAnon:
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvc3prZGVibmVtamZ4YnBybWZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA3MTQ3NDUsImV4cCI6MjEwNjI5MDc0NX0.18Mf3R64tRPvHpj5BUj3wgkmj1M9JlQUiJfSmZk0ZMw",
 };
 
 export const comptesActifs = Boolean(comptes.url && comptes.cleAnon);
