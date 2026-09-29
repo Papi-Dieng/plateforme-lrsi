@@ -44,7 +44,6 @@ const articles = [
     paragraphes: [
       "Les vidéos ne sont pas hébergées ici : la plateforme ne garde que l'identifiant d'une vidéo YouTube, et la lecture se fait chez YouTube, selon ses propres conditions.",
       "Les liens vers d'autres sites sont donnés pour aider à réviser. La plateforme ne contrôle pas ces sites et n'est pas responsable de leur contenu.",
-      "Chacun reste responsable des liens qu'il ajoute lui-même, et doit avoir le droit de les partager.",
     ],
   },
   ...(iaActive

@@ -17,7 +17,6 @@ export const CLES = {
   scores: "lrsi-scores",
   exercices: "lrsi-exercices",
   favoris: "lrsi-favoris",
-  videos: "lrsi-videos",
   videosVues: "lrsi-videos-vues",
   chapitresLus: "lrsi-chapitres-lus",
 };
@@ -202,64 +201,17 @@ export function retirerFavori(type, reference) {
 /* ---------------------------------------------------------------- */
 /* Vidéos d'explication                                              */
 /*                                                                   */
-/* L'étudiant colle un lien YouTube, la plateforme en extrait        */
-/* l'identifiant. Rien n'est téléversé : seul l'identifiant est      */
-/* conservé, et la vidéo reste hébergée par YouTube.                 */
+/* Seul l'admin ajoute des vidéos. Avant, un étudiant pouvait en      */
+/* ajouter dans son navigateur (clé `lrsi-videos`) : ces anciennes    */
+/* vidéos sont effacées au premier passage, elles ne s'affichent plus. */
 /* ---------------------------------------------------------------- */
 
-// Accepte une URL complète, une URL courte, un lien /embed, un Short,
-// ou directement l'identifiant à onze caractères.
-export function extraireIdYouTube(lien) {
-  if (!lien) return null;
-  const texte = String(lien).trim();
-  if (/^[A-Za-z0-9_-]{11}$/.test(texte)) return texte;
-  const motifs = [
-    /youtu\.be\/([A-Za-z0-9_-]{11})/,
-    /[?&]v=([A-Za-z0-9_-]{11})/,
-    /\/embed\/([A-Za-z0-9_-]{11})/,
-    /\/shorts\/([A-Za-z0-9_-]{11})/,
-    /\/live\/([A-Za-z0-9_-]{11})/,
-  ];
-  for (const motif of motifs) {
-    const trouve = texte.match(motif);
-    if (trouve) return trouve[1];
+export function oublierAnciennesVideos() {
+  try {
+    localStorage.removeItem("lrsi-videos");
+  } catch {
+    /* stockage indisponible : rien à effacer */
   }
-  return null;
-}
-
-export function lireVideos() {
-  const brut = lire(CLES.videos, []);
-  return Array.isArray(brut) ? brut : [];
-}
-
-export function ajouterVideo({ titre, matiere, duree, lien }) {
-  const youtubeId = extraireIdYouTube(lien);
-  if (!youtubeId) return { erreur: "lien" };
-
-  const videos = lireVideos();
-  if (videos.some((v) => v.youtubeId === youtubeId)) {
-    return { erreur: "doublon", videos };
-  }
-
-  const suite = [
-    {
-      id: `perso-${youtubeId}`,
-      titre: titre.trim(),
-      matiere,
-      duree: duree.trim(),
-      youtubeId,
-      ajoutee: new Date().toISOString(),
-    },
-    ...videos,
-  ];
-  ecrire(CLES.videos, suite);
-  return { videos: suite };
-}
-
-export function supprimerVideo(id) {
-  const suite = lireVideos().filter((v) => v.id !== id);
-  ecrire(CLES.videos, suite);
-  return suite;
 }
 
 export function lireVideosVues() {

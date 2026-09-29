@@ -1,12 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import Icon from "./Icon";
-import { Badge, Bouton } from "./ui";
+import { Badge } from "./ui";
 import { cx } from "./classes";
 import BoutonFavori from "./BoutonFavori";
-import { getMatiere, matieres, nomMatiere } from "../data/matieres";
+import { getMatiere, nomMatiere } from "../data/matieres";
 import { themeMatiere } from "../data/couleurs";
-import { ajouterVideo } from "../progression";
 import { useVideos } from "./useVideos";
 
 /* ==================================================================
@@ -18,8 +17,8 @@ import { useVideos } from "./useVideos";
    s'affiche, ce que dit la politique de confidentialité.
 
    Ce fichier fournit les briques communes au tableau de bord et à la
-   page dédiée : la carte, la fenêtre et le formulaire. Le crochet qui
-   tient la liste à jour est dans useVideos.js.
+   page dédiée : la carte, la fenêtre et le lecteur. Seul l'admin ajoute
+   des vidéos (« Gérer le contenu ») ; la liste vient de useVideos.js.
    ================================================================== */
 
 const miniature = (id) => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
@@ -31,16 +30,15 @@ const lecteurUrl = (id) =>
 /* Carte                                                               */
 /* ------------------------------------------------------------------ */
 
-export function CarteVideo({ video, vue, onLire, onCompleter, onSupprimer }) {
+export function CarteVideo({ video, vue, onLire }) {
   const theme = themeMatiere(getMatiere(video.matiere));
   const pret = Boolean(video.youtubeId);
-  const perso = video.id.startsWith("perso-");
 
   return (
     <article className="group relative">
       <button
         type="button"
-        onClick={() => (pret ? onLire(video) : onCompleter(video))}
+        onClick={() => pret && onLire(video)}
         className="block w-full overflow-hidden rounded-2xl text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
       >
         <span
@@ -96,11 +94,6 @@ export function CarteVideo({ video, vue, onLire, onCompleter, onSupprimer }) {
             <span className={cx("text-xs font-medium", theme.texte)}>
               {nomMatiere(video.matiere)}
             </span>
-            {!pret && (
-              <Badge ton="sun" className="text-[10px]">
-                Lien à ajouter
-              </Badge>
-            )}
             {vue && pret && (
               <Badge className="text-[10px]">Déjà ouverte</Badge>
             )}
@@ -116,16 +109,6 @@ export function CarteVideo({ video, vue, onLire, onCompleter, onSupprimer }) {
         className="absolute top-2 right-2 bg-ink-950/50 backdrop-blur-sm"
       />
 
-      {perso && (
-        <button
-          type="button"
-          onClick={() => onSupprimer(video)}
-          aria-label={`Retirer la vidéo ${video.titre}`}
-          className="absolute top-2 left-2 grid size-8 place-items-center rounded-lg bg-ink-950/70 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-ink-950 focus-visible:opacity-100"
-        >
-          <Icon name="trash" className="size-4" />
-        </button>
-      )}
     </article>
   );
 }
@@ -216,125 +199,6 @@ export function Lecteur({ video, onFermer }) {
 /* Formulaire d'ajout                                                  */
 /* ------------------------------------------------------------------ */
 
-export function FormulaireVideo({ prefill, onFermer, onAjoutee }) {
-  const [titre, setTitre] = useState(prefill?.titre ?? "");
-  const [matiere, setMatiere] = useState(prefill?.matiere ?? matieres[0].id);
-  const [duree, setDuree] = useState("");
-  const [lien, setLien] = useState("");
-  const [erreur, setErreur] = useState(null);
-
-  const soumettre = (e) => {
-    e.preventDefault();
-    if (titre.trim().length < 3) {
-      setErreur("Donne un titre d'au moins trois caractères.");
-      return;
-    }
-    const resultat = ajouterVideo({ titre, matiere, duree, lien });
-    if (resultat.erreur === "lien") {
-      setErreur("Lien YouTube non reconnu. Colle l'adresse complète de la vidéo.");
-      return;
-    }
-    if (resultat.erreur === "doublon") {
-      setErreur("Cette vidéo est déjà dans la liste.");
-      return;
-    }
-    onAjoutee(resultat.videos);
-    onFermer();
-  };
-
-  const champ =
-    "mt-1.5 w-full rounded-xl border border-ink-200 bg-white px-4 py-2.5 text-sm text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-ink-700 dark:bg-ink-950 dark:text-white";
-  const etiquette = "block text-sm font-medium text-ink-800 dark:text-ink-200";
-
-  return (
-    <form onSubmit={soumettre} noValidate className="mt-5 space-y-4">
-      <div>
-        <label htmlFor="video-lien" className={etiquette}>
-          Lien YouTube
-        </label>
-        <input
-          id="video-lien"
-          type="url"
-          inputMode="url"
-          value={lien}
-          onChange={(e) => setLien(e.target.value)}
-          placeholder="https://www.youtube.com/watch?v=…"
-          className={champ}
-        />
-        <p className="mt-1.5 text-xs text-ink-500 dark:text-ink-400">
-          L'adresse courte youtu.be et les Shorts fonctionnent aussi.
-        </p>
-      </div>
-
-      <div>
-        <label htmlFor="video-titre" className={etiquette}>
-          Titre
-        </label>
-        <input
-          id="video-titre"
-          type="text"
-          value={titre}
-          onChange={(e) => setTitre(e.target.value)}
-          placeholder="Ex. Le modèle OSI expliqué simplement"
-          className={champ}
-        />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label htmlFor="video-matiere" className={etiquette}>
-            Matière
-          </label>
-          <select
-            id="video-matiere"
-            value={matiere}
-            onChange={(e) => setMatiere(e.target.value)}
-            className={champ}
-          >
-            {matieres.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.nom}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="video-duree" className={etiquette}>
-            Durée <span className="font-normal text-ink-500 dark:text-ink-400">(facultatif)</span>
-          </label>
-          <input
-            id="video-duree"
-            type="text"
-            value={duree}
-            onChange={(e) => setDuree(e.target.value)}
-            placeholder="Ex. 12:40"
-            className={champ}
-          />
-        </div>
-      </div>
-
-      {erreur && (
-        <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-          {erreur}
-        </p>
-      )}
-
-      <p className="rounded-xl bg-ink-100 px-4 py-3 text-xs/5 text-ink-600 dark:bg-ink-800/60 dark:text-ink-300">
-        La vidéo reste hébergée par YouTube : seul son identifiant est
-        enregistré, et uniquement dans ce navigateur. Vérifie que tu as le droit
-        de partager le lien.
-      </p>
-
-      <div className="flex flex-wrap justify-end gap-3 pt-1">
-        <Bouton variante="secondaire" onClick={onFermer}>
-          Annuler
-        </Bouton>
-        <Bouton type="submit">Ajouter la vidéo</Bouton>
-      </div>
-    </form>
-  );
-}
-
 /* ================================================================== */
 /* Rangée du tableau de bord                                           */
 /* ================================================================== */
@@ -344,7 +208,8 @@ export function FormulaireVideo({ prefill, onFermer, onAjoutee }) {
 export default function SectionVideos({ matiere = null }) {
   const v = useVideos();
   const liste = matiere ? v.toutes.filter((x) => x.matiere === matiere) : v.toutes;
-  const pretes = liste.filter((x) => x.youtubeId).length;
+  // Rien de publié pour cette sélection : la section ne s'affiche pas.
+  if (liste.length === 0) return null;
 
   return (
     <section className="rounded-3xl bg-ink-50 p-5 sm:p-6 dark:bg-ink-950">
@@ -361,19 +226,11 @@ export default function SectionVideos({ matiere = null }) {
             )}
           </h2>
           <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">
-            {liste.length === 0
-              ? "Pas encore de vidéo pour cette matière. Ajoute la tienne avec un lien YouTube."
-              : pretes > 0
-              ? `${pretes} vidéo${pretes > 1 ? "s" : ""} prête${pretes > 1 ? "s" : ""} à regarder. Les autres attendent leur lien.`
-              : "Colle un lien YouTube pour remplir un emplacement, ou ajoute ta propre vidéo."}
+            {liste.length} vidéo{liste.length > 1 ? "s" : ""} choisie{liste.length > 1 ? "s" : ""} pour débloquer une notion.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Bouton variante="secondaire" onClick={() => v.ouvrirFormulaire(matiere ? { matiere } : {})}>
-            <Icon name="plus" className="size-4" />
-            Ajouter une vidéo
-          </Bouton>
           <Link
             to={matiere ? `/videos?m=${matiere}` : "/videos"}
             className="text-sm font-medium text-flame-700 hover:text-flame-800 dark:text-flame-400"
@@ -390,10 +247,6 @@ export default function SectionVideos({ matiere = null }) {
               video={video}
               vue={v.vues.includes(video.id)}
               onLire={v.lire}
-              onCompleter={(x) =>
-                v.ouvrirFormulaire({ titre: x.titre, matiere: x.matiere })
-              }
-              onSupprimer={v.retirer}
             />
           </li>
         ))}
@@ -403,15 +256,6 @@ export default function SectionVideos({ matiere = null }) {
         <Lecteur video={v.enLecture} onFermer={v.fermerLecteur} />
       )}
 
-      {v.formulaire && (
-        <Modale titre="Ajouter une vidéo" onFermer={v.fermerFormulaire}>
-          <FormulaireVideo
-            prefill={v.formulaire}
-            onFermer={v.fermerFormulaire}
-            onAjoutee={v.majPerso}
-          />
-        </Modale>
-      )}
     </section>
   );
 }

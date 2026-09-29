@@ -6,11 +6,16 @@ import FiletErreur from "./components/FiletErreur";
 import { chargerContenu } from "./contenu";
 import { site } from "./data/site";
 import { demarrerApplication } from "./installation";
+import { oublierAnciennesVideos } from "./progression";
 import "./index.css";
 
 // Application installable : service worker et proposition
 // d'installation, écoutée dès le lancement (voir src/installation.js).
 demarrerApplication();
+
+// Les vidéos qu'un étudiant ajoutait lui-même, avant que ce soit réservé
+// à l'admin : effacées de son navigateur.
+oublierAnciennesVideos();
 
 // Routeur à dièse : les adresses contiennent un « # », par exemple
 // /#/cours. Cela évite les erreurs 404 au rechargement d'une page sur

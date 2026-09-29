@@ -39,7 +39,7 @@ const articles = [
       {
         liste: [
           ["Ta fiche profil", "Avatar, nom d'utilisateur, âge, téléphone, e-mail, niveau et matricule. Tous ces champs sont facultatifs."],
-          ["Ta progression", "Scores des QCM et détail des réponses, exercices travaillés, chapitres lus, favoris, vidéos ajoutées et vues, QCM à revoir."],
+          ["Ta progression", "Scores des QCM et détail des réponses, exercices travaillés, chapitres lus, favoris, vidéos vues, QCM à revoir."],
           ["Ton organisation", "Emploi du temps, examens, programme de révision et disponibilités de la semaine."],
           ["Tes réglages", "Thème, taille du texte en plein écran, rappels de révision, refus des statistiques anonymes, nom affiché dans la barre du haut."],
         ],

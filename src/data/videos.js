@@ -4,14 +4,10 @@
    Aucune vidéo n'est hébergée par la plateforme : on ne conserve que
    l'identifiant YouTube, et la lecture se fait chez YouTube.
 
-   Les entrées ci-dessous sont des EMPLACEMENTS : le titre décrit la
-   vidéo recherchée, mais `youtubeId` reste vide tant que le lien n'a
-   pas été choisi. Deux façons de le remplir :
-
-     - depuis le site, avec le bouton « Ajouter une vidéo » du tableau
-       de bord, qui enregistre le lien dans le navigateur ;
-     - ici, en collant l'identifiant à onze caractères dans
-       `youtubeId` pour que la vidéo apparaisse pour tout le monde.
+   Seul l'admin ajoute des vidéos, depuis « Gérer le contenu » (onglet
+   Vidéos) ; les entrées ci-dessous sont le contenu par défaut. Une
+   entrée dont `youtubeId` est vide est un emplacement réservé : elle
+   n'est PAS montrée aux étudiants tant que le lien n'est pas renseigné.
 
    Dans l'adresse https://www.youtube.com/watch?v=AbCdEf12345,
    l'identifiant est « AbCdEf12345 ».

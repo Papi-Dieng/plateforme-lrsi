@@ -17,7 +17,6 @@ const APPAREIL = {
   "lrsi-exercices": JSON.stringify({ "sous-reseaux-1": { date: "2026-09-20" } }),
   "lrsi-chapitres-lus": JSON.stringify({ "reseaux:Le modèle OSI": "2026-09-21" }),
   "lrsi-favoris": JSON.stringify([{ type: "qcm", id: "osi-bases" }]),
-  "lrsi-videos": JSON.stringify([]),
   "lrsi-videos-vues": JSON.stringify(["AbCdEf12345"]),
   "lrsi-planning": JSON.stringify({ evaluations: [], faites: {}, evenements: [] }),
   "lrsi-disponibilites": JSON.stringify({ 1: { actif: true, debut: "18:00", fin: "20:00" } }),
@@ -67,6 +66,17 @@ describe("aller-retour", () => {
     const autre = stockage();
     restaurerSauvegarde(lue.donnees, autre.ecrire);
     expect(Object.fromEntries(autre.valeurs)).toEqual(APPAREIL);
+  });
+
+  test("une ancienne sauvegarde avec des vidéos ajoutées par l'étudiant reste lisible, sans elles", () => {
+    // Avant, un étudiant pouvait ajouter des vidéos ; c'est réservé à l'admin.
+    const ancienne = JSON.stringify({
+      application: "sunu-cours",
+      format: 1,
+      donnees: { "lrsi-favoris": [], "lrsi-videos": [{ id: "perso-AbCdEf12345", youtubeId: "AbCdEf12345" }] },
+    });
+    const lue = lireSauvegarde(ancienne);
+    expect(Object.keys(lue.donnees)).toEqual(["lrsi-favoris"]);
   });
 
   test("le thème reste une chaîne brute, pas du JSON", () => {

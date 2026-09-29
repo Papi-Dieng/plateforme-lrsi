@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import Icon from "../components/Icon";
 import {
   Bouton,
   ChampRecherche,
@@ -8,14 +7,8 @@ import {
   EnTetePage,
   EtatVide,
   Filtres,
-  NoteDemo,
 } from "../components/ui";
-import {
-  CarteVideo,
-  FormulaireVideo,
-  Lecteur,
-  Modale,
-} from "../components/videos";
+import { CarteVideo, Lecteur } from "../components/videos";
 import { useVideos } from "../components/useVideos";
 import { getMatiere, matieres } from "../data/matieres";
 
@@ -57,20 +50,14 @@ export default function Videos() {
     setRecherche("");
   };
 
-  const pretes = resultats.filter((x) => x.youtubeId).length;
 
   return (
     <>
       <EnTetePage
         surtitre="Comprendre autrement"
         titre="Vidéos d'explication"
-        texte="Des vidéos pour débloquer une notion avant de reprendre le cours. Elles restent hébergées par YouTube : la plateforme n'en garde que le lien."
-      >
-        <Bouton onClick={() => v.ouvrirFormulaire()}>
-          <Icon name="plus" className="size-4" />
-          Ajouter une vidéo
-        </Bouton>
-      </EnTetePage>
+        texte="Des vidéos choisies pour débloquer une notion avant de reprendre le cours. Elles restent hébergées par YouTube : la plateforme n'en garde que le lien."
+      />
 
       <Container className="py-10">
         {/* ---- Filtres ---- */}
@@ -97,26 +84,25 @@ export default function Videos() {
 
         <p className="mt-6 text-sm text-ink-500 dark:text-ink-400">
           {resultats.length} vidéo{resultats.length > 1 ? "s" : ""} affichée
-          {resultats.length > 1 ? "s" : ""}, dont {pretes} prête
-          {pretes > 1 ? "s" : ""} à regarder.
+          {resultats.length > 1 ? "s" : ""}.
         </p>
 
         {/* ---- Grille ---- */}
         <div className="mt-4">
           {resultats.length === 0 ? (
             <EtatVide
-              titre="Aucune vidéo pour cette sélection"
-              texte="Change de matière, ou ajoute une vidéo à celle-ci."
+              titre={v.toutes.length === 0 ? "Pas encore de vidéo" : "Aucune vidéo pour cette sélection"}
+              texte={
+                v.toutes.length === 0
+                  ? "Les vidéos d'explication arriveront ici au fur et à mesure que l'équipe les choisit."
+                  : "Change de matière ou de recherche."
+              }
             >
-              <div className="flex flex-wrap justify-center gap-3">
-                <Bouton onClick={() => v.ouvrirFormulaire()}>
-                  <Icon name="plus" className="size-4" />
-                  Ajouter une vidéo
-                </Bouton>
+              {v.toutes.length > 0 && (
                 <Bouton variante="secondaire" onClick={reinitialiser}>
                   Réinitialiser le filtre
                 </Bouton>
-              </div>
+              )}
             </EtatVide>
           ) : (
             <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -126,10 +112,6 @@ export default function Videos() {
                     video={video}
                     vue={v.vues.includes(video.id)}
                     onLire={v.lire}
-                    onCompleter={(x) =>
-                      v.ouvrirFormulaire({ titre: x.titre, matiere: x.matiere })
-                    }
-                    onSupprimer={v.retirer}
                   />
                 </li>
               ))}
@@ -137,27 +119,10 @@ export default function Videos() {
           )}
         </div>
 
-        <div className="mt-8">
-          <NoteDemo>
-            Les cartes marquées « Lien à ajouter » sont des emplacements :
-            clique dessus pour y coller une adresse YouTube. Les vidéos ajoutées
-            depuis le site restent dans ton navigateur. Pour qu'une vidéo soit
-            visible par tous, elle se renseigne dans le fichier des données.
-          </NoteDemo>
-        </div>
       </Container>
 
       {v.enLecture && <Lecteur video={v.enLecture} onFermer={v.fermerLecteur} />}
 
-      {v.formulaire && (
-        <Modale titre="Ajouter une vidéo" onFermer={v.fermerFormulaire}>
-          <FormulaireVideo
-            prefill={v.formulaire}
-            onFermer={v.fermerFormulaire}
-            onAjoutee={v.majPerso}
-          />
-        </Modale>
-      )}
     </>
   );
 }

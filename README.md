@@ -90,6 +90,7 @@ téléphone.
 | `e2e/filet.e2e.js` | une page qui plante affiche un message et la coque tient ; une page ou l'application introuvable après une mise en ligne invite à recharger ; un contenu publié mal formé est ignoré |
 | `e2e/accessibilite.e2e.js` | axe (règles WCAG 2.1 A et AA) sur chaque page, en thème clair et en thème sombre : contrastes, libellés, structure, navigation au clavier |
 | `e2e/ia.e2e.js` | saisie de l'assistant (Entrée, Maj + Entrée, rien à vide, hauteur bornée) ; raccourci « Un exercice » ; bouton Stop qui arrête vraiment ; image jointe (agrandir, retirer, envoi, relais pas à jour signalé, fichier refusé) ; dictée avec une fausse reconnaissance vocale ; attente de l'IA et son accessibilité |
+| `e2e/videos.e2e.js` | l'étudiant voit seulement les vidéos publiées avec un lien, sans aucun bouton pour en ajouter ou en retirer ; sans vidéo publiée, la section du tableau de bord disparaît ; les vidéos qu'il avait ajoutées avant sont effacées |
 
 Le relais IA n'est jamais appelé : `e2e/outils.js` le remplace par de
 fausses réponses (rien de publié, IA indisponible, espace admin ouvert
@@ -517,8 +518,8 @@ lrsi-platform/
 │   │   ├── Layout.jsx        en-tête, navigation, thème, pied de page
 │   │   ├── ui.jsx            briques réutilisables (boutons, badges, filtres…)
 │   │   ├── classes.js        `cx`, qui assemble des classes CSS
-│   │   ├── videos.jsx        briques vidéo : carte, lecteur, formulaire
-│   │   ├── useVideos.js      état partagé des vidéos (ajoutées, vues, en lecture)
+│   │   ├── videos.jsx        briques vidéo : carte, lecteur
+│   │   ├── useVideos.js      vidéos publiées par l'admin, vues, en lecture
 │   │   ├── BoutonFavori.jsx  marque-page commun à tous les contenus
 │   │   ├── PageJuridique.jsx mise en page des trois pages juridiques
 │   │   ├── FiletErreur.jsx   message à la place d'une page qui plante
@@ -851,15 +852,13 @@ section « Coulisses » du menu profil, jamais dans la barre latérale.
 
 ### Une vidéo d'explication
 
-Deux possibilités.
+**Seul l'admin ajoute des vidéos**, depuis « Gérer le contenu », onglet
+Vidéos : coller l'adresse YouTube suffit. Les étudiants n'ont aucun moyen
+d'en ajouter ni d'en modifier ; ils voient les vidéos publiées **avec un
+lien**. Une vidéo sans lien est un emplacement réservé, invisible pour eux.
 
-**Depuis le site**, avec le bouton « Ajouter une vidéo » du tableau de bord :
-coller l'adresse YouTube suffit, la plateforme en extrait l'identifiant. La
-vidéo n'est alors visible que dans ce navigateur.
-
-**Dans le code**, pour que la vidéo apparaisse pour tout le monde : ouvrir
-`src/data/videos.js` et renseigner `youtubeId` avec l'identifiant à onze
-caractères. Dans l'adresse `https://www.youtube.com/watch?v=AbCdEf12345`,
+Dans le code, le contenu par défaut est `src/data/videos.js` : `youtubeId`
+reçoit l'identifiant à onze caractères. Dans l'adresse `https://www.youtube.com/watch?v=AbCdEf12345`,
 l'identifiant est `AbCdEf12345`.
 
 Aucune vidéo n'est hébergée par la plateforme : seul l'identifiant est
@@ -893,7 +892,7 @@ qui fait la différence entre un questionnaire et un vrai outil de révision.
   matières en favori, et remise à zéro en deux temps.
 - Vidéos d'explication : rangée défilante sur le tableau de bord et page
   dédiée dans la barre latérale, filtrable par matière.
-  Lecteur intégré ouvert au clic, ajout d'un lien YouTube depuis l'interface.
+  Lecteur intégré ouvert au clic. Seul l'admin ajoute des vidéos.
 - Fiche profil : six avatars dessinés, nom d'utilisateur, âge, téléphone,
   e-mail, niveau et matricule, avec vérification des formats.
 - Menu déroulant sous l'avatar : profil, progression, paramètres, conditions
@@ -1006,7 +1005,6 @@ dans la sauvegarde (liste `DONNEES` de `src/sauvegarde.js`) :
 | `lrsi-exercices` | exercices travaillés | `src/progression.js` |
 | `lrsi-chapitres-lus` | chapitres lus, détectés sans bouton | `src/progression.js` |
 | `lrsi-favoris` | favoris, tous types confondus | `src/progression.js` |
-| `lrsi-videos` | vidéos YouTube ajoutées par l'étudiant | `src/progression.js` |
 | `lrsi-videos-vues` | vidéos déjà ouvertes | `src/progression.js` |
 | `lrsi-planning` | planning de révision et emploi du temps | `src/planning.js` |
 | `lrsi-disponibilites` | créneaux libres de la semaine | `src/programmeIA.js` |

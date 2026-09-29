@@ -13,7 +13,7 @@ import { CLE_DISPONIBILITES } from "./programmeIA";
    et recharge sur un autre appareil.
 
    Ce qui est sauvegardé : profil, scores des QCM, exercices travaillés,
-   favoris, vidéos ajoutées et vues, thème, planning de révision et
+   favoris, vidéos vues, thème, planning de révision et
    disponibilités de la semaine. Ce qui
    ne l'est pas : la session (qui se recrée à l'entrée), le mot de passe
    admin, le cache du contenu.
@@ -40,7 +40,6 @@ export const DONNEES = [
   { cle: CLES.exercices, libelle: (n) => `${n} exercice${n > 1 ? "s" : ""} travaillé${n > 1 ? "s" : ""}`, valide: estObjet, compter: (v) => Object.keys(v).length },
   { cle: CLES.chapitresLus, libelle: (n) => `${n} chapitre${n > 1 ? "s" : ""} lu${n > 1 ? "s" : ""}`, valide: estObjet, compter: (v) => Object.keys(v).length },
   { cle: CLES.favoris, libelle: (n) => `${n} favori${n > 1 ? "s" : ""}`, valide: Array.isArray, compter: (v) => v.length },
-  { cle: CLES.videos, libelle: (n) => `${n} vidéo${n > 1 ? "s" : ""} ajoutée${n > 1 ? "s" : ""}`, valide: Array.isArray, compter: (v) => v.length },
   { cle: CLES.videosVues, libelle: (n) => `${n} vidéo${n > 1 ? "s" : ""} vue${n > 1 ? "s" : ""}`, valide: Array.isArray, compter: (v) => v.length },
   { cle: CLE_PLANNING, libelle: () => "ton planning de révision", valide: estObjet, compter: () => 1 },
   { cle: CLE_DISPONIBILITES, libelle: () => "tes disponibilités de la semaine", valide: estObjet, compter: () => 1 },

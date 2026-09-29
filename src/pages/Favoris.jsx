@@ -14,7 +14,6 @@ import { cx } from "../components/classes";
 import {
   dateLisible,
   lireFavoris,
-  lireVideos,
   litRefChapitre,
   retirerFavori,
 } from "../progression";
@@ -43,7 +42,7 @@ const libellesType = {
 
 /* ---- Résolution d'un favori vers le contenu qu'il désigne ---- */
 
-function resoudre(favori, videosPerso) {
+function resoudre(favori) {
   const { type, reference } = favori;
 
   if (type === "matiere") {
@@ -96,9 +95,7 @@ function resoudre(favori, videosPerso) {
   }
 
   if (type === "video") {
-    const v =
-      videosPerso.find((x) => x.id === reference) ??
-      videosSuggerees.find((x) => x.id === reference);
+    const v = videosSuggerees.find((x) => x.id === reference && x.youtubeId);
     if (!v) return null;
     return {
       titre: v.titre,
@@ -116,7 +113,6 @@ function resoudre(favori, videosPerso) {
 
 export default function Favoris() {
   const [favoris, setFavoris] = useState(lireFavoris);
-  const [videosPerso] = useState(lireVideos);
   const [type, setType] = useState("tous");
 
   // Lus à la création de l'état ; l'effet ne fait que suivre les
@@ -131,9 +127,9 @@ export default function Favoris() {
     () =>
       favoris.map((f) => ({
         ...f,
-        contenu: resoudre(f, videosPerso),
+        contenu: resoudre(f),
       })),
-    [favoris, videosPerso]
+    [favoris]
   );
 
   const comptes = useMemo(() => {

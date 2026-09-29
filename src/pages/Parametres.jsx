@@ -32,7 +32,6 @@ const entreesStockage = [
   { cle: CLES.exercices, libelle: "Exercices travaillés", detail: "Corrections déjà ouvertes" },
   { cle: CLES.chapitresLus, libelle: "Chapitres lus", detail: "Cours lus jusqu'au bout, détectés tout seuls" },
   { cle: CLES.favoris, libelle: "Matières en favori", detail: "Marque-pages du tableau de bord" },
-  { cle: CLES.videos, libelle: "Vidéos ajoutées", detail: "Identifiants YouTube collés" },
   { cle: CLES.videosVues, libelle: "Vidéos ouvertes", detail: "Pour la barre de lecture" },
   { cle: CLE_PLANNING, libelle: "Planning de révision", detail: "Évaluations à préparer" },
   { cle: CLE_REVISIONS, libelle: "Révisions espacées", detail: "QCM à refaire, et quand" },
