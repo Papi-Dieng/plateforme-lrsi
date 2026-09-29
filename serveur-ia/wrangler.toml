@@ -16,6 +16,12 @@ MODELE = "gemini-3.6-flash"
 #   https://jangrsi-ia.soniadieng22.workers.dev/modeles (depuis le site)
 MODELES_SECOURS = "gemini-3.1-flash-lite,gemini-3.5-flash"
 
+# Comptes étudiants (Supabase) : l'adresse du projet, la même que dans
+# src/data/comptes.js. Sert seulement à l'inscription par téléphone.
+# La clé « service_role » n'est PAS écrite ici : elle se dépose avec
+#   npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+SUPABASE_URL = ""
+
 # 10 questions par minute et par visiteur, au-delà le guide répond seul.
 [[ratelimits]]
 name = "LIMITEUR"

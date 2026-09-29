@@ -33,7 +33,7 @@ export const site = {
   editeur: "",
   // Date de la dernière modification des pages juridiques (conditions,
   // confidentialité, mentions légales), à changer à chaque mise à jour.
-  pagesJuridiquesMisesAJour: "28 septembre 2026",
+  pagesJuridiquesMisesAJour: "29 septembre 2026",
   version: "Version 1 — site de présentation",
   // Adresse du relais IA (dossier `serveur-ia/`), affichée par Cloudflare
   // après `npx wrangler deploy`, par exemple

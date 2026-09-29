@@ -4,7 +4,7 @@ import Layout from "./components/Layout";
 import { Bouton, Container, EtatVide } from "./components/ui";
 import { useSession } from "./session";
 import Bienvenue from "./pages/Bienvenue";
-import { Connexion, Inscription } from "./pages/Authentification";
+import { Connexion, Inscription, MotDePasseOublie, NouveauMotDePasse } from "./pages/Authentification";
 import TableauDeBord from "./pages/Accueil";
 /* Pages chargées à la demande : chacune devient un petit fichier à part,
    téléchargé à sa première ouverture. Le premier affichage est plus
@@ -51,7 +51,7 @@ function SiDejaEntre({ children }) {
   return session ? <Navigate to="/tableau-de-bord" replace /> : children;
 }
 
-// Le tableau de bord suppose d'être entré, en mode invité ou de démonstration.
+// Le tableau de bord suppose d'être entré, en mode invité ou avec un compte.
 // Sans session, on renvoie à la page d'accueil, qui propose les trois entrées :
 // se connecter, créer un compte ou continuer en invité.
 function Protege({ children }) {
@@ -101,6 +101,17 @@ export default function App() {
           </SiDejaEntre>
         }
       />
+
+      <Route
+        path="/mot-de-passe-oublie"
+        element={
+          <SiDejaEntre>
+            <MotDePasseOublie />
+          </SiDejaEntre>
+        }
+      />
+      {/* Arrivée par le lien reçu par email : la session est déjà là. */}
+      <Route path="/nouveau-mot-de-passe" element={<NouveauMotDePasse />} />
 
       {/* Application */}
       <Route element={<Layout />}>

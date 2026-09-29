@@ -46,6 +46,7 @@ import { executerTacheAdmin } from "./agent-admin.js";
 import { avisRedaction } from "./avis.js";
 import { effacerStats, enregistrerStats, lireStats } from "./stats.js";
 import { composerPlanning } from "./planning-ia.js";
+import { inscrireTelephone } from "./comptes.js";
 
 const MAX_MESSAGES = 10;
 const MAX_CARACTERES = 1500;
@@ -345,6 +346,24 @@ export default {
       }
       const r = await enregistrerStats(corps, env);
       return r.erreur ? json({ erreur: r.erreur }, r.statut, cors) : json(r.resultat, 200, cors);
+    }
+
+    // Inscription par téléphone (`comptes.js`) : soumise à la limite par
+    // visiteur, contre les inscriptions en rafale.
+    if (chemin === "/comptes/telephone") {
+      let corps;
+      try {
+        corps = await requete.json();
+      } catch {
+        return json({ erreur: "format" }, 400, cors);
+      }
+      try {
+        const r = await inscrireTelephone(corps, env);
+        return r.erreur ? json({ erreur: r.erreur }, r.statut, cors) : json(r.resultat, 200, cors);
+      } catch (e) {
+        console.log("Inscription par téléphone", e);
+        return json({ erreur: "reseau" }, 502, cors);
+      }
     }
 
     // L'avis de l'IA sur une réponse rédigée dans un devoir : soumis,

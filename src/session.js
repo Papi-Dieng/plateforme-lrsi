@@ -1,18 +1,17 @@
 import { createContext, useContext } from "react";
 
 /* ==================================================================
-   Session locale — VERSION 1
+   Session : qui est entré sur le site.
 
-   ATTENTION : il n'y a pas encore de serveur, donc pas de véritable
-   authentification. Ce module ne fait que retenir, dans le navigateur,
-   le mode choisi à l'entrée :
+     - "invite" : simple visite, sans compte. Tout reste dans ce
+       navigateur.
+     - "compte" : un étudiant connecté à son compte (src/comptes.js).
+       Ses données le suivent sur tous ses appareils (src/synchro.js).
 
-     - "invite" : aucune donnée, simple visite ;
-     - "demo"   : un identifiant saisi dans le formulaire de démonstration.
-
-   AUCUN MOT DE PASSE N'EST ENREGISTRÉ NI TRANSMIS. Le formulaire ne
-   vérifie rien : il sert à dessiner l'écran en attendant la version 3,
-   qui apportera la vraie authentification côté serveur.
+   Ce qui est retenu ici ne sert qu'à l'affichage (nom, identifiant),
+   pour que l'en-tête soit juste dès le premier rendu. La vraie session
+   d'un compte (jetons, expiration) est gardée par Supabase, et c'est
+   elle qui fait foi : FournisseurSession.jsx la relit au démarrage.
 
    Ce fichier ne contient volontairement aucun composant : le fournisseur
    vit dans FournisseurSession.jsx. Mélanger un composant et un hook dans
@@ -26,8 +25,11 @@ export const SessionContext = createContext(null);
 export function lireSession() {
   try {
     const brut = JSON.parse(localStorage.getItem(CLE_SESSION) ?? "null");
-    if (!brut || (brut.mode !== "invite" && brut.mode !== "demo")) return null;
-    return brut;
+    if (!brut) return null;
+    if (brut.mode === "invite" || brut.mode === "compte") return brut;
+    // Les anciens comptes « de démonstration » n'étaient que des visites.
+    if (brut.mode === "demo") return { ...brut, mode: "invite", nom: "Invité" };
+    return null;
   } catch {
     return null;
   }

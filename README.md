@@ -372,10 +372,10 @@ Trois choses à faire dans `src/data/site.js` avant d'ouvrir la plateforme
 - `pagesJuridiquesMisesAJour` : la date, à changer à chaque modification.
 
 **Règle à tenir** : toute nouvelle donnée qui quitte le navigateur (un
-nouvel appel au relais, un nouveau service extérieur, les futurs comptes)
+nouvel appel au relais, un nouveau service extérieur, une nouvelle donnée du compte)
 doit être ajoutée à `src/pages/Confidentialite.jsx` avant la mise en ligne.
 Ces textes ne remplacent pas l'avis d'un juriste : à faire relire avant
-l'arrivée des comptes, qui enregistreront des données sur un serveur.
+l'ouverture des comptes, qui enregistrent des données chez Supabase.
 
 ### Logo
 
@@ -1012,17 +1012,17 @@ dans la sauvegarde (liste `DONNEES` de `src/sauvegarde.js`) :
 | `lrsi-theme` | thème clair ou sombre | `Layout.jsx`, `Parametres.jsx` |
 
 Les autres sont des réglages de l'appareil, volontairement hors de la
-sauvegarde : `lrsi-session` (nom affiché), `lrsi-contenu` (dernière version
+sauvegarde : `lrsi-session` (mode et nom affiché), `lrsi-contenu` (dernière version
 publiée, pour le mode sans réseau), `lrsi-rappels` et `lrsi-rappels-dernier`
 (notifications), `lrsi-stats-refus` (refus des statistiques anonymes),
 `lrsi-taille-lecture` (taille du texte en plein écran) et
 `lrsi-installation-masquee`. Le mot de passe admin (`lrsi-admin-ia`) vit dans
 `sessionStorage` et disparaît à la fermeture de l'onglet.
 
-Aucune de ces données ne quitte l'appareil, sauf les statistiques anonymes
-des QCM, et elles ne suivent pas l'étudiant d'un ordinateur à l'autre. Pour
-passer au suivi par compte en version 3, la liste `DONNEES` de
-`src/sauvegarde.js` dit exactement ce qu'il faudra synchroniser.
+En mode invité, aucune de ces données ne quitte l'appareil, sauf les
+statistiques anonymes des QCM. Avec un compte, celles de la liste `DONNEES`
+sont aussi recopiées dans le compte (voir « Les comptes étudiants »).
+`lrsi-synchro` retient l'état de la dernière synchronisation de l'appareil.
 
 ### Le planning de révision
 
@@ -1051,27 +1051,65 @@ La relecture est méfiante (`src/sauvegarde.js`) : fichier d'une autre origine
 ou d'un format futur refusé, et seules les clés connues, de la bonne forme,
 sont écrites. Une donnée absente de la sauvegarde n'est pas effacée.
 
-### Les écrans de connexion ne connectent à rien
+### Les comptes étudiants (Supabase)
 
-C'est le point à retenir avant de montrer le projet à quelqu'un. Il n'y a pas
-encore de serveur, donc pas d'authentification :
+Les étudiants s'inscrivent eux-mêmes, au choix :
 
-- les formulaires ne vérifient aucun identifiant et n'envoient rien ;
-- **le mot de passe saisi n'est jamais enregistré**, il reste dans l'état du
-  composant le temps de la saisie ;
-- seul le nom affiché est conservé, dans le navigateur, sous la clé
-  `lrsi-session`, pour personnaliser la barre du haut ;
-- le mode invité ne conserve strictement aucune donnée personnelle.
+- **email + mot de passe** : Supabase envoie un lien de confirmation, et un
+  lien « mot de passe oublié » ;
+- **numéro de téléphone + mot de passe**, sans SMS : le relais crée un compte
+  dont l'adresse est fabriquée à partir du numéro
+  (`221771234567@telephone.sunu-cours.invalid`, voir `src/telephone.js`). Pas
+  de réinitialisation par lien : l'admin la fait depuis Supabase ;
+- **leur compte Google**.
 
-Un encadré le dit explicitement sur les deux formulaires, et invite à ne pas
-saisir un mot de passe utilisé ailleurs. Toute la logique tient dans
-`src/session.js`, qui sera remplacé par des appels à l'API en version 3.
+Le mode invité reste ouvert. Une fois connecté, le site travaille comme avant
+dans le navigateur, et `src/synchro.js` recopie les données de la sauvegarde
+(liste `DONNEES` de `src/sauvegarde.js`) dans le compte : envoi toutes les 15
+secondes si quelque chose a changé, relecture au retour sur l'onglet. Si deux
+appareils ont changé en même temps, la fusion ne perd rien (scores et
+chapitres additionnés, favoris réunis ; pour le profil et le planning, le
+compte l'emporte). À la première connexion, la progression faite en invité
+rejoint le compte. Se déconnecter efface les données de l'appareil.
 
-**Version 3 — comptes et accès.** Authentification, rôles étudiant et
-administrateur, progression enregistrée côté serveur plutôt que dans le
-navigateur. Points de vigilance : hachage des mots de passe avec bcrypt ou
-Argon2, vérification des droits côté serveur pour chaque ressource réservée,
-et jamais un simple masquage dans l'interface.
+| Fichier | Rôle |
+| --- | --- |
+| `supabase/schema.sql` | la table `donnees_etudiants`, ses règles d'accès (chacun ne lit que sa ligne) et la suppression de compte |
+| `src/data/comptes.js` | l'adresse du projet et sa clé publique ; vides = comptes éteints |
+| `src/comptes.js` | inscription, connexion, Google, mot de passe oublié, suppression |
+| `src/synchro.js` | la synchronisation et la fusion |
+| `src/FournisseurSession.jsx` | la session (invité ou compte), branchée sur Supabase |
+| `serveur-ia/comptes.js` | la route `/comptes/telephone` du relais |
+
+**Mise en route (une fois, environ 20 minutes) :**
+
+1. Créer un projet gratuit sur <https://supabase.com> (région : Europe, la
+   plus proche du Sénégal).
+2. *SQL Editor* → *New query* : coller `supabase/schema.sql`, puis *Run*.
+3. *Project Settings* → *API* : recopier « Project URL » et la clé « anon
+   public » dans `src/data/comptes.js`. **Jamais la clé `service_role`.**
+4. *Authentication* → *URL Configuration* : *Site URL* =
+   `https://papi-dieng.github.io/plateforme-lrsi/` ; dans *Redirect URLs*, ajouter
+   cette adresse et `http://localhost:5173/`.
+5. Google : sur <https://console.cloud.google.com>, *APIs & Services* →
+   *Credentials* → *Create credentials* → *OAuth client ID* (type
+   « Web application »), avec comme *Authorized redirect URI* l'adresse
+   indiquée par Supabase dans *Authentication* → *Providers* → *Google*.
+   Recopier l'identifiant et le secret dans ce même écran Supabase, et
+   activer Google.
+6. Le téléphone passe par le relais. Dans `serveur-ia/wrangler.toml`, remplir
+   `SUPABASE_URL`, puis, dans `serveur-ia/` :
+
+   ```bash
+   npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+   npx wrangler deploy
+   ```
+
+7. `npm run build`, puis commit et push.
+
+Les règles d'accès de `schema.sql` sont ce qui protège les données : la clé
+« anon » est publique par nature. La clé `service_role` donne tous les droits,
+elle ne vit que dans le relais.
 
 **Version 4 — assistant de révision.** Intégration d'un modèle de langage, avec
 des limites explicites : pas d'invention d'informations pédagogiques, pas

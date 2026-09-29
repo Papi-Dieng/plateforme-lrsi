@@ -58,6 +58,7 @@ const stylesBouton = {
     "text-ink-600 hover:bg-ink-100 hover:text-ink-900 dark:text-ink-300 dark:hover:bg-ink-800 dark:hover:text-white",
   accent:
     "bg-accent-700 text-white shadow-sm hover:bg-accent-900 dark:bg-accent-700 dark:hover:bg-accent-900",
+  danger: "bg-flame-600 text-white shadow-sm hover:bg-flame-700 dark:bg-flame-600 dark:hover:bg-flame-700",
 };
 
 const taillesBouton = {

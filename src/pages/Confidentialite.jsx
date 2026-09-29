@@ -1,6 +1,7 @@
 import PageJuridique from "../components/PageJuridique";
 import { nomEditeur, site } from "../data/site";
 import { iaActive } from "../ia";
+import { comptesActifs } from "../data/comptes";
 
 /* ==================================================================
    Politique de confidentialité.
@@ -17,7 +18,9 @@ const articles = [
     icone: "check",
     titre: "En bref",
     paragraphes: [
-      "Pas de compte, pas de publicité, pas de mesure d'audience, pas de cookie déposé par la plateforme. Ta fiche profil et ta progression restent dans ton navigateur, sur ton appareil.",
+      comptesActifs
+        ? "Pas de publicité, pas de mesure d'audience, pas de cookie publicitaire. En mode invité, ta fiche profil et ta progression restent dans ton navigateur. Si tu crées un compte, elles sont aussi enregistrées dans ce compte, pour te suivre sur tous tes appareils."
+        : "Pas de compte, pas de publicité, pas de mesure d'audience, pas de cookie déposé par la plateforme. Ta fiche profil et ta progression restent dans ton navigateur, sur ton appareil.",
       iaActive
         ? "Pour fonctionner, le site contacte quelques services extérieurs : son hébergeur, son relais, YouTube pour les vidéos, et Google Gemini quand tu utilises un outil d'intelligence artificielle. Chacun est détaillé ci-dessous, avec ce qu'il reçoit."
         : "Pour fonctionner, le site contacte quelques services extérieurs : son hébergeur, son relais et YouTube pour les vidéos. Chacun est détaillé ci-dessous, avec ce qu'il reçoit.",
@@ -35,7 +38,9 @@ const articles = [
     icone: "lock",
     titre: "Ce qui reste sur ton appareil",
     paragraphes: [
-      "Ces informations sont enregistrées dans le stockage local de ton navigateur. Elles ne sont envoyées nulle part, et ne suivent pas d'un appareil à l'autre :",
+      comptesActifs
+        ? "Ces informations sont enregistrées dans le stockage local de ton navigateur. En mode invité, elles ne sont envoyées nulle part. Avec un compte, elles sont aussi recopiées dans ce compte (voir plus bas) :"
+        : "Ces informations sont enregistrées dans le stockage local de ton navigateur. Elles ne sont envoyées nulle part, et ne suivent pas d'un appareil à l'autre :",
       {
         liste: [
           ["Ta fiche profil", "Avatar, nom d'utilisateur, âge, téléphone, e-mail, niveau et matricule. Tous ces champs sont facultatifs."],
@@ -58,6 +63,18 @@ const articles = [
             "L'hébergeur du site : GitHub Pages",
             "Comme pour tout site web, ton navigateur transmet ton adresse IP et quelques informations techniques (navigateur, page demandée) à chaque visite. GitHub peut les enregistrer dans ses journaux techniques, pour la sécurité de son service.",
           ],
+          ...(comptesActifs
+            ? [
+                [
+                  "Ton compte, si tu en crées un : Supabase",
+                  "Supabase héberge les comptes et leur base de données. Il reçoit ton nom, ton niveau, ton adresse email ou ton numéro de téléphone (ou, avec Google, ton nom et ton adresse Gmail), et ton mot de passe, qu'il garde chiffré : personne dans l'équipe ne peut le lire. Il reçoit aussi une copie de ta fiche profil, de ta progression, de ton organisation et de ton thème, pour que tu les retrouves sur un autre appareil. Chaque étudiant ne peut lire que ses propres données. Supabase garde dans ton navigateur de quoi laisser ta session ouverte. Ton numéro ne sert jamais à t'envoyer un SMS, et ton adresse email ne sert qu'à confirmer ton compte et à réinitialiser ton mot de passe.",
+                ],
+                [
+                  "Google, seulement si tu choisis « Continuer avec Google »",
+                  "Google confirme ton identité à Supabase et lui transmet ton nom et ton adresse Gmail. Il n'a accès à rien d'autre sur la plateforme.",
+                ],
+              ]
+            : []),
           [
             "Le relais de la plateforme : Cloudflare",
             "À l'ouverture du site, il fournit le contenu publié (cours, exercices, QCM), ainsi que les PDF des cours. Il reçoit ton adresse IP, qu'il utilise un instant pour limiter chaque visiteur à 10 demandes par minute aux outils d'IA, sans l'enregistrer. Il ne garde ni tes questions ni ses réponses. Cloudflare, qui l'héberge, peut tenir ses propres journaux techniques.",
@@ -97,6 +114,7 @@ const articles = [
     liens: [
       { href: "https://docs.github.com/fr/site-policy/privacy-policies/github-general-privacy-statement", label: "Confidentialité chez GitHub" },
       { href: "https://www.cloudflare.com/fr-fr/privacypolicy/", label: "Chez Cloudflare" },
+      ...(comptesActifs ? [{ href: "https://supabase.com/privacy", label: "Chez Supabase" }] : []),
       { href: "https://policies.google.com/privacy?hl=fr", label: "Chez Google" },
     ],
   },
@@ -111,14 +129,17 @@ const articles = [
     icone: "clock",
     titre: "Combien de temps",
     paragraphes: [
-      "Sur ton appareil : tant que tu ne les effaces pas. Sur le relais : les compteurs anonymes des QCM, tant que le projet existe ; l'équipe peut les remettre à zéro. Chez GitHub, Cloudflare et Google : selon leurs propres politiques, indiquées plus haut.",
+      "Sur ton appareil : tant que tu ne les effaces pas ; se déconnecter d'un compte efface de l'appareil les données de ce compte. Sur le relais : les compteurs anonymes des QCM, tant que le projet existe ; l'équipe peut les remettre à zéro. Chez GitHub, Cloudflare et Google : selon leurs propres politiques, indiquées plus haut.",
+      ...(comptesActifs
+        ? ["Ton compte et tout ce qu'il contient : jusqu'à ce que tu le supprimes, depuis les paramètres. La suppression est immédiate et définitive."]
+        : []),
     ],
   },
   {
     icone: "graduation",
     titre: "Hors du Sénégal",
     paragraphes: [
-      "GitHub, Cloudflare et Google sont des entreprises établies aux États-Unis, dont les serveurs peuvent se trouver hors du Sénégal. Les informations qu'ils reçoivent, décrites plus haut, peuvent donc y être traitées.",
+      `GitHub, Cloudflare${comptesActifs ? ", Supabase" : ""} et Google sont des entreprises établies aux États-Unis, dont les serveurs peuvent se trouver hors du Sénégal. Les informations qu'ils reçoivent, décrites plus haut, peuvent donc y être traitées.`,
     ],
   },
   {
@@ -126,7 +147,9 @@ const articles = [
     titre: "Tes droits",
     paragraphes: [
       "La loi sénégalaise n° 2008-12 du 25 janvier 2008 sur la protection des données à caractère personnel te donne un droit d'accès, de rectification, d'opposition et de suppression.",
-      "Comme tes informations restent sur ton appareil, tu les consultes, les corriges et les effaces toi-même, depuis ta fiche profil et les paramètres. Les statistiques des QCM sont anonymes : impossible de retrouver les tiennes, mais tu peux en refuser l'envoi. Pour toute autre demande, écris au contact du projet.",
+      comptesActifs
+        ? "Tu consultes, corriges et effaces toi-même tes informations depuis ta fiche profil et les paramètres ; supprimer ton compte efface tout ce qu'il contient. Les statistiques des QCM sont anonymes : impossible de retrouver les tiennes, mais tu peux en refuser l'envoi. Pour toute autre demande, écris au contact du projet."
+        : "Comme tes informations restent sur ton appareil, tu les consultes, les corriges et les effaces toi-même, depuis ta fiche profil et les paramètres. Les statistiques des QCM sont anonymes : impossible de retrouver les tiennes, mais tu peux en refuser l'envoi. Pour toute autre demande, écris au contact du projet.",
       "Tu peux aussi t'adresser à la Commission de protection des données personnelles (CDP), l'autorité sénégalaise chargée de faire respecter cette loi.",
     ],
   },
@@ -134,7 +157,7 @@ const articles = [
     icone: "bell",
     titre: "Modifications",
     paragraphes: [
-      "Cette politique suit ce que fait la plateforme. Elle sera mise à jour avant toute nouvelle collecte, en particulier avant l'arrivée des comptes étudiants, qui enregistreront des données sur un serveur. La date de la dernière mise à jour figure en haut de la page.",
+      "Cette politique suit ce que fait la plateforme. Elle sera mise à jour avant toute nouvelle collecte. La date de la dernière mise à jour figure en haut de la page.",
     ],
   },
 ];

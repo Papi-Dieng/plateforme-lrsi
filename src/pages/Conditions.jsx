@@ -1,6 +1,7 @@
 import PageJuridique from "../components/PageJuridique";
 import { site } from "../data/site";
 import { iaActive } from "../ia";
+import { comptesActifs } from "../data/comptes";
 
 /* ==================================================================
    Conditions d'utilisation.
@@ -25,7 +26,9 @@ const articles = [
     icone: "users",
     titre: "Accès",
     paragraphes: [
-      "L'accès est libre et gratuit, sans inscription : le mode invité suffit. Les formulaires de connexion et d'inscription sont pour l'instant des maquettes, qui ne créent aucun compte.",
+      comptesActifs
+        ? "L'accès est libre et gratuit. Le mode invité suffit pour tout consulter ; un compte, gratuit lui aussi, garde ta progression sur tous tes appareils. Tu t'inscris toi-même, avec ton email, ton numéro de téléphone ou ton compte Google. Un compte est personnel : ne partage pas ton mot de passe, et n'utilise pas celui d'un autre service. L'équipe peut supprimer un compte utilisé contre ces conditions."
+        : "L'accès est libre et gratuit, sans inscription : le mode invité suffit. Les comptes étudiants ne sont pas encore ouverts.",
       "Le site est fourni tel quel. Il peut être interrompu, modifié ou arrêté à tout moment, notamment pour une mise à jour ou si un service dont il dépend (hébergeur, relais, intelligence artificielle) est indisponible.",
     ],
   },
@@ -89,7 +92,9 @@ const articles = [
     icone: "lock",
     titre: "Données personnelles",
     paragraphes: [
-      "Il n'y a pas de compte : ta progression reste dans ton navigateur. Ce que la plateforme conserve, ce qui sort de ton appareil, vers qui, et tes droits sont décrits dans la politique de confidentialité.",
+      comptesActifs
+        ? "En mode invité, ta progression reste dans ton navigateur ; avec un compte, elle y est aussi enregistrée. Ce que la plateforme conserve, ce qui sort de ton appareil, vers qui, et tes droits sont décrits dans la politique de confidentialité."
+        : "Il n'y a pas de compte : ta progression reste dans ton navigateur. Ce que la plateforme conserve, ce qui sort de ton appareil, vers qui, et tes droits sont décrits dans la politique de confidentialité.",
     ],
     liens: [{ to: "/confidentialite", label: "Politique de confidentialité" }],
   },
@@ -97,7 +102,7 @@ const articles = [
     icone: "clock",
     titre: "Modifications",
     paragraphes: [
-      "Ces conditions peuvent évoluer avec la plateforme, en particulier à l'arrivée des comptes étudiants. La date de la dernière mise à jour figure en haut de la page ; continuer d'utiliser le site après une modification vaut acceptation de la nouvelle version.",
+      "Ces conditions peuvent évoluer avec la plateforme. La date de la dernière mise à jour figure en haut de la page ; continuer d'utiliser le site après une modification vaut acceptation de la nouvelle version.",
       "Le projet est mené au Sénégal : ces conditions relèvent du droit sénégalais.",
     ],
   },

@@ -1,0 +1,1 @@
+var e={url:``,cleAnon:``},t=!!(e.url&&e.cleAnon);export{t as n,e as t};

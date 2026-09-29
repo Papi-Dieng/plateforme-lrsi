@@ -401,8 +401,7 @@ function MenuProfil() {
   // Le badge invite à compléter la fiche, pas à s'inscrire : il dépend
   // donc du profil, pas du mode de session.
   const profilVide = !profil.pseudo.trim() && !profil.nomComplet.trim();
-  const sousTitre =
-    profil.email.trim() || (invite ? "Mode invité" : "Compte de démonstration");
+  const sousTitre = invite ? "Mode invité" : session.identifiant || profil.email.trim() || "Mon compte";
 
   return (
     <div ref={conteneur} className="relative shrink-0">
@@ -517,16 +516,16 @@ function MenuProfil() {
           <button
             type="button"
             role="menuitem"
-            onClick={() => {
+            onClick={async () => {
               setOuvert(false);
-              sortir();
+              await sortir();
               navigate("/");
             }}
             className="group flex w-full items-center gap-3 rounded-xl border border-transparent bg-red-500/10 p-3 transition-all duration-200 hover:border-red-500/30 hover:bg-red-500/20"
           >
             <Icon name="external" className="size-4 text-red-500" />
             <span className="text-sm font-medium text-red-500 group-hover:text-red-600">
-              Quitter la session
+              {invite ? "Quitter la session" : "Se déconnecter"}
             </span>
           </button>
         </div>
@@ -680,6 +679,7 @@ const PAGES_PLEIN_ECRAN = ["/assistant"];
 export default function Layout() {
   const [ouvert, setOuvert] = useState(false);
   const { pathname } = useLocation();
+  const { versionDonnees } = useSession();
   const pleinEcran = PAGES_PLEIN_ECRAN.includes(pathname);
 
   // Le menu mobile se referme à chaque navigation.
@@ -710,8 +710,9 @@ export default function Layout() {
           <BarreDuHaut ouvert={ouvert} setOuvert={setOuvert} />
           <main id="contenu" className={cx("flex-1", pleinEcran && "min-h-0 overflow-hidden")}>
             {/* Une page qui plante n'emporte pas la coque ; le filet se
-                remet à zéro à chaque changement de page. */}
-            <FiletErreur key={pathname}>
+                remet à zéro à chaque changement de page, et la page se
+                relit quand des données arrivent du compte. */}
+            <FiletErreur key={`${pathname}:${versionDonnees}`}>
               <Suspense fallback={<ChargementPage />}>
                 <Outlet />
               </Suspense>

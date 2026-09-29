@@ -4,6 +4,7 @@ import Icon from "../components/Icon";
 import { Badge, Bouton, Container, EnTetePage } from "../components/ui";
 import { cx } from "../components/classes";
 import { useSession } from "../session";
+import { comptesActifs, messageErreurCompte } from "../comptes";
 import { CLES } from "../progression";
 import { CLE_PROFIL } from "../profil";
 import { choisirStats, statsRefusees } from "../stats";
@@ -158,7 +159,8 @@ function Sauvegarde({ utilisees, apresRestauration }) {
 }
 
 export default function Parametres() {
-  const { session, sortir } = useSession();
+  const { session, sortir, supprimer } = useSession();
+  const [suppression, setSuppression] = useState(null);
   const navigate = useNavigate();
 
   const [theme, setTheme] = useState(() =>
@@ -253,30 +255,74 @@ export default function Parametres() {
               Session
             </h2>
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <Badge ton={invite ? "neutre" : "brand"}>
-                {invite ? "Mode invité" : "Compte de démonstration"}
-              </Badge>
+              <Badge ton={invite ? "neutre" : "brand"}>{invite ? "Mode invité" : "Compte"}</Badge>
               <span className="text-sm text-ink-500 dark:text-ink-400">
                 {invite
-                  ? "Aucune donnée personnelle n'est demandée."
-                  : "Aucun mot de passe n'est enregistré."}
+                  ? "Ta progression reste sur cet appareil seulement."
+                  : `Connecté${session?.identifiant ? ` : ${session.identifiant}` : ""}. Ta progression te suit sur tous tes appareils.`}
               </span>
             </div>
             <div className="mt-5 flex flex-wrap gap-3">
+              {invite && comptesActifs && (
+                <Bouton to="/inscription">Créer un compte</Bouton>
+              )}
               <Bouton
                 variante="secondaire"
-                onClick={() => {
-                  sortir();
+                onClick={async () => {
+                  await sortir();
                   navigate("/");
                 }}
               >
                 <Icon name="external" className="size-4" />
-                Quitter la session
+                {invite ? "Quitter la session" : "Se déconnecter"}
               </Bouton>
               <Bouton to="/profil" variante="fantome">
                 Modifier mon profil
               </Bouton>
             </div>
+
+            {!invite && (
+              <div className="mt-6 border-t border-ink-200 pt-5 dark:border-ink-800">
+                <h3 className="text-sm font-semibold text-ink-900 dark:text-white">Supprimer mon compte</h3>
+                <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">
+                  Le compte et toute la progression enregistrée sont effacés, sur tous les appareils. Ce n'est pas réversible.
+                </p>
+                {suppression === "confirmer" ? (
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    <Bouton
+                      variante="danger"
+                      onClick={async () => {
+                        setSuppression("en-cours");
+                        const r = await supprimer();
+                        if (r.erreur) setSuppression(r.erreur);
+                        else navigate("/");
+                      }}
+                    >
+                      Oui, supprimer définitivement
+                    </Bouton>
+                    <Bouton variante="fantome" onClick={() => setSuppression(null)}>
+                      Annuler
+                    </Bouton>
+                  </div>
+                ) : (
+                  <div className="mt-3">
+                    <Bouton
+                      variante="secondaire"
+                      disabled={suppression === "en-cours"}
+                      onClick={() => setSuppression("confirmer")}
+                    >
+                      <Icon name="trash" className="size-4" />
+                      {suppression === "en-cours" ? "Suppression…" : "Supprimer mon compte"}
+                    </Bouton>
+                    {suppression && suppression !== "en-cours" && (
+                      <p role="alert" className="mt-2 text-sm text-flame-600 dark:text-flame-400">
+                        {messageErreurCompte(suppression)}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </section>
 
           {/* ------------------------------------------------ */}

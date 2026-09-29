@@ -402,3 +402,71 @@ describe("réglages", () => {
     expect(listeModeles({ MODELE: "a", MODELES_SECOURS: "b, a ,c," })).toEqual(["a", "b", "c"]);
   });
 });
+
+describe("inscription par téléphone", () => {
+  const envComptes = () => ({ ...env(), SUPABASE_URL: "https://projet.supabase.co/", SUPABASE_SERVICE_ROLE_KEY: "cle-service" });
+  const inscription = (corps) => demande("/comptes/telephone", { corps });
+  const valide = { telephone: "77 123 45 67", motDePasse: "un-bon-mot", nom: "Awa Diallo", niveau: "Licence 2" };
+
+  let appelsSupabase;
+  function supabaseRepond(statut, corps = {}) {
+    appelsSupabase = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url, init) => {
+        appelsSupabase.push({ url: String(url), entetes: init.headers, corps: JSON.parse(init.body) });
+        return Response.json(corps, { status: statut });
+      })
+    );
+  }
+
+  test("crée un compte déjà confirmé, avec l'adresse fabriquée à partir du numéro", async () => {
+    supabaseRepond(200, { id: "u1" });
+    const r = await relais.fetch(inscription(valide), envComptes());
+    expect(r.status).toBe(200);
+    expect(await r.json()).toEqual({ ok: true });
+    const [appel] = appelsSupabase;
+    expect(appel.url).toBe("https://projet.supabase.co/auth/v1/admin/users");
+    expect(appel.entetes.Authorization).toBe("Bearer cle-service");
+    expect(appel.corps).toEqual({
+      email: "221771234567@telephone.sunu-cours.invalid",
+      password: "un-bon-mot",
+      email_confirm: true,
+      user_metadata: { nom: "Awa Diallo", niveau: "Licence 2", telephone: "221771234567" },
+    });
+  });
+
+  test("numéro déjà inscrit : 409, que le site traduit", async () => {
+    supabaseRepond(422, { error_code: "email_exists", msg: "A user with this email address has already been registered" });
+    const r = await relais.fetch(inscription(valide), envComptes());
+    expect(r.status).toBe(409);
+    expect(await r.json()).toEqual({ erreur: "deja-inscrit" });
+  });
+
+  test("numéro, mot de passe ou nom invalides : refusés sans appeler Supabase", async () => {
+    supabaseRepond(200);
+    for (const [champ, valeur, erreur] of [
+      ["telephone", "abc", "telephone"],
+      ["motDePasse", "court", "mot-de-passe-faible"],
+      ["nom", " ", "nom"],
+    ]) {
+      const r = await relais.fetch(inscription({ ...valide, [champ]: valeur }), envComptes());
+      expect(r.status).toBe(400);
+      expect(await r.json()).toEqual({ erreur });
+    }
+    expect(appelsSupabase).toHaveLength(0);
+  });
+
+  test("sans clé Supabase, l'inscription est fermée", async () => {
+    const r = await relais.fetch(inscription(valide), env());
+    expect(r.status).toBe(503);
+  });
+
+  test("soumise à la limite par visiteur", async () => {
+    supabaseRepond(200);
+    const e = envComptes();
+    const statuts = [];
+    for (let i = 0; i < 11; i++) statuts.push((await relais.fetch(inscription(valide), e)).status);
+    expect(statuts[10]).toBe(429);
+  });
+});

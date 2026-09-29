@@ -1,28 +1,48 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Icon from "../components/Icon";
 import { Logo, Signature } from "../components/Layout";
 import { cx } from "../components/classes";
 import { useSession } from "../session";
 import { site } from "../data/site";
+import { niveaux } from "../profil";
+import { normaliserTelephone } from "../telephone";
+import {
+  changerMotDePasse,
+  comptesActifs,
+  connecter,
+  connecterGoogle,
+  inscrireEmail,
+  inscrireTelephone,
+  messageErreurCompte,
+  motDePasseOublie,
+} from "../comptes";
 
 /* ==================================================================
-   Écrans d'entrée — VERSION 1
+   Écrans d'entrée : connexion, inscription, mot de passe oublié et
+   nouveau mot de passe. Les comptes sont gérés par Supabase
+   (src/comptes.js) ; tant qu'ils ne sont pas activés
+   (src/data/comptes.js), les écrans le disent et le mode invité reste
+   ouvert.
 
-   Les formulaires ci-dessous dessinent l'interface prévue, mais il n'y
-   a pas encore de serveur : rien n'est vérifié, rien n'est envoyé, et
-   le mot de passe saisi n'est jamais enregistré. Seul le nom affiché
-   est retenu dans le navigateur, pour personnaliser l'en-tête.
-   La véritable authentification arrive en version 3.
+   Une fois l'étudiant connecté, rien à faire ici : la session arrive
+   par FournisseurSession.jsx, et la route (SiDejaEntre, App.jsx)
+   l'envoie d'elle-même au tableau de bord.
    ================================================================== */
 
+const MIN_MOT_DE_PASSE = 8;
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 /* ------------------------------------------------------------------ */
-/* Cadre commun aux deux écrans                                        */
+/* Cadre commun                                                        */
 /* ------------------------------------------------------------------ */
 
-function CadreAuth({ titre, texte, children, pied }) {
+function CadreAuth({ titre, texte, children, pied, sansInvite = false }) {
   const navigate = useNavigate();
-  const { entrer } = useSession();
+  const { entrer, brancher } = useSession();
+
+  // Écoute Supabase dès l'arrivée ici, pour voir la connexion aboutir.
+  useEffect(() => brancher(), [brancher]);
 
   const entrerEnInvite = () => {
     entrer("invite");
@@ -67,8 +87,8 @@ function CadreAuth({ titre, texte, children, pied }) {
           <div className="relative flex items-center gap-3 rounded-2xl bg-white/10 p-4">
             <Icon name="lock" className="size-5 shrink-0 text-lime-400" />
             <p className="text-xs/5 text-white/80">
-              La connexion réelle arrivera en version 3, avec un contrôle des
-              accès côté serveur. Cet écran en dessine déjà l'interface.
+              Ton compte garde ta progression sur tous tes appareils. Ton mot
+              de passe est chiffré : personne dans l'équipe ne peut le lire.
             </p>
           </div>
         </aside>
@@ -96,52 +116,54 @@ function CadreAuth({ titre, texte, children, pied }) {
               {texte}
             </p>
 
-            {/* Avertissement, volontairement bien visible */}
-            <div className="mt-6 flex gap-3 rounded-xl border border-sun-400/50 bg-sun-100/70 px-4 py-3 dark:border-sun-400/40 dark:bg-sun-400/15">
-              <Icon
-                name="bulb"
-                className="mt-0.5 size-4.5 shrink-0 text-sun-600 dark:text-sun-400"
-              />
-              <p className="text-xs/5 text-sun-900 dark:text-sun-100">
-                <strong className="font-semibold">
-                  Formulaire de démonstration.
-                </strong>{" "}
-                Aucun compte n'existe encore : rien n'est vérifié, rien n'est
-                envoyé et le mot de passe n'est pas enregistré. N'utilise pas un
-                mot de passe que tu emploies ailleurs.
-              </p>
-            </div>
+            {!comptesActifs && (
+              <div className="mt-6 flex gap-3 rounded-xl border border-ink-200 bg-ink-50 px-4 py-3 dark:border-ink-700 dark:bg-ink-800/60">
+                <Icon name="info" className="mt-0.5 size-4.5 shrink-0 text-ink-500 dark:text-ink-400" />
+                <p className="text-xs/5 text-ink-700 dark:text-ink-200">
+                  Les comptes ne sont pas encore ouverts. En attendant, le
+                  mode invité donne accès à tout, sans compte.
+                </p>
+              </div>
+            )}
 
             {children}
 
-            {/* Mode invité */}
-            <div className="mt-7">
-              <div className="flex items-center gap-4">
-                <span className="h-px flex-1 bg-ink-200 dark:bg-ink-800" />
-                <span className="text-xs font-medium text-ink-500 dark:text-ink-400">ou</span>
-                <span className="h-px flex-1 bg-ink-200 dark:bg-ink-800" />
+            {!sansInvite && (
+              <div className="mt-7">
+                <Separateur />
+                <button
+                  type="button"
+                  onClick={entrerEnInvite}
+                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-lime-400 px-5 py-3.5 text-sm font-semibold text-ink-950 transition-colors hover:bg-lime-300"
+                >
+                  <Icon name="users" className="size-4.5" />
+                  Entrer en mode invité
+                </button>
+                <p className="mt-2.5 text-center text-xs text-ink-500 dark:text-ink-400">
+                  Accès immédiat à tous les contenus, sans compte. Ta
+                  progression reste alors sur cet appareil seulement.
+                </p>
               </div>
+            )}
 
-              <button
-                type="button"
-                onClick={entrerEnInvite}
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-lime-400 px-5 py-3.5 text-sm font-semibold text-ink-950 transition-colors hover:bg-lime-300"
-              >
-                <Icon name="users" className="size-4.5" />
-                Entrer en mode invité
-              </button>
-              <p className="mt-2.5 text-center text-xs text-ink-500 dark:text-ink-400">
-                Accès immédiat à tous les contenus, sans compte et sans aucune
-                donnée personnelle.
+            {pied && (
+              <p className="mt-8 text-center text-sm text-ink-600 dark:text-ink-400">
+                {pied}
               </p>
-            </div>
-
-            <p className="mt-8 text-center text-sm text-ink-600 dark:text-ink-400">
-              {pied}
-            </p>
+            )}
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function Separateur() {
+  return (
+    <div className="flex items-center gap-4">
+      <span className="h-px flex-1 bg-ink-200 dark:bg-ink-800" />
+      <span className="text-xs font-medium text-ink-500 dark:text-ink-400">ou</span>
+      <span className="h-px flex-1 bg-ink-200 dark:bg-ink-800" />
     </div>
   );
 }
@@ -150,52 +172,54 @@ function CadreAuth({ titre, texte, children, pied }) {
 /* Champs                                                              */
 /* ------------------------------------------------------------------ */
 
+const classeChamp = (erreur) =>
+  cx(
+    "w-full rounded-xl border bg-white px-4 py-3 text-sm text-ink-900 placeholder:text-ink-400 focus:ring-2 focus:ring-brand-500/20 dark:bg-ink-950 dark:text-white",
+    erreur
+      ? "border-red-400 focus:border-red-500"
+      : "border-ink-200 focus:border-brand-500 dark:border-ink-700"
+  );
+
+function Aide({ id, erreur, aide }) {
+  if (erreur) {
+    return (
+      <p id={`${id}-erreur`} role="alert" className="mt-1.5 text-xs text-red-600 dark:text-red-400">
+        {erreur}
+      </p>
+    );
+  }
+  return aide ? (
+    <p id={`${id}-aide`} className="mt-1.5 text-xs text-ink-500 dark:text-ink-400">
+      {aide}
+    </p>
+  ) : null;
+}
+
+const decrit = (id, erreur, aide) => (erreur ? `${id}-erreur` : aide ? `${id}-aide` : undefined);
+
 function Champ({ id, label, erreur, aide, ...rest }) {
   return (
     <div>
-      <label
-        htmlFor={id}
-        className="block text-sm font-medium text-ink-800 dark:text-ink-200"
-      >
+      <label htmlFor={id} className="block text-sm font-medium text-ink-800 dark:text-ink-200">
         {label}
       </label>
       <input
         id={id}
         aria-invalid={erreur ? true : undefined}
-        aria-describedby={erreur ? `${id}-erreur` : aide ? `${id}-aide` : undefined}
-        className={cx(
-          "mt-1.5 w-full rounded-xl border bg-white px-4 py-3 text-sm text-ink-900 placeholder:text-ink-400 focus:ring-2 focus:ring-brand-500/20 dark:bg-ink-950 dark:text-white",
-          erreur
-            ? "border-red-400 focus:border-red-500"
-            : "border-ink-200 focus:border-brand-500 dark:border-ink-700"
-        )}
+        aria-describedby={decrit(id, erreur, aide)}
+        className={cx("mt-1.5", classeChamp(erreur))}
         {...rest}
       />
-      {erreur ? (
-        <p
-          id={`${id}-erreur`}
-          role="alert"
-          className="mt-1.5 text-xs text-red-600 dark:text-red-400"
-        >
-          {erreur}
-        </p>
-      ) : aide ? (
-        <p id={`${id}-aide`} className="mt-1.5 text-xs text-ink-500 dark:text-ink-400">
-          {aide}
-        </p>
-      ) : null}
+      <Aide id={id} erreur={erreur} aide={aide} />
     </div>
   );
 }
 
-function ChampMotDePasse({ id, label, erreur, aide, valeur, onChange }) {
+function ChampMotDePasse({ id, label, erreur, aide, valeur, onChange, autoComplete = "new-password" }) {
   const [visible, setVisible] = useState(false);
   return (
     <div>
-      <label
-        htmlFor={id}
-        className="block text-sm font-medium text-ink-800 dark:text-ink-200"
-      >
+      <label htmlFor={id} className="block text-sm font-medium text-ink-800 dark:text-ink-200">
         {label}
       </label>
       <div className="relative mt-1.5">
@@ -204,117 +228,161 @@ function ChampMotDePasse({ id, label, erreur, aide, valeur, onChange }) {
           type={visible ? "text" : "password"}
           value={valeur}
           onChange={(e) => onChange(e.target.value)}
-          autoComplete="new-password"
+          autoComplete={autoComplete}
           aria-invalid={erreur ? true : undefined}
-          aria-describedby={
-            erreur ? `${id}-erreur` : aide ? `${id}-aide` : undefined
-          }
-          className={cx(
-            "w-full rounded-xl border bg-white px-4 py-3 pr-12 text-sm text-ink-900 placeholder:text-ink-400 focus:ring-2 focus:ring-brand-500/20 dark:bg-ink-950 dark:text-white",
-            erreur
-              ? "border-red-400 focus:border-red-500"
-              : "border-ink-200 focus:border-brand-500 dark:border-ink-700"
-          )}
+          aria-describedby={decrit(id, erreur, aide)}
+          className={cx("pr-12", classeChamp(erreur))}
         />
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
-          aria-label={
-            visible ? "Masquer le mot de passe" : "Afficher le mot de passe"
-          }
-          className="absolute top-1/2 right-2 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-ink-500 dark:text-ink-400 hover:bg-ink-100 hover:text-ink-700 dark:hover:bg-ink-800"
+          aria-label={visible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+          className="absolute top-1/2 right-2 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-ink-500 hover:bg-ink-100 hover:text-ink-700 dark:text-ink-400 dark:hover:bg-ink-800"
         >
           <Icon name={visible ? "sun" : "lock"} className="size-4" />
         </button>
       </div>
-      {erreur ? (
-        <p
-          id={`${id}-erreur`}
-          role="alert"
-          className="mt-1.5 text-xs text-red-600 dark:text-red-400"
-        >
-          {erreur}
-        </p>
-      ) : aide ? (
-        <p id={`${id}-aide`} className="mt-1.5 text-xs text-ink-500 dark:text-ink-400">
-          {aide}
-        </p>
-      ) : null}
+      <Aide id={id} erreur={erreur} aide={aide} />
     </div>
   );
 }
 
+/* Erreur venue du serveur, sous le formulaire. */
+function ErreurServeur({ code }) {
+  if (!code) return null;
+  return (
+    <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">
+      {messageErreurCompte(code)}
+    </p>
+  );
+}
+
 const boutonPrincipal =
-  "mt-6 w-full rounded-xl bg-ink-950 px-5 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-ink-800 dark:bg-white dark:text-ink-950 dark:hover:bg-ink-200";
+  "mt-6 w-full rounded-xl bg-ink-950 px-5 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-ink-800 disabled:cursor-wait disabled:opacity-60 dark:bg-white dark:text-ink-950 dark:hover:bg-ink-200";
+
+/* Le « G » de Google, aux couleurs demandées par ses règles d'usage. */
+function LogoGoogle() {
+  return (
+    <svg viewBox="0 0 48 48" className="size-5" aria-hidden="true">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+    </svg>
+  );
+}
+
+function BoutonGoogle({ surErreur }) {
+  const [attente, setAttente] = useState(false);
+  const partir = async () => {
+    setAttente(true);
+    surErreur(null);
+    const r = await connecterGoogle();
+    // En cas de succès, le navigateur part chez Google : on ne revient ici
+    // qu'en cas d'erreur.
+    if (r.erreur) {
+      setAttente(false);
+      surErreur(r.erreur);
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={partir}
+      disabled={attente}
+      className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl border border-ink-200 bg-white px-5 py-3.5 text-sm font-semibold text-ink-900 transition-colors hover:bg-ink-50 disabled:cursor-wait disabled:opacity-60 dark:border-ink-700 dark:bg-ink-950 dark:text-white dark:hover:bg-ink-800"
+    >
+      <LogoGoogle />
+      {attente ? "Ouverture de Google…" : "Continuer avec Google"}
+    </button>
+  );
+}
 
 /* ================================================================== */
 /* Connexion                                                           */
 /* ================================================================== */
 
 export function Connexion() {
-  const navigate = useNavigate();
-  const { entrer } = useSession();
-
   const [identifiant, setIdentifiant] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
   const [erreurs, setErreurs] = useState({});
+  const [erreurServeur, setErreurServeur] = useState(null);
+  const [attente, setAttente] = useState(false);
 
-  const soumettre = (e) => {
+  const soumettre = async (e) => {
     e.preventDefault();
     const suite = {};
-    if (!identifiant.trim()) {
-      suite.identifiant = "Indique ton matricule ou ton adresse e-mail.";
+    const id = identifiant.trim();
+    if (!id) suite.identifiant = "Indique ton adresse email ou ton numéro de téléphone.";
+    else if (id.includes("@") ? !EMAIL.test(id) : !normaliserTelephone(id)) {
+      suite.identifiant = id.includes("@") ? "Cette adresse email n'est pas valide." : "Ce numéro n'est pas valide. Exemple : 77 123 45 67.";
     }
-    if (motDePasse.length < 8) {
-      suite.motDePasse = "Le mot de passe doit faire au moins 8 caractères.";
-    }
+    if (!motDePasse) suite.motDePasse = "Indique ton mot de passe.";
     setErreurs(suite);
+    setErreurServeur(null);
     if (Object.keys(suite).length > 0) return;
 
-    // Le mot de passe n'est pas conservé : il reste dans l'état du composant.
-    entrer("demo", identifiant.trim());
-    navigate("/tableau-de-bord");
+    setAttente(true);
+    const r = await connecter({ identifiant: id, motDePasse });
+    // Réussite : la session arrive et la page part d'elle-même.
+    if (r.erreur) {
+      setAttente(false);
+      setErreurServeur(r.erreur);
+    }
   };
 
   return (
     <CadreAuth
       titre="Se connecter"
-      texte="Retrouve tes matières, tes exercices et ta progression."
+      texte="Retrouve tes matières, tes exercices et ta progression, sur tous tes appareils."
       pied={
         <>
           Pas encore de compte ?{" "}
-          <Link
-            to="/inscription"
-            className="font-semibold text-brand-600 hover:underline dark:text-brand-400"
-          >
+          <Link to="/inscription" className="font-semibold text-brand-600 hover:underline dark:text-brand-400">
             Créer un compte
           </Link>
         </>
       }
     >
+      <BoutonGoogle surErreur={setErreurServeur} />
+      <div className="mt-6">
+        <Separateur />
+      </div>
+
       <form onSubmit={soumettre} noValidate className="mt-6 space-y-4">
         <Champ
           id="identifiant"
-          label="Matricule ou adresse e-mail"
+          label="Email ou numéro de téléphone"
           type="text"
+          inputMode="email"
           autoComplete="username"
-          placeholder="Ex. 21RSI0456"
+          placeholder="Ex. awa@exemple.com ou 77 123 45 67"
           value={identifiant}
           onChange={(e) => setIdentifiant(e.target.value)}
           erreur={erreurs.identifiant}
         />
 
-        <ChampMotDePasse
-          id="mot-de-passe"
-          label="Mot de passe"
-          valeur={motDePasse}
-          onChange={setMotDePasse}
-          erreur={erreurs.motDePasse}
-          aide="Au moins 8 caractères. Ce champ n'est ni vérifié ni enregistré."
-        />
+        <div>
+          <ChampMotDePasse
+            id="mot-de-passe"
+            label="Mot de passe"
+            valeur={motDePasse}
+            onChange={setMotDePasse}
+            erreur={erreurs.motDePasse}
+            autoComplete="current-password"
+          />
+          <Link
+            to="/mot-de-passe-oublie"
+            className="mt-2 inline-block text-xs font-medium text-brand-600 hover:underline dark:text-brand-400"
+          >
+            Mot de passe oublié ?
+          </Link>
+        </div>
 
-        <button type="submit" className={boutonPrincipal}>
-          Se connecter
+        <ErreurServeur code={erreurServeur} />
+
+        <button type="submit" disabled={attente} className={boutonPrincipal}>
+          {attente ? "Connexion…" : "Se connecter"}
         </button>
       </form>
     </CadreAuth>
@@ -325,58 +393,112 @@ export function Connexion() {
 /* Inscription                                                         */
 /* ================================================================== */
 
-const niveaux = ["Licence 1", "Licence 2", "Licence 3"];
+const METHODES = [
+  { valeur: "email", label: "Email" },
+  { valeur: "telephone", label: "Téléphone" },
+];
 
 export function Inscription() {
-  const navigate = useNavigate();
-  const { entrer } = useSession();
-
+  const [methode, setMethode] = useState("email");
   const [nom, setNom] = useState("");
-  const [matricule, setMatricule] = useState("");
   const [niveau, setNiveau] = useState(niveaux[0]);
+  const [email, setEmail] = useState("");
+  const [telephone, setTelephone] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [accepte, setAccepte] = useState(false);
   const [erreurs, setErreurs] = useState({});
+  const [erreurServeur, setErreurServeur] = useState(null);
+  const [attente, setAttente] = useState(false);
+  const [emailEnvoye, setEmailEnvoye] = useState(null);
 
-  const soumettre = (e) => {
+  const soumettre = async (e) => {
     e.preventDefault();
     const suite = {};
-    if (nom.trim().length < 2) suite.nom = "Indique ton nom complet.";
-    if (!matricule.trim()) suite.matricule = "Indique ton matricule étudiant.";
-    if (motDePasse.length < 8) {
-      suite.motDePasse = "Le mot de passe doit faire au moins 8 caractères.";
+    if (nom.trim().length < 2) suite.nom = "Indique ton nom.";
+    if (methode === "email" && !EMAIL.test(email.trim())) suite.email = "Indique une adresse email valide.";
+    if (methode === "telephone" && !normaliserTelephone(telephone)) {
+      suite.telephone = "Indique un numéro valide. Exemple : 77 123 45 67.";
     }
-    if (confirmation !== motDePasse) {
-      suite.confirmation = "Les deux mots de passe ne correspondent pas.";
+    if (motDePasse.length < MIN_MOT_DE_PASSE) {
+      suite.motDePasse = `Le mot de passe doit faire au moins ${MIN_MOT_DE_PASSE} caractères.`;
     }
-    if (!accepte) suite.accepte = "Il faut accepter le cadre du projet.";
+    if (confirmation !== motDePasse) suite.confirmation = "Les deux mots de passe ne correspondent pas.";
+    if (!accepte) suite.accepte = "Il faut accepter les conditions d'utilisation.";
     setErreurs(suite);
+    setErreurServeur(null);
     if (Object.keys(suite).length > 0) return;
 
-    // Seul le nom affiché est retenu. Ni le matricule ni le mot de passe
-    // ne sont enregistrés tant qu'il n'y a pas de serveur.
-    entrer("demo", nom.trim());
-    navigate("/tableau-de-bord");
+    setAttente(true);
+    const r =
+      methode === "email"
+        ? await inscrireEmail({ email, motDePasse, nom, niveau })
+        : await inscrireTelephone({ telephone, motDePasse, nom, niveau });
+    setAttente(false);
+    if (r.erreur) setErreurServeur(r.erreur);
+    else if (r.confirmer) setEmailEnvoye(email.trim());
+    // Sinon, déjà connecté : la page part d'elle-même.
   };
+
+  if (emailEnvoye) {
+    return (
+      <CadreAuth titre="Vérifie ta boîte mail" texte="Ton compte est presque prêt." sansInvite>
+        <div className="mt-6 rounded-2xl border border-ink-200 p-5 dark:border-ink-700">
+          <p className="text-sm/6 text-ink-700 dark:text-ink-200">
+            Un lien de confirmation vient de partir vers{" "}
+            <strong className="font-semibold text-ink-950 dark:text-white">{emailEnvoye}</strong>. Clique
+            dessus pour activer ton compte : tu arriveras directement sur ton tableau de bord.
+          </p>
+          <p className="mt-3 text-xs/5 text-ink-500 dark:text-ink-400">
+            Rien reçu après quelques minutes ? Regarde dans les courriers indésirables, ou
+            vérifie l'adresse et recommence.
+          </p>
+        </div>
+        <button type="button" onClick={() => setEmailEnvoye(null)} className={boutonPrincipal}>
+          Modifier l'adresse
+        </button>
+      </CadreAuth>
+    );
+  }
 
   return (
     <CadreAuth
       titre="Créer un compte"
-      texte="Quelques informations suffisent pour suivre ta progression."
+      texte="Gratuit. Ta progression te suit ensuite sur tous tes appareils."
       pied={
         <>
           Tu as déjà un compte ?{" "}
-          <Link
-            to="/connexion"
-            className="font-semibold text-brand-600 hover:underline dark:text-brand-400"
-          >
+          <Link to="/connexion" className="font-semibold text-brand-600 hover:underline dark:text-brand-400">
             Se connecter
           </Link>
         </>
       }
     >
+      <BoutonGoogle surErreur={setErreurServeur} />
+      <div className="mt-6">
+        <Separateur />
+      </div>
+
       <form onSubmit={soumettre} noValidate className="mt-6 space-y-4">
+        <div role="group" aria-label="S'inscrire avec" className="grid grid-cols-2 gap-2 rounded-xl bg-ink-100 p-1 dark:bg-ink-800">
+          {METHODES.map((m) => (
+            <button
+              key={m.valeur}
+              type="button"
+              onClick={() => setMethode(m.valeur)}
+              aria-pressed={methode === m.valeur}
+              className={cx(
+                "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                methode === m.valeur
+                  ? "bg-white text-ink-950 shadow-sm dark:bg-ink-950 dark:text-white"
+                  : "text-ink-600 hover:text-ink-900 dark:text-ink-300 dark:hover:text-white"
+              )}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+
         <Champ
           id="nom"
           label="Nom complet"
@@ -388,21 +510,34 @@ export function Inscription() {
           erreur={erreurs.nom}
         />
 
-        <Champ
-          id="matricule"
-          label="Matricule étudiant"
-          type="text"
-          placeholder="Ex. 21RSI0456"
-          value={matricule}
-          onChange={(e) => setMatricule(e.target.value)}
-          erreur={erreurs.matricule}
-        />
+        {methode === "email" ? (
+          <Champ
+            id="email"
+            label="Adresse email"
+            type="email"
+            autoComplete="email"
+            placeholder="Ex. awa@exemple.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            erreur={erreurs.email}
+            aide="Un lien de confirmation y sera envoyé."
+          />
+        ) : (
+          <Champ
+            id="telephone"
+            label="Numéro de téléphone"
+            type="tel"
+            autoComplete="tel"
+            placeholder="Ex. 77 123 45 67"
+            value={telephone}
+            onChange={(e) => setTelephone(e.target.value)}
+            erreur={erreurs.telephone}
+            aide="Aucun SMS n'est envoyé. Pour un numéro hors du Sénégal, commence par l'indicatif (+33…). Garde bien ton mot de passe : sans email, il ne peut pas être réinitialisé par lien."
+          />
+        )}
 
         <div>
-          <label
-            htmlFor="niveau"
-            className="block text-sm font-medium text-ink-800 dark:text-ink-200"
-          >
+          <label htmlFor="niveau" className="block text-sm font-medium text-ink-800 dark:text-ink-200">
             Niveau
           </label>
           <select
@@ -423,7 +558,7 @@ export function Inscription() {
           valeur={motDePasse}
           onChange={setMotDePasse}
           erreur={erreurs.motDePasse}
-          aide="Au moins 8 caractères. Ce champ n'est ni vérifié ni enregistré."
+          aide={`Au moins ${MIN_MOT_DE_PASSE} caractères. Évite un mot de passe que tu utilises ailleurs.`}
         />
 
         <ChampMotDePasse
@@ -444,32 +579,161 @@ export function Inscription() {
               className="mt-0.5 size-4.5 shrink-0 rounded border-ink-300 text-brand-600 focus:ring-brand-500/30 dark:border-ink-600"
             />
             <span className="text-sm/6 text-ink-600 dark:text-ink-400">
-              J'ai lu{" "}
-              <Link
-                to="/projet"
-                className="font-medium text-brand-600 hover:underline dark:text-brand-400"
-              >
-                le cadre du projet
+              J'accepte les{" "}
+              <Link to="/conditions" className="font-medium text-brand-600 hover:underline dark:text-brand-400">
+                conditions d'utilisation
               </Link>{" "}
-              et je comprends qu'aucun document universitaire n'y est publié sans
-              autorisation.
+              et j'ai lu la{" "}
+              <Link to="/confidentialite" className="font-medium text-brand-600 hover:underline dark:text-brand-400">
+                politique de confidentialité
+              </Link>
+              .
             </span>
           </label>
           {erreurs.accepte && (
-            <p
-              id="accepte-erreur"
-              role="alert"
-              className="mt-1.5 text-xs text-red-600 dark:text-red-400"
-            >
+            <p id="accepte-erreur" role="alert" className="mt-1.5 text-xs text-red-600 dark:text-red-400">
               {erreurs.accepte}
             </p>
           )}
         </div>
 
-        <button type="submit" className={boutonPrincipal}>
-          Créer mon compte
+        <ErreurServeur code={erreurServeur} />
+
+        <button type="submit" disabled={attente} className={boutonPrincipal}>
+          {attente ? "Création du compte…" : "Créer mon compte"}
         </button>
       </form>
+    </CadreAuth>
+  );
+}
+
+/* ================================================================== */
+/* Mot de passe oublié                                                 */
+/* ================================================================== */
+
+export function MotDePasseOublie() {
+  const [email, setEmail] = useState("");
+  const [erreur, setErreur] = useState(null);
+  const [erreurServeur, setErreurServeur] = useState(null);
+  const [attente, setAttente] = useState(false);
+  const [envoye, setEnvoye] = useState(false);
+
+  const soumettre = async (e) => {
+    e.preventDefault();
+    setErreurServeur(null);
+    if (!EMAIL.test(email.trim())) {
+      setErreur("Indique l'adresse email de ton compte.");
+      return;
+    }
+    setErreur(null);
+    setAttente(true);
+    const r = await motDePasseOublie(email);
+    setAttente(false);
+    if (r.erreur) setErreurServeur(r.erreur);
+    else setEnvoye(true);
+  };
+
+  return (
+    <CadreAuth
+      titre="Mot de passe oublié"
+      texte="Reçois par email un lien pour choisir un nouveau mot de passe."
+      sansInvite
+      pied={
+        <Link to="/connexion" className="font-semibold text-brand-600 hover:underline dark:text-brand-400">
+          Revenir à la connexion
+        </Link>
+      }
+    >
+      {envoye ? (
+        <p role="status" className="mt-6 rounded-2xl border border-ink-200 p-5 text-sm/6 text-ink-700 dark:border-ink-700 dark:text-ink-200">
+          Si un compte existe avec cette adresse, un lien vient de partir. Clique dessus
+          pour choisir ton nouveau mot de passe.
+        </p>
+      ) : (
+        <form onSubmit={soumettre} noValidate className="mt-6 space-y-4">
+          <Champ
+            id="email-oubli"
+            label="Adresse email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            erreur={erreur}
+            aide="Inscrit avec ton numéro de téléphone ? Écris à l'équipe du site : elle peut réinitialiser ton mot de passe."
+          />
+          <ErreurServeur code={erreurServeur} />
+          <button type="submit" disabled={attente} className={boutonPrincipal}>
+            {attente ? "Envoi…" : "Envoyer le lien"}
+          </button>
+        </form>
+      )}
+    </CadreAuth>
+  );
+}
+
+/* ================================================================== */
+/* Nouveau mot de passe (après le lien reçu par email)                  */
+/* ================================================================== */
+
+export function NouveauMotDePasse() {
+  const navigate = useNavigate();
+  const { session } = useSession();
+  const [motDePasse, setMotDePasse] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const [erreurs, setErreurs] = useState({});
+  const [erreurServeur, setErreurServeur] = useState(null);
+  const [attente, setAttente] = useState(false);
+
+  const soumettre = async (e) => {
+    e.preventDefault();
+    const suite = {};
+    if (motDePasse.length < MIN_MOT_DE_PASSE) {
+      suite.motDePasse = `Le mot de passe doit faire au moins ${MIN_MOT_DE_PASSE} caractères.`;
+    }
+    if (confirmation !== motDePasse) suite.confirmation = "Les deux mots de passe ne correspondent pas.";
+    setErreurs(suite);
+    setErreurServeur(null);
+    if (Object.keys(suite).length > 0) return;
+    setAttente(true);
+    const r = await changerMotDePasse(motDePasse);
+    setAttente(false);
+    if (r.erreur) setErreurServeur(r.erreur);
+    else navigate("/tableau-de-bord");
+  };
+
+  return (
+    <CadreAuth titre="Nouveau mot de passe" texte="Choisis le mot de passe de ton compte." sansInvite>
+      {session?.mode !== "compte" ? (
+        <p className="mt-6 text-sm/6 text-ink-600 dark:text-ink-300">
+          Ce lien a expiré ou a déjà servi.{" "}
+          <Link to="/mot-de-passe-oublie" className="font-semibold text-brand-600 hover:underline dark:text-brand-400">
+            Demande un nouveau lien
+          </Link>
+          .
+        </p>
+      ) : (
+        <form onSubmit={soumettre} noValidate className="mt-6 space-y-4">
+          <ChampMotDePasse
+            id="nouveau-mot-de-passe"
+            label="Nouveau mot de passe"
+            valeur={motDePasse}
+            onChange={setMotDePasse}
+            erreur={erreurs.motDePasse}
+            aide={`Au moins ${MIN_MOT_DE_PASSE} caractères.`}
+          />
+          <ChampMotDePasse
+            id="confirmation"
+            label="Confirmer le mot de passe"
+            valeur={confirmation}
+            onChange={setConfirmation}
+            erreur={erreurs.confirmation}
+          />
+          <ErreurServeur code={erreurServeur} />
+          <button type="submit" disabled={attente} className={boutonPrincipal}>
+            {attente ? "Enregistrement…" : "Enregistrer"}
+          </button>
+        </form>
+      )}
     </CadreAuth>
   );
 }
