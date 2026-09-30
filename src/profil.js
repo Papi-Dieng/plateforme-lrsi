@@ -1,13 +1,10 @@
 /* ==================================================================
    Fiche profil de l'étudiant.
 
-   Ces informations sont personnelles. En version 1, elles ne quittent
-   jamais l'appareil : elles vivent dans le navigateur, sous la clé
-   `lrsi-profil`, et rien n'est envoyé à un serveur. Aucun champ n'est
-   obligatoire, et la page le dit clairement.
-
-   En version 3, ce fichier sera le seul à modifier pour passer à un
-   profil rattaché à un compte.
+   Ces informations sont personnelles. Elles vivent dans le navigateur,
+   sous la clé `lrsi-profil`. En mode invité, elles n'en sortent pas ;
+   avec un compte, src/synchro.js les recopie dans ce compte. Aucun champ
+   n'est obligatoire, et la page le dit clairement.
    ================================================================== */
 
 export const CLE_PROFIL = "lrsi-profil";

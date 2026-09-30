@@ -10,6 +10,7 @@ import { cx } from "../components/classes";
 import CarrouselEquipe from "../components/CarrouselEquipe";
 import {
   engagements,
+  etatVersion,
   feuilleDeRoute,
   principesSecurite,
   roles,
@@ -17,19 +18,20 @@ import {
 } from "../data/site";
 
 const etatsRoute = {
-  "en-cours": { ton: "accent", label: "En cours" },
+  fait: { ton: "accent", label: "Terminée" },
+  "en-cours": { ton: "brand", label: "En cours" },
   prevu: { ton: "brand", label: "Prévu" },
   vision: { ton: "neutre", label: "Vision" },
 };
 
 const pile = [
-  { element: "Interface", techno: "React et Tailwind CSS", etat: "en place" },
-  { element: "Routage", techno: "React Router", etat: "en place" },
-  { element: "Contenu", techno: "Fichiers de données JavaScript", etat: "en place" },
-  { element: "Serveur et API", techno: "Node.js et Express", etat: "version 2" },
-  { element: "Base de données", techno: "MongoDB ou PostgreSQL", etat: "version 2" },
-  { element: "Authentification", techno: "Sessions ou jetons signés", etat: "version 3" },
-  { element: "Assistant IA", techno: "API d'un modèle de langage", etat: "version 4" },
+  { element: "Interface", techno: "React et Tailwind CSS" },
+  { element: "Hébergement du site", techno: "GitHub Pages" },
+  { element: "Relais et contenu publié", techno: "Cloudflare Workers" },
+  { element: "Comptes et base de données", techno: "Supabase (PostgreSQL)" },
+  { element: "Emails du compte", techno: "Brevo" },
+  { element: "Assistant IA", techno: "Google Gemini, appelé par le relais" },
+  { element: "Tests automatiques", techno: "Vitest et Playwright" },
 ];
 
 const usagesIA = [
@@ -37,25 +39,25 @@ const usagesIA = [
     icone: "sparkles",
     titre: "Assistant de révision",
     texte:
-      "Poser une question sur une notion du cours et recevoir une explication adaptée à son niveau.",
+      "Une question sur une notion, une photo d'exercice : il répond en s'appuyant sur les cours de la plateforme, et donne la méthode avant la correction.",
   },
   {
-    icone: "code",
-    titre: "Génération d'exercices",
+    icone: "pencil",
+    titre: "Avis sur une rédaction",
     texte:
-      "Produire des exercices sur une matière précise, avec plusieurs niveaux de difficulté.",
+      "Dans un devoir, l'étudiant recopie sa réponse et reçoit un avis comparé au corrigé. Jamais de note.",
   },
   {
-    icone: "bulb",
-    titre: "Explication des erreurs",
+    icone: "clock",
+    titre: "Programme de révision",
     texte:
-      "Après un QCM, revenir sur les erreurs et clarifier le concept mal compris.",
+      "À partir des dates d'examen et des créneaux libres, un programme jour par jour qui commence par les points faibles.",
   },
   {
     icone: "target",
-    titre: "Accompagnement personnalisé",
+    titre: "Aide à l'équipe",
     texte:
-      "S'adapter aux difficultés repérées dans les exercices, sans remplacer le rôle des enseignants.",
+      "Côté admin, l'IA propose des questions de QCM tirées des cours. L'équipe relit et décide : rien n'est publié sans elle.",
   },
 ];
 
@@ -126,13 +128,13 @@ export default function Projet() {
             <TitreSection
               surtitre="Développement par étapes"
               titre="Cinq versions, une seule à la fois"
-              texte="Chaque version n'ajoute une couche qu'une fois la précédente stable. C'est ce qui évite de construire un projet trop complexe dès le départ."
+              texte="Le projet avance couche par couche, pour ne pas construire trop complexe dès le départ. Ce qui est coché est déjà en ligne."
             />
 
             <ol className="mt-8 space-y-4">
               {feuilleDeRoute.map((v, i) => {
-                const etat = etatsRoute[v.etat];
-                const actif = v.etat === "en-cours";
+                const etat = etatsRoute[etatVersion(v)];
+                const actif = etatVersion(v) === "en-cours";
                 return (
                   <li
                     key={v.version}
@@ -167,14 +169,24 @@ export default function Projet() {
                       <ul className="mt-3 grid gap-2 sm:grid-cols-3">
                         {v.points.map((p) => (
                           <li
-                            key={p}
+                            key={p.texte}
                             className="flex gap-2 text-sm/6 text-ink-600 dark:text-ink-400"
                           >
-                            <Icon
-                              name="check"
-                              className="mt-1 size-3.5 shrink-0 text-ink-500 dark:text-ink-400"
-                            />
-                            {p}
+                            {p.fait ? (
+                              <Icon
+                                name="check"
+                                className="mt-1 size-3.5 shrink-0 text-accent-600 dark:text-accent-400"
+                              />
+                            ) : (
+                              <span
+                                className="mt-1.5 size-2.5 shrink-0 rounded-full border border-ink-400 dark:border-ink-500"
+                                aria-hidden="true"
+                              />
+                            )}
+                            <span>
+                              {p.texte}
+                              {!p.fait && <span className="sr-only"> (à venir)</span>}
+                            </span>
                           </li>
                         ))}
                       </ul>
@@ -191,8 +203,8 @@ export default function Projet() {
           <section>
             <TitreSection
               surtitre="Comptes et accès"
-              titre="Trois rôles envisagés"
-              texte="Cette répartition est une proposition de conception. Elle ne signifie pas que les enseignants ou le département auront automatiquement accès à la plateforme."
+              titre="Qui fait quoi"
+              texte="Deux rôles existent déjà. Le rôle enseignant reste une proposition : il ne donne à personne un accès automatique à la plateforme."
             />
 
             <div className="mt-6 grid gap-5 lg:grid-cols-3">
@@ -201,9 +213,12 @@ export default function Projet() {
                   <div className="grid size-10 place-items-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300">
                     <Icon name={r.icone} className="size-5" />
                   </div>
-                  <h3 className="mt-4 font-semibold text-ink-900 dark:text-white">
-                    {r.nom}
-                  </h3>
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <h3 className="font-semibold text-ink-900 dark:text-white">
+                      {r.nom}
+                    </h3>
+                    <Badge ton={r.etat === "En place" ? "accent" : "neutre"}>{r.etat}</Badge>
+                  </div>
                   <p className="mt-2 text-sm/6 text-ink-600 dark:text-ink-400">
                     {r.texte}
                   </p>
@@ -212,9 +227,9 @@ export default function Projet() {
             </div>
 
             <p className="mt-5 max-w-3xl text-sm/6 text-ink-500 dark:text-ink-400">
-              L'identification pourrait s'appuyer sur le matricule étudiant et le
-              niveau, mais le fonctionnement exact devra être défini avec le
-              département et respecter les règles de protection des données.
+              Les étudiants s'inscrivent eux-mêmes, avec leur email, leur numéro
+              de téléphone ou leur compte Google. Aucun matricule n'est demandé,
+              et le mode invité reste ouvert à tous.
             </p>
           </section>
 
@@ -257,8 +272,8 @@ export default function Projet() {
           <section>
             <TitreSection
               surtitre="Version 4"
-              titre="L'intelligence artificielle, plus tard et avec des limites"
-              texte="L'IA n'arrivera qu'une fois la base fonctionnelle. Elle ne doit ni inventer d'informations pédagogiques, ni donner accès à des documents non autorisés."
+              titre="L'intelligence artificielle, avec des limites"
+              texte="L'IA s'appuie sur ce que la plateforme enseigne. Elle ne doit ni inventer d'informations pédagogiques, ni donner accès à des documents non autorisés, et ses réponses sont signalées comme telles."
             />
 
             <div className="mt-6 grid gap-5 sm:grid-cols-2">
@@ -287,7 +302,7 @@ export default function Projet() {
             <TitreSection
               surtitre="Technique"
               titre="Organisation technique"
-              texte="La pile reste modifiable. Ce tableau décrit ce qui est en place aujourd'hui et ce qui est prévu."
+              texte="Ce qui fait tourner la plateforme aujourd'hui. Tout tient dans des offres gratuites."
             />
 
             <div className="mt-6 overflow-hidden rounded-2xl border border-ink-200 dark:border-ink-800">
@@ -301,7 +316,7 @@ export default function Projet() {
                       Technologie
                     </th>
                     <th scope="col" className="px-5 py-3 font-semibold">
-                      Statut
+                      État
                     </th>
                   </tr>
                 </thead>
@@ -315,9 +330,7 @@ export default function Projet() {
                         {p.techno}
                       </td>
                       <td className="px-5 py-3.5">
-                        <Badge ton={p.etat === "en place" ? "accent" : "neutre"}>
-                          {p.etat}
-                        </Badge>
+                        <Badge ton="accent">en place</Badge>
                       </td>
                     </tr>
                   ))}

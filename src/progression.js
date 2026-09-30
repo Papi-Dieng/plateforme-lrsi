@@ -1,16 +1,9 @@
 /* ==================================================================
-   Progression de l'étudiant — VERSION 1
+   Progression de l'étudiant.
 
-   Tout est conservé dans le navigateur, rien n'est envoyé nulle part.
-   Trois informations seulement :
-
-     lrsi-scores    → meilleur score et nombre de tentatives par QCM
-     lrsi-exercices → exercices dont la correction a été ouverte
-     lrsi-favoris   → matières mises en marque-page
-
-   La version 3 déplacera ces données côté serveur, rattachées à un
-   compte. Les fonctions ci-dessous sont le seul point de passage :
-   il suffira de les remplacer par des appels à l'API.
+   Tout est conservé dans le navigateur (clés CLES ci-dessous). En mode
+   invité, rien n'en sort ; avec un compte, src/synchro.js recopie ces
+   données dans le compte et les ramène sur les autres appareils.
    ================================================================== */
 
 export const CLES = {
@@ -90,7 +83,7 @@ export function lireExercicesTravailles() {
 }
 
 // Appelé quand l'étudiant ouvre la correction : c'est le signe le plus
-// fiable, en version 1, qu'il a réellement travaillé l'exercice.
+// fiable qu'il a réellement travaillé l'exercice.
 export function marquerExerciceTravaille(id) {
   const faits = lireExercicesTravailles();
   if (!faits[id]) {

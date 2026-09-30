@@ -32,10 +32,10 @@ export const site = {
   editeur: "Papa Mathar Dieng",
   // L'équipe : le carrousel de la page Projet et les mentions légales.
   // `photo` : un fichier du dossier public/equipe/ (par exemple
-  // "equipe/papa-mathar-dieng.jpg") ; vide, la carte affiche les
-  // initiales. `bio` : une phrase de présentation, facultative.
+  // "equipe/papa-mathar-dieng.webp", recadrée en 600 × 800) ; vide, la
+  // carte affiche les initiales. `bio` : une phrase de présentation, facultative.
   equipe: [
-    { id: "papa-mathar-dieng", nom: "Papa Mathar Dieng", role: "Fondateur et directeur technique (CTO)", photo: "", bio: "" },
+    { id: "papa-mathar-dieng", nom: "Papa Mathar Dieng", role: "Fondateur et directeur technique (CTO)", photo: "equipe/papa-mathar-dieng.webp", bio: "" },
     { id: "pape-fily-massaly", nom: "Pape Fily Massaly", role: "Responsable de la recherche et de la qualité pédagogique", photo: "", bio: "" },
     { id: "balle-ndiaye", nom: "Balle Ndiaye", role: "Responsable des contenus pédagogiques et du marketing", photo: "", bio: "" },
     { id: "jean-emmanuel-patron-mendy", nom: "Jean Emmanuel Patron Mendy", role: "Responsable des contenus et de la communication", photo: "", bio: "" },
@@ -43,7 +43,7 @@ export const site = {
   // Date de la dernière modification des pages juridiques (conditions,
   // confidentialité, mentions légales), à changer à chaque mise à jour.
   pagesJuridiquesMisesAJour: "30 septembre 2026",
-  version: "Version 1 — site de présentation",
+  version: "Plateforme en ligne",
   // Adresse du relais IA (dossier `serveur-ia/`), affichée par Cloudflare
   // après `npx wrangler deploy`, par exemple
   // "https://jangrsi-ia.<compte>.workers.dev". Tant qu'elle est vide,
@@ -81,8 +81,8 @@ export const menuProfil = [
   { label: "Paramètres", to: "/parametres", icone: "settings" },
   { label: "Conditions d'utilisation", to: "/conditions", icone: "file" },
   { label: "Confidentialité", to: "/confidentialite", icone: "lock" },
-  // Page d'auteur, pas de page étudiante. Elle rejoindra un espace
-  // réservé quand les rôles existeront, en version 3.
+  // Page d'auteur, pas de page étudiante : ce qu'elle modifie demande
+  // le mot de passe admin.
   { label: "Administration", to: "/admin", icone: "shield", auteur: true },
 ];
 
@@ -113,89 +113,94 @@ export const objectifs = [
   },
 ];
 
+// `fait` : ce qui est déjà en ligne. Une version est « terminée » quand
+// tous ses points le sont, « en cours » dès que l'un l'est.
 export const feuilleDeRoute = [
   {
     version: "Version 1",
     titre: "Site de présentation",
-    etat: "en-cours",
     points: [
-      "Page d'accueil, design et navigation",
-      "Pages cours, exercices et QCM",
-      "Contenu de démonstration",
+      { texte: "Page d'accueil, design et navigation", fait: true },
+      { texte: "Pages cours, exercices et QCM", fait: true },
+      { texte: "Thème sombre, version hors ligne, application installable", fait: true },
     ],
   },
   {
     version: "Version 2",
     titre: "Ressources pédagogiques",
-    etat: "prevu",
     points: [
-      "Organisation des cours par matière et chapitre",
-      "Exercices corrigés et corrections détaillées",
-      "Gestion de contenu adaptée",
+      { texte: "Cours par matière et chapitre, semestres 1 et 2", fait: true },
+      { texte: "Exercices, QCM, devoirs et examens corrigés", fait: true },
+      { texte: "Espace admin pour publier le contenu", fait: true },
     ],
   },
   {
     version: "Version 3",
     titre: "Comptes et accès",
-    etat: "prevu",
     points: [
-      "Authentification des étudiants",
-      "Rôles étudiant, administrateur, enseignant",
-      "Autorisations d'accès aux ressources réservées",
+      { texte: "Comptes étudiants : email, téléphone ou Google", fait: true },
+      { texte: "Progression retrouvée sur tous les appareils", fait: true },
+      { texte: "Rôle enseignant et ressources réservées", fait: false },
     ],
   },
   {
     version: "Version 4",
     titre: "IA et fonctionnalités avancées",
-    etat: "prevu",
     points: [
-      "Assistant de révision",
-      "Génération d'exercices par niveau",
-      "Explication des erreurs après un QCM",
+      { texte: "Assistant de révision, avis sur les rédactions", fait: true },
+      { texte: "Programme de révision composé par l'IA", fait: true },
+      { texte: "QCM proposés par l'IA à l'équipe, qui les relit", fait: true },
     ],
   },
   {
     version: "Version 5",
     titre: "Ouverture à d'autres établissements",
-    etat: "vision",
+    vision: true,
     points: [
-      "Partenariats avec d'autres formations",
-      "Nouvelles filières informatiques",
-      "Extension au-delà de la filière LRSI",
+      { texte: "Partenariats avec d'autres formations", fait: false },
+      { texte: "Nouvelles filières informatiques", fait: false },
+      { texte: "Extension au-delà de la filière LRSI", fait: false },
     ],
   },
 ];
 
+export const etatVersion = (v) => {
+  if (v.vision) return "vision";
+  if (v.points.every((p) => p.fait)) return "fait";
+  return v.points.some((p) => p.fait) ? "en-cours" : "prevu";
+};
+
+// Ce que la plateforme applique déjà, pas ce qu'elle promet.
 export const principesSecurite = [
   {
     titre: "Comptes et mots de passe",
     texte:
-      "Hachage des mots de passe, politique de complexité et limitation des tentatives de connexion.",
+      "Mots de passe chiffrés par Supabase, jamais visibles par l'équipe. Tentatives de connexion et envois d'emails limités.",
   },
   {
     titre: "Contrôle des accès",
     texte:
-      "Chaque ressource réservée est vérifiée côté serveur, jamais seulement masquée dans l'interface.",
+      "Règles appliquées par la base elle-même : chaque étudiant ne lit que ses propres données. L'espace admin est vérifié par le serveur, pas seulement masqué.",
   },
   {
     titre: "Validation des fichiers",
     texte:
-      "Type, taille et provenance vérifiés avant publication. Aucun fichier exécuté sur le serveur.",
+      "Un PDF déposé est vérifié par le relais (type réel, taille) avant d'être gardé, et n'est jamais servi autrement que comme PDF.",
   },
   {
     titre: "Données personnelles",
     texte:
-      "Collecte minimale : uniquement ce qui est nécessaire pour identifier un étudiant et suivre sa progression.",
+      "Collecte minimale : un nom, un niveau et un identifiant de connexion. Le mode invité ne demande rien. Chacun peut supprimer son compte.",
   },
   {
-    titre: "Droits d'administration",
+    titre: "Secrets et droits d'administration",
     texte:
-      "Séparation nette des rôles et journalisation des actions d'administration.",
+      "Les clés d'accès (IA, base de données) restent sur le serveur, jamais dans le site. Publier du contenu demande le mot de passe admin.",
   },
   {
-    titre: "Failles courantes",
+    titre: "Contenu et abus",
     texte:
-      "Protection contre l'injection SQL, le XSS et le CSRF dès la conception, pas après coup.",
+      "Le relais nettoie ce qui est publié (liens en https seulement, formats vérifiés) et limite le nombre de requêtes par visiteur.",
   },
 ];
 
@@ -211,19 +216,22 @@ export const roles = [
   {
     nom: "Étudiant",
     icone: "users",
+    etat: "En place",
     texte:
-      "Consulter les cours, faire les exercices, participer aux QCM et suivre sa progression.",
+      "Consulte les cours, fait les exercices et les QCM, suit sa progression. Il s'inscrit lui-même, ou entre en invité ; il n'ajoute ni ne modifie aucun contenu.",
   },
   {
     nom: "Administrateur",
     icone: "shield",
+    etat: "En place",
     texte:
-      "Gérer les utilisateurs, les matières, les documents et les contenus autorisés.",
+      "L'équipe du projet : publie les matières, les exercices, les QCM et les documents autorisés, depuis l'espace admin protégé par mot de passe.",
   },
   {
     nom: "Enseignant",
     icone: "book",
+    etat: "Évolution possible",
     texte:
-      "Évolution possible : contribuer à la validation ou à la publication de ressources, selon les autorisations accordées.",
+      "Contribuer à la validation ou à la publication de ressources, selon les autorisations accordées.",
   },
 ];

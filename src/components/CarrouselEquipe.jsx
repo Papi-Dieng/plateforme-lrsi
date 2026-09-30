@@ -33,8 +33,19 @@ function ecart(index, actif, total) {
 }
 
 function Portrait({ membre }) {
-  if (membre.photo) {
-    return <img src={membre.photo} alt="" className="size-full object-cover" loading="lazy" draggable="false" />;
+  // Photo introuvable (version hors ligne, fichier absent) : les initiales.
+  const [echec, setEchec] = useState(false);
+  if (membre.photo && !echec) {
+    return (
+      <img
+        src={membre.photo}
+        alt=""
+        className="size-full object-cover"
+        loading="lazy"
+        draggable="false"
+        onError={() => setEchec(true)}
+      />
+    );
   }
   return (
     <span className="grid size-full place-items-center bg-gradient-to-br from-brand-500 to-brand-800 text-5xl font-bold tracking-tight text-white sm:text-6xl">

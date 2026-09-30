@@ -22,10 +22,9 @@ import { themeMatiere } from "../data/couleurs";
    fabrique le contenu. Elle répond à une seule question : qu'est-ce
    qui manque pour que la plateforme fonctionne pleinement ?
 
-   En version 1 elle est en lecture seule et sans contrôle d'accès :
-   il n'y a pas encore de serveur, donc pas de rôles. La gestion des
-   utilisateurs, la publication et les autorisations arriveront en
-   version 3, avec la véritable authentification.
+   Elle-même ne montre que ce qui est déjà public. Tout ce qui modifie
+   (contenu, éducation de l'IA) demande le mot de passe admin, vérifié
+   par le relais. Les comptes étudiants se gèrent dans Supabase.
    ================================================================== */
 
 function Bloc({ icone, ton = "brand", titre, description, children }) {
@@ -143,7 +142,9 @@ export default function Admin() {
               Ce tableau de bord est lisible par quiconque connaît son adresse,
               mais il ne montre que ce qui est déjà public. Modifier le contenu
               ou l'éducation de l'IA demande le mot de passe admin, vérifié par
-              le relais. Les comptes et les rôles arriveront en version 3.
+              le relais. Les comptes étudiants se gèrent dans Supabase
+              (Authentication → Users) : c'est là qu'on réinitialise le mot
+              de passe d'un compte téléphone, ou qu'on supprime un compte.
             </p>
           </div>
 
@@ -445,14 +446,13 @@ export default function Admin() {
           {/* ---- Ce que fera le vrai espace d'administration ---- */}
           <Bloc
             icone="shield"
-            titre="Ce que fera l'administration en version 3"
+            titre="Encore à venir dans l'administration"
             description="Prévu dans la feuille de route, pas encore construit."
           >
             <ul className="grid gap-3 sm:grid-cols-2">
               {[
-                "Gérer les comptes étudiants et les rôles",
-                "Créer et modifier cours, exercices et QCM sans toucher au code",
-                "Valider les ressources avant publication",
+                "Gérer les comptes étudiants depuis le site, sans passer par Supabase",
+                "Rôle enseignant pour valider les ressources avant publication",
                 "Contrôler les accès aux documents réservés",
                 "Journaliser les actions d'administration",
                 "Suivre l'activité de la promotion, sans profilage individuel",
