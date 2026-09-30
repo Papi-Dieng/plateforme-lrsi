@@ -10,6 +10,7 @@ import { CLE_PROFIL } from "../profil";
 import { choisirStats, statsRefusees } from "../stats";
 import Installation from "../components/Installation";
 import { CLE_REVISIONS } from "../revisions";
+import { CLE_CONVERSATIONS } from "../conversations";
 import { site } from "../data/site";
 import { CLE_PLANNING, CLE_THEME } from "../sauvegarde";
 
@@ -31,6 +32,7 @@ const entreesStockage = [
   { cle: CLES.videosVues, libelle: "Vidéos ouvertes", detail: "Pour la barre de lecture" },
   { cle: CLE_PLANNING, libelle: "Planning de révision", detail: "Évaluations à préparer" },
   { cle: CLE_REVISIONS, libelle: "Révisions espacées", detail: "QCM à refaire, et quand" },
+  { cle: CLE_CONVERSATIONS, libelle: "Discussions avec l'assistant", detail: "Les 20 plus récentes, sans les images" },
   { cle: CLE_THEME, libelle: "Thème", detail: "Clair ou sombre" },
 ];
 

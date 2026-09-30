@@ -133,6 +133,8 @@ export function raisonEchec(code) {
       return "L'IA a mis trop de temps à répondre. Réessaie.";
     case "annule":
       return "Tu as arrêté la réponse.";
+    case "interrompu":
+      return "La réponse a été interrompue (page fermée avant la fin). Tu peux la relancer.";
     case "image":
       return "Cette image n'a pas pu être envoyée : choisis une photo en JPEG, PNG ou WebP.";
     default:

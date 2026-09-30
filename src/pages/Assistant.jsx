@@ -11,6 +11,16 @@ import { RACCOURCIS, repondre, questionsRapides } from "../assistant";
 import { decouperReponse, demanderIA, iaActive, raisonEchec } from "../ia";
 import { getMatiere } from "../data/matieres";
 import { themeMatiere } from "../data/couleurs";
+import {
+  ecrireActive,
+  ecrireConversations,
+  enregistrer,
+  listeConversations,
+  lireActive,
+  lireConversations,
+  nouvelIdentifiant,
+  supprimerConversation,
+} from "../conversations";
 
 /* ==================================================================
    Assistant de révision.
@@ -32,6 +42,10 @@ import { themeMatiere } from "../data/couleurs";
    Chaque réponse rédigée par l'IA est signalée comme telle : un outil
    qui laisserait croire qu'il ne se trompe jamais tromperait
    l'étudiant au moment où il a le plus besoin d'être sûr.
+
+   Chaque discussion est gardée (src/conversations.js) : l'historique la
+   rouvre, et la suite repart avec les échanges précédents, comme si on
+   ne l'avait jamais quittée.
    ================================================================== */
 
 const INTENTIONS_SANS_IA = new Set(["priorite"]);
@@ -138,19 +152,126 @@ function Liens({ liens }) {
   );
 }
 
+/* ---- Historique des discussions ---- */
+
+const dateCourte = (iso) => {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const aujourdhui = new Date().toDateString() === d.toDateString();
+  return aujourdhui
+    ? `aujourd'hui à ${d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`
+    : d.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+};
+
+function Historique({ liste, active, onOuvrir, onSupprimer, onFermer }) {
+  useEffect(() => {
+    const surTouche = (e) => e.key === "Escape" && onFermer();
+    window.addEventListener("keydown", surTouche);
+    return () => window.removeEventListener("keydown", surTouche);
+  }, [onFermer]);
+
+  return (
+    <div className="absolute inset-0 z-30 flex">
+      <button type="button" aria-label="Fermer l'historique" tabIndex={-1} onClick={onFermer} className="absolute inset-0 bg-ink-950/40" />
+      <section
+        aria-label="Historique des discussions"
+        className="relative flex h-full w-full max-w-sm flex-col border-r border-ink-200 bg-white shadow-xl dark:border-ink-800 dark:bg-ink-900"
+      >
+        <div className="flex items-center justify-between gap-3 border-b border-ink-200 px-4 py-3 dark:border-ink-800">
+          <h2 className="font-semibold text-ink-900 dark:text-white">Mes discussions</h2>
+          <button
+            type="button"
+            onClick={onFermer}
+            aria-label="Fermer l'historique"
+            className="grid size-9 place-items-center rounded-lg text-ink-500 hover:bg-ink-100 dark:text-ink-400 dark:hover:bg-ink-800"
+          >
+            <Icon name="close" className="size-4.5" />
+          </button>
+        </div>
+        {liste.length === 0 ? (
+          <p className="px-4 py-6 text-sm/6 text-ink-600 dark:text-ink-300">
+            Aucune discussion gardée pour l&apos;instant. Pose une question : elle apparaîtra ici,
+            et tu pourras la rouvrir pour la continuer.
+          </p>
+        ) : (
+          <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
+            {liste.map((c) => (
+              <li key={c.id} className="group flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => onOuvrir(c.id)}
+                  aria-current={c.id === active ? "true" : undefined}
+                  className={cx(
+                    "min-w-0 flex-1 rounded-xl px-3 py-2.5 text-left transition-colors",
+                    c.id === active ? "bg-brand-50 dark:bg-brand-500/15" : "hover:bg-ink-100 dark:hover:bg-ink-800"
+                  )}
+                >
+                  <span className="block truncate text-sm font-medium text-ink-900 dark:text-white">{c.titre}</span>
+                  <span className="block text-xs text-ink-500 dark:text-ink-400">
+                    {dateCourte(c.date)} · {c.nombre} question{c.nombre > 1 ? "s" : ""}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSupprimer(c.id)}
+                  aria-label={`Supprimer la discussion « ${c.titre} »`}
+                  className="grid size-9 shrink-0 place-items-center rounded-lg text-ink-400 hover:bg-flame-50 hover:text-flame-600 dark:hover:bg-flame-500/10 dark:hover:text-flame-400"
+                >
+                  <Icon name="trash" className="size-4" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="border-t border-ink-200 px-4 py-3 text-xs/5 text-ink-500 dark:border-ink-800 dark:text-ink-400">
+          Les {liste.length > 0 ? "20 " : ""}discussions les plus récentes sont gardées, sans les images. Avec un
+          compte, tu les retrouves sur tous tes appareils.
+        </p>
+      </section>
+    </div>
+  );
+}
+
+// La discussion ouverte à l'arrivée : celle de l'onglet, si elle existe.
+function discussionDeDepart() {
+  const id = lireActive();
+  const conv = id ? lireConversations()[id] : null;
+  return conv ? { id, messages: conv.messages } : { id: null, messages: [] };
+}
+
+const plusGrandId = (messages) => messages.reduce((max, m) => Math.max(max, m.id ?? 0), 0);
+
 /* ================================================================== */
 
 export default function Assistant() {
   // Lus une fois, à l'ouverture de la page.
   const [scores] = useState(lireScores);
   const [saisie, setSaisie] = useState("");
-  const [messages, setMessages] = useState([]);
-  const compteur = useRef(0);
+  const [depart] = useState(discussionDeDepart);
+  const [messages, setMessages] = useState(depart.messages);
+  const [conversation, setConversation] = useState(depart.id);
+  const [historiqueOuvert, setHistoriqueOuvert] = useState(false);
+  const [liste, setListe] = useState(() => listeConversations(lireConversations()));
+  // Les messages tels qu'ouverts depuis l'historique : les rouvrir ne
+  // doit pas changer la date de la discussion.
+  const ouverts = useRef(depart.messages);
+  const compteur = useRef(plusGrandId(depart.messages));
+  // Change à chaque changement de discussion : une réponse de l'IA qui
+  // arrive après coup ne doit pas atterrir dans une autre discussion.
+  const generation = useRef(0);
   const dernierMessage = useRef(null);
   // La demande à l'IA en cours, pour pouvoir l'arrêter.
   const enCours = useRef(null);
 
   const analyse = useMemo(() => analyserCompetences(scores), [scores]);
+
+  // Chaque changement de la discussion est gardé aussitôt.
+  useEffect(() => {
+    if (!conversation || messages === ouverts.current) return;
+    const toutes = enregistrer(lireConversations(), { id: conversation, messages, date: new Date().toISOString() });
+    ecrireConversations(toutes);
+    setListe(listeConversations(toutes));
+  }, [messages, conversation]);
 
   const enAttente = messages.some((m) => m.etat === "attente");
 
@@ -174,6 +295,12 @@ export default function Assistant() {
     const avecIA = iaActive && !INTENTIONS_SANS_IA.has(reponse.intention);
     const pourIA = mode ? RACCOURCIS[mode].consigneIA + texte : texte;
 
+    if (!conversation) {
+      const nouvelle = nouvelIdentifiant();
+      setConversation(nouvelle);
+      ecrireActive(nouvelle);
+    }
+
     compteur.current += 2;
     const id = compteur.current;
     const question = { id: id - 1, role: "etudiant", texte, mode, pourIA, image };
@@ -186,11 +313,14 @@ export default function Assistant() {
     const historique = [...historiqueAvant(precedents, id), { role: "etudiant", texte: question.pourIA }];
     const controle = new AbortController();
     enCours.current = controle;
+    const pour = generation.current;
 
     let maj;
     try {
-      const resultat = await demanderIA(historique, liens, undefined, { signal: controle.signal, image: question.image });
-      maj = question.image
+      // Une image rouverte depuis l'historique n'est plus là : le texte seul.
+      const image = question.image?.donnees ? question.image : undefined;
+      const resultat = await demanderIA(historique, liens, undefined, { signal: controle.signal, image });
+      maj = image
         ? { etat: "ia", texteIA: resultat.texte, imageIgnoree: !resultat.imageLue }
         : { etat: "ia", texteIA: resultat };
     } catch (e) {
@@ -198,10 +328,47 @@ export default function Assistant() {
     } finally {
       if (enCours.current === controle) enCours.current = null;
     }
+    if (pour !== generation.current) return;
     setMessages((liste) => liste.map((m) => (m.id === id ? { ...m, ...maj } : m)));
   };
 
   const arreter = () => enCours.current?.abort();
+
+  const nouvelleDiscussion = () => {
+    generation.current += 1;
+    enCours.current?.abort();
+    setMessages([]);
+    ouverts.current = [];
+    setConversation(null);
+    ecrireActive(null);
+    setHistoriqueOuvert(false);
+  };
+
+  const ouvrirDiscussion = (id) => {
+    const conv = lireConversations()[id];
+    if (!conv) return;
+    generation.current += 1;
+    enCours.current?.abort();
+    ouverts.current = conv.messages;
+    setMessages(conv.messages);
+    compteur.current = plusGrandId(conv.messages);
+    setConversation(id);
+    ecrireActive(id);
+    setHistoriqueOuvert(false);
+  };
+
+  const supprimerDiscussion = (id) => {
+    const toutes = supprimerConversation(id);
+    setListe(listeConversations(toutes));
+    if (id === conversation) {
+      generation.current += 1;
+      enCours.current?.abort();
+      setMessages([]);
+      ouverts.current = [];
+      setConversation(null);
+      ecrireActive(null);
+    }
+  };
 
   const reessayer = (id) => {
     if (enAttente) return;
@@ -215,7 +382,17 @@ export default function Assistant() {
 
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="relative flex h-full flex-col">
+      {historiqueOuvert && (
+        <Historique
+          liste={liste}
+          active={conversation}
+          onOuvrir={ouvrirDiscussion}
+          onSupprimer={supprimerDiscussion}
+          onFermer={() => setHistoriqueOuvert(false)}
+        />
+      )}
+
       {/* ---- En-tête ---- */}
       <div className="shrink-0 bg-brand-950 px-4 py-3.5 sm:px-6">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-6 gap-y-2">
@@ -230,6 +407,29 @@ export default function Assistant() {
                 {iaActive ? "IA Gemini et contenu de la plateforme" : "Cherche dans le contenu de la plateforme"}
               </p>
             </div>
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setListe(listeConversations(lireConversations()));
+                setHistoriqueOuvert(true);
+              }}
+              className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm font-medium text-white ring-1 ring-white/15 transition-colors hover:bg-white/20"
+            >
+              <Icon name="clock" className="size-4" />
+              Historique
+            </button>
+            <button
+              type="button"
+              onClick={nouvelleDiscussion}
+              disabled={messages.length === 0}
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-semibold text-brand-950 transition-colors hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Icon name="plus" className="size-4" />
+              <span className="hidden sm:inline">Nouvelle discussion</span>
+              <span className="sm:hidden">Nouvelle</span>
+            </button>
           </div>
         </div>
       </div>
@@ -281,13 +481,18 @@ export default function Assistant() {
               {messages.map((m, i) =>
                 m.role === "etudiant" ? (
                   <div key={m.id} className="flex flex-col items-end gap-1.5">
-                    {m.image && (
+                    {m.image?.apercu ? (
                       <img
                         src={m.image.apercu}
                         alt={`Image jointe : ${m.image.nom}`}
                         className="max-h-48 max-w-[60%] rounded-2xl border border-ink-200 object-contain dark:border-ink-700"
                       />
-                    )}
+                    ) : m.image ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-ink-100 px-3 py-1 text-xs text-ink-600 dark:bg-ink-800 dark:text-ink-300">
+                        <Icon name="trombone" className="size-3.5" />
+                        Image jointe : {m.image.nom} (non gardée)
+                      </span>
+                    ) : null}
                     <p className="max-w-md rounded-2xl rounded-br-md bg-brand-600 px-4 py-3 text-sm/6 whitespace-pre-line text-white">
                       {m.mode && (
                         <span className="mr-1.5 inline-flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 align-middle text-[11px] font-semibold">

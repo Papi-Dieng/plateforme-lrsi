@@ -46,6 +46,7 @@ const articles = [
           ["Ta fiche profil", "Avatar, nom d'utilisateur, âge, téléphone, e-mail, niveau et matricule. Tous ces champs sont facultatifs."],
           ["Ta progression", "Scores des QCM et détail des réponses, exercices travaillés, chapitres lus, favoris, vidéos vues, QCM à revoir."],
           ["Ton organisation", "Emploi du temps, examens, programme de révision et disponibilités de la semaine."],
+          ["Tes discussions avec l'assistant", "Les 20 plus récentes, pour les rouvrir et les continuer. Les images jointes ne sont pas gardées, seulement leur nom. Tu peux effacer chaque discussion depuis l'historique de l'assistant."],
           ["Tes réglages", "Thème, taille du texte en plein écran, rappels de révision, refus des statistiques anonymes, nom affiché dans la barre du haut."],
         ],
       },
@@ -67,7 +68,7 @@ const articles = [
             ? [
                 [
                   "Ton compte, si tu en crées un : Supabase",
-                  "Supabase héberge les comptes et leur base de données. Il reçoit ton nom, ton niveau, ton adresse email ou ton numéro de téléphone (ou, avec Google, ton nom et ton adresse Gmail), et ton mot de passe, qu'il garde chiffré : personne dans l'équipe ne peut le lire. Il reçoit aussi une copie de ta fiche profil, de ta progression, de ton organisation et de ton thème, pour que tu les retrouves sur un autre appareil. Chaque étudiant ne peut lire que ses propres données. Supabase garde dans ton navigateur de quoi laisser ta session ouverte. Ton numéro ne sert jamais à t'envoyer un SMS, et ton adresse email ne sert qu'à confirmer ton compte et à réinitialiser ton mot de passe.",
+                  "Supabase héberge les comptes et leur base de données. Il reçoit ton nom, ton niveau, ton adresse email ou ton numéro de téléphone (ou, avec Google, ton nom et ton adresse Gmail), et ton mot de passe, qu'il garde chiffré : personne dans l'équipe ne peut le lire. Il reçoit aussi une copie de ta fiche profil, de ta progression, de ton organisation, de tes discussions avec l'assistant et de ton thème, pour que tu les retrouves sur un autre appareil. Chaque étudiant ne peut lire que ses propres données. Supabase garde dans ton navigateur de quoi laisser ta session ouverte. Ton numéro ne sert jamais à t'envoyer un SMS, et ton adresse email ne sert qu'à confirmer ton compte et à réinitialiser ton mot de passe.",
                 ],
                 [
                   "Brevo, pour les emails du compte",

@@ -3,6 +3,7 @@ import { CLE_PROFIL } from "./profil";
 import { CLE_PLANNING } from "./planning";
 import { CLE_REVISIONS } from "./revisions";
 import { CLE_DISPONIBILITES } from "./programmeIA";
+import { CLE_CONVERSATIONS, conversationsValides } from "./conversations";
 
 /* ==================================================================
    Sauvegarder et restaurer ses données.
@@ -44,6 +45,7 @@ export const DONNEES = [
   { cle: CLE_PLANNING, libelle: () => "ton planning de révision", valide: estObjet, compter: () => 1 },
   { cle: CLE_DISPONIBILITES, libelle: () => "tes disponibilités de la semaine", valide: estObjet, compter: () => 1 },
   { cle: CLE_REVISIONS, libelle: (n) => `${n} QCM à revoir`, valide: estObjet, compter: (v) => Object.keys(v).length },
+  { cle: CLE_CONVERSATIONS, libelle: (n) => `${n} discussion${n > 1 ? "s" : ""} avec l'assistant`, valide: conversationsValides, compter: (v) => Object.keys(v).length },
   // Le thème est rangé tel quel (« dark » ou « light »), pas en JSON.
   { cle: CLE_THEME, libelle: () => "ton thème (clair ou sombre)", valide: (v) => v === "dark" || v === "light", compter: () => 1, brut: true },
 ];

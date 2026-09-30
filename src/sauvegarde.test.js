@@ -21,6 +21,7 @@ const APPAREIL = {
   "lrsi-planning": JSON.stringify({ evaluations: [], faites: {}, evenements: [] }),
   "lrsi-disponibilites": JSON.stringify({ 1: { actif: true, debut: "18:00", fin: "20:00" } }),
   "lrsi-revisions": JSON.stringify({ "osi-bases": { etape: 1, prochaine: "2026-09-26" } }),
+  "lrsi-conversations": JSON.stringify({ c1: { id: "c1", titre: "OSI", date: "2026-09-30", messages: [] } }),
   "lrsi-theme": "dark",
 };
 

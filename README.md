@@ -979,6 +979,11 @@ et le relais Cloudflare les publie (voir section 5). Les fichiers de
 
 ### L'assistant de révision
 
+**Historique** : chaque discussion est gardée (`src/conversations.js`). Le
+bouton « Historique » de l'assistant les liste, les rouvre et les efface ;
+une discussion rouverte se continue, l'IA recevant ses échanges précédents.
+Les 20 plus récentes sont gardées, sans les images, et suivent le compte.
+
 Il fonctionne, et **ce n'est pas une intelligence artificielle**. Il ne rédige
 aucune explication : il reconnaît l'intention d'une question, cherche dans les
 données de la plateforme et renvoie vers ce qui existe vraiment.
@@ -1024,6 +1029,7 @@ dans son compte (liste `DONNEES` de `src/sauvegarde.js`) :
 | `lrsi-planning` | planning de révision et emploi du temps | `src/planning.js` |
 | `lrsi-disponibilites` | créneaux libres de la semaine | `src/programmeIA.js` |
 | `lrsi-revisions` | révision espacée des QCM | `src/revisions.js` |
+| `lrsi-conversations` | discussions avec l'assistant (20 au plus, sans images) | `src/conversations.js` |
 | `lrsi-theme` | thème clair ou sombre | `Layout.jsx`, `Parametres.jsx` |
 
 Les autres sont des réglages de l'appareil, volontairement hors de la

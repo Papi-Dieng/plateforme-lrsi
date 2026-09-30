@@ -1,5 +1,6 @@
 import { CLES } from "./progression";
 import { CLE_REVISIONS } from "./revisions";
+import { CLE_CONVERSATIONS } from "./conversations";
 import { CLE_THEME, DONNEES, construireSauvegarde } from "./sauvegarde";
 
 /* ==================================================================
@@ -26,7 +27,7 @@ export const CLE_SYNCHRO = "lrsi-synchro";
 const INTERVALLE = 15_000;
 
 // Données rangées par identifiant : { id: { …, date } }.
-const DICTIONNAIRES = [CLES.scores, CLES.exercices, CLES.chapitresLus, CLE_REVISIONS];
+const DICTIONNAIRES = [CLES.scores, CLES.exercices, CLES.chapitresLus, CLE_REVISIONS, CLE_CONVERSATIONS];
 // Listes : favoris, vidéos vues.
 const LISTES = [CLES.favoris, CLES.videosVues];
 
