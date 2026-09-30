@@ -7,6 +7,7 @@ import {
   TitreSection,
 } from "../components/ui";
 import { cx } from "../components/classes";
+import CarrouselEquipe from "../components/CarrouselEquipe";
 import {
   engagements,
   feuilleDeRoute,
@@ -79,6 +80,21 @@ export default function Projet() {
 
       <Container className="py-12">
         <div className="space-y-16">
+          {/* ------------------------------------------------ */}
+          {/* L'équipe                                          */}
+          {/* ------------------------------------------------ */}
+          <section>
+            <TitreSection
+              surtitre="L'équipe"
+              titre="Les créateurs de la plateforme"
+              texte={`Ceux qui construisent ${site.nom} pour les étudiants de la filière.`}
+              centre
+            />
+            <div className="mt-10">
+              <CarrouselEquipe membres={site.equipe} defilement={3000} />
+            </div>
+          </section>
+
           {/* ------------------------------------------------ */}
           {/* Autorisations                                     */}
           {/* ------------------------------------------------ */}

@@ -30,12 +30,15 @@ export const site = {
   // et la politique de confidentialité. Tant qu'il est vide, les pages
   // disent « l'équipe étudiante du projet ».
   editeur: "Papa Mathar Dieng",
-  // L'équipe, affichée dans les mentions légales.
+  // L'équipe : le carrousel de la page Projet et les mentions légales.
+  // `photo` : un fichier du dossier public/equipe/ (par exemple
+  // "equipe/papa-mathar-dieng.jpg") ; vide, la carte affiche les
+  // initiales. `bio` : une phrase de présentation, facultative.
   equipe: [
-    { nom: "Papa Mathar Dieng", role: "Fondateur et directeur technique (CTO)" },
-    { nom: "Pape Fily Massaly", role: "Responsable de la recherche et de la qualité pédagogique" },
-    { nom: "Balle Ndiaye", role: "Responsable des contenus pédagogiques et du marketing" },
-    { nom: "Jean Emmanuel Patron Mendy", role: "Responsable des contenus et de la communication" },
+    { id: "papa-mathar-dieng", nom: "Papa Mathar Dieng", role: "Fondateur et directeur technique (CTO)", photo: "", bio: "" },
+    { id: "pape-fily-massaly", nom: "Pape Fily Massaly", role: "Responsable de la recherche et de la qualité pédagogique", photo: "", bio: "" },
+    { id: "balle-ndiaye", nom: "Balle Ndiaye", role: "Responsable des contenus pédagogiques et du marketing", photo: "", bio: "" },
+    { id: "jean-emmanuel-patron-mendy", nom: "Jean Emmanuel Patron Mendy", role: "Responsable des contenus et de la communication", photo: "", bio: "" },
   ],
   // Date de la dernière modification des pages juridiques (conditions,
   // confidentialité, mentions légales), à changer à chaque mise à jour.

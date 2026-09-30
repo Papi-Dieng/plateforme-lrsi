@@ -177,6 +177,7 @@ const paths = {
       <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7" />
     </>
   ),
+  pause: <path d="M9 5.5v13M15 5.5v13" />,
   stop: <rect x="6.5" y="6.5" width="11" height="11" rx="2" fill="currentColor" />,
   haut: <path d="M12 19V5M6 11l6-6 6 6" />,
 };
