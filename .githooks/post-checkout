@@ -1,0 +1,5 @@
+#!/bin/sh
+# Changement de branche ou de version : même chose qu'après un pull.
+# $3 vaut 1 pour un changement de branche, 0 pour un simple fichier.
+[ "$3" = "1" ] || exit 0
+exec "$(dirname "$0")/post-merge"

@@ -13,7 +13,8 @@
     "banc-ia": "node scripts/banc-ia.mjs",
     "test": "vitest run",
     "test:suivi": "vitest",
-    "test:navigateur": "npm run build && playwright test"
+    "test:navigateur": "npm run build && playwright test",
+    "prepare": "git config core.hooksPath .githooks || true"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",

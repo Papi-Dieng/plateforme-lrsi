@@ -188,7 +188,23 @@ export default {
       return servirPdf(cheminBrut.slice("/fichiers/".length), env);
     }
 
-    const cors = entetesCors(requete.headers.get("Origin") ?? "", env);
+    const origine = requete.headers.get("Origin") ?? "";
+    const chemin0 = new URL(requete.url).pathname;
+    // La version hors ligne, ouverte depuis un fichier, envoie l'origine
+    // « null ». Elle peut LIRE le contenu publié, déjà public, et rien
+    // d'autre : ni l'IA, ni l'espace admin, ni les comptes.
+    if (origine === "null" && requete.method === "GET" && chemin0 === "/contenu") {
+      const contenu = env.EDUCATION ? await lireContenu(env) : null;
+      return new Response(JSON.stringify(contenu ? versionPublique(contenu) : null), {
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "Cache-Control": "no-store",
+          "Access-Control-Allow-Origin": "null",
+        },
+      });
+    }
+
+    const cors = entetesCors(origine, env);
     if (!cors) return new Response("Origine non autorisée", { status: 403 });
 
     if (requete.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });

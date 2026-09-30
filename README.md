@@ -246,16 +246,29 @@ npm run hors-ligne:suivi
 Et `npm run hors-ligne` la fabrique une fois, sans compiler le site.
 
 Le fichier obtenu est `hors-ligne/plateforme-lrsi-hors-ligne.html`, environ
-0,5 Mo. Ce
+1 Mo. Le raccourci « Sunu Cours (hors ligne) » du bureau l'ouvre. Ce
 fichier **contient tout le site** : le JavaScript et le CSS sont écrits à
 l'intérieur du HTML, l'icône y est encodée en base64. Il n'a donc plus rien à
 aller chercher, et c'est ce qui le rend ouvrable **par double-clic**, sans
 serveur et sans connexion. Il se copie sur une clé USB ou s'envoie par
 messagerie à un camarade.
 
-Deux limites à connaître :
+**Il suit la version en ligne**, de trois façons :
+
+- **le code** : `npm run build` le refait à chaque modification, et après
+  chaque `git pull`, le crochet `.githooks/post-merge` le refait aussi
+  (activé par `npm install`, script `prepare`) ;
+- **le contenu publié** depuis l'espace admin est copié dedans à la
+  compilation (`vite.config.hors-ligne.js`, le relais doit répondre) ;
+- **ouvert avec une connexion**, il va chercher le dernier contenu publié,
+  comme le site. Le relais accepte pour cela l'origine « null » d'un fichier
+  local, pour la lecture de `/contenu` seulement.
+
+Limites à connaître :
 
 - les **vidéos** restent hébergées par YouTube, elles demandent une connexion ;
+- les **comptes**, la connexion Google et l'**assistant IA** demandent le site
+  en ligne : le fichier s'utilise en mode invité ;
 - la progression est enregistrée dans le navigateur, et un fichier ouvert
   depuis le disque ne partage pas cet espace avec le site en ligne : les deux
   versions ont chacune leur propre progression.

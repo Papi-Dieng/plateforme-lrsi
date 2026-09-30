@@ -1,0 +1,13 @@
+#!/bin/sh
+# Après un « git pull » : refaire la version hors ligne, pour que le
+# fichier ouvert par double-clic (raccourci « Sunu Cours (hors ligne) »)
+# corresponde toujours à la version de GitHub. Activé par `npm install`
+# (script « prepare » de package.json).
+[ -d node_modules ] || exit 0
+echo "Version hors ligne : mise à jour…"
+if npm run hors-ligne --silent > /dev/null 2>&1; then
+  echo "Version hors ligne : à jour."
+else
+  echo "Version hors ligne : échec. Lancer « npm run hors-ligne » pour voir l'erreur."
+fi
+exit 0

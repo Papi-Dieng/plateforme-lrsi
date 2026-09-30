@@ -20,10 +20,11 @@ import { normaliserSemestre } from "./semestres";
    `src/data/` : toutes les pages qui les importent voient donc le
    contenu publié sans avoir à changer.
 
-   Si le relais ne répond pas (hors connexion, version hors ligne,
-   panne), on prend la dernière version reçue, gardée dans le
-   navigateur, et à défaut le contenu du code. Le site s'affiche
-   toujours.
+   Si le relais ne répond pas (hors connexion, panne), on prend la
+   dernière version reçue, gardée dans le navigateur ; la version hors
+   ligne a aussi la copie publiée le jour de sa compilation
+   (vite.config.hors-ligne.js). La plus récente des deux l'emporte, et à
+   défaut le contenu du code. Le site s'affiche toujours.
    ================================================================== */
 
 const CLE_CACHE = "lrsi-contenu";
@@ -114,16 +115,22 @@ export async function chargerContenu() {
     clearTimeout(minuteur);
   }
 
+  let cache = null;
   try {
-    const cache = JSON.parse(localStorage.getItem(CLE_CACHE));
-    if (valide(cache)) {
-      remplacer(cache);
-      origineContenu = "cache";
-      dateContenu = cache.publieLe ?? null;
-    }
+    cache = JSON.parse(localStorage.getItem(CLE_CACHE));
   } catch {
-    /* rien en cache : le contenu du code s'affiche */
+    /* rien en cache */
   }
+  const copie = globalThis.__CONTENU_HORS_LIGNE__;
+  const recente = [cache, copie]
+    .filter(valide)
+    .sort((a, b) => String(b.publieLe ?? "").localeCompare(String(a.publieLe ?? "")))[0];
+  if (recente) {
+    remplacer(recente);
+    origineContenu = "cache";
+    dateContenu = recente.publieLe ?? null;
+  }
+  // Sinon, le contenu du code s'affiche.
 }
 
 /* Une copie du contenu affiché, que l'espace admin peut modifier sans

@@ -103,6 +103,17 @@ describe("origines", () => {
     expect(r.status).toBe(403);
   });
 
+  test("la version hors ligne (origine « null ») lit le contenu publié, et rien d'autre", async () => {
+    const e = env();
+    const lu = await relais.fetch(demande("/contenu", { methode: "GET", origine: "null" }), e);
+    expect(lu.status).toBe(200);
+    expect(lu.headers.get("Access-Control-Allow-Origin")).toBe("null");
+    for (const [chemin, methode] of [["/", "POST"], ["/admin/contenu", "GET"], ["/comptes/telephone", "POST"], ["/contenu", "POST"]]) {
+      const r = await relais.fetch(demande(chemin, { methode, origine: "null", corps: methode === "POST" ? question("q") : undefined }), e);
+      expect(r.status).toBe(403);
+    }
+  });
+
   test("répond à la vérification préalable du navigateur, pour le site seulement", async () => {
     const r = await relais.fetch(demande("/", { methode: "OPTIONS" }), env());
     expect(r.status).toBe(204);

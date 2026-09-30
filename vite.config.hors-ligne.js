@@ -4,6 +4,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
+import { site } from "./src/data/site.js";
 
 /* ==================================================================
    Compilation « hors ligne » : tout le site dans UN seul fichier.
@@ -19,8 +20,13 @@ import { viteSingleFile } from "vite-plugin-singlefile";
    double-clic, sans serveur et sans connexion. Il se transporte aussi
    sur une clé USB ou s'envoie par messagerie.
 
+   Le contenu publié depuis l'espace admin est copié dans le fichier au
+   moment de la compilation. Ouvert avec une connexion, le fichier va
+   chercher la dernière version publiée, comme le site en ligne.
+
    Ce que cette version ne peut pas faire : les vidéos restent
-   hébergées par YouTube, elles demandent donc une connexion.
+   hébergées par YouTube, elles demandent donc une connexion ; les
+   comptes, Google et l'assistant IA demandent le site en ligne.
    ================================================================== */
 
 const NOM_FICHIER = "plateforme-lrsi-hors-ligne.html";
@@ -38,6 +44,38 @@ function integrerIcone() {
       const svg = readFileSync("public/logo.svg", "utf8");
       const donnees = `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
       return html.replace('href="/logo.svg"', `href="${donnees}"`);
+    },
+  };
+}
+
+// Le contenu publié depuis l'espace admin, tel qu'il est au moment de
+// la compilation, écrit dans la page (lu par src/contenu.js). Sans
+// connexion, la compilation continue avec le contenu du code seul.
+const ORIGINE_SITE = "https://papi-dieng.github.io";
+
+function integrerContenuPublie() {
+  return {
+    name: "integrer-contenu-publie",
+    async transformIndexHtml(html) {
+      if (!site.urlIA) return html;
+      try {
+        const r = await fetch(new URL("/contenu", site.urlIA), {
+          headers: { Origin: ORIGINE_SITE },
+          signal: AbortSignal.timeout(10_000),
+        });
+        const contenu = r.ok ? await r.json() : null;
+        if (!contenu?.matieres?.length) {
+          console.log("\nContenu publié : rien de publié, le contenu du code suffit.");
+          return html;
+        }
+        // « </ » ne doit pas fermer la balise script avant l'heure.
+        const json = JSON.stringify(contenu).replace(/</g, "\\u003c");
+        console.log(`\nContenu publié copié dans le fichier (publié le ${contenu.publieLe ?? "?"}).`);
+        return html.replace("</head>", () => `<script>globalThis.__CONTENU_HORS_LIGNE__=${json};</script>\n</head>`);
+      } catch (e) {
+        console.log(`\nContenu publié injoignable (${e.message}) : le fichier aura le contenu du code.`);
+        return html;
+      }
     },
   };
 }
@@ -103,6 +141,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     integrerIcone(),
+    integrerContenuPublie(),
     retirerAvertissementFichierLocal(),
     viteSingleFile(),
     nommerFichierUnique(),
