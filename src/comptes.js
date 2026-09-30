@@ -15,9 +15,12 @@ import { afficherTelephone, emailTelephone, estEmailTelephone, normaliserTelepho
    La bibliothèque n'est téléchargée que si les comptes sont activés
    (src/data/comptes.js) : le visiteur invité n'en paie pas le poids.
 
-   Les retours par lien (Google, confirmation d'email, mot de passe
-   oublié) utilisent le flux « PKCE » : Supabase revient avec « ?code= »
-   dans l'adresse, ce qui ne gêne pas les adresses en « #/ » du site.
+   Les emails (confirmation d'inscription, mot de passe oublié) ne
+   contiennent pas de lien mais un code à 6 chiffres, que l'étudiant
+   tape sur le site : le service d'envoi (Brevo) réécrit les liens pour
+   compter les clics, et certaines messageries les « cliquent » avant
+   l'étudiant. Seul le retour de Google passe par l'adresse, avec le
+   flux « PKCE » : « ?code= », qui ne gêne pas les adresses en « #/ ».
    ================================================================== */
 
 export { comptesActifs };
@@ -153,12 +156,30 @@ export const connecterGoogle = () =>
     return error ? { erreur: codeDe(error) } : { ok: true };
   });
 
-/* Envoie le lien pour choisir un nouveau mot de passe. Seulement pour
+/* Envoie le code pour choisir un nouveau mot de passe. Seulement pour
    les comptes email : un compte téléphone n'a pas de boîte mail. */
 export const motDePasseOublie = (email) =>
   tenter(async () => {
     const sb = await client();
     const { error } = await sb.auth.resetPasswordForEmail(email.trim(), { redirectTo: adresseRetour() });
+    return error ? { erreur: codeDe(error) } : { ok: true };
+  });
+
+/* Vérifie le code reçu par email. `type` : "signup" (inscription) ou
+   "recovery" (mot de passe oublié). S'il est bon, l'étudiant est
+   connecté ; pour "recovery", il choisit ensuite son mot de passe. */
+export const verifierCode = ({ email, code, type }) =>
+  tenter(async () => {
+    const sb = await client();
+    const { error } = await sb.auth.verifyOtp({ email: email.trim(), token: code.replace(/\s/g, ""), type });
+    return error ? { erreur: codeDe(error) } : { ok: true };
+  });
+
+/* Renvoie le code d'inscription (le premier n'est pas arrivé, ou a expiré). */
+export const renvoyerCodeInscription = (email) =>
+  tenter(async () => {
+    const sb = await client();
+    const { error } = await sb.auth.resend({ type: "signup", email: email.trim() });
     return error ? { erreur: codeDe(error) } : { ok: true };
   });
 
@@ -206,6 +227,9 @@ const MESSAGES = {
   over_email_send_rate_limit: "Trop d'emails envoyés. Attends quelques minutes puis réessaie.",
   "trop-de-requetes": "Trop d'essais d'un coup. Attends une minute puis réessaie.",
   same_password: "C'est déjà ton mot de passe actuel.",
+  otp_expired: "Code incorrect ou expiré. Vérifie les chiffres, ou demande un nouveau code.",
+  "code-invalide": "Le code fait 6 chiffres. Recopie-le depuis l'email.",
+  over_email_send_rate_limit_resend: "Attends une minute avant de demander un nouveau code.",
   "comptes-non-configures": "Les comptes ne sont pas encore activés sur le site. Tu peux entrer en mode invité.",
   reseau: "Impossible de joindre le serveur. Vérifie ta connexion puis réessaie.",
 };

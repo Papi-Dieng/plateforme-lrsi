@@ -102,14 +102,9 @@ export default function App() {
         }
       />
 
-      <Route
-        path="/mot-de-passe-oublie"
-        element={
-          <SiDejaEntre>
-            <MotDePasseOublie />
-          </SiDejaEntre>
-        }
-      />
+      {/* Sans SiDejaEntre : le code bon connecte l'étudiant, qui doit
+          ensuite choisir son mot de passe, pas partir au tableau de bord. */}
+      <Route path="/mot-de-passe-oublie" element={<MotDePasseOublie />} />
       {/* Arrivée par le lien reçu par email : la session est déjà là. */}
       <Route path="/nouveau-mot-de-passe" element={<NouveauMotDePasse />} />
 

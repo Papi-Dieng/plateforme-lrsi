@@ -16,6 +16,8 @@ import {
   inscrireTelephone,
   messageErreurCompte,
   motDePasseOublie,
+  renvoyerCodeInscription,
+  verifierCode,
 } from "../comptes";
 
 /* ==================================================================
@@ -31,6 +33,9 @@ import {
    ================================================================== */
 
 const MIN_MOT_DE_PASSE = 8;
+// Supabase envoie 6 chiffres par défaut (réglable jusqu'à 10).
+const CODE = /^\d{6,10}$/;
+const ATTENTE_RENVOI = 60;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /* ------------------------------------------------------------------ */
@@ -298,6 +303,95 @@ function BoutonGoogle({ surErreur }) {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Code reçu par email                                                 */
+/* `prudent` : ne dit pas si l'adresse a un compte (mot de passe       */
+/* oublié), pour ne pas révéler qui est inscrit.                       */
+/* ------------------------------------------------------------------ */
+
+function SaisieCode({ email, type, renvoyer, texteBouton, surValide, prudent = false }) {
+  const [code, setCode] = useState("");
+  const [erreur, setErreur] = useState(null);
+  const [erreurServeur, setErreurServeur] = useState(null);
+  const [attente, setAttente] = useState(false);
+  const [delai, setDelai] = useState(ATTENTE_RENVOI);
+  const [renvoye, setRenvoye] = useState(false);
+
+  // Compte à rebours avant de pouvoir redemander un code.
+  useEffect(() => {
+    if (delai <= 0) return undefined;
+    const t = setTimeout(() => setDelai((d) => d - 1), 1000);
+    return () => clearTimeout(t);
+  }, [delai]);
+
+  const valider = async (e) => {
+    e.preventDefault();
+    setErreurServeur(null);
+    const propre = code.replace(/\s/g, "");
+    if (!CODE.test(propre)) {
+      setErreur("Le code fait 6 chiffres. Recopie-le depuis l'email.");
+      return;
+    }
+    setErreur(null);
+    setAttente(true);
+    const r = await verifierCode({ email, code: propre, type });
+    setAttente(false);
+    if (r.erreur) setErreurServeur(r.erreur === "invalid_credentials" ? "otp_expired" : r.erreur);
+    else surValide?.();
+    // Inscription : la session arrive et la page part d'elle-même.
+  };
+
+  const redemander = async () => {
+    setErreurServeur(null);
+    setRenvoye(false);
+    const r = await renvoyer();
+    setDelai(ATTENTE_RENVOI);
+    if (r.erreur) setErreurServeur(r.erreur === "over_email_send_rate_limit" ? "over_email_send_rate_limit_resend" : r.erreur);
+    else setRenvoye(true);
+  };
+
+  return (
+    <form onSubmit={valider} noValidate className="mt-6 space-y-4">
+      <p role="status" className="rounded-2xl border border-ink-200 p-5 text-sm/6 text-ink-700 dark:border-ink-700 dark:text-ink-200">
+        {prudent ? "Si un compte existe avec l'adresse " : "Un code à 6 chiffres vient de partir vers "}
+        <strong className="font-semibold break-all text-ink-950 dark:text-white">{email}</strong>
+        {prudent ? ", un code à 6 chiffres vient d'y partir. " : ". "}
+        Tape-le ci-dessous. Pense à regarder dans les courriers indésirables : le premier
+        email peut mettre quelques minutes à arriver.
+      </p>
+      <Champ
+        id="code"
+        label="Code reçu par email"
+        type="text"
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        maxLength={12}
+        placeholder="123456"
+        value={code}
+        onChange={(e) => setCode(e.target.value)}
+        erreur={erreur}
+      />
+      <ErreurServeur code={erreurServeur} />
+      {renvoye && (
+        <p role="status" className="text-sm text-accent-700 dark:text-accent-400">
+          Nouveau code envoyé. Seul le dernier reçu fonctionne.
+        </p>
+      )}
+      <button type="submit" disabled={attente} className={boutonPrincipal}>
+        {attente ? "Vérification…" : texteBouton}
+      </button>
+      <button
+        type="button"
+        onClick={redemander}
+        disabled={delai > 0}
+        className="w-full text-center text-sm font-medium text-brand-600 hover:underline disabled:cursor-default disabled:text-ink-400 disabled:no-underline dark:text-brand-400 dark:disabled:text-ink-500"
+      >
+        {delai > 0 ? `Renvoyer un code (dans ${delai} s)` : "Renvoyer un code"}
+      </button>
+    </form>
+  );
+}
+
 /* ================================================================== */
 /* Connexion                                                           */
 /* ================================================================== */
@@ -443,19 +537,18 @@ export function Inscription() {
   if (emailEnvoye) {
     return (
       <CadreAuth titre="Vérifie ta boîte mail" texte="Ton compte est presque prêt." sansInvite>
-        <div className="mt-6 rounded-2xl border border-ink-200 p-5 dark:border-ink-700">
-          <p className="text-sm/6 text-ink-700 dark:text-ink-200">
-            Un lien de confirmation vient de partir vers{" "}
-            <strong className="font-semibold text-ink-950 dark:text-white">{emailEnvoye}</strong>. Clique
-            dessus pour activer ton compte : tu arriveras directement sur ton tableau de bord.
-          </p>
-          <p className="mt-3 text-xs/5 text-ink-500 dark:text-ink-400">
-            Rien reçu après quelques minutes ? Regarde dans les courriers indésirables, ou
-            vérifie l'adresse et recommence.
-          </p>
-        </div>
-        <button type="button" onClick={() => setEmailEnvoye(null)} className={boutonPrincipal}>
-          Modifier l'adresse
+        <SaisieCode
+          email={emailEnvoye}
+          type="signup"
+          renvoyer={() => renvoyerCodeInscription(emailEnvoye)}
+          texteBouton="Activer mon compte"
+        />
+        <button
+          type="button"
+          onClick={() => setEmailEnvoye(null)}
+          className="mt-4 w-full text-center text-sm font-medium text-ink-500 hover:text-brand-600 dark:text-ink-400"
+        >
+          Modifier l'adresse email
         </button>
       </CadreAuth>
     );
@@ -612,6 +705,7 @@ export function Inscription() {
 /* ================================================================== */
 
 export function MotDePasseOublie() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [erreur, setErreur] = useState(null);
   const [erreurServeur, setErreurServeur] = useState(null);
@@ -636,7 +730,7 @@ export function MotDePasseOublie() {
   return (
     <CadreAuth
       titre="Mot de passe oublié"
-      texte="Reçois par email un lien pour choisir un nouveau mot de passe."
+      texte="Reçois par email un code pour choisir un nouveau mot de passe."
       sansInvite
       pied={
         <Link to="/connexion" className="font-semibold text-brand-600 hover:underline dark:text-brand-400">
@@ -645,10 +739,24 @@ export function MotDePasseOublie() {
       }
     >
       {envoye ? (
-        <p role="status" className="mt-6 rounded-2xl border border-ink-200 p-5 text-sm/6 text-ink-700 dark:border-ink-700 dark:text-ink-200">
-          Si un compte existe avec cette adresse, un lien vient de partir. Clique dessus
-          pour choisir ton nouveau mot de passe.
-        </p>
+        <>
+          <SaisieCode
+            email={email.trim()}
+            type="recovery"
+            renvoyer={() => motDePasseOublie(email)}
+            texteBouton="Continuer"
+            // Le code bon, l'étudiant est connecté : il choisit son mot de passe.
+            surValide={() => navigate("/nouveau-mot-de-passe")}
+            prudent
+          />
+          <button
+            type="button"
+            onClick={() => setEnvoye(false)}
+            className="mt-4 w-full text-center text-sm font-medium text-ink-500 hover:text-brand-600 dark:text-ink-400"
+          >
+            Modifier l'adresse email
+          </button>
+        </>
       ) : (
         <form onSubmit={soumettre} noValidate className="mt-6 space-y-4">
           <Champ
@@ -663,7 +771,7 @@ export function MotDePasseOublie() {
           />
           <ErreurServeur code={erreurServeur} />
           <button type="submit" disabled={attente} className={boutonPrincipal}>
-            {attente ? "Envoi…" : "Envoyer le lien"}
+            {attente ? "Envoi…" : "Recevoir un code"}
           </button>
         </form>
       )}
@@ -672,7 +780,7 @@ export function MotDePasseOublie() {
 }
 
 /* ================================================================== */
-/* Nouveau mot de passe (après le lien reçu par email)                  */
+/* Nouveau mot de passe (après le code reçu par email)                  */
 /* ================================================================== */
 
 export function NouveauMotDePasse() {
@@ -705,9 +813,9 @@ export function NouveauMotDePasse() {
     <CadreAuth titre="Nouveau mot de passe" texte="Choisis le mot de passe de ton compte." sansInvite>
       {session?.mode !== "compte" ? (
         <p className="mt-6 text-sm/6 text-ink-600 dark:text-ink-300">
-          Ce lien a expiré ou a déjà servi.{" "}
+          Pour changer ton mot de passe, demande d'abord un code par email.{" "}
           <Link to="/mot-de-passe-oublie" className="font-semibold text-brand-600 hover:underline dark:text-brand-400">
-            Demande un nouveau lien
+            Recevoir un code
           </Link>
           .
         </p>

@@ -1055,8 +1055,8 @@ sont écrites. Une donnée absente de la sauvegarde n'est pas effacée.
 
 Les étudiants s'inscrivent eux-mêmes, au choix :
 
-- **email + mot de passe** : Supabase envoie un lien de confirmation, et un
-  lien « mot de passe oublié » ;
+- **email + mot de passe** : Supabase envoie un code à 6 chiffres à taper
+  sur le site, pour confirmer l'adresse comme pour un mot de passe oublié ;
 - **numéro de téléphone + mot de passe**, sans SMS : le relais crée un compte
   dont l'adresse est fabriquée à partir du numéro
   (`221771234567@telephone.sunu-cours.invalid`, voir `src/telephone.js`). Pas
@@ -1110,7 +1110,9 @@ rejoint le compte. Se déconnecter efface les données de l'appareil.
 **Emails** : envoyés par Brevo (offre gratuite, 300 par jour), branché dans
 Supabase, *Authentication* → *Emails* → *SMTP Settings* (hôte
 `smtp-relay.brevo.com`, port 587). Les modèles « Confirm signup » et « Reset
-Password » sont traduits en français dans *Templates* ; la limite d'envoi est
+Password » sont traduits en français dans *Templates*, et contiennent le code
+(`{{ .Token }}`), jamais de lien : Brevo réécrit les liens pour compter les
+clics, et son serveur de suivi ne répond pas toujours ; la limite d'envoi est
 à 100 par heure dans *Rate Limits*. Les premiers emails d'un compte Brevo neuf
 peuvent mettre quelques minutes à arriver.
 
