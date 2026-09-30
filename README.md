@@ -362,13 +362,12 @@ conditions d'utilisation, politique de confidentialité et mentions
 légales. Elles décrivent ce que fait réellement le code ; leur mise en
 page commune est `src/components/PageJuridique.jsx`.
 
-Trois choses à faire dans `src/data/site.js` avant d'ouvrir la plateforme
-à de vrais étudiants :
+Ce qu'elles affichent vient de `src/data/site.js` :
 
-- `editeur` : le nom de la personne (ou des personnes) qui publie le site.
-  Tant qu'il est vide, les pages disent « l'équipe étudiante du projet » ;
-- `contact` : l'adresse est encore l'exemple `contact@exemple.sn`, affichée
-  telle quelle sur le site en ligne ;
+- `editeur` : le responsable de la publication (Papa Mathar Dieng) ;
+- `equipe` : les membres de l'équipe et leur rôle, listés dans les mentions
+  légales ;
+- `contact` : `sunucours@gmail.com` ;
 - `pagesJuridiquesMisesAJour` : la date, à changer à chaque modification.
 
 **Règle à tenir** : toute nouvelle donnée qui quitte le navigateur (un

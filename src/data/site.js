@@ -23,17 +23,23 @@ export const site = {
     "Une plateforme gratuite qui rassemble au même endroit les cours, les exercices corrigés et les QCM de la filière Réseaux et Systèmes Informatiques.",
   filiere: "Licence Réseaux et Systèmes Informatiques (LRSI)",
   annee: new Date().getFullYear(),
-  // Adresse de contact provisoire, à remplacer elle aussi.
-  contact: "contact@exemple.sn",
-  // Qui publie le site : nom et prénom de la personne responsable (ou
-  // des personnes, séparées par des virgules). Il figure dans les
-  // mentions légales et la politique de confidentialité, et doit être
-  // renseigné avant d'ouvrir la plateforme à de vrais étudiants. Tant
-  // qu'il est vide, les pages disent « l'équipe étudiante du projet ».
-  editeur: "",
+  // Adresse de contact, affichée dans les pages juridiques, le pied de
+  // page et la page Projet.
+  contact: "sunucours@gmail.com",
+  // Responsable de la publication : il figure dans les mentions légales
+  // et la politique de confidentialité. Tant qu'il est vide, les pages
+  // disent « l'équipe étudiante du projet ».
+  editeur: "Papa Mathar Dieng",
+  // L'équipe, affichée dans les mentions légales.
+  equipe: [
+    { nom: "Papa Mathar Dieng", role: "Fondateur et directeur technique (CTO)" },
+    { nom: "Pape Fily Massaly", role: "Responsable de la recherche et de la qualité pédagogique" },
+    { nom: "Balle Ndiaye", role: "Responsable des contenus pédagogiques et du marketing" },
+    { nom: "Jean Emmanuel Patron Mendy", role: "Responsable des contenus et de la communication" },
+  ],
   // Date de la dernière modification des pages juridiques (conditions,
   // confidentialité, mentions légales), à changer à chaque mise à jour.
-  pagesJuridiquesMisesAJour: "29 septembre 2026",
+  pagesJuridiquesMisesAJour: "30 septembre 2026",
   version: "Version 1 — site de présentation",
   // Adresse du relais IA (dossier `serveur-ia/`), affichée par Cloudflare
   // après `npx wrangler deploy`, par exemple
@@ -45,8 +51,10 @@ export const site = {
     "Celui affiché ici est provisoire, le choix se fera plus tard. Il est défini à un seul endroit dans le code et se change en une ligne, sans rien casser ailleurs.",
 };
 
-// Le nom affiché dans les pages juridiques tant que `editeur` est vide.
-export const nomEditeur = site.editeur || "l'équipe étudiante du projet";
+// Qui publie le site, dans les pages juridiques.
+export const nomEditeur = site.editeur
+  ? `l'équipe ${site.nom}, sous la responsabilité de ${site.editeur}`
+  : "l'équipe étudiante du projet";
 
 export const navigation = [
   { label: "Tableau de bord", to: "/tableau-de-bord" },
