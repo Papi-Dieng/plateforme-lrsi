@@ -16,7 +16,7 @@ import { afficherTelephone, emailTelephone, estEmailTelephone, normaliserTelepho
    (src/data/comptes.js) : le visiteur invité n'en paie pas le poids.
 
    Les emails (confirmation d'inscription, mot de passe oublié) ne
-   contiennent pas de lien mais un code à 6 chiffres, que l'étudiant
+   contiennent pas de lien mais un code numérique, que l'étudiant
    tape sur le site : le service d'envoi (Brevo) réécrit les liens pour
    compter les clics, et certaines messageries les « cliquent » avant
    l'étudiant. Seul le retour de Google passe par l'adresse, avec le
@@ -228,7 +228,6 @@ const MESSAGES = {
   "trop-de-requetes": "Trop d'essais d'un coup. Attends une minute puis réessaie.",
   same_password: "C'est déjà ton mot de passe actuel.",
   otp_expired: "Code incorrect ou expiré. Vérifie les chiffres, ou demande un nouveau code.",
-  "code-invalide": "Le code fait 6 chiffres. Recopie-le depuis l'email.",
   over_email_send_rate_limit_resend: "Attends une minute avant de demander un nouveau code.",
   "comptes-non-configures": "Les comptes ne sont pas encore activés sur le site. Tu peux entrer en mode invité.",
   reseau: "Impossible de joindre le serveur. Vérifie ta connexion puis réessaie.",

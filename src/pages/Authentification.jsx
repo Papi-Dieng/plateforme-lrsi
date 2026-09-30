@@ -33,7 +33,7 @@ import {
    ================================================================== */
 
 const MIN_MOT_DE_PASSE = 8;
-// Supabase envoie 6 chiffres par défaut (réglable jusqu'à 10).
+// La longueur du code se règle dans Supabase (6 à 10 chiffres ; 6 ici).
 const CODE = /^\d{6,10}$/;
 const ATTENTE_RENVOI = 60;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -329,7 +329,7 @@ function SaisieCode({ email, type, renvoyer, texteBouton, surValide, prudent = f
     setErreurServeur(null);
     const propre = code.replace(/\s/g, "");
     if (!CODE.test(propre)) {
-      setErreur("Le code fait 6 chiffres. Recopie-le depuis l'email.");
+      setErreur("Recopie le code reçu par email : seulement des chiffres, sans en oublier.");
       return;
     }
     setErreur(null);
@@ -353,9 +353,9 @@ function SaisieCode({ email, type, renvoyer, texteBouton, surValide, prudent = f
   return (
     <form onSubmit={valider} noValidate className="mt-6 space-y-4">
       <p role="status" className="rounded-2xl border border-ink-200 p-5 text-sm/6 text-ink-700 dark:border-ink-700 dark:text-ink-200">
-        {prudent ? "Si un compte existe avec l'adresse " : "Un code à 6 chiffres vient de partir vers "}
+        {prudent ? "Si un compte existe avec l'adresse " : "Un code vient de partir vers "}
         <strong className="font-semibold break-all text-ink-950 dark:text-white">{email}</strong>
-        {prudent ? ", un code à 6 chiffres vient d'y partir. " : ". "}
+        {prudent ? ", un code vient d'y partir. " : ". "}
         Tape-le ci-dessous. Pense à regarder dans les courriers indésirables : le premier
         email peut mettre quelques minutes à arriver.
       </p>

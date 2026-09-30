@@ -119,7 +119,7 @@ test.describe("comptes", () => {
 
     await page.getByLabel("Code reçu par email").fill("12345");
     await page.getByRole("button", { name: "Activer mon compte" }).click();
-    await expect(page.getByText("Le code fait 6 chiffres.", { exact: false }).first()).toBeVisible();
+    await expect(page.getByText("Recopie le code reçu par email", { exact: false }).first()).toBeVisible();
 
     await page.getByLabel("Code reçu par email").fill("000000");
     await page.getByRole("button", { name: "Activer mon compte" }).click();
