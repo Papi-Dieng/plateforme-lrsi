@@ -49,7 +49,7 @@ const articles = [
           ["Tes réglages", "Thème, taille du texte en plein écran, rappels de révision, refus des statistiques anonymes, nom affiché dans la barre du haut."],
         ],
       },
-      "Tu peux tout voir et tout effacer dans les paramètres. « Télécharger ma sauvegarde » crée un fichier que tu gardes toi-même : la plateforme n'en conserve pas de copie. Vider les données de ton navigateur efface aussi ces informations.",
+      "Tu peux tout voir et tout effacer dans les paramètres. Vider les données de ton navigateur efface aussi ces informations de l'appareil ; avec un compte, elles restent dans le compte jusqu'à ce que tu le supprimes.",
     ],
     liens: [{ to: "/parametres", label: "Paramètres : voir et effacer mes données" }],
   },

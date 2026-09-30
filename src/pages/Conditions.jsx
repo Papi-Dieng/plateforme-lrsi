@@ -85,7 +85,7 @@ const articles = [
     titre: "Limites et responsabilité",
     paragraphes: [
       "Les contenus sont fournis en l'état, sans garantie d'exactitude, d'exhaustivité ni de disponibilité. Une erreur reste toujours possible dans un corrigé ou une explication.",
-      "La plateforme ne peut être tenue responsable d'une mauvaise note, d'une perte de données enregistrées dans ton navigateur (pense à télécharger ta sauvegarde) ni du contenu des sites extérieurs.",
+      "La plateforme ne peut être tenue responsable d'une mauvaise note, d'une perte de données enregistrées dans ton navigateur en mode invité (un compte les garde) ni du contenu des sites extérieurs.",
     ],
   },
   {

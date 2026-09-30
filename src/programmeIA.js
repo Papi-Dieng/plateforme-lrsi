@@ -1,5 +1,5 @@
 import { site } from "./data/site";
-import { numerosSemestre } from "./semestres";
+import { numerosSemestre, semestresMatiere } from "./semestres";
 import { ajouterJours, tachesPourEvaluation } from "./planning";
 import { enHeure, enMinutes, evenementsDuJour, versDate } from "./emploiDuTemps";
 
@@ -57,11 +57,12 @@ export const disponibilitesParDefaut = () => ({
 // qui les importaient déjà d'ici.
 export { numerosSemestre };
 
+// Les semestres viennent des chapitres de chaque matière.
 export const semestres = (matieres) =>
-  [...new Set(matieres.flatMap((m) => numerosSemestre(m.semestre)))].sort((a, b) => a - b);
+  [...new Set(matieres.flatMap(semestresMatiere))].sort((a, b) => a - b);
 
 export const matieresDuSemestre = (matieres, numero) =>
-  numero ? matieres.filter((m) => numerosSemestre(m.semestre).includes(numero)) : matieres;
+  numero ? matieres.filter((m) => semestresMatiere(m).includes(numero)) : matieres;
 
 /* ---- Créneaux ---- */
 

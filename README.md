@@ -791,7 +791,6 @@ Dans `src/data/matieres.js`, ajouter un objet au tableau :
   nom: "Mathématiques pour l'informatique",
   couleur: "violet",              // voir src/data/couleurs.js
   icone: "code",                  // voir les noms dans src/components/Icon.jsx
-  semestre: "Semestre 1",
   resume: "Une phrase qui dit à quoi sert la matière.",
   chapitres: [
     {
@@ -799,10 +798,14 @@ Dans `src/data/matieres.js`, ajouter un objet au tableau :
       resume: "Ce que couvre le chapitre.",
       duree: "3 h",
       statut: "disponible",       // disponible | bientot
+      semestre: 1,                // 1 ou 2 : la matière montre les deux à part
     },
   ],
 }
 ```
+
+Le semestre se donne **chapitre par chapitre** : une matière a sa partie
+semestre 1 et sa partie semestre 2, affichées séparément (`src/semestres.js`).
 
 ### Un exercice
 
@@ -1008,7 +1011,7 @@ l'IA » plus bas.
 
 Tout est rangé dans le navigateur (`localStorage`), sous des clés qui
 commencent par `lrsi-`. Celles qui décrivent le travail de l'étudiant partent
-dans la sauvegarde (liste `DONNEES` de `src/sauvegarde.js`) :
+dans son compte (liste `DONNEES` de `src/sauvegarde.js`) :
 
 | Clé | Contenu | Écrite par |
 | --- | --- | --- |
@@ -1050,18 +1053,13 @@ programme se recalcule à chaque visite avec les nouveaux résultats. Le
 planning (`lrsi-planning`) reste dans le navigateur et part dans la
 sauvegarde.
 
-### Sauvegarder et restaurer sa progression
+### Plus de fichier de sauvegarde
 
-Sans compte, tout vit dans le navigateur. Dans *Paramètres*, « Télécharger ma
-sauvegarde » produit un fichier `sunu-cours-sauvegarde-AAAA-MM-JJ.json` :
-profil, scores, exercices travaillés, chapitres lus, favoris, vidéos,
-planning, disponibilités, révisions espacées et thème. Ni
-la session ni le mot de passe admin n'y figurent. « Restaurer une sauvegarde »
-le relit sur n'importe quel appareil, après un aperçu de ce qui sera remplacé.
-
-La relecture est méfiante (`src/sauvegarde.js`) : fichier d'une autre origine
-ou d'un format futur refusé, et seules les clés connues, de la bonne forme,
-sont écrites. Une donnée absente de la sauvegarde n'est pas effacée.
+L'ancien bouton « Télécharger ma sauvegarde » des *Paramètres* a été retiré :
+un compte fait la même chose, sans fichier à garder. La liste `DONNEES` de
+`src/sauvegarde.js` reste la référence de ce qui est recopié dans le compte
+(`src/synchro.js`) ; ses fonctions de lecture et d'écriture de fichier restent
+testées, prêtes à resservir.
 
 ### Les comptes étudiants (Supabase)
 

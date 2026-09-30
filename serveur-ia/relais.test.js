@@ -362,6 +362,24 @@ describe("nettoyage de ce qui est publié", () => {
     expect(matieres.map((m) => m.semestre)).toEqual(["Semestre 2", "Semestres 1 et 2", "Semestres 1 et 2", "Semestres 1 et 2"]);
   });
 
+  test("chaque chapitre garde son semestre, 1 ou 2 ; une autre valeur est retirée", () => {
+    const { matieres } = nettoyerContenu({
+      matieres: [
+        {
+          id: "a",
+          nom: "A",
+          chapitres: [
+            { titre: "Un", semestre: 1 },
+            { titre: "Deux", semestre: "Semestre 2" },
+            { titre: "Trois", semestre: 3 },
+            { titre: "Quatre" },
+          ],
+        },
+      ],
+    });
+    expect(matieres[0].chapitres.map((c) => c.semestre)).toEqual([1, 2, undefined, undefined]);
+  });
+
   test("un identifiant en double est écarté", () => {
     const { qcms } = nettoyerContenu({
       qcms: [

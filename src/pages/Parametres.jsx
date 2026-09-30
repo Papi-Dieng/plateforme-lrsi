@@ -11,20 +11,15 @@ import { choisirStats, statsRefusees } from "../stats";
 import Installation from "../components/Installation";
 import { CLE_REVISIONS } from "../revisions";
 import { site } from "../data/site";
-import {
-  CLE_PLANNING,
-  CLE_THEME,
-  lireSauvegarde,
-  restaurerSauvegarde,
-  telechargerSauvegarde,
-} from "../sauvegarde";
+import { CLE_PLANNING, CLE_THEME } from "../sauvegarde";
 
 /* ==================================================================
    Paramètres.
 
-   Tout ce que la plateforme enregistre tient dans le navigateur. Cette
-   page le montre noir sur blanc, permet de le sauvegarder dans un
-   fichier pour changer d'appareil, et de tout effacer.
+   Ce que la plateforme enregistre dans le navigateur, noir sur blanc,
+   et de quoi tout effacer. Avec un compte, ces données sont aussi
+   recopiées dans le compte (src/synchro.js) : c'est lui qui les fait
+   suivre d'un appareil à l'autre.
    ================================================================== */
 
 const entreesStockage = [
@@ -49,113 +44,6 @@ function poids(cle) {
   } catch {
     return null;
   }
-}
-
-/* Télécharger sa sauvegarde, ou en recharger une : pour changer
-   d'appareil, ou ne rien perdre en vidant son navigateur. */
-function Sauvegarde({ utilisees, apresRestauration }) {
-  const [lue, setLue] = useState(null);
-  const [message, setMessage] = useState({ type: "", texte: "" });
-
-  const telecharger = () => {
-    const n = telechargerSauvegarde();
-    setMessage({ type: "ok", texte: `Sauvegarde téléchargée (${n} donnée(s)). Garde-la dans un endroit sûr.` });
-  };
-
-  const choisir = async (fichier) => {
-    setLue(null);
-    if (!fichier) return;
-    const r = lireSauvegarde(await fichier.text());
-    if (r.erreur) setMessage({ type: "erreur", texte: r.erreur });
-    else {
-      setLue(r);
-      setMessage({ type: "", texte: "" });
-    }
-  };
-
-  const restaurer = () => {
-    restaurerSauvegarde(lue.donnees, (cle, valeur) => {
-      try {
-        localStorage.setItem(cle, valeur);
-      } catch {
-        /* stockage plein ou bloqué */
-      }
-    });
-    setLue(null);
-    apresRestauration();
-    setMessage({ type: "ok", texte: "Sauvegarde restaurée. La page se recharge…" });
-    // Les pages relisent tout au chargement : on repart d'un site propre.
-    setTimeout(() => window.location.reload(), 900);
-  };
-
-  return (
-    <section className="card p-6">
-      <h2 className="flex items-center gap-2 text-lg font-semibold text-ink-900 dark:text-white">
-        <Icon name="bookmark" className="size-5" />
-        Sauvegarder et restaurer
-      </h2>
-      <p className="mt-1.5 max-w-2xl text-sm/6 text-ink-600 dark:text-ink-400">
-        Tu changes d'ordinateur, ou tu vas vider ton navigateur ? Télécharge ta
-        sauvegarde : un petit fichier avec ton profil, tes scores, tes favoris
-        et ton planning. Recharge-la ensuite ici, sur n'importe quel appareil.
-      </p>
-
-      <div className="mt-5 flex flex-wrap gap-3">
-        <Bouton taille="sm" onClick={telecharger} disabled={utilisees === 0}>
-          Télécharger ma sauvegarde
-        </Bouton>
-        <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-ink-200 px-3.5 py-2 text-sm font-semibold text-ink-700 hover:bg-ink-50 dark:border-ink-700 dark:text-ink-200 dark:hover:bg-ink-800">
-          Restaurer une sauvegarde
-          <input
-            type="file"
-            accept="application/json,.json"
-            className="sr-only"
-            onChange={(e) => {
-              choisir(e.target.files?.[0]);
-              e.target.value = "";
-            }}
-          />
-        </label>
-      </div>
-
-      {lue && (
-        <div className="mt-4 rounded-xl border border-brand-300 bg-brand-50/50 p-4 dark:border-brand-500/30 dark:bg-brand-500/10">
-          <p className="text-sm font-semibold text-ink-900 dark:text-white">
-            Sauvegarde{lue.creeLe ? ` du ${new Date(lue.creeLe).toLocaleString("fr-FR")}` : ""}
-          </p>
-          <ul className="mt-2 list-disc space-y-0.5 pl-5 text-sm text-ink-700 dark:text-ink-300">
-            {lue.resume.map((ligne) => (
-              <li key={ligne}>{ligne}</li>
-            ))}
-          </ul>
-          <p className="mt-2 text-xs text-ink-500 dark:text-ink-400">
-            Ces données remplaceront celles de cet appareil. Ce qui n'est pas dans la
-            sauvegarde reste tel quel.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Bouton taille="sm" onClick={restaurer}>
-              Restaurer
-            </Bouton>
-            <Bouton taille="sm" variante="secondaire" onClick={() => setLue(null)}>
-              Annuler
-            </Bouton>
-          </div>
-        </div>
-      )}
-
-      {message.texte && (
-        <p
-          role="status"
-          className={cx(
-            "mt-3 text-sm",
-            message.type === "erreur" ? "text-flame-600 dark:text-flame-400" : "text-accent-700 dark:text-accent-400"
-          )}
-        >
-          {message.texte}
-        </p>
-      )}
-    </section>
-  );
 }
 
 export default function Parametres() {
@@ -369,11 +257,12 @@ export default function Parametres() {
               Mes données sur cet appareil
             </h2>
             <p className="mt-1.5 max-w-2xl text-sm/6 text-ink-600 dark:text-ink-400">
-              Voici exactement ce que la plateforme conserve dans ce navigateur.
-              Ces données ne sont pas envoyées sur un serveur, et rien ne te suit
-              d'un appareil à l'autre, sauf si tu emportes ta sauvegarde (juste en
-              dessous). Seules tes réponses aux QCM partent, anonymes : voir
-              « Statistiques anonymes » plus bas.
+              Voici exactement ce que la plateforme conserve dans ce navigateur.{" "}
+              {invite
+                ? "En mode invité, rien de tout cela n'est envoyé sur un serveur, et rien ne te suit d'un appareil à l'autre : crée un compte pour retrouver ta progression partout."
+                : "Avec ton compte, ces données y sont aussi enregistrées, et te suivent sur tous tes appareils. Se déconnecter les efface de cet appareil, pas de ton compte."}{" "}
+              Tes réponses aux QCM partent aussi, anonymes : voir « Statistiques
+              anonymes » plus bas.
             </p>
 
             <div className="mt-5 overflow-hidden rounded-2xl border border-ink-200 dark:border-ink-800">
@@ -447,11 +336,6 @@ export default function Parametres() {
               )}
             </div>
           </section>
-
-          {/* ------------------------------------------------ */}
-          {/* Sauvegarde                                        */}
-          {/* ------------------------------------------------ */}
-          <Sauvegarde utilisees={utilisees} apresRestauration={relever} />
 
           {/* ------------------------------------------------ */}
           {/* À propos                                          */}

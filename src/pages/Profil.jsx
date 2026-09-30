@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Icon from "../components/Icon";
 import { Bouton } from "../components/ui";
 import { cx } from "../components/classes";
+import { useSession } from "../session";
 import { avatars, getAvatar } from "../data/avatars";
 import {
   effacerProfil,
@@ -141,6 +142,7 @@ function ChoixAvatar({ avatarId, onChoisir }) {
 /* ================================================================== */
 
 export default function Profil() {
+  const { session } = useSession();
   const [profil, setProfil] = useState(lireProfil);
   const [erreurs, setErreurs] = useState({});
   const [enregistre, setEnregistre] = useState(false);
@@ -378,9 +380,9 @@ export default function Profil() {
             Où vont ces informations
           </h2>
           <p className="mt-2 text-sm/6 text-ink-600 dark:text-ink-400">
-            Elles restent dans ce navigateur. Rien n'est envoyé sur un serveur,
-            personne d'autre n'y a accès, et elles ne te suivent pas d'un
-            appareil à l'autre.
+            {session?.mode === "compte"
+              ? "Elles sont enregistrées dans ton compte : tu les retrouves sur tous tes appareils. Toi seul y as accès ; l'équipe ne les partage avec personne."
+              : "En mode invité, elles restent dans ce navigateur : rien n'est envoyé sur un serveur, et elles ne te suivent pas d'un appareil à l'autre. Crée un compte pour les retrouver partout."}
           </p>
 
           <div className="mt-5">

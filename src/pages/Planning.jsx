@@ -33,7 +33,7 @@ import {
    L'étudiant note ses évaluations ; pour chacune, un programme jour
    par jour jusqu'à la veille, construit à partir de ses résultats
    (`src/planning.js`). Il coche ce qu'il a fait. Tout reste dans son
-   navigateur, et part dans sa sauvegarde.
+   navigateur, et part dans le compte de l'étudiant (src/synchro.js).
    ================================================================== */
 
 const ICONES = { chapitre: "book", exercice: "pencil", qcm: "target", devoir: "graduation" };
@@ -500,11 +500,8 @@ export default function Planning() {
 
         <p className="text-xs text-ink-500 dark:text-ink-400">
           Le programme se recalcule à chaque visite : fais un QCM, et tes nouveaux résultats changent
-          les priorités. Ton emploi du temps et ton planning restent dans ce navigateur ; pense à{" "}
-          <Link to="/parametres" className="underline">
-            télécharger ta sauvegarde
-          </Link>{" "}
-          pour les garder.
+          les priorités. Avec un compte, ton emploi du temps et ton planning te suivent sur tous tes
+          appareils ; en mode invité, ils restent dans ce navigateur.
         </p>
       </Container>
     </>

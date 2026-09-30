@@ -26,6 +26,10 @@ export const site = {
   // Adresse de contact, affichée dans les pages juridiques, le pied de
   // page et la page Projet.
   contact: "sunucours@gmail.com",
+  // Numéro WhatsApp de l'équipe, pour les contributions (format
+  // international, par exemple "221771234567"). Vide : seul Gmail est
+  // proposé.
+  whatsapp: "",
   // Responsable de la publication : il figure dans les mentions légales
   // et la politique de confidentialité. Tant qu'il est vide, les pages
   // disent « l'équipe étudiante du projet ».

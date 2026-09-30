@@ -52,17 +52,51 @@ test.describe("semestres", () => {
     const libelles = await filtres.getByRole("button").allInnerTexts();
     expect(libelles.map((t) => t.trim())).toEqual(["Tous les semestres", "Semestre 1", "Semestre 2"]);
 
-    // Toutes les matières couvrent les deux semestres : elles restent toutes.
+    // Toutes les matières ont des chapitres dans les deux semestres : elles restent toutes.
     await filtres.getByRole("button", { name: "Semestre 2" }).click();
     for (const m of matieres) await expect(page.getByText(m.nom, { exact: true }).first()).toBeVisible();
     await expect(page.getByText(/Semestre [3-9]/)).toHaveCount(0);
   });
 
-  test("un semestre 3 publié avant la règle s'affiche « Semestres 1 et 2 »", async ({ page, relais }) => {
-    relais.contenu = { matieres: matieres.map((m, i) => (i === 0 ? { ...m, semestre: "Semestre 3" } : m)) };
+  test("dans une matière, le semestre 1 et le semestre 2 sont deux parties à part", async ({ page }) => {
+    await entrerEnInvite(page);
+    const m = matieres[0];
+    const s1 = m.chapitres.filter((c) => c.semestre === 1);
+    const s2 = m.chapitres.filter((c) => c.semestre === 2);
+    await aller(page, `/cours/${m.id}`);
+    const parties = page.getByRole("group", { name: "Choisir le semestre" });
+    await expect(parties.getByRole("button", { name: `Semestre 1 (${s1.length})` })).toBeVisible();
+    await expect(page.getByRole("heading", { name: s1[0].titre })).toBeVisible();
+    await expect(page.getByRole("heading", { name: s2[0].titre })).toHaveCount(0);
+
+    await parties.getByRole("button", { name: `Semestre 2 (${s2.length})` }).click();
+    await expect(page.getByRole("heading", { name: s2[0].titre })).toBeVisible();
+    await expect(page.getByRole("heading", { name: s1[0].titre })).toHaveCount(0);
+    await expect(page).toHaveURL(/semestre=2/);
+  });
+
+  test("le filtre Semestre 2 de la page Cours ouvre directement la partie semestre 2", async ({ page }) => {
+    await entrerEnInvite(page);
+    await aller(page, "/cours");
+    const filtres = page.getByRole("group", { name: "Filtrer par semestre" });
+    await filtres.getByRole("button", { name: "Semestre 2" }).click();
+    await page.getByRole("link", { name: new RegExp(matieres[0].nom) }).first().click();
+    const s2 = matieres[0].chapitres.find((c) => c.semestre === 2);
+    await expect(page.getByRole("heading", { name: s2.titre })).toBeVisible();
+  });
+
+  test("un contenu publié sans semestre par chapitre est réparti entre le 1 et le 2", async ({ page, relais }) => {
+    relais.contenu = {
+      matieres: matieres.map((m, i) =>
+        i === 0 ? { ...m, semestre: "Semestre 3", chapitres: m.chapitres.map(({ semestre: _s, ...c }) => c) } : m
+      ),
+    };
     await entrerEnInvite(page);
     await aller(page, `/cours/${matieres[0].id}`);
-    await expect(page.getByText("Semestres 1 et 2").first()).toBeVisible();
+    const parties = page.getByRole("group", { name: "Choisir le semestre" });
+    await expect(parties.getByRole("button", { name: /^Semestre 1 \(\d+\)$/ })).toBeVisible();
+    await expect(parties.getByRole("button", { name: /^Semestre 2 \(\d+\)$/ })).toBeVisible();
     await expect(page.getByText("Semestre 3")).toHaveCount(0);
+    await expect(page.getByText("Semestres 1 et 2")).toHaveCount(0);
   });
 });

@@ -66,8 +66,9 @@ const pdfValide = (v) =>
     ? { id: v.id, nom: texte(v.nom, 120) || "document.pdf", taille: entier(v.taille, 0, 30_000_000, 0) }
     : null;
 
-/* Seulement les semestres 1 et 2 : toute autre valeur devient
-   « Semestres 1 et 2 » (même règle que src/semestres.js, côté site). */
+/* Le semestre de la matière, d'avant les semestres par chapitre : gardé
+   pour les chapitres qui n'en ont pas (voir src/semestres.js). Seulement
+   les semestres 1 et 2 : toute autre valeur devient « Semestres 1 et 2 ». */
 function semestre(v) {
   const n = [...new Set((String(v ?? "").match(/\d+/g) ?? []).map(Number))];
   return n.length === 1 && (n[0] === 1 || n[0] === 2) ? `Semestre ${n[0]}` : "Semestres 1 et 2";
@@ -89,10 +90,14 @@ const nettoyerMatiere = (m) => ({
       // rien n'est écrit.
       const pdf = pdfValide(c?.pdf);
       const contenu = texte(c?.contenu, 30000);
+      // Semestre 1 ou 2, chapitre par chapitre ; absent, le site en
+      // choisit un (src/semestres.js).
+      const numero = Number(String(c?.semestre ?? "").match(/\d+/)?.[0]);
       return {
         titre: texte(c?.titre, 150),
         resume: texte(c?.resume, 600),
         duree: texte(c?.duree, 20),
+        ...((numero === 1 || numero === 2) && { semestre: numero }),
         statut: unParmi(c?.statut, ["disponible", "bientot"], "bientot"),
         format: !contenu && pdf ? "pdf" : "texte",
         contenu,

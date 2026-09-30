@@ -8,6 +8,7 @@ import {
 } from "../components/ui";
 import { cx } from "../components/classes";
 import CarrouselEquipe from "../components/CarrouselEquipe";
+import { MESSAGE_CONTRIBUTION, lienGmail, lienWhatsApp } from "../contact";
 import {
   engagements,
   etatVersion,
@@ -23,16 +24,6 @@ const etatsRoute = {
   prevu: { ton: "brand", label: "Prévu" },
   vision: { ton: "neutre", label: "Vision" },
 };
-
-const pile = [
-  { element: "Interface", techno: "React et Tailwind CSS" },
-  { element: "Hébergement du site", techno: "GitHub Pages" },
-  { element: "Relais et contenu publié", techno: "Cloudflare Workers" },
-  { element: "Comptes et base de données", techno: "Supabase (PostgreSQL)" },
-  { element: "Emails du compte", techno: "Brevo" },
-  { element: "Assistant IA", techno: "Google Gemini, appelé par le relais" },
-  { element: "Tests automatiques", techno: "Vitest et Playwright" },
-];
 
 const usagesIA = [
   {
@@ -296,50 +287,6 @@ export default function Projet() {
           </section>
 
           {/* ------------------------------------------------ */}
-          {/* Pile technique                                    */}
-          {/* ------------------------------------------------ */}
-          <section>
-            <TitreSection
-              surtitre="Technique"
-              titre="Organisation technique"
-              texte="Ce qui fait tourner la plateforme aujourd'hui. Tout tient dans des offres gratuites."
-            />
-
-            <div className="mt-6 overflow-hidden rounded-2xl border border-ink-200 dark:border-ink-800">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-ink-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300">
-                  <tr>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Élément
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Technologie
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      État
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-ink-200 bg-white dark:divide-ink-800 dark:bg-ink-900">
-                  {pile.map((p) => (
-                    <tr key={p.element}>
-                      <td className="px-5 py-3.5 font-medium text-ink-900 dark:text-white">
-                        {p.element}
-                      </td>
-                      <td className="px-5 py-3.5 text-ink-600 dark:text-ink-400">
-                        {p.techno}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <Badge ton="accent">en place</Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          {/* ------------------------------------------------ */}
           {/* Vision                                            */}
           {/* ------------------------------------------------ */}
           <section className="rounded-3xl bg-brand-700 p-8 sm:p-12 dark:bg-brand-800">
@@ -357,13 +304,30 @@ export default function Projet() {
                 d'autres établissements, la collaboration avec des enseignants et
                 des étudiants, et l'ajout de nouvelles filières.
               </p>
-              <div className="mt-7 flex flex-wrap gap-3">
+              <h3 className="mt-8 text-lg font-semibold text-white">Proposer une contribution</h3>
+              <p className="mt-2 text-sm/6 text-brand-100">
+                Un cours, un exercice corrigé, une question de QCM, une erreur à
+                signaler ? Écris à l'équipe
+                {lienWhatsApp("") ? " sur WhatsApp ou par Gmail" : " par Gmail"} : le
+                message est déjà commencé, il te reste à le compléter et à joindre
+                tes fichiers (PDF, photos).
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                {lienWhatsApp(MESSAGE_CONTRIBUTION.corps) && (
+                  <Bouton
+                    href={lienWhatsApp(MESSAGE_CONTRIBUTION.corps)}
+                    className="bg-white text-brand-700 hover:bg-brand-50 dark:bg-white dark:text-brand-700"
+                  >
+                    Envoyer par WhatsApp
+                    <Icon name="external" className="size-4" />
+                  </Bouton>
+                )}
                 <Bouton
-                  href={`mailto:${site.contact}`}
+                  href={lienGmail(MESSAGE_CONTRIBUTION)}
                   className="bg-white text-brand-700 hover:bg-brand-50 dark:bg-white dark:text-brand-700"
                 >
-                  Proposer une contribution
-                  <Icon name="arrow" className="size-4" />
+                  Envoyer par Gmail
+                  <Icon name="external" className="size-4" />
                 </Bouton>
                 <Bouton
                   to="/cours"

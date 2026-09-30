@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { SEMESTRES, numerosSemestre } from "../semestres";
+import { SEMESTRES, chapitresDuSemestre, semestresMatiere } from "../semestres";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import TexteLibre from "../components/TexteLibre";
@@ -41,7 +41,8 @@ export function Cours() {
   const setRecherche = (v) => setParams(v ? { q: v } : {}, { replace: true });
   const [semestre, setSemestre] = useState("tous");
 
-  // Semestre 1 ou 2 : une matière des deux semestres apparaît dans les deux.
+  // Semestre 1 ou 2 : les matières qui ont des chapitres dans ce
+  // semestre, et le lien ouvre directement cette partie.
   const semestres = [
     { value: "tous", label: "Tous les semestres" },
     ...SEMESTRES.map((n) => ({ value: String(n), label: `Semestre ${n}` })),
@@ -50,7 +51,7 @@ export function Cours() {
   const resultats = useMemo(() => {
     const q = normalise(recherche.trim());
     return matieres.filter((m) => {
-      if (semestre !== "tous" && !numerosSemestre(m.semestre).includes(Number(semestre))) return false;
+      if (semestre !== "tous" && !semestresMatiere(m).includes(Number(semestre))) return false;
       if (!q) return true;
       const corpus = normalise(
         [m.nom, m.resume, ...m.chapitres.map((c) => c.titre)].join(" ")
@@ -107,13 +108,13 @@ export function Cours() {
           ) : (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {resultats.map((m) => {
-                const dispo = m.chapitres.filter(
-                  (c) => c.statut === "disponible"
-                ).length;
+                const filtre = semestre === "tous" ? null : Number(semestre);
+                const liste = filtre ? chapitresDuSemestre(m, filtre) : m.chapitres;
+                const dispo = liste.filter((c) => c.statut === "disponible").length;
                 return (
                   <Link
                     key={m.id}
-                    to={`/cours/${m.id}`}
+                    to={filtre ? `/cours/${m.id}?semestre=${filtre}` : `/cours/${m.id}`}
                     className="card group flex flex-col p-6 transition-shadow hover:shadow-md"
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -125,7 +126,13 @@ export function Cours() {
                       >
                         <Icon name={m.icone} className="size-5.5" />
                       </div>
-                      <Badge>{m.semestre}</Badge>
+                      <div className="flex flex-wrap justify-end gap-1.5">
+                        {semestresMatiere(m)
+                          .filter((n) => !filtre || n === filtre)
+                          .map((n) => (
+                            <Badge key={n}>Semestre {n}</Badge>
+                          ))}
+                      </div>
                     </div>
                     <h2 className="mt-4 font-semibold text-ink-900 group-hover:text-brand-600 dark:text-white dark:group-hover:text-brand-300">
                       {m.nom}
@@ -136,7 +143,7 @@ export function Cours() {
                     <div className="mt-4 flex items-center justify-between border-t border-ink-200 pt-4 dark:border-ink-800">
                       <span className="flex items-center gap-1.5 text-xs text-ink-500 dark:text-ink-400">
                         <Icon name="layers" className="size-3.5" />
-                        {m.chapitres.length} chapitres · {dispo} disponibles
+                        {liste.length} chapitres{filtre ? ` au semestre ${filtre}` : ""} · {dispo} disponibles
                       </span>
                       <Icon
                         name="arrow"
@@ -163,6 +170,13 @@ export function CoursDetail() {
   const { matiereId } = useParams();
   const matiere = getMatiere(matiereId);
   const [lus, setLus] = useState(lireChapitresLus);
+  // Le semestre 1 et le semestre 2 sont deux parties à part. Celle
+  // demandée par l'adresse (?semestre=2), sinon la première qui existe.
+  const [params, setParams] = useSearchParams();
+  const demande = Number(params.get("semestre"));
+  const presents = matiere ? semestresMatiere(matiere) : [];
+  const partie = SEMESTRES.includes(demande) ? demande : (presents[0] ?? 1);
+  const choisirPartie = (n) => setParams({ semestre: String(n) }, { replace: true });
 
   if (!matiere) {
     return (
@@ -190,7 +204,7 @@ export function CoursDetail() {
   return (
     <>
       <EnTetePage
-        surtitre={matiere.semestre}
+        surtitre={`Semestre ${presents.join(" · Semestre ")}`}
         titre={matiere.nom}
         texte={matiere.resume}
       >
@@ -225,9 +239,28 @@ export function CoursDetail() {
             <h2 className="text-lg font-semibold text-ink-900 dark:text-white">
               Programme des chapitres
             </h2>
+            <div className="mt-4">
+              <Filtres
+                label="Choisir le semestre"
+                options={SEMESTRES.map((n) => ({
+                  value: String(n),
+                  label: `Semestre ${n} (${chapitresDuSemestre(matiere, n).length})`,
+                }))}
+                actif={String(partie)}
+                onChange={(v) => choisirPartie(Number(v))}
+              />
+            </div>
 
-            <ol className="mt-5 space-y-3">
-              {matiere.chapitres.map((c, i) => {
+            <h3 className="mt-6 text-base font-semibold text-ink-900 dark:text-white">
+              Semestre {partie}
+            </h3>
+            {chapitresDuSemestre(matiere, partie).length === 0 && (
+              <p className="mt-3 text-sm text-ink-500 dark:text-ink-400">
+                Pas encore de chapitre pour le semestre {partie} dans cette matière.
+              </p>
+            )}
+            <ol className="mt-3 space-y-3">
+              {chapitresDuSemestre(matiere, partie).map((c, i) => {
                 const pret = c.statut === "disponible";
                 const ref = refChapitre(matiere.id, c.titre);
                 const lu = Boolean(lus[ref]);

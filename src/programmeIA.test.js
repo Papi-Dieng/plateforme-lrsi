@@ -23,10 +23,11 @@ describe("semestres", () => {
     expect(numerosSemestre(undefined)).toEqual([]);
   });
 
+  // Le semestre vient des chapitres.
   const matieres = [
-    { id: "a", semestre: "Semestre 2" },
-    { id: "b", semestre: "Semestres 1 et 2" },
-    { id: "c", semestre: "Semestre 1" },
+    { id: "a", chapitres: [{ semestre: 2 }] },
+    { id: "b", chapitres: [{ semestre: 1 }, { semestre: 2 }] },
+    { id: "c", chapitres: [{ semestre: 1 }] },
   ];
 
   test("liste les semestres sans doublon, dans l'ordre", () => {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CHOIX_SEMESTRE, normaliserSemestre } from "../../semestres";
+import { SEMESTRES } from "../../semestres";
 import Icon from "../../components/Icon";
 import { Badge } from "../../components/ui";
 import { themesMatiere } from "../../data/couleurs";
@@ -82,12 +82,6 @@ export function EditeurMatiere({ element: m, changer, motDePasse }) {
           maxLength={30}
           onChange={(e) => changer({ nomCourt: e.target.value })}
         />
-        <Choix
-          label="Semestre"
-          value={normaliserSemestre(m.semestre)}
-          onChange={(e) => changer({ semestre: e.target.value })}
-          options={CHOIX_SEMESTRE.map((s) => ({ value: s, label: s }))}
-        />
         <div className="grid grid-cols-2 gap-3">
           <Choix
             label="Couleur"
@@ -108,8 +102,9 @@ export function EditeurMatiere({ element: m, changer, motDePasse }) {
       <div>
         <h3 className="text-sm font-semibold text-ink-900 dark:text-white">Chapitres et cours</h3>
         <p className="mt-0.5 text-xs text-ink-500 dark:text-ink-400">
-          Le texte du cours s'affiche aux étudiants sous le chapitre, et l'IA s'en sert pour
-          répondre. Une ligne vide sépare deux paragraphes. Changer le titre d'un chapitre
+          Chaque chapitre appartient au semestre 1 ou au semestre 2 : la page de la matière
+          montre les deux à part. Le texte du cours s'affiche aux étudiants sous le chapitre,
+          et l'IA s'en sert pour répondre. Une ligne vide sépare deux paragraphes. Changer le titre d'un chapitre
           détache les favoris et les compétences qui y renvoient.
         </p>
         <div className="mt-3 space-y-3">
@@ -121,6 +116,7 @@ export function EditeurMatiere({ element: m, changer, motDePasse }) {
                 <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink-900 dark:text-white">
                   {c.titre || "Chapitre sans titre"}
                 </span>
+                <Badge>S{c.semestre ?? 1}</Badge>
                 <Badge ton={c.statut === "disponible" ? "accent" : "sun"}>
                   {c.statut === "disponible" ? "Disponible" : "Bientôt"}
                 </Badge>
@@ -129,7 +125,7 @@ export function EditeurMatiere({ element: m, changer, motDePasse }) {
                 </Badge>
               </summary>
               <div className="space-y-3 border-t border-ink-200 p-4 dark:border-ink-800">
-                <div className="grid gap-3 sm:grid-cols-[1fr_120px_150px]">
+                <div className="grid gap-3 sm:grid-cols-[1fr_120px_150px_140px]">
                   <Champ label="Titre" value={c.titre} maxLength={150} onChange={(e) => changerChapitre(i, { titre: e.target.value })} />
                   <Champ label="Durée" value={c.duree} maxLength={20} placeholder="3 h" onChange={(e) => changerChapitre(i, { duree: e.target.value })} />
                   <Choix
@@ -140,6 +136,12 @@ export function EditeurMatiere({ element: m, changer, motDePasse }) {
                       { value: "disponible", label: "Disponible" },
                       { value: "bientot", label: "Bientôt" },
                     ]}
+                  />
+                  <Choix
+                    label="Semestre"
+                    value={String(c.semestre ?? 1)}
+                    onChange={(e) => changerChapitre(i, { semestre: Number(e.target.value) })}
+                    options={SEMESTRES.map((n) => ({ value: String(n), label: `Semestre ${n}` }))}
                   />
                 </div>
                 <Zone label="Résumé" rows={2} value={c.resume} maxLength={600} onChange={(e) => changerChapitre(i, { resume: e.target.value })} />
@@ -168,7 +170,7 @@ export function EditeurMatiere({ element: m, changer, motDePasse }) {
           icone="plus"
           className="mt-3"
           onClick={() =>
-            changer({ chapitres: [...chapitres, { titre: "", resume: "", duree: "", statut: "bientot", format: "texte", contenu: "" }] })
+            changer({ chapitres: [...chapitres, { titre: "", resume: "", duree: "", statut: "bientot", semestre: chapitres.at(-1)?.semestre ?? 1, format: "texte", contenu: "" }] })
           }
         >
           Ajouter un chapitre

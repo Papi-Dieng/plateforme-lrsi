@@ -137,8 +137,8 @@ test.describe("exercice : vérifier ma réponse", () => {
   });
 });
 
-test.describe("favoris, sauvegarde et restauration", () => {
-  test("un favori part dans la sauvegarde et revient sur un autre appareil", async ({ page, browser }) => {
+test.describe("favoris", () => {
+  test("un favori s'allume, reste après un rechargement, et s'éteint", async ({ page }) => {
     const exercice = exercices[0];
     await entrerEnInvite(page);
     await aller(page, `/exercices/${exercice.id}`);
@@ -153,41 +153,10 @@ test.describe("favoris, sauvegarde et restauration", () => {
     await page.getByRole("button", { name: /aux favoris$/ }).first().click();
     await expect(page.getByRole("button", { name: /des favoris$/ }).first()).toHaveAttribute("aria-pressed", "true");
 
+    await aller(page, "/favoris");
+    await expect(page.getByText(exercice.titre).first()).toBeVisible();
+    // La sauvegarde par fichier a disparu : les comptes la remplacent.
     await aller(page, "/parametres");
-    const [telechargement] = await Promise.all([
-      page.waitForEvent("download"),
-      page.getByRole("button", { name: "Télécharger ma sauvegarde" }).click(),
-    ]);
-    expect(telechargement.suggestedFilename()).toMatch(/^sunu-cours-sauvegarde-\d{4}-\d{2}-\d{2}\.json$/);
-    const fichier = await telechargement.path();
-
-    // Un autre appareil : un navigateur tout neuf, sans aucune donnée.
-    const autre = await browser.newContext({ serviceWorkers: "block", baseURL: page.url().split("#")[0] });
-    const page2 = await autre.newPage();
-    await page2.route(/workers\.dev/, (route) => route.fulfill({ json: null, headers: { "Access-Control-Allow-Origin": "*" } }));
-    await entrerEnInvite(page2);
-    await aller(page2, "/favoris");
-    await expect(page2.getByText(exercice.titre)).toHaveCount(0);
-
-    await aller(page2, "/parametres");
-    await page2.locator('input[type="file"]').setInputFiles(fichier);
-    await expect(page2.getByText("1 favori", { exact: true })).toBeVisible();
-    await page2.getByRole("button", { name: "Restaurer", exact: true }).click();
-
-    await aller(page2, "/favoris");
-    await expect(page2.getByText(exercice.titre).first()).toBeVisible();
-    await autre.close();
-  });
-
-  test("un fichier qui n'est pas une sauvegarde est refusé", async ({ page }) => {
-    await entrerEnInvite(page);
-    await aller(page, "/parametres");
-    await page.locator('input[type="file"]').setInputFiles({
-      name: "photo.json",
-      mimeType: "application/json",
-      buffer: Buffer.from(JSON.stringify({ application: "autre-site", donnees: {} })),
-    });
-    await expect(page.getByText("Ce fichier n'est pas une sauvegarde de la plateforme.")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Restaurer", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Télécharger ma sauvegarde" })).toHaveCount(0);
   });
 });
