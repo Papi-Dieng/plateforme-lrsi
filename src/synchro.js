@@ -24,6 +24,8 @@ import { CLE_THEME, DONNEES, construireSauvegarde } from "./sauvegarde";
    ================================================================== */
 
 export const CLE_SYNCHRO = "lrsi-synchro";
+// Ce qui n'a pas pu partir avant une déconnexion : { [utilisateur]: { donnees, date } }.
+export const CLE_RESERVE = "lrsi-synchro-en-attente";
 const INTERVALLE = 15_000;
 
 // Données rangées par identifiant : { id: { …, date } }.
@@ -142,11 +144,57 @@ function ecrireLocal(donnees) {
   }
 }
 
+/* La réserve : la progression d'un compte qui n'a pas pu être envoyée
+   avant la déconnexion (pas de réseau, session expirée). Elle reste sur
+   l'appareil, rangée sous ce compte, et n'est rendue qu'à lui : à sa
+   prochaine connexion ici, elle rejoint ses données puis part. Une
+   autre personne qui se connecte ensuite ne la reçoit jamais. */
+function lireReserve() {
+  try {
+    const brut = JSON.parse(stockage.lire(CLE_RESERVE) ?? "null");
+    return estObjet(brut) ? brut : {};
+  } catch {
+    return {};
+  }
+}
+function ecrireReserve(reserve) {
+  stockage.ecrire(CLE_RESERVE, Object.keys(reserve).length ? JSON.stringify(reserve) : null);
+}
+
+/* Ce que l'appareil a de plus que la dernière synchronisation réussie
+   de ce compte. */
+export function changementsEnAttente(utilisateur) {
+  const local = lireLocal();
+  if (Object.keys(local).length === 0) return false;
+  const base = lireBase();
+  if (base?.utilisateur !== utilisateur) return true;
+  return empreinte(local) !== base.empreinte;
+}
+
 /* Efface les données personnelles de cet appareil, à la déconnexion :
-   sur un ordinateur partagé, le suivant ne doit rien voir. */
-export function oublierDonneesLocales() {
+   sur un ordinateur partagé, le suivant ne doit rien voir. Avec
+   `utilisateur`, ce qui n'a pas encore été envoyé est d'abord mis dans
+   la réserve de ce compte, pour ne rien perdre. Sans (suppression du
+   compte), rien n'est mis de côté ; les réserves des autres comptes de
+   l'appareil restent. */
+export function oublierDonneesLocales(utilisateur) {
+  const reserve = lireReserve();
+  if (utilisateur && changementsEnAttente(utilisateur)) {
+    const avant = reserve[utilisateur]?.donnees;
+    const local = lireLocal();
+    // Le plus récent (l'appareil) passe en second : il l'emporte.
+    reserve[utilisateur] = { donnees: avant ? fusionner(avant, local) : local, date: new Date().toISOString() };
+    ecrireReserve(reserve);
+  }
   for (const d of DONNEES) if (d.cle !== CLE_THEME) stockage.ecrire(d.cle, null);
   ecrireBase(null);
+}
+
+/* Retire la réserve d'un compte (compte supprimé). */
+export function oublierReserve(utilisateur) {
+  const reserve = lireReserve();
+  delete reserve[utilisateur];
+  ecrireReserve(reserve);
 }
 
 /* Lance la synchronisation d'un compte. `surChangement()` est appelé
@@ -168,6 +216,15 @@ export function lancerSynchro(sb, utilisateur, { surChangement } = {}) {
   async function complete() {
     const { data: distant, error } = await table().select("donnees, mis_a_jour").eq("utilisateur", utilisateur).maybeSingle();
     if (error) throw error;
+    // Une progression restée en réserve pour ce compte : elle rejoint
+    // l'appareil, et la fusion avec le compte se fait comme au premier
+    // passage (aucune base), donc sans rien perdre d'un côté ni de l'autre.
+    const reserve = lireReserve()[utilisateur];
+    if (reserve) {
+      const ici = lireLocal();
+      ecrireLocal(Object.keys(ici).length ? fusionner(reserve.donnees, ici) : reserve.donnees);
+      ecrireBase(null);
+    }
     const local = lireLocal();
     const { donnees, envoyer, ecrire } = arbitrer({ utilisateur, local, distant, base: lireBase() });
     if (ecrire) {
@@ -184,6 +241,8 @@ export function lancerSynchro(sb, utilisateur, { surChangement } = {}) {
       maj = data.mis_a_jour;
     }
     retenir(donnees, maj);
+    // Envoyée : la réserve n'a plus lieu d'être.
+    if (reserve) oublierReserve(utilisateur);
   }
 
   // Envoi rapide : seulement si le compte n'a pas bougé depuis la

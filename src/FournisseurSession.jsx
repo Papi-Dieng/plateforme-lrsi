@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SessionContext, ecrireSession, lireSession } from "./session";
 import { client, comptesActifs, deconnecter, nettoyerAdresse, sessionDeCompte, supprimerCompte } from "./comptes";
-import { lancerSynchro, oublierDonneesLocales } from "./synchro";
+import { lancerSynchro, oublierDonneesLocales, oublierReserve } from "./synchro";
 
 // Retour d'un lien Supabase (Google, confirmation, mot de passe oublié).
 const retourDeLien = () => /[?&](code|error)=/.test(window.location.search);
@@ -48,9 +48,10 @@ export function FournisseurSession({ children }) {
                 };
               }
             } else if (lireSession()?.mode === "compte") {
-              // Session expirée ou fermée sur un autre onglet.
+              // Session expirée ou fermée sur un autre onglet : ce qui
+              // n'a pas pu partir reste en réserve pour ce compte.
               arreterSynchro();
-              oublierDonneesLocales();
+              oublierDonneesLocales(lireSession()?.id);
               setSession(null);
               ecrireSession(null);
             }
@@ -77,20 +78,25 @@ export function FournisseurSession({ children }) {
   /* Quitter : pour un compte, on envoie d'abord les derniers changements,
      puis on efface tout de cet appareil. */
   const sortir = useCallback(async () => {
-    if (lireSession()?.mode === "compte") {
+    const actuelle = lireSession();
+    if (actuelle?.mode === "compte") {
       await synchro.current?.envoyerMaintenant();
       arreterSynchro();
       await deconnecter();
-      oublierDonneesLocales();
+      // Sans réseau, l'envoi a échoué : la progression reste en réserve
+      // pour ce compte, au lieu d'être perdue.
+      oublierDonneesLocales(actuelle.id);
     }
     setSession(null);
     ecrireSession(null);
   }, []);
 
   const supprimer = useCallback(async () => {
+    const id = lireSession()?.id;
     arreterSynchro();
     const r = await supprimerCompte();
     if (r.erreur) return r;
+    if (id) oublierReserve(id);
     oublierDonneesLocales();
     setSession(null);
     ecrireSession(null);
