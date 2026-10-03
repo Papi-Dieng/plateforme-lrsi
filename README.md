@@ -512,6 +512,8 @@ lrsi-platform/
 │   ├── avis.js               avis de l'IA sur une réponse rédigée (devoirs)
 │   ├── planning-ia.js        programme de révision composé par l'IA
 │   ├── stats.js              statistiques anonymes des QCM
+│   ├── comptes.js            inscription par téléphone
+│   ├── secours.js            code et email de secours des comptes téléphone
 │   └── wrangler.toml         réglages : origines, modèles, limites, KV
 ├── scripts/
 │   ├── banc-ia.mjs           banc de test de l'IA (npm run banc-ia)
@@ -549,6 +551,7 @@ lrsi-platform/
 │   │   ├── EmploiDuTemps.jsx      vues mois, semaine, jour et liste
 │   │   ├── AssistantProgramme.jsx programme de révision d'une session
 │   │   ├── Installation.jsx       bouton « Installer l'application »
+│   │   ├── CodeSecours.jsx        code de secours : fenêtre, paramètres
 │   │   ├── ConnexionAdmin.jsx     mot de passe de l'espace admin
 │   │   ├── AssistantAdmin.jsx     propositions de l'agent admin
 │   │   ├── QuizEnTexte.jsx        écrire un QCM en texte (admin)
@@ -1037,8 +1040,9 @@ sauvegarde : `lrsi-session` (mode et nom affiché), `lrsi-contenu` (dernière ve
 publiée, pour le mode sans réseau), `lrsi-rappels` et `lrsi-rappels-dernier`
 (notifications), `lrsi-stats-refus` (refus des statistiques anonymes),
 `lrsi-taille-lecture` (taille du texte en plein écran) et
-`lrsi-installation-masquee`. Le mot de passe admin (`lrsi-admin-ia`) vit dans
-`sessionStorage` et disparaît à la fermeture de l'onglet.
+`lrsi-installation-masquee`. Le mot de passe admin (`lrsi-admin-ia`) et le
+code de secours à montrer (`lrsi-code-secours`) vivent dans `sessionStorage`
+et disparaissent à la fermeture de l'onglet.
 
 En mode invité, aucune de ces données ne quitte l'appareil, sauf les
 statistiques anonymes des QCM. Avec un compte, celles de la liste `DONNEES`
@@ -1075,8 +1079,9 @@ Les étudiants s'inscrivent eux-mêmes, au choix :
   sur le site, pour confirmer l'adresse comme pour un mot de passe oublié ;
 - **numéro de téléphone + mot de passe**, sans SMS : le relais crée un compte
   dont l'adresse est fabriquée à partir du numéro
-  (`221771234567@telephone.sunu-cours.invalid`, voir `src/telephone.js`). Pas
-  de réinitialisation par lien : l'admin la fait depuis Supabase ;
+  (`221771234567@telephone.sunu-cours.invalid`, voir `src/telephone.js`). Sans
+  boîte mail, il retrouve son compte seul (voir « Mot de passe oublié d'un
+  compte téléphone » plus bas) ;
 - **leur compte Google**.
 
 Le mode invité reste ouvert. Une fois connecté, le site travaille comme avant
@@ -1135,6 +1140,40 @@ peuvent mettre quelques minutes à arriver.
 Les règles d'accès de `schema.sql` sont ce qui protège les données : la clé
 « anon » est publique par nature. La clé `service_role` donne tous les droits,
 elle ne vit que dans le relais.
+
+**Mot de passe oublié d'un compte téléphone** (`serveur-ia/secours.js`,
+`src/components/CodeSecours.jsx`). Pas de SMS (payants) : deux moyens
+gratuits, sans l'équipe.
+
+- **Le code de secours** : 12 caractères (`K7QM-4XPA-9TRB`), donné à
+  l'inscription dans une fenêtre qui ne se ferme qu'une fois « noté » coché.
+  Dans « Mot de passe oublié », onglet Téléphone : numéro + code + nouveau
+  mot de passe. Le relais change le mot de passe, l'étudiant arrive connecté,
+  et un nouveau code lui est montré : chaque code ne sert qu'une fois. Seule
+  son empreinte SHA-256 est gardée, dans la table `secours_comptes`. Cinq
+  codes faux bloquent le numéro une heure. Un nouveau code se demande aussi
+  dans *Paramètres → Récupérer mon compte* (l'ancien ne marche plus) : c'est
+  là que les comptes créés avant cette fonction obtiennent le leur.
+- **L'email de secours**, facultatif, ajouté dans les mêmes paramètres et
+  confirmé par un code à 6 chiffres. En cas d'oubli, Supabase fabrique un
+  code de réinitialisation sans rien envoyer (`generate_link`), le relais
+  l'envoie par l'API de Brevo, et l'étudiant le tape comme un code reçu par
+  email.
+
+Le code à montrer attend dans `sessionStorage` (`lrsi-code-secours`), le
+temps d'arriver au tableau de bord, et s'efface dès qu'il est noté. Les
+réponses publiques ne disent jamais si un numéro est inscrit. Reste un cas
+pour l'équipe : ni code ni email (réinitialisation dans Supabase).
+
+Mise en service :
+
+1. *SQL Editor* : relancer `supabase/schema.sql` (il crée `secours_comptes`
+   et ne casse rien d'existant).
+2. Brevo, *SMTP & API* → *API Keys* : créer une clé, puis, dans
+   `serveur-ia/` : `npx wrangler secret put BREVO_API_KEY`.
+   `EMAIL_EXPEDITEUR` (`wrangler.toml`) doit être un expéditeur validé dans
+   Brevo. Sans la clé, seul l'email de secours est éteint.
+3. `npx wrangler deploy`, puis mettre le site en ligne.
 
 **Version 4 — assistant de révision.** Intégration d'un modèle de langage, avec
 des limites explicites : pas d'invention d'informations pédagogiques, pas

@@ -47,6 +47,7 @@ import { avisRedaction } from "./avis.js";
 import { effacerStats, enregistrerStats, lireStats } from "./stats.js";
 import { composerPlanning } from "./planning-ia.js";
 import { inscrireTelephone } from "./comptes.js";
+import { routeSecours } from "./secours.js";
 
 const MAX_MESSAGES = 10;
 const MAX_CARACTERES = 1500;
@@ -68,7 +69,7 @@ function entetesCors(origine, env) {
   return {
     "Access-Control-Allow-Origin": origine,
     "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, X-Admin, X-Nom-Fichier",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin, X-Nom-Fichier",
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",
   };
@@ -329,6 +330,19 @@ export default {
         return json(await ecrireFiche(env, id, fiche), 200, cors);
       }
       return json({ erreur: "methode" }, 405, cors);
+    }
+
+    // Récupération des comptes téléphone (`secours.js`) : code et email
+    // de secours. Soumise à la limite par visiteur, en plus du blocage
+    // du numéro après cinq codes faux.
+    if (chemin.startsWith("/comptes/secours")) {
+      try {
+        const r = await routeSecours(chemin, requete, env);
+        return r.erreur ? json({ erreur: r.erreur }, r.statut, cors) : json(r.resultat, 200, cors);
+      } catch (e) {
+        console.log("Secours du compte", e);
+        return json({ erreur: "reseau" }, 502, cors);
+      }
     }
 
     if (requete.method !== "POST") return json({ erreur: "methode" }, 405, cors);

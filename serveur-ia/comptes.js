@@ -1,4 +1,5 @@
 import { emailTelephone, normaliserTelephone } from "../src/telephone.js";
+import { creerCodeSecours } from "./secours.js";
 
 /* ==================================================================
    Inscription par numéro de téléphone, sans SMS (voir src/telephone.js).
@@ -9,8 +10,9 @@ import { emailTelephone, normaliserTelephone } from "../src/telephone.js";
      npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
    et l'adresse du projet est dans wrangler.toml (SUPABASE_URL).
 
-   Le relais crée le compte et s'arrête là : c'est le site qui se
-   connecte ensuite, avec le numéro et le mot de passe. Le mot de passe
+   Le relais crée le compte, lui donne un code de secours (secours.js),
+   et s'arrête là : c'est le site qui se connecte ensuite, avec le
+   numéro et le mot de passe, puis montre le code à noter. Le mot de passe
    n'est ni gardé ni journalisé ici. La limite de requêtes par visiteur
    (index.js) s'applique, contre les inscriptions en rafale.
    ================================================================== */
@@ -47,7 +49,18 @@ export async function inscrireTelephone(corps, env) {
       user_metadata: { nom, niveau, telephone: numero },
     }),
   });
-  if (r.ok) return { resultat: { ok: true } };
+  if (r.ok) {
+    const { id } = await r.json().catch(() => ({}));
+    // Sans code (table absente, réseau), le compte est créé quand même :
+    // l'étudiant pourra en demander un depuis ses paramètres.
+    const codeSecours = id
+      ? await creerCodeSecours(env, id, numero).catch((e) => {
+          console.log("Code de secours à l'inscription", e);
+          return null;
+        })
+      : null;
+    return { resultat: { ok: true, codeSecours } };
+  }
 
   const detail = await r.json().catch(() => ({}));
   const code = detail?.error_code ?? detail?.code ?? "";

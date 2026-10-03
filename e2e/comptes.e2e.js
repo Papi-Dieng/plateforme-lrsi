@@ -1,4 +1,5 @@
 import { comptes } from "../src/data/comptes.js";
+import { site } from "../src/data/site.js";
 import { aller, expect, test } from "./outils.js";
 
 /* ==================================================================
@@ -149,6 +150,83 @@ test.describe("comptes", () => {
     await page.getByRole("button", { name: "Enregistrer" }).click();
     await expect(page).toHaveURL(/#\/tableau-de-bord$/);
     expect(appels.motDePasse).toEqual(["encore-meilleur"]);
+  });
+
+  test("compte téléphone : le code de secours change le mot de passe, puis se renouvelle", async ({ page }) => {
+    const RELAIS = new URL(site.urlIA).origin;
+    const telephone = {
+      id: "00000000-0000-4000-8000-000000000002",
+      aud: "authenticated",
+      email: "221771234567@telephone.sunu-cours.invalid",
+      user_metadata: { nom: "Moussa Ndiaye", niveau: "Licence 2", telephone: "221771234567" },
+      app_metadata: { provider: "email" },
+      identities: [{ id: "i2" }],
+      created_at: "2026-09-30T00:00:00Z",
+    };
+    await page.route(`${comptes.url}/auth/v1/token**`, (route) =>
+      route.fulfill({
+        json: {
+          access_token: "jeton-telephone",
+          token_type: "bearer",
+          expires_in: 3600,
+          expires_at: Math.floor(Date.now() / 1000) + 3600,
+          refresh_token: "rafraichir",
+          user: telephone,
+        },
+      })
+    );
+    const demandes = [];
+    const entetes = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*" };
+    await page.route(`${RELAIS}/comptes/secours**`, (route) => {
+      const r = route.request();
+      if (r.method() === "OPTIONS") return route.fulfill({ status: 204, headers: entetes });
+      const chemin = new URL(r.url()).pathname;
+      demandes.push({ chemin, corps: r.postDataJSON(), jeton: r.headers().authorization });
+      if (chemin.endsWith("/oublie-code")) {
+        return r.postDataJSON().code === "ABCD-EFGH-JKMN"
+          ? route.fulfill({ json: { ok: true, codeSecours: "WXYZ-2345-6789" }, headers: entetes })
+          : route.fulfill({ status: 400, json: { erreur: "code-secours" }, headers: entetes });
+      }
+      if (chemin.endsWith("/nouveau-code")) return route.fulfill({ json: { codeSecours: "QRST-UVWX-YZ23" }, headers: entetes });
+      return route.fulfill({
+        json: { code: true, email: null, emailAttente: null, emailDisponible: true, telephone: "221771234567" },
+        headers: entetes,
+      });
+    });
+
+    await aller(page, "/mot-de-passe-oublie");
+    await page.getByRole("group", { name: "Mon compte est lié à" }).getByRole("button", { name: "Téléphone" }).click();
+    await page.getByLabel("Numéro de téléphone du compte").fill("77 123 45 67");
+    await page.getByRole("textbox", { name: "Code de secours" }).fill("abcd efgh jkmx");
+    await page.getByLabel("Nouveau mot de passe").fill("un-nouveau-mot");
+    await page.getByLabel("Confirmer le mot de passe").fill("un-nouveau-mot");
+    await page.getByRole("button", { name: "Changer mon mot de passe" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: "Numéro ou code de secours incorrect." })).toBeVisible();
+
+    await page.getByRole("textbox", { name: "Code de secours" }).fill("ABCD-EFGH-JKMN");
+    await page.getByRole("button", { name: "Changer mon mot de passe" }).click();
+    await expect(page).toHaveURL(/#\/tableau-de-bord$/);
+    expect(demandes.at(-1)).toMatchObject({ corps: { telephone: "221771234567", code: "ABCD-EFGH-JKMN", motDePasse: "un-nouveau-mot" } });
+
+    // Le nouveau code est montré une fois, et la fenêtre ne part qu'après « noté ».
+    const fenetre = page.getByRole("dialog", { name: "Garde ton code de secours" });
+    await expect(fenetre.getByText("WXYZ-2345-6789")).toBeVisible();
+    await expect(fenetre.getByRole("button", { name: "Continuer" })).toBeDisabled();
+    await fenetre.getByLabel("J'ai noté mon code de secours.").check();
+    await fenetre.getByRole("button", { name: "Continuer" }).click();
+    await expect(fenetre).toHaveCount(0);
+    await page.reload();
+    await expect(page.getByRole("dialog", { name: "Garde ton code de secours" })).toHaveCount(0);
+
+    // Paramètres : nouveau code, avec la session du compte.
+    await aller(page, "/parametres");
+    const secours = page.locator("#secours");
+    await expect(secours.getByRole("heading", { name: "Récupérer mon compte" })).toBeVisible();
+    await secours.getByRole("button", { name: "Obtenir un nouveau code" }).click();
+    await secours.getByRole("button", { name: "Oui, nouveau code" }).click();
+    await expect(secours.getByText("QRST-UVWX-YZ23")).toBeVisible();
+    expect(demandes.at(-1)).toMatchObject({ chemin: "/comptes/secours/nouveau-code", jeton: "Bearer jeton-telephone" });
+    await expect(secours.getByLabel("Adresse email")).toBeVisible();
   });
 
   test("le mode invité reste ouvert depuis la connexion", async ({ page }) => {

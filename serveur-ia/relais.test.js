@@ -443,7 +443,7 @@ describe("inscription par téléphone", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (url, init) => {
-        appelsSupabase.push({ url: String(url), entetes: init.headers, corps: JSON.parse(init.body) });
+        appelsSupabase.push({ url: String(url), entetes: init.headers, corps: init.body && JSON.parse(init.body) });
         return Response.json(corps, { status: statut });
       })
     );
@@ -453,7 +453,8 @@ describe("inscription par téléphone", () => {
     supabaseRepond(200, { id: "u1" });
     const r = await relais.fetch(inscription(valide), envComptes());
     expect(r.status).toBe(200);
-    expect(await r.json()).toEqual({ ok: true });
+    // Le code de secours, à montrer une fois à l'étudiant.
+    expect(await r.json()).toEqual({ ok: true, codeSecours: expect.stringMatching(/^[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/) });
     const [appel] = appelsSupabase;
     expect(appel.url).toBe("https://projet.supabase.co/auth/v1/admin/users");
     expect(appel.entetes.Authorization).toBe("Bearer cle-service");
@@ -497,5 +498,155 @@ describe("inscription par téléphone", () => {
     const statuts = [];
     for (let i = 0; i < 11; i++) statuts.push((await relais.fetch(inscription(valide), e)).status);
     expect(statuts[10]).toBe(429);
+  });
+});
+
+describe("secours des comptes téléphone", () => {
+  const NUMERO = "221771234567";
+  const EMAIL_COMPTE = `${NUMERO}@telephone.sunu-cours.invalid`;
+  const envSecours = (extra = {}) => ({
+    ...env(),
+    SUPABASE_URL: "https://projet.supabase.co",
+    SUPABASE_SERVICE_ROLE_KEY: "cle-service",
+    BREVO_API_KEY: "cle-brevo",
+    EMAIL_EXPEDITEUR: "equipe@exemple.sn",
+    LIMITEUR: fauxLimiteur(1000),
+    ...extra,
+  });
+
+  /* Supabase (table secours_comptes, comptes) et Brevo simulés. */
+  let base;
+  beforeEach(() => {
+    base = { lignes: new Map(), motsDePasse: [], emails: [] };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url, init = {}) => {
+        const u = new URL(String(url));
+        const corps = init.body ? JSON.parse(init.body) : undefined;
+        const methode = init.method ?? "GET";
+        if (u.hostname === "api.brevo.com") {
+          base.emails.push(corps);
+          return Response.json({ messageId: "m1" }, { status: 201 });
+        }
+        if (u.pathname === "/auth/v1/admin/users" && methode === "POST") return Response.json({ id: "u1" });
+        if (u.pathname === "/auth/v1/user") {
+          return init.headers.Authorization === "Bearer jeton-u1"
+            ? Response.json({ id: "u1", email: EMAIL_COMPTE })
+            : Response.json({ msg: "invalid" }, { status: 401 });
+        }
+        if (u.pathname.startsWith("/auth/v1/admin/users/") && methode === "PUT") {
+          base.motsDePasse.push(corps.password);
+          return Response.json({ id: "u1" });
+        }
+        if (u.pathname === "/auth/v1/admin/generate_link") return Response.json({ id: "u1", email_otp: "424242" });
+        if (u.pathname === "/rest/v1/secours_comptes") {
+          if (methode === "POST") {
+            base.lignes.set(corps.utilisateur, { ...base.lignes.get(corps.utilisateur), ...corps });
+            return new Response(null, { status: 201 });
+          }
+          const [[colonne, filtre]] = [...u.searchParams].filter(([c]) => c === "telephone" || c === "utilisateur");
+          const valeur = filtre.replace(/^eq\./, "");
+          return Response.json([...base.lignes.values()].filter((l) => l[colonne] === valeur));
+        }
+        return Response.json({}, { status: 404 });
+      })
+    );
+  });
+
+  const appel = (chemin, corps, entetes) =>
+    relais.fetch(
+      demande(`/comptes/secours${chemin}`, { methode: corps === undefined ? "GET" : "POST", corps, entetes }),
+      envSecours()
+    );
+  const connecte = { Authorization: "Bearer jeton-u1" };
+
+  async function inscrire() {
+    const r = await relais.fetch(
+      demande("/comptes/telephone", { corps: { telephone: "77 123 45 67", motDePasse: "un-bon-mot", nom: "Awa", niveau: "Licence 1" } }),
+      envSecours()
+    );
+    return (await r.json()).codeSecours;
+  }
+
+  test("seule l'empreinte du code est gardée, jamais le code", async () => {
+    const code = await inscrire();
+    const ligne = base.lignes.get("u1");
+    expect(ligne.telephone).toBe(NUMERO);
+    expect(ligne.code_empreinte).toMatch(/^[0-9a-f]{64}$/);
+    expect(JSON.stringify(ligne)).not.toContain(code.replace(/-/g, ""));
+  });
+
+  test("le bon code change le mot de passe, puis est remplacé par un nouveau", async () => {
+    const code = await inscrire();
+    // Tirets, espaces et minuscules acceptés.
+    const r = await appel("/oublie-code", { telephone: "77 123 45 67", code: code.toLowerCase().replace(/-/g, " "), motDePasse: "nouveau-mot" });
+    expect(r.status).toBe(200);
+    const { codeSecours } = await r.json();
+    expect(base.motsDePasse).toEqual(["nouveau-mot"]);
+    expect(codeSecours).not.toBe(code);
+    // L'ancien ne marche plus.
+    const encore = await appel("/oublie-code", { telephone: "771234567", code, motDePasse: "autre-mot-1" });
+    expect(await encore.json()).toEqual({ erreur: "code-secours" });
+  });
+
+  test("un numéro inconnu répond comme un code faux", async () => {
+    const r = await appel("/oublie-code", { telephone: "76 000 00 00", code: "ABCD-EFGH-JKMN", motDePasse: "nouveau-mot" });
+    expect(r.status).toBe(400);
+    expect(await r.json()).toEqual({ erreur: "code-secours" });
+  });
+
+  test("cinq codes faux bloquent le numéro, même avec le bon code ensuite", async () => {
+    const code = await inscrire();
+    const statuts = [];
+    for (let i = 0; i < 5; i++) {
+      statuts.push((await appel("/oublie-code", { telephone: NUMERO, code: "ABCD-EFGH-JKMN", motDePasse: "nouveau-mot" })).status);
+    }
+    expect(statuts).toEqual([400, 400, 400, 400, 429]);
+    const r = await appel("/oublie-code", { telephone: NUMERO, code, motDePasse: "nouveau-mot" });
+    expect(await r.json()).toEqual({ erreur: "secours-bloque" });
+    expect(base.motsDePasse).toEqual([]);
+  });
+
+  test("les paramètres demandent d'être connecté avec un compte téléphone", async () => {
+    expect((await appel("/")).status).toBe(401);
+    expect((await appel("/nouveau-code", {}, { Authorization: "Bearer faux" })).status).toBe(401);
+    const r = await appel("/nouveau-code", {}, connecte);
+    expect(r.status).toBe(200);
+    expect((await r.json()).codeSecours).toMatch(/^[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/);
+  });
+
+  test("email de secours : confirmé par un code, puis utilisé pour le mot de passe oublié", async () => {
+    await inscrire();
+    expect((await appel("/email", { email: "Awa@Exemple.sn" }, connecte)).status).toBe(200);
+    const [confirmation] = base.emails;
+    expect(confirmation.to).toEqual([{ email: "awa@exemple.sn" }]);
+    const code = confirmation.textContent.match(/: (\d{6})/)[1];
+
+    expect((await appel("/email/confirmer", { code: code === "000000" ? "111111" : "000000" }, connecte)).status).toBe(400);
+    const ok = await appel("/email/confirmer", { code }, connecte);
+    expect(await ok.json()).toEqual({ ok: true, email: "awa@exemple.sn" });
+    expect((await (await appel("/", undefined, connecte)).json()).email).toBe("awa@exemple.sn");
+
+    // Mot de passe oublié : le code de Supabase part à l'email de secours.
+    base.lignes.get("u1").email_envoye_le = null;
+    expect((await appel("/oublie-email", { telephone: "77 123 45 67" })).status).toBe(200);
+    expect(base.emails.at(-1).to).toEqual([{ email: "awa@exemple.sn" }]);
+    expect(base.emails.at(-1).textContent).toContain("424242");
+  });
+
+  test("sans email de secours, la réponse est la même mais rien ne part", async () => {
+    await inscrire();
+    const r = await appel("/oublie-email", { telephone: "77 123 45 67" });
+    expect(await r.json()).toEqual({ ok: true });
+    expect(base.emails).toEqual([]);
+  });
+
+  test("sans clé Brevo, l'email de secours est éteint, le code marche", async () => {
+    const r = await relais.fetch(
+      demande("/comptes/secours/oublie-email", { corps: { telephone: NUMERO } }),
+      envSecours({ BREVO_API_KEY: undefined })
+    );
+    expect(r.status).toBe(503);
+    expect(await r.json()).toEqual({ erreur: "email-non-configure" });
   });
 });

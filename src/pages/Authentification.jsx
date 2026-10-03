@@ -16,6 +16,8 @@ import {
   inscrireTelephone,
   messageErreurCompte,
   motDePasseOublie,
+  oublieAvecCodeSecours,
+  oublieParEmailSecours,
   renvoyerCodeInscription,
   verifierCode,
 } from "../comptes";
@@ -309,7 +311,7 @@ function BoutonGoogle({ surErreur }) {
 /* oublié), pour ne pas révéler qui est inscrit.                       */
 /* ------------------------------------------------------------------ */
 
-function SaisieCode({ email, type, renvoyer, texteBouton, surValide, prudent = false }) {
+function SaisieCode({ email, type, renvoyer, texteBouton, surValide, prudent = false, annonce }) {
   const [code, setCode] = useState("");
   const [erreur, setErreur] = useState(null);
   const [erreurServeur, setErreurServeur] = useState(null);
@@ -353,9 +355,13 @@ function SaisieCode({ email, type, renvoyer, texteBouton, surValide, prudent = f
   return (
     <form onSubmit={valider} noValidate className="mt-6 space-y-4">
       <p role="status" className="rounded-2xl border border-ink-200 p-5 text-sm/6 text-ink-700 dark:border-ink-700 dark:text-ink-200">
-        {prudent ? "Si un compte existe avec l'adresse " : "Un code vient de partir vers "}
-        <strong className="font-semibold break-all text-ink-950 dark:text-white">{email}</strong>
-        {prudent ? ", un code vient d'y partir. " : ". "}
+        {annonce ?? (
+          <>
+            {prudent ? "Si un compte existe avec l'adresse " : "Un code vient de partir vers "}
+            <strong className="font-semibold break-all text-ink-950 dark:text-white">{email}</strong>
+            {prudent ? ", un code vient d'y partir. " : ". "}
+          </>
+        )}{" "}
         Tape-le ci-dessous. Pense à regarder dans les courriers indésirables : le premier
         email peut mettre quelques minutes à arriver.
       </p>
@@ -625,7 +631,7 @@ export function Inscription() {
             value={telephone}
             onChange={(e) => setTelephone(e.target.value)}
             erreur={erreurs.telephone}
-            aide="Aucun SMS n'est envoyé. Pour un numéro hors du Sénégal, commence par l'indicatif (+33…). Garde bien ton mot de passe : sans email, il ne peut pas être réinitialisé par lien."
+            aide="Aucun SMS n'est envoyé. Pour un numéro hors du Sénégal, commence par l'indicatif (+33…). Un code de secours te sera donné, pour retrouver ton compte si tu oublies ton mot de passe."
           />
         )}
 
@@ -705,6 +711,46 @@ export function Inscription() {
 /* ================================================================== */
 
 export function MotDePasseOublie() {
+  const [methode, setMethode] = useState("email");
+  return (
+    <CadreAuth
+      titre="Mot de passe oublié"
+      texte={
+        methode === "email"
+          ? "Reçois par email un code pour choisir un nouveau mot de passe."
+          : "Avec ton code de secours, ou un code envoyé à ton email de secours."
+      }
+      sansInvite
+      pied={
+        <Link to="/connexion" className="font-semibold text-brand-600 hover:underline dark:text-brand-400">
+          Revenir à la connexion
+        </Link>
+      }
+    >
+      <div role="group" aria-label="Mon compte est lié à" className="mt-6 grid grid-cols-2 gap-2 rounded-xl bg-ink-100 p-1 dark:bg-ink-800">
+        {METHODES.map((m) => (
+          <button
+            key={m.valeur}
+            type="button"
+            onClick={() => setMethode(m.valeur)}
+            aria-pressed={methode === m.valeur}
+            className={cx(
+              "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              methode === m.valeur
+                ? "bg-white text-ink-950 shadow-sm dark:bg-ink-950 dark:text-white"
+                : "text-ink-600 hover:text-ink-900 dark:text-ink-300 dark:hover:text-white"
+            )}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+      {methode === "email" ? <OublieEmail /> : <OublieTelephone />}
+    </CadreAuth>
+  );
+}
+
+function OublieEmail() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [erreur, setErreur] = useState(null);
@@ -727,55 +773,212 @@ export function MotDePasseOublie() {
     else setEnvoye(true);
   };
 
-  return (
-    <CadreAuth
-      titre="Mot de passe oublié"
-      texte="Reçois par email un code pour choisir un nouveau mot de passe."
-      sansInvite
-      pied={
-        <Link to="/connexion" className="font-semibold text-brand-600 hover:underline dark:text-brand-400">
-          Revenir à la connexion
-        </Link>
+  return envoye ? (
+    <>
+      <SaisieCode
+        email={email.trim()}
+        type="recovery"
+        renvoyer={() => motDePasseOublie(email)}
+        texteBouton="Continuer"
+        // Le code bon, l'étudiant est connecté : il choisit son mot de passe.
+        surValide={() => navigate("/nouveau-mot-de-passe")}
+        prudent
+      />
+      <button
+        type="button"
+        onClick={() => setEnvoye(false)}
+        className="mt-4 w-full text-center text-sm font-medium text-ink-500 hover:text-brand-600 dark:text-ink-400"
+      >
+        Modifier l'adresse email
+      </button>
+    </>
+  ) : (
+    <form onSubmit={soumettre} noValidate className="mt-6 space-y-4">
+      <Champ
+        id="email-oubli"
+        label="Adresse email"
+        type="email"
+        autoComplete="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        erreur={erreur}
+      />
+      <ErreurServeur code={erreurServeur} />
+      <button type="submit" disabled={attente} className={boutonPrincipal}>
+        {attente ? "Envoi…" : "Recevoir un code"}
+      </button>
+    </form>
+  );
+}
+
+/* Compte téléphone : avec le code de secours, ou par l'email de
+   secours (serveur-ia/secours.js). Avec le code, le relais change le
+   mot de passe, et l'étudiant arrive connecté avec son nouveau code à
+   noter ; avec l'email, il tape le code reçu, puis choisit son mot de
+   passe comme un compte email. */
+const MOYENS = [
+  { valeur: "code", label: "J'ai mon code de secours" },
+  { valeur: "email", label: "Recevoir un code sur mon email de secours" },
+];
+
+function OublieTelephone() {
+  const navigate = useNavigate();
+  const [moyen, setMoyen] = useState("code");
+  const [telephone, setTelephone] = useState("");
+  const [code, setCode] = useState("");
+  const [motDePasse, setMotDePasse] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const [erreurs, setErreurs] = useState({});
+  const [erreurServeur, setErreurServeur] = useState(null);
+  const [attente, setAttente] = useState(false);
+  const [emailCompte, setEmailCompte] = useState(null);
+  const [change, setChange] = useState(false);
+  const { session } = useSession();
+
+  // La session arrive un peu après la connexion : on attend qu'elle soit
+  // là pour partir, sinon la route protégée renverrait à l'accueil.
+  useEffect(() => {
+    if (change && session?.mode === "compte") navigate("/tableau-de-bord");
+  }, [change, session, navigate]);
+
+  const soumettre = async (e) => {
+    e.preventDefault();
+    const suite = {};
+    if (!normaliserTelephone(telephone)) suite.telephone = "Indique ton numéro. Exemple : 77 123 45 67.";
+    if (moyen === "code") {
+      if (code.replace(/[^a-z0-9]/gi, "").length !== 12) suite.code = "Le code de secours compte 12 caractères, comme ABCD-EFGH-JKMN.";
+      if (motDePasse.length < MIN_MOT_DE_PASSE) {
+        suite.motDePasse = `Le mot de passe doit faire au moins ${MIN_MOT_DE_PASSE} caractères.`;
       }
-    >
-      {envoye ? (
+      if (confirmation !== motDePasse) suite.confirmation = "Les deux mots de passe ne correspondent pas.";
+    }
+    setErreurs(suite);
+    setErreurServeur(null);
+    if (Object.keys(suite).length > 0) return;
+
+    setAttente(true);
+    if (moyen === "code") {
+      const r = await oublieAvecCodeSecours({ telephone, code, motDePasse });
+      if (r.erreur) {
+        setAttente(false);
+        setErreurServeur(r.erreur);
+      }
+      // Connecté : le tableau de bord montre le nouveau code à noter.
+      else setChange(true);
+      return;
+    }
+    const r = await oublieParEmailSecours(telephone);
+    setAttente(false);
+    if (r.erreur) setErreurServeur(r.erreur);
+    else setEmailCompte(r.email);
+  };
+
+  if (emailCompte) {
+    return (
+      <>
+        <SaisieCode
+          email={emailCompte}
+          type="recovery"
+          renvoyer={() => oublieParEmailSecours(telephone)}
+          texteBouton="Continuer"
+          surValide={() => navigate("/nouveau-mot-de-passe")}
+          annonce="Si ce numéro a un email de secours confirmé, un code vient d'y partir."
+        />
+        <button
+          type="button"
+          onClick={() => setEmailCompte(null)}
+          className="mt-4 w-full text-center text-sm font-medium text-ink-500 hover:text-brand-600 dark:text-ink-400"
+        >
+          Revenir en arrière
+        </button>
+      </>
+    );
+  }
+
+  return (
+    <form onSubmit={soumettre} noValidate className="mt-6 space-y-4">
+      <Champ
+        id="telephone-oubli"
+        label="Numéro de téléphone du compte"
+        type="tel"
+        autoComplete="tel"
+        placeholder="Ex. 77 123 45 67"
+        value={telephone}
+        onChange={(e) => setTelephone(e.target.value)}
+        erreur={erreurs.telephone}
+      />
+
+      <fieldset>
+        <legend className="text-sm font-medium text-ink-800 dark:text-ink-200">Comment veux-tu le retrouver ?</legend>
+        <div className="mt-2 space-y-2">
+          {MOYENS.map((m) => (
+            <label
+              key={m.valeur}
+              className={cx(
+                "flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-sm",
+                moyen === m.valeur
+                  ? "border-brand-500 bg-brand-50 text-ink-950 dark:bg-brand-500/15 dark:text-white"
+                  : "border-ink-200 text-ink-700 dark:border-ink-700 dark:text-ink-200"
+              )}
+            >
+              <input
+                type="radio"
+                name="moyen"
+                value={m.valeur}
+                checked={moyen === m.valeur}
+                onChange={() => setMoyen(m.valeur)}
+                className="size-4 accent-brand-600"
+              />
+              {m.label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      {moyen === "code" && (
         <>
-          <SaisieCode
-            email={email.trim()}
-            type="recovery"
-            renvoyer={() => motDePasseOublie(email)}
-            texteBouton="Continuer"
-            // Le code bon, l'étudiant est connecté : il choisit son mot de passe.
-            surValide={() => navigate("/nouveau-mot-de-passe")}
-            prudent
-          />
-          <button
-            type="button"
-            onClick={() => setEnvoye(false)}
-            className="mt-4 w-full text-center text-sm font-medium text-ink-500 hover:text-brand-600 dark:text-ink-400"
-          >
-            Modifier l'adresse email
-          </button>
-        </>
-      ) : (
-        <form onSubmit={soumettre} noValidate className="mt-6 space-y-4">
           <Champ
-            id="email-oubli"
-            label="Adresse email"
-            type="email"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            erreur={erreur}
-            aide="Inscrit avec ton numéro de téléphone ? Écris à l'équipe du site : elle peut réinitialiser ton mot de passe."
+            id="code-secours"
+            label="Code de secours"
+            type="text"
+            autoComplete="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+            placeholder="ABCD-EFGH-JKMN"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            erreur={erreurs.code}
+            aide="Le code donné à l'inscription, ou le dernier reçu. Majuscules et tirets n'ont pas d'importance."
           />
-          <ErreurServeur code={erreurServeur} />
-          <button type="submit" disabled={attente} className={boutonPrincipal}>
-            {attente ? "Envoi…" : "Recevoir un code"}
-          </button>
-        </form>
+          <ChampMotDePasse
+            id="nouveau-mot-de-passe"
+            label="Nouveau mot de passe"
+            valeur={motDePasse}
+            onChange={setMotDePasse}
+            erreur={erreurs.motDePasse}
+            aide={`Au moins ${MIN_MOT_DE_PASSE} caractères.`}
+          />
+          <ChampMotDePasse
+            id="confirmation"
+            label="Confirmer le mot de passe"
+            valeur={confirmation}
+            onChange={setConfirmation}
+            erreur={erreurs.confirmation}
+          />
+        </>
       )}
-    </CadreAuth>
+
+      <ErreurServeur code={erreurServeur} />
+      <button type="submit" disabled={attente} className={boutonPrincipal}>
+        {attente
+          ? moyen === "code" ? "Vérification…" : "Envoi…"
+          : moyen === "code" ? "Changer mon mot de passe" : "Recevoir un code"}
+      </button>
+      <p className="text-xs/5 text-ink-500 dark:text-ink-400">
+        Ni code, ni email de secours ? Écris à l'équipe ({site.contact}) : elle peut
+        réinitialiser ton mot de passe.
+      </p>
+    </form>
   );
 }
 

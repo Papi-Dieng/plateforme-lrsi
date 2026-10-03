@@ -72,3 +72,38 @@ $$;
 
 revoke all on function public.supprimer_mon_compte() from public, anon;
 grant execute on function public.supprimer_mon_compte() to authenticated;
+
+-- ------------------------------------------------------------------
+-- Récupération des comptes téléphone (serveur-ia/secours.js).
+--
+-- Un compte téléphone n'a pas de boîte mail : pour retrouver l'accès,
+-- il a un code de secours (seule son empreinte est gardée) et, s'il le
+-- veut, un email de secours confirmé.
+--
+-- Aucune règle RLS n'autorise qui que ce soit : seul le relais, avec la
+-- clé service_role (qui passe outre RLS), lit et écrit cette table. Le
+-- site ne la lit jamais directement. Les droits donnés par défaut à
+-- anon et authenticated sont retirés en plus, par prudence.
+-- ------------------------------------------------------------------
+
+create table if not exists public.secours_comptes (
+  utilisateur uuid primary key references auth.users (id) on delete cascade,
+  telephone text not null unique,
+  code_empreinte text,
+  echecs integer not null default 0,
+  bloque_jusqua timestamptz,
+  email text,
+  email_attente text,
+  email_attente_empreinte text,
+  email_attente_expire timestamptz,
+  email_attente_essais integer not null default 0,
+  email_envoye_le timestamptz,
+  mis_a_jour timestamptz not null default now()
+);
+
+alter table public.secours_comptes enable row level security;
+revoke all on table public.secours_comptes from anon, authenticated;
+
+drop trigger if exists dater_secours on public.secours_comptes;
+create trigger dater_secours before insert or update on public.secours_comptes
+  for each row execute function public.dater_donnees();

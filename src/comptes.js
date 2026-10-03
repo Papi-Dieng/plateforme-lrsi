@@ -122,6 +122,8 @@ export const inscrireTelephone = ({ telephone, motDePasse, nom, niveau }) =>
       const { erreur } = await r.json().catch(() => ({}));
       return { erreur: erreur || (r.status === 429 ? "trop-de-requetes" : "reseau") };
     }
+    const { codeSecours } = await r.json().catch(() => ({}));
+    if (codeSecours) retenirCodeAMontrer(codeSecours);
     return connecterTelephone({ telephone: numero, motDePasse });
   });
 
@@ -208,6 +210,93 @@ export const supprimerCompte = () =>
   });
 
 /* ---------------------------------------------------------------- */
+/* Secours des comptes téléphone (serveur-ia/secours.js)             */
+/*                                                                   */
+/* Un compte téléphone n'a pas de boîte mail. Pour retrouver l'accès */
+/* sans l'équipe : un code de secours, donné à l'inscription, et un  */
+/* email de secours facultatif, confirmé depuis les paramètres.      */
+/* ---------------------------------------------------------------- */
+
+/* Le code à montrer une fois, juste après l'inscription ou après
+   avoir servi. Gardé le temps de l'onglet : la page d'inscription
+   part d'elle-même au tableau de bord, où AvisCodeSecours l'affiche,
+   puis l'efface dès que l'étudiant dit l'avoir noté. */
+export const CLE_CODE_A_MONTRER = "lrsi-code-secours";
+
+export function retenirCodeAMontrer(code) {
+  try {
+    sessionStorage.setItem(CLE_CODE_A_MONTRER, code);
+  } catch {
+    /* stockage indisponible : le code se redemande dans les paramètres */
+  }
+}
+
+export function codeAMontrer() {
+  try {
+    return sessionStorage.getItem(CLE_CODE_A_MONTRER);
+  } catch {
+    return null;
+  }
+}
+
+export function oublierCodeAMontrer() {
+  try {
+    sessionStorage.removeItem(CLE_CODE_A_MONTRER);
+  } catch {
+    /* rien à faire */
+  }
+}
+
+async function appelSecours(chemin, { corps, connecte = false } = {}) {
+  if (!site.urlIA) return { erreur: "comptes-non-configures" };
+  const entetes = corps === undefined ? {} : { "Content-Type": "application/json" };
+  if (connecte) {
+    const sb = await client();
+    const { data } = await sb.auth.getSession();
+    if (!data.session) return { erreur: "session" };
+    entetes.Authorization = `Bearer ${data.session.access_token}`;
+  }
+  const r = await fetch(`${site.urlIA}/comptes/secours${chemin}`, {
+    method: corps === undefined ? "GET" : "POST",
+    headers: entetes,
+    body: corps === undefined ? undefined : JSON.stringify(corps),
+  });
+  const reponse = await r.json().catch(() => ({}));
+  if (!r.ok) return { erreur: reponse.erreur || (r.status === 429 ? "trop-de-requetes" : "reseau") };
+  return reponse;
+}
+
+/* Mot de passe oublié, avec le code de secours : le relais change le
+   mot de passe, donne un nouveau code, et l'étudiant est connecté. */
+export const oublieAvecCodeSecours = ({ telephone, code, motDePasse }) =>
+  tenter(async () => {
+    const numero = normaliserTelephone(telephone);
+    if (!numero) return { erreur: "telephone" };
+    const r = await appelSecours("/oublie-code", { corps: { telephone: numero, code, motDePasse } });
+    if (r.erreur) return r;
+    if (r.codeSecours) retenirCodeAMontrer(r.codeSecours);
+    return connecterTelephone({ telephone: numero, motDePasse });
+  });
+
+/* Mot de passe oublié, par l'email de secours : le code arrive par
+   email, et se vérifie comme les autres, sur l'adresse du compte. */
+export const oublieParEmailSecours = (telephone) =>
+  tenter(async () => {
+    const numero = normaliserTelephone(telephone);
+    if (!numero) return { erreur: "telephone" };
+    const r = await appelSecours("/oublie-email", { corps: { telephone: numero } });
+    return r.erreur ? r : { ok: true, email: emailTelephone(numero) };
+  });
+
+export const etatSecours = () => tenter(() => appelSecours("/", { connecte: true }));
+export const nouveauCodeSecours = () => tenter(() => appelSecours("/nouveau-code", { corps: {}, connecte: true }));
+export const ajouterEmailSecours = (email) =>
+  tenter(() => appelSecours("/email", { corps: { email: email.trim() }, connecte: true }));
+export const confirmerEmailSecours = (code) =>
+  tenter(() => appelSecours("/email/confirmer", { corps: { code: code.replace(/\s/g, "") }, connecte: true }));
+export const retirerEmailSecours = () => tenter(() => appelSecours("/email/retirer", { corps: {}, connecte: true }));
+
+/* ---------------------------------------------------------------- */
 /* Messages                                                          */
 /* ---------------------------------------------------------------- */
 
@@ -230,6 +319,12 @@ const MESSAGES = {
   otp_expired: "Code incorrect ou expiré. Vérifie les chiffres, ou demande un nouveau code.",
   over_email_send_rate_limit_resend: "Attends une minute avant de demander un nouveau code.",
   "comptes-non-configures": "Les comptes ne sont pas encore activés sur le site. Tu peux entrer en mode invité.",
+  "code-secours": "Numéro ou code de secours incorrect. Vérifie les 12 caractères.",
+  "secours-bloque": "Trop de codes faux pour ce numéro. Réessaie dans une heure.",
+  "email-non-configure": "L'email de secours n'est pas encore disponible sur le site. Utilise ton code de secours.",
+  "attendre-email": "Attends une minute avant de demander un nouveau code.",
+  session: "Ta session a expiré. Reconnecte-toi puis réessaie.",
+  "pas-telephone": "Ton compte a déjà une adresse email : utilise « Mot de passe oublié » avec elle.",
   reseau: "Impossible de joindre le serveur. Vérifie ta connexion puis réessaie.",
 };
 

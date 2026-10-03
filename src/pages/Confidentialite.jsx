@@ -68,11 +68,11 @@ const articles = [
             ? [
                 [
                   "Ton compte, si tu en crées un : Supabase",
-                  "Supabase héberge les comptes et leur base de données. Il reçoit ton nom, ton niveau, ton adresse email ou ton numéro de téléphone (ou, avec Google, ton nom et ton adresse Gmail), et ton mot de passe, qu'il garde chiffré : personne dans l'équipe ne peut le lire. Il reçoit aussi une copie de ta fiche profil, de ta progression, de ton organisation, de tes discussions avec l'assistant et de ton thème, pour que tu les retrouves sur un autre appareil. Chaque étudiant ne peut lire que ses propres données. Supabase garde dans ton navigateur de quoi laisser ta session ouverte. Ton numéro ne sert jamais à t'envoyer un SMS, et ton adresse email ne sert qu'à confirmer ton compte et à réinitialiser ton mot de passe.",
+                  "Supabase héberge les comptes et leur base de données. Il reçoit ton nom, ton niveau, ton adresse email ou ton numéro de téléphone (ou, avec Google, ton nom et ton adresse Gmail), et ton mot de passe, qu'il garde chiffré : personne dans l'équipe ne peut le lire. Il reçoit aussi une copie de ta fiche profil, de ta progression, de ton organisation, de tes discussions avec l'assistant et de ton thème, pour que tu les retrouves sur un autre appareil. Chaque étudiant ne peut lire que ses propres données. Supabase garde dans ton navigateur de quoi laisser ta session ouverte. Ton numéro ne sert jamais à t'envoyer un SMS, et ton adresse email ne sert qu'à confirmer ton compte et à réinitialiser ton mot de passe. Avec un compte téléphone, Supabase garde aussi l'empreinte de ton code de secours (pas le code lui-même : personne ne peut le relire) et, si tu en ajoutes un, ton email de secours, qui ne sert qu'à t'envoyer un code pour changer ton mot de passe. Ces deux informations ne sont lues que par le relais de la plateforme.",
                 ],
                 [
                   "Brevo, pour les emails du compte",
-                  "Quand tu crées un compte avec ton email ou demandes un nouveau mot de passe, l'email est envoyé par Brevo (Sendinblue), un service d'envoi établi en France. Il reçoit ton adresse email et le contenu de ce message, rien d'autre. Aucune lettre d'information ni publicité ne t'est envoyée.",
+                  "Quand tu crées un compte avec ton email, ajoutes un email de secours ou demandes un nouveau mot de passe, l'email est envoyé par Brevo (Sendinblue), un service d'envoi établi en France. Il reçoit ton adresse email et le contenu de ce message, rien d'autre. Aucune lettre d'information ni publicité ne t'est envoyée.",
                 ],
                 [
                   "Google, seulement si tu choisis « Continuer avec Google »",

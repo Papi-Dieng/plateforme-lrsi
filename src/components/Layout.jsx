@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 import Icon from "./Icon";
 import FiletErreur from "./FiletErreur";
+import { AvisCodeSecours } from "./CodeSecours";
 import { cx } from "./classes";
 import { initiales, useSession } from "../session";
 import { lireProfil, nomAffiche } from "../profil";
@@ -698,6 +699,8 @@ export default function Layout() {
         Aller au contenu principal
       </a>
       <RetourEnHaut />
+      {/* Le code de secours d'un compte téléphone, montré une fois. */}
+      <AvisCodeSecours />
 
       <div
         className={cx(

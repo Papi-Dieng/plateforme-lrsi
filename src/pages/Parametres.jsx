@@ -9,6 +9,7 @@ import { CLES } from "../progression";
 import { CLE_PROFIL } from "../profil";
 import { choisirStats, statsRefusees } from "../stats";
 import Installation from "../components/Installation";
+import { SecoursCompte } from "../components/CodeSecours";
 import { CLE_REVISIONS } from "../revisions";
 import { CLE_CONVERSATIONS } from "../conversations";
 import { site } from "../data/site";
@@ -214,6 +215,9 @@ export default function Parametres() {
               </div>
             )}
           </section>
+
+          {/* Comptes téléphone seulement : code et email de secours. */}
+          <SecoursCompte />
 
           {/* ------------------------------------------------ */}
           {/* Application installable                           */}
