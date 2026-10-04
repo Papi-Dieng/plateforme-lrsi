@@ -251,11 +251,16 @@ export default {
     // s'applique aussi aux essais de mot de passe : 10 par minute au
     // plus. Seul l'admin authentifié en est dispensé, pour lancer ses
     // tests d'un coup.
+    // Les comptes (/comptes/…) ont leur propre compteur, LIMITEUR_COMPTES :
+    // tout un campus peut partager la même adresse IP, et l'usage de l'IA
+    // ne doit jamais empêcher de s'inscrire ou de retrouver son compte.
+    // Sans ce second compteur déclaré, les comptes partagent le premier.
     const motDePasse = requete.headers.get("X-Admin");
     const admin = await motDePasseValide(motDePasse, env);
-    if (env.LIMITEUR && !admin) {
+    const limiteur = chemin.startsWith("/comptes/") ? env.LIMITEUR_COMPTES ?? env.LIMITEUR : env.LIMITEUR;
+    if (limiteur && !admin) {
       const ip = requete.headers.get("CF-Connecting-IP") ?? "inconnu";
-      const { success } = await env.LIMITEUR.limit({ key: ip });
+      const { success } = await limiteur.limit({ key: ip });
       if (!success) return json({ erreur: "trop-de-requetes" }, 429, cors);
     }
 

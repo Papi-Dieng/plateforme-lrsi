@@ -37,6 +37,18 @@ namespace_id = "1001"
   limit = 10
   period = 60
 
+# Compteur à part pour les comptes (inscription par téléphone, code et
+# email de secours) : 30 demandes par minute et par adresse IP. Un
+# campus derrière une seule adresse peut ainsi utiliser l'IA sans
+# bloquer les inscriptions. Les abus restent bornés dans secours.js :
+# 5 codes faux bloquent le numéro une heure, un email par minute au plus.
+[[ratelimits]]
+name = "LIMITEUR_COMPTES"
+namespace_id = "1002"
+  [ratelimits.simple]
+  limit = 30
+  period = 60
+
 # Ce que l'espace admin du site enregistre pour éduquer l'IA, matière par
 # matière : consignes, cours, exemples de réponses et tests.
 # Modifiable seulement avec le mot de passe admin, déposé avec

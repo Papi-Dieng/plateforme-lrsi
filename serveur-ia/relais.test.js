@@ -251,6 +251,22 @@ describe("limite par visiteur", () => {
       expect(r.status).toBe(200);
     }
   });
+
+  test("l'IA épuisée ne bloque pas les comptes, qui ont leur propre compteur", async () => {
+    geminiRepond("ok");
+    const e = { ...env(), LIMITEUR_COMPTES: fauxLimiteur(30) };
+    for (let i = 0; i < 10; i++) await relais.fetch(demande("/", { corps: question("q") }), e);
+    expect((await relais.fetch(demande("/", { corps: question("q") }), e)).status).toBe(429);
+
+    // Même adresse IP : les comptes répondent toujours (503 ici, faute de
+    // Supabase dans cet environnement de test), jusqu'à leur propre limite.
+    const statuts = [];
+    for (let i = 0; i < 31; i++) {
+      statuts.push((await relais.fetch(demande("/comptes/secours/oublie-code", { corps: {} }), e)).status);
+    }
+    expect(statuts.slice(0, 30).every((s) => s === 503)).toBe(true);
+    expect(statuts[30]).toBe(429);
+  });
 });
 
 describe("espace admin", () => {
