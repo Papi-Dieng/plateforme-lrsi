@@ -109,7 +109,7 @@ export default function Parametres() {
               Apparence
             </h2>
             <p className="mt-1.5 text-sm text-ink-500 dark:text-ink-400">
-              Au premier passage, le site suit la préférence de ton système.
+              Le site s'affiche en thème clair, sauf si tu choisis le thème sombre.
             </p>
 
             <div className="mt-5 flex flex-wrap gap-3">

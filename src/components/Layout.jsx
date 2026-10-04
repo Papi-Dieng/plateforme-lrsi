@@ -64,13 +64,11 @@ export function Signature() {
 /* Thème clair / sombre                                                */
 /* ------------------------------------------------------------------ */
 
+// Clair par défaut : main.jsx a déjà posé la classe `.dark` si
+// l'étudiant a choisi le thème sombre.
 function themeInitial() {
-  if (typeof window === "undefined") return "light";
-  const enregistre = localStorage.getItem("lrsi-theme");
-  if (enregistre === "light" || enregistre === "dark") return enregistre;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+  if (typeof document === "undefined") return "light";
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
 }
 
 function BoutonTheme({ className }) {

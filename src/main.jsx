@@ -27,15 +27,21 @@ oublierAnciennesVideos();
 // définitif sera choisi.
 document.title = `${site.nom} — Plateforme d'apprentissage LRSI`;
 
-// Applique le thème enregistré avant le premier rendu, pour éviter
-// un flash de thème clair chez les étudiants qui utilisent le mode sombre.
+// Le thème clair est le thème principal : le sombre ne s'affiche que
+// si l'étudiant l'a choisi, jamais d'après la préférence du système.
+// Appliqué avant le premier rendu, pour éviter un flash de thème clair
+// chez ceux qui ont choisi le sombre.
+//
+// Avant le 4 octobre 2026, le site suivait le système et enregistrait
+// ce thème sans qu'on l'ait choisi : un téléphone en mode sombre
+// restait donc en sombre. Ce thème enregistré est oublié une fois
+// (repère `lrsi-theme-clair`), pour que tout le monde reparte en clair.
 try {
-  const enregistre = localStorage.getItem("lrsi-theme");
-  const sombre =
-    enregistre === "dark" ||
-    (!enregistre &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches);
-  document.documentElement.classList.toggle("dark", sombre);
+  if (!localStorage.getItem("lrsi-theme-clair")) {
+    localStorage.removeItem("lrsi-theme");
+    localStorage.setItem("lrsi-theme-clair", "1");
+  }
+  document.documentElement.classList.toggle("dark", localStorage.getItem("lrsi-theme") === "dark");
 } catch {
   /* stockage indisponible : on garde le thème clair par défaut */
 }

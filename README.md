@@ -436,9 +436,12 @@ concaténation serait absente de la feuille de style finale.
 ### Typographie et thème
 
 Police système en pile `sans`, police `mono` pour le code et les résultats
-numériques. Le thème sombre est piloté par la classe `.dark` sur `<html>` :
-il suit la préférence du système, l'étudiant peut le changer, et le choix est
-conservé dans le navigateur.
+numériques. Le thème sombre est piloté par la classe `.dark` sur `<html>`.
+**Le thème clair est le thème principal** : le sombre ne s'affiche que si
+l'étudiant le choisit, jamais d'après la préférence du système, et le choix
+est conservé dans le navigateur. Le 4 octobre 2026, les thèmes enregistrés
+jusque-là (souvent sans choix, copiés du système) ont été oubliés une fois,
+repère `lrsi-theme-clair` (`src/main.jsx`).
 
 ---
 
@@ -1039,7 +1042,8 @@ Les autres sont des réglages de l'appareil, volontairement hors de la
 sauvegarde : `lrsi-session` (mode et nom affiché), `lrsi-contenu` (dernière version
 publiée, pour le mode sans réseau), `lrsi-rappels` et `lrsi-rappels-dernier`
 (notifications), `lrsi-stats-refus` (refus des statistiques anonymes),
-`lrsi-taille-lecture` (taille du texte en plein écran) et
+`lrsi-taille-lecture` (taille du texte en plein écran), `lrsi-theme-clair`
+(passage au thème clair par défaut, voir « Typographie et thème ») et
 `lrsi-installation-masquee`. Le mot de passe admin (`lrsi-admin-ia`) et le
 code de secours à montrer (`lrsi-code-secours`) vivent dans `sessionStorage`
 et disparaissent à la fermeture de l'onglet.
