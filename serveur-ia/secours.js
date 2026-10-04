@@ -138,7 +138,8 @@ async function envoyerEmail(env, { a, sujet, lignes }) {
       htmlContent: lignes.map((l) => `<p>${l.replace(/[<>&]/g, "")}</p>`).join(""),
     }),
   });
-  if (!r.ok) throw new Error(`Brevo ${r.status}`);
+  // Le message de Brevo dit la cause (clé, expéditeur, adresse IP…).
+  if (!r.ok) throw new Error(`Brevo ${r.status} ${(await r.text().catch(() => "")).slice(0, 300)}`);
 }
 
 /* L'étudiant connecté, d'après le jeton de session envoyé par le site. */
