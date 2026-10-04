@@ -2,8 +2,7 @@
 
 Version 1 : site de présentation, avec cours, exercices corrigés et QCM interactifs.
 
-> **Le nom définitif n'est pas encore choisi.** Le site affiche un nom provisoire.
-> Voir la section 2 pour le remplacer, c'est une seule ligne à modifier.
+Nom : **Sunu Cours** (définitif depuis le 4 octobre 2026, voir la section 2).
 
 Projet étudiant, gratuit et sans objectif commercial, destiné aux étudiants de la
 filière Réseaux et Systèmes Informatiques.
@@ -345,13 +344,13 @@ sont donc à corriger si le site déménage.
 
 ## 2. Identité visuelle
 
-### Nom : à choisir
+### Nom : Sunu Cours
 
-Le site affiche pour l'instant **Sunu Cours**, un nom provisoire. « Sunu »
-signifie *notre* en wolof : « nos cours ». Le précédent, JàngRSI (« jàng » :
-*apprendre*), reste une piste.
+**Sunu Cours** est le nom définitif, choisi le 4 octobre 2026. « Sunu »
+signifie *notre* en wolof : « nos cours ». La page Projet l'explique
+(`origineNom`).
 
-Pour le remplacer, une seule ligne à modifier dans `src/data/site.js` :
+Il n'est écrit qu'à un endroit, `src/data/site.js` :
 
 ```js
 export const site = {

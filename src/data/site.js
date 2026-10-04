@@ -1,18 +1,8 @@
 // Identité de la plateforme.
 //
-// ============================================================
-//  NOM PROVISOIRE — À REMPLACER
-//  Le nom définitif n'est pas encore choisi. Il n'est écrit
-//  qu'ici : modifier la ligne `nom` ci-dessous suffit à mettre
-//  à jour l'en-tête, le pied de page, le titre de l'onglet et
-//  toutes les pages. Rien d'autre dans le code n'en dépend.
-//
-//  Quelques pistes, à garder ou à jeter :
-//    Sunu Cours — « sunu » veut dire notre en wolof (choisi pour l'instant)
-//    JàngRSI   — « jàng » veut dire apprendre en wolof
-//    RSI Campus
-//    NetSkool
-// ============================================================
+// Le nom, Sunu Cours, est définitif depuis le 4 octobre 2026 : « sunu »
+// veut dire « notre » en wolof. Il n'est écrit qu'ici : l'en-tête, le
+// pied de page, le titre de l'onglet et toutes les pages le lisent.
 export const site = {
   nom: "Sunu Cours",
   // Décoratif : si le nom commence par ce texte, cette partie s'affiche en
@@ -53,9 +43,9 @@ export const site = {
   // "https://jangrsi-ia.<compte>.workers.dev". Tant qu'elle est vide,
   // l'assistant fonctionne en guide seul, sans modèle de langage.
   urlIA: "https://jangrsi-ia.soniadieng22.workers.dev",
-  // Texte volontairement neutre : il reste juste quel que soit le nom choisi.
+  // D'où vient le nom, sur la page Projet.
   origineNom:
-    "Celui affiché ici est provisoire, le choix se fera plus tard. Il est défini à un seul endroit dans le code et se change en une ligne, sans rien casser ailleurs.",
+    "« Sunu » veut dire « notre » en wolof : Sunu Cours, ce sont nos cours, ceux de la filière, réunis par et pour ses étudiants.",
 };
 
 // Qui publie le site, dans les pages juridiques.

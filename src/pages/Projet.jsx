@@ -348,7 +348,7 @@ export default function Projet() {
             </span>
             <p className="text-sm/6 text-ink-600 dark:text-ink-400">
               <span className="font-semibold text-ink-900 dark:text-white">
-                Le nom n'est pas définitif.
+                D'où vient le nom ?
               </span>{" "}
               {site.origineNom}
             </p>
