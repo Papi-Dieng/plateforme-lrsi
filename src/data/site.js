@@ -141,7 +141,7 @@ export const feuilleDeRoute = [
     version: "Version 4",
     titre: "IA et fonctionnalités avancées",
     points: [
-      { texte: "Assistant de révision, avis sur les rédactions", fait: true },
+      { texte: "Assistant de révision, correction des réponses par l'IA", fait: true },
       { texte: "Programme de révision composé par l'IA", fait: true },
       { texte: "QCM proposés par l'IA à l'équipe, qui les relit", fait: true },
     ],
@@ -169,7 +169,7 @@ export const principesSecurite = [
   {
     titre: "Comptes et mots de passe",
     texte:
-      "Mots de passe chiffrés par Supabase, jamais visibles par l'équipe. Tentatives de connexion et envois d'emails limités.",
+      "Mots de passe chiffrés par Supabase, jamais visibles par l'équipe. Tentatives de connexion et envois d'emails limités. Un compte téléphone se récupère par un code de secours dont seule l'empreinte est gardée : cinq codes faux bloquent le numéro une heure.",
   },
   {
     titre: "Contrôle des accès",

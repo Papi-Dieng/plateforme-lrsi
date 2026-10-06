@@ -48,6 +48,9 @@ const articles = [
           ["Ton organisation", "Emploi du temps, examens, programme de révision et disponibilités de la semaine."],
           ["Tes discussions avec l'assistant", "Les 20 plus récentes, pour les rouvrir et les continuer. Les images jointes ne sont pas gardées, seulement leur nom. Tu peux effacer chaque discussion depuis l'historique de l'assistant."],
           ["Tes réglages", "Thème, taille du texte en plein écran, rappels de révision, refus des statistiques anonymes, nom affiché dans la barre du haut."],
+          ...(comptesActifs
+            ? [["Ton code de secours, quelques minutes", "Avec un compte téléphone, le code qui vient de t'être donné est gardé le temps de l'onglet, pour te le montrer, puis effacé dès que tu indiques l'avoir noté."]]
+            : []),
         ],
       },
       "Tu peux tout voir et tout effacer dans les paramètres. Vider les données de ton navigateur efface aussi ces informations de l'appareil ; avec un compte, elles restent dans le compte jusqu'à ce que tu le supprimes.",
@@ -82,7 +85,7 @@ const articles = [
             : []),
           [
             "Le relais de la plateforme : Cloudflare",
-            "À l'ouverture du site, il fournit le contenu publié (cours, exercices, QCM), ainsi que les PDF des cours. Il reçoit ton adresse IP, qu'il utilise un instant pour limiter chaque visiteur à 10 demandes par minute aux outils d'IA, sans l'enregistrer. Il ne garde ni tes questions ni ses réponses. Cloudflare, qui l'héberge, peut tenir ses propres journaux techniques.",
+            `À l'ouverture du site, il fournit le contenu publié (cours, exercices, QCM), ainsi que les PDF des cours. Il reçoit ton adresse IP, qu'il utilise un instant pour limiter le nombre de demandes de chaque visiteur (par minute : 10 à l'assistant, 30 pour corriger des réponses${comptesActifs ? ", 30 pour les comptes" : ""}), sans l'enregistrer. Il ne garde ni tes questions ni ses réponses.${comptesActifs ? " Pour un compte téléphone, il reçoit aussi ton numéro et ton mot de passe à l'inscription, ton code de secours ou ton email de secours quand tu t'en sers : il les transmet aussitôt à Supabase, sans les garder ni les enregistrer, et n'envoie un email de secours que par Brevo." : ""} Cloudflare, qui l'héberge, peut tenir ses propres journaux techniques.`,
           ],
           [
             "Les statistiques anonymes des QCM",
@@ -139,7 +142,7 @@ const articles = [
     icone: "clock",
     titre: "Combien de temps",
     paragraphes: [
-      "Sur ton appareil : tant que tu ne les effaces pas ; se déconnecter d'un compte efface de l'appareil les données de ce compte. Sur le relais : les compteurs anonymes des QCM, tant que le projet existe ; l'équipe peut les remettre à zéro. Chez GitHub, Cloudflare et Google : selon leurs propres politiques, indiquées plus haut.",
+      `Sur ton appareil : tant que tu ne les effaces pas ; se déconnecter d'un compte efface de l'appareil les données de ce compte. Sur le relais : les compteurs anonymes des QCM, tant que le projet existe ; l'équipe peut les remettre à zéro. Chez GitHub, Cloudflare, Google${comptesActifs ? ", Supabase et Brevo" : ""} : selon leurs propres politiques, indiquées plus haut.`,
       ...(comptesActifs
         ? ["Ton compte et tout ce qu'il contient : jusqu'à ce que tu le supprimes, depuis les paramètres. La suppression est immédiate et définitive."]
         : []),
@@ -149,7 +152,7 @@ const articles = [
     icone: "graduation",
     titre: "Hors du Sénégal",
     paragraphes: [
-      `GitHub, Cloudflare${comptesActifs ? ", Supabase" : ""} et Google sont des entreprises établies aux États-Unis, dont les serveurs peuvent se trouver hors du Sénégal. Les informations qu'ils reçoivent, décrites plus haut, peuvent donc y être traitées.`,
+      `GitHub, Cloudflare${comptesActifs ? ", Supabase" : ""} et Google sont des entreprises établies aux États-Unis${comptesActifs ? ", et Brevo en France" : ""}, dont les serveurs peuvent se trouver hors du Sénégal. Les informations qu'ils reçoivent, décrites plus haut, peuvent donc y être traitées.`,
     ],
   },
   {
