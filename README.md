@@ -1244,7 +1244,14 @@ AI Studio.
 
 **Modèles de secours.** Si le modèle principal (`MODELE`) est saturé, a épuisé
 son quota ou a été retiré par Google, le relais passe à ceux de
-`MODELES_SECOURS`, dans l'ordre. La liste des modèles que la clé peut utiliser
+`MODELES_SECOURS`, dans l'ordre. Pour la correction des exercices, tâche courte, l'ordre change :
+`MODELE_RAPIDE` d'abord, puis les secours, et le principal en dernier ; un
+modèle qui ne répond pas en 15 s est abandonné pour le suivant, et si tous
+sont saturés, le modèle rapide est redemandé une fois après 1,5 s. Mesuré le
+6 octobre 2026 : 2 à 11 s par correction, contre jusqu'à 100 s quand le
+principal saturé était attendu sans limite ; 30 questions en 4 s. Chaque appel
+à Gemini note son modèle, son statut et sa durée, lisibles avec
+`npx wrangler tail`. La liste des modèles que la clé peut utiliser
 s'obtient à l'adresse `/modeles` du relais.
 
 ### Images jointes à l'assistant : redéployer le relais

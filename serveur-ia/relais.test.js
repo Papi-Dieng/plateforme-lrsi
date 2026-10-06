@@ -138,6 +138,51 @@ describe("correction d'un exercice par l'IA", () => {
     expect(appel.corps.contents[0].parts[0].text).toContain("<reponse>\n64 hôtes\n</reponse>");
   });
 
+  test("demande d'abord le modèle rapide", async () => {
+    geminiRepond(JSON.stringify({ verdict: "juste", justes: ["Tout correspond."], erreurs: [] }));
+    await relais.fetch(demande("/corriger-exercice", { corps }), { ...env(), MODELE_RAPIDE: "modele-rapide" });
+    expect(appelsGemini.map((a) => a.url.match(/models\/([^:]+)/)[1])).toEqual(["modele-rapide"]);
+  });
+
+  test("un modèle qui ne répond pas en 15 s est abandonné pour le suivant", async () => {
+    vi.useFakeTimers();
+    const modeles = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url, init) => {
+        const modele = String(url).match(/models\/([^:]+)/)[1];
+        modeles.push(modele);
+        // Le modèle rapide ne répond jamais ; le suivant répond tout de suite.
+        if (modele === "modele-rapide") {
+          return new Promise((_, refuser) => init.signal.addEventListener("abort", () => refuser(new Error("abort"))));
+        }
+        return Promise.resolve(
+          Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({ verdict: "faux", justes: [], erreurs: ["Ne correspond pas."] }) }] } }] })
+        );
+      })
+    );
+    const enCours = relais.fetch(demande("/corriger-exercice", { corps }), { ...env(), MODELE_RAPIDE: "modele-rapide" });
+    await vi.advanceTimersByTimeAsync(15000);
+    const r = await enCours;
+    vi.useRealTimers();
+    expect(r.status).toBe(200);
+    expect((await r.json()).verdict).toBe("faux");
+    // Le secours avant le principal, le plus lent quand il est saturé.
+    expect(modeles).toEqual(["modele-rapide", "modele-secours"]);
+  });
+
+  test("tous saturés : un dernier essai du modèle rapide, après une pause", async () => {
+    geminiRepond(503, 503, 503, JSON.stringify({ verdict: "juste", justes: ["Tout correspond."], erreurs: [] }));
+    const r = await relais.fetch(demande("/corriger-exercice", { corps }), { ...env(), MODELE_RAPIDE: "modele-rapide" });
+    expect(r.status).toBe(200);
+    expect(appelsGemini.map((a) => a.url.match(/models\/([^:]+)/)[1])).toEqual([
+      "modele-rapide",
+      "modele-secours",
+      "modele-principal",
+      "modele-rapide",
+    ]);
+  });
+
   test("un verdict inconnu n'est jamais pris pour « juste »", async () => {
     geminiRepond(JSON.stringify({ verdict: "excellent", justes: [], erreurs: [] }));
     const r = await corriger();

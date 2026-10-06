@@ -15,6 +15,10 @@ MODELE = "gemini-3.6-flash"
 # La liste des modèles disponibles pour la clé :
 #   https://jangrsi-ia.soniadieng22.workers.dev/modeles (depuis le site)
 MODELES_SECOURS = "gemini-3.1-flash-lite,gemini-3.5-flash"
+# Modèle essayé d'abord pour les tâches courtes (corriger un exercice) :
+# mesuré le 6 octobre 2026, 3,6 s contre jusqu'à 100 s pour le principal
+# saturé. Puis le principal et les secours, 15 s au plus chacun.
+MODELE_RAPIDE = "gemini-3.1-flash-lite"
 
 # Comptes étudiants (Supabase) : l'adresse du projet, la même que dans
 # src/data/comptes.js. Sert seulement à l'inscription par téléphone.

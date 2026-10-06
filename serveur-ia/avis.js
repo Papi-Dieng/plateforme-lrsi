@@ -11,7 +11,7 @@
    requêtes par visiteur s'appliquent. Rien n'est enregistré.
    ================================================================== */
 
-import { interrogerGemini } from "./gemini.js";
+import { interrogerGemini, modelesRapides } from "./gemini.js";
 
 const texte = (v, max) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 const liste = (v, max) => (Array.isArray(v) ? v.slice(0, max) : []);
@@ -151,7 +151,9 @@ export async function corrigerExercice(corps, env) {
       },
     },
     env.GEMINI_API_KEY,
-    env
+    env,
+    // Tâche courte : le modèle rapide d'abord, et 15 s au plus par modèle.
+    { modeles: modelesRapides(env), delaiMax: 15000 }
   );
   if (r.erreur) return r;
 
