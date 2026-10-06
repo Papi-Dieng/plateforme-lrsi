@@ -152,7 +152,12 @@ export default function Accueil() {
           </EtatVide>
         </div>
       ) : (
-        <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        // Trois matières par ligne sur toutes les tailles d'écran, comme sur
+        // ordinateur. Sous `md`, la carte se fait compacte (environ 110 px
+        // de large sur un téléphone) : nom court, barre de progression, et
+        // toute la carte cliquable (lien étiré du titre) ; les compteurs et
+        // « Continuer » ne s'affichent qu'à partir de `md`.
+        <div className="mt-6 grid grid-cols-3 gap-2.5 sm:gap-4 xl:gap-5">
           {matieresFiltrees.map((m) => {
             const theme = themeMatiere(m);
             // Progression : les chapitres que l'étudiant a cochés « lu »,
@@ -168,43 +173,54 @@ export default function Accueil() {
               <article
                 key={m.id}
                 className={cx(
-                  "flex flex-col rounded-3xl p-5 text-white",
+                  "relative flex min-w-0 flex-col rounded-2xl p-3 text-white md:rounded-3xl md:p-5",
                   theme.carte
                 )}
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-1 md:gap-3">
                   <span
                     className={cx(
-                      "rounded-lg px-2.5 py-1 text-xs font-semibold",
+                      "hidden rounded-lg px-2.5 py-1 text-xs font-semibold md:inline",
                       theme.badgeCarte
                     )}
                   >
                     {m.nomCourt}
                   </span>
+                  {/* Au-dessus du lien qui couvre la carte. */}
                   <BoutonFavori
                     type="matiere"
                     reference={m.id}
                     libelle={m.nom}
                     variante="surCouleur"
-                    className="-m-1"
+                    taille="sm"
+                    className="relative z-10 -m-1 ml-auto shrink-0 md:size-8"
                   />
                 </div>
 
-                <h2 className="mt-4 text-xl leading-snug font-semibold text-balance">
+                {/* Sur téléphone, le nom court tient lieu de titre, sur
+                    toute la largeur de la carte. */}
+                <h2 className="mt-1 text-[13px] leading-tight font-semibold hyphens-auto md:hidden">
+                  <Link to={`/cours/${m.id}`} className="after:absolute after:inset-0 after:rounded-2xl">
+                    {m.nomCourt}
+                  </Link>
+                </h2>
+
+                <h2 className="mt-4 hidden text-xl leading-snug font-semibold text-balance md:block">
                   <Link to={`/cours/${m.id}`} className="hover:underline">
                     {m.nom}
                   </Link>
                 </h2>
 
-                <div className="mt-auto pt-8">
+                <div className="mt-auto pt-4 md:pt-8">
                   <div className="flex items-center justify-between text-xs">
-                    <span className={surCarte.attenue}>Progression</span>
-                    <span className={surCarte.attenue}>
-                      {nbLus}/{dispo} chapitre{dispo > 1 ? "s lus" : " lu"}
+                    <span className={cx("hidden md:inline", surCarte.attenue)}>Progression</span>
+                    <span className={cx("text-[11px] md:text-xs", surCarte.attenue)}>
+                      {nbLus}/{dispo}
+                      <span className="hidden md:inline"> chapitre{dispo > 1 ? "s lus" : " lu"}</span>
                     </span>
                   </div>
                   <div
-                    className={cx("mt-2 h-1.5 overflow-hidden rounded-full", surCarte.piste)}
+                    className={cx("mt-1.5 h-1.5 overflow-hidden rounded-full md:mt-2", surCarte.piste)}
                     role="progressbar"
                     aria-valuenow={pourcentage}
                     aria-valuemin={0}
@@ -217,7 +233,7 @@ export default function Accueil() {
                     />
                   </div>
 
-                  <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                  <div className="mt-5 hidden flex-wrap items-center justify-between gap-3 md:flex">
                     <div className="flex flex-wrap gap-1.5">
                       <span
                         className={cx(
