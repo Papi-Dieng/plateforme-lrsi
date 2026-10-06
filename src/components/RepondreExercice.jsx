@@ -27,8 +27,11 @@ import { assemblerReponses, questionsDe } from "../questionsExercice";
    réponse juste compte l'exercice comme travaillé. Rien n'est gardé :
    la réponse part au relais, puis à Google Gemini, le temps de corriger.
 
-   Absent si l'IA n'est pas branchée ou si l'exercice n'a pas de corrigé
-   lisible (PDF scanné, sans texte).
+   Absent si l'exercice n'a pas de corrigé lisible (PDF scanné, sans
+   texte). Sans IA (version hors ligne) ou si elle échoue (saturation,
+   quota, réseau), l'étudiant n'est pas laissé sans rien : « Voir la
+   réponse attendue » lui montre la réponse de l'auteur, pour qu'il se
+   corrige lui-même.
 
    `RepondreAvecIA` est le bloc lui-même, partagé avec les devoirs
    (pages/Examens.jsx, une partie à la fois) : pendant l'épreuve il est
@@ -155,8 +158,9 @@ export function RepondreAvecIA({
   const [resultat, setResultat] = useState(null);
   const [rates, setRates] = useState(0);
   const [etat, setEtat] = useState({ attente: false, erreur: "" });
+  const [voirAttendue, setVoirAttendue] = useState(false);
 
-  if (!iaActive || !enonce || !corrige) return null;
+  if (!enonce || !corrige) return null;
 
   const questions = questionsDe(enonce);
   // Par défaut, question par question quand l'énoncé s'y prête.
@@ -258,7 +262,13 @@ export function RepondreAvecIA({
             />
           </>
         )}
-        {!verrouille && (
+        {!verrouille && !iaActive && (
+          <p className="text-sm/6 text-ink-600 dark:text-ink-300">
+            La correction par l'IA demande une connexion et la version en ligne du site.
+            {reponseAttendue ? " Compare toi-même ta réponse à la réponse attendue." : " Compare toi-même ta réponse au corrigé."}
+          </p>
+        )}
+        {!verrouille && iaActive && (
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="submit"
@@ -280,6 +290,22 @@ export function RepondreAvecIA({
         <p role="alert" className="mt-3 text-sm text-flame-700 dark:text-flame-400">
           {etat.erreur}
         </p>
+      )}
+
+      {/* Le filet : sans IA ou quand elle échoue, la réponse de l'auteur. */}
+      {!verrouille && reponseAttendue && !resultat && (!iaActive || etat.erreur) && (
+        <div className="mt-3 space-y-3">
+          <button
+            type="button"
+            onClick={() => setVoirAttendue((v) => !v)}
+            aria-expanded={voirAttendue}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent-700 hover:underline dark:text-accent-400"
+          >
+            <Icon name="check" className="size-4" />
+            {voirAttendue ? "Masquer la réponse attendue" : "Voir la réponse attendue"}
+          </button>
+          {voirAttendue && reponseAttendue}
+        </div>
       )}
 
       {verdict && (

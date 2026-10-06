@@ -204,6 +204,22 @@ test.describe("exercice : répondre question par question, ou tout écrire", () 
     expect(envois[1].reponse).toBe("Masque 255.255.255.224, 30 hôtes, diffusion 192.168.5.31");
   });
 
+  test("l'IA ne répond pas : la réponse attendue reste accessible", async ({ page }) => {
+    // Le relais simulé d'e2e/outils.js répond 503 à la correction.
+    const exercice = exercices.find((e) => e.reponse && !/^\s*1[.)]/m.test(e.enonce));
+    await entrerEnInvite(page);
+    await aller(page, `/exercices/${exercice.id}`);
+    await page.getByRole("textbox", { name: "Ta réponse à l'exercice" }).fill("Une réponse.");
+    await page.getByRole("button", { name: "Faire corriger par l'IA" }).click();
+    await expect(page.getByRole("alert")).toBeVisible();
+
+    const voir = page.getByRole("button", { name: "Voir la réponse attendue" });
+    await voir.click();
+    await expect(page.getByText("Réponse attendue", { exact: true })).toBeVisible();
+    await expect(page.getByText(exercice.reponse.split("\n")[0].slice(0, 30), { exact: false }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "Masquer la réponse attendue" })).toHaveAttribute("aria-expanded", "true");
+  });
+
   test("un énoncé sans questions numérotées : seulement la grande case", async ({ page }) => {
     const sansNumeros = exercices.find((e) => e.reponse && !/^\s*1[.)]/m.test(e.enonce));
     await entrerEnInvite(page);

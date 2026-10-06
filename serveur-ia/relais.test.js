@@ -331,6 +331,19 @@ describe("limite par visiteur", () => {
     }
   });
 
+  test("l'assistant épuisé ne bloque pas la correction des réponses, qui a son propre compteur", async () => {
+    geminiRepond(JSON.stringify({ verdict: "juste", justes: ["Tout correspond."], erreurs: [] }));
+    const e = { ...env(), LIMITEUR_CORRECTION: fauxLimiteur(30) };
+    for (let i = 0; i < 10; i++) await relais.fetch(demande("/", { corps: question("q") }), e);
+    expect((await relais.fetch(demande("/", { corps: question("q") }), e)).status).toBe(429);
+
+    const corps = { enonce: "Combien ?", corrige: "62", reponse: "62" };
+    const statuts = [];
+    for (let i = 0; i < 31; i++) statuts.push((await relais.fetch(demande("/corriger-exercice", { corps }), e)).status);
+    expect(statuts.slice(0, 30).every((s) => s === 200)).toBe(true);
+    expect(statuts[30]).toBe(429);
+  });
+
   test("l'IA épuisée ne bloque pas les comptes, qui ont leur propre compteur", async () => {
     geminiRepond("ok");
     const e = { ...env(), LIMITEUR_COMPTES: fauxLimiteur(30) };

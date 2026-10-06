@@ -710,7 +710,11 @@ recompilation, pas de push.
   « 2) », « Question 3 : »… lues par `src/questionsExercice.js` ; proposé
   seulement s'il y en a au moins deux), ou **écrire ou coller sa réponse**
   dans une seule case. Les réponses question par question partent ensemble,
-  chacune sous sa question, et une question laissée vide est signalée à l'IA. L'IA la compare au corrigé de l'auteur (texte
+  chacune sous sa question, et une question laissée vide est signalée à l'IA. Sans IA (version hors ligne) ou si elle échoue, « Voir la réponse
+  attendue » montre la réponse de l'auteur, pour que l'étudiant se corrige
+  lui-même. La correction a son propre compteur de demandes
+  (`LIMITEUR_CORRECTION`, 30 par minute et par adresse IP), séparé de celui
+  de l'assistant. L'IA la compare au corrigé de l'auteur (texte
   écrit, sinon celui lu dans le PDF de correction) et donne un verdict :
   **juste**, **presque** ou **pas encore**, avec ce qui correspond au corrigé
   et ce qui n'y correspond pas. Elle ne fait que comparer : ni solution, ni

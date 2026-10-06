@@ -254,10 +254,17 @@ export default {
     // Les comptes (/comptes/…) ont leur propre compteur, LIMITEUR_COMPTES :
     // tout un campus peut partager la même adresse IP, et l'usage de l'IA
     // ne doit jamais empêcher de s'inscrire ou de retrouver son compte.
-    // Sans ce second compteur déclaré, les comptes partagent le premier.
+    // La correction des réponses (/corriger-exercice) a aussi le sien,
+    // LIMITEUR_CORRECTION : enchaîner des exercices ne doit pas épuiser
+    // l'assistant, ni l'inverse. Sans ces compteurs déclarés, tout
+    // partage le premier.
     const motDePasse = requete.headers.get("X-Admin");
     const admin = await motDePasseValide(motDePasse, env);
-    const limiteur = chemin.startsWith("/comptes/") ? env.LIMITEUR_COMPTES ?? env.LIMITEUR : env.LIMITEUR;
+    const limiteur = chemin.startsWith("/comptes/")
+      ? env.LIMITEUR_COMPTES ?? env.LIMITEUR
+      : chemin === "/corriger-exercice"
+        ? env.LIMITEUR_CORRECTION ?? env.LIMITEUR
+        : env.LIMITEUR;
     if (limiteur && !admin) {
       const ip = requete.headers.get("CF-Connecting-IP") ?? "inconnu";
       const { success } = await limiteur.limit({ key: ip });

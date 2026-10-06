@@ -53,6 +53,16 @@ namespace_id = "1002"
   limit = 30
   period = 60
 
+# Compteur à part pour la correction des réponses (exercices et devoirs) :
+# 30 par minute et par adresse IP. Corriger une série d'exercices
+# n'épuise pas l'assistant, et l'inverse.
+[[ratelimits]]
+name = "LIMITEUR_CORRECTION"
+namespace_id = "1003"
+  [ratelimits.simple]
+  limit = 30
+  period = 60
+
 # Ce que l'espace admin du site enregistre pour éduquer l'IA, matière par
 # matière : consignes, cours, exemples de réponses et tests.
 # Modifiable seulement avec le mot de passe admin, déposé avec
