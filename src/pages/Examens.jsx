@@ -3,7 +3,8 @@ import { Link, useParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import TexteLibre from "../components/TexteLibre";
 import LecteurPdf from "../components/LecteurPdf";
-import { RepondreAvecIA } from "../components/RepondreExercice";
+import { ChoixReponse, RepondreAvecIA } from "../components/RepondreExercice";
+import { questionsDe } from "../questionsExercice";
 import { Badge, Container, EnTetePage, EtatVide, Filtres } from "../components/ui";
 import { cx } from "../components/classes";
 import { annales, examens, getExamen, totalPoints } from "../data/examens";
@@ -191,6 +192,8 @@ export function ExamenSession() {
   const [fin, setFin] = useState(null);
   const [maintenant, setMaintenant] = useState(() => Date.now());
   const [notes, setNotes] = useState({});
+  // La façon de répondre, choisie avant de commencer, pour toutes les parties.
+  const [modeReponse, setModeReponse] = useState("questions");
 
   // Un seul minuteur, qui ne tourne que pendant l'épreuve. Le temps
   // restant se calcule depuis l'heure de fin : il reste juste même si
@@ -305,6 +308,10 @@ export function ExamenSession() {
                   <TexteLibre texte={examen.consignes} className="mt-1" />
                 </div>
               )}
+              {examen.format !== "pdf" &&
+                examen.parties.some((p) => p.corrige && questionsDe(p.enonce).length > 0) && (
+                  <ChoixReponse valeur={modeReponse} onChange={setModeReponse} className="mt-5" />
+                )}
               <button
                 type="button"
                 onClick={commencer}
@@ -384,6 +391,7 @@ export function ExamenSession() {
                   corrige={p.corrige}
                   encadre={false}
                   verrouille={etape === "epreuve"}
+                  mode={modeReponse}
                   libelle={`Ta réponse à la partie ${i + 1}`}
                 />
 

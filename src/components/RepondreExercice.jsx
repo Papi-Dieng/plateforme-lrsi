@@ -115,14 +115,44 @@ const MODES = [
   { valeur: "libre", label: "Écrire ou coller ma réponse" },
 ];
 
+/* Le choix de la façon de répondre, fait UNE fois, au début : en haut
+   de la page d'un exercice, ou sur l'écran « Avant de commencer » d'un
+   devoir, pour toutes ses parties (demande du 6 octobre 2026). */
+export function ChoixReponse({ valeur, onChange, className }) {
+  return (
+    <div className={className}>
+      <p className="text-sm font-medium text-ink-800 dark:text-ink-200">Comment veux-tu répondre ?</p>
+      <div role="group" aria-label="Façon de répondre" className="mt-2 grid gap-2 rounded-xl bg-ink-100 p-1 sm:grid-cols-2 dark:bg-ink-800">
+        {MODES.map((m) => (
+          <button
+            key={m.valeur}
+            type="button"
+            onClick={() => onChange(m.valeur)}
+            aria-pressed={valeur === m.valeur}
+            className={cx(
+              "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              valeur === m.valeur
+                ? "bg-white text-ink-950 shadow-sm dark:bg-ink-950 dark:text-white"
+                : "text-ink-600 hover:text-ink-900 dark:text-ink-300 dark:hover:text-white"
+            )}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const champ =
   "w-full rounded-xl border border-ink-200 bg-white px-3.5 py-2.5 text-sm/6 text-ink-900 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-ink-700 dark:bg-ink-950 dark:text-white";
 
-export default function RepondreExercice({ exercice, onReussi, onBesoinIndice, indiceDisponible }) {
+export default function RepondreExercice({ exercice, mode, onReussi, onBesoinIndice, indiceDisponible }) {
   const { enonce, corrige } = textesExercice(exercice);
   return (
     <RepondreAvecIA
       id={exercice.id}
+      mode={mode}
       enonce={enonce}
       corrige={corrige}
       reponseAttendue={<ReponseAttendue exercice={exercice} />}
@@ -139,7 +169,10 @@ export default function RepondreExercice({ exercice, onReussi, onBesoinIndice, i
      déjà affiché par la page) ;
    - `verrouille` : on peut écrire, pas encore faire corriger ;
    - `encadre` : dans sa propre carte, ou à l'intérieur d'une autre ;
-   - `libelle` : le nom de la grande case, pour les lecteurs d'écran. */
+   - `libelle` : le nom de la grande case, pour les lecteurs d'écran ;
+   - `mode` : la façon de répondre choisie au début (ChoixReponse) ;
+     sans questions numérotées dans l'énoncé, c'est toujours la grande
+     case. */
 export function RepondreAvecIA({
   id,
   enonce,
@@ -148,11 +181,11 @@ export function RepondreAvecIA({
   verrouille = false,
   encadre = true,
   libelle = "Ta réponse à l'exercice",
+  mode: modeChoisi = "questions",
   onReussi,
   onBesoinIndice,
   indiceDisponible,
 }) {
-  const [choix, setChoix] = useState(null);
   const [reponse, setReponse] = useState("");
   const [reponses, setReponses] = useState({});
   const [resultat, setResultat] = useState(null);
@@ -163,8 +196,7 @@ export function RepondreAvecIA({
   if (!enonce || !corrige) return null;
 
   const questions = questionsDe(enonce);
-  // Par défaut, question par question quand l'énoncé s'y prête.
-  const mode = questions.length ? choix ?? "questions" : "libre";
+  const mode = questions.length ? modeChoisi : "libre";
   const aEnvoyer =
     mode === "questions" ? assemblerReponses(questions, questions.map((_, i) => reponses[i] ?? "")) : reponse;
   const vide =
@@ -200,27 +232,6 @@ export function RepondreAvecIA({
           ? "Écris tes réponses ici pendant le devoir. Quand tu le termines, l'IA les compare au corrigé et te dit si elles sont justes."
           : "Réponds comme sur ta copie : l'IA compare ta réponse au corrigé et te dit si elle est juste."}
       </p>
-
-      {questions.length > 0 && (
-        <div role="group" aria-label="Façon de répondre" className="mt-4 grid gap-2 rounded-xl bg-ink-100 p-1 sm:grid-cols-2 dark:bg-ink-800">
-          {MODES.map((m) => (
-            <button
-              key={m.valeur}
-              type="button"
-              onClick={() => setChoix(m.valeur)}
-              aria-pressed={mode === m.valeur}
-              className={cx(
-                "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                mode === m.valeur
-                  ? "bg-white text-ink-950 shadow-sm dark:bg-ink-950 dark:text-white"
-                  : "text-ink-600 hover:text-ink-900 dark:text-ink-300 dark:hover:text-white"
-              )}
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
-      )}
 
       <form onSubmit={corriger} className="mt-4 space-y-3">
         {mode === "questions" ? (

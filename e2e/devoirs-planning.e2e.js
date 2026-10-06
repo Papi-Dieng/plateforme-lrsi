@@ -78,6 +78,22 @@ test.describe("devoir", () => {
     await expect(partie.getByRole("spinbutton", { name: "Mes points" })).toHaveValue("");
   });
 
+  test("la façon de répondre se choisit avant de commencer, pour toutes les parties", async ({ page }) => {
+    await entrerEnInvite(page);
+    await aller(page, `/examens/${devoir.id}`);
+    const choix = page.getByRole("group", { name: "Façon de répondre" });
+    await expect(choix).toHaveCount(1);
+    await choix.getByRole("button", { name: "Écrire ou coller ma réponse" }).click();
+    await page.getByRole("button", { name: "Commencer le devoir" }).click();
+
+    // Plus de choix pendant l'épreuve, et une seule grande case par partie.
+    await expect(page.getByRole("group", { name: "Façon de répondre" })).toHaveCount(0);
+    await expect(page.getByRole("textbox", { name: "Ta réponse à la question 1" })).toHaveCount(0);
+    for (let i = 1; i <= devoir.parties.length; i++) {
+      await expect(page.getByRole("textbox", { name: `Ta réponse à la partie ${i}` })).toBeVisible();
+    }
+  });
+
   test("sans IA, la correction échoue proprement et le corrigé reste là", async ({ page }) => {
     await entrerEnInvite(page);
     await aller(page, `/examens/${devoir.id}`);

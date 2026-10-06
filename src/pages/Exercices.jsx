@@ -2,7 +2,9 @@ import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import { CorrectionExercice, EnonceExercice } from "../components/AffichageExercice";
-import RepondreExercice from "../components/RepondreExercice";
+import RepondreExercice, { ChoixReponse } from "../components/RepondreExercice";
+import { textesExercice } from "../ia";
+import { questionsDe } from "../questionsExercice";
 import {
   Badge,
   Bouton,
@@ -204,6 +206,7 @@ function DetailExercice({ exerciceId }) {
 
   const [indiceVisible, setIndiceVisible] = useState(false);
   const [correctionVisible, setCorrectionVisible] = useState(false);
+  const [modeReponse, setModeReponse] = useState("questions");
 
   // Ouvrir la correction compte comme « exercice travaillé » dans le profil.
   const basculerCorrection = () => {
@@ -223,6 +226,9 @@ function DetailExercice({ exerciceId }) {
       </Container>
     );
   }
+
+  const textes = textesExercice(exercice);
+  const choixPossible = textes.corrige && questionsDe(textes.enonce).length > 0;
 
   const suivants = exercices
     .filter((e) => e.id !== exercice.id && e.matiere === exercice.matiere)
@@ -254,6 +260,14 @@ function DetailExercice({ exerciceId }) {
 
       <Container className="py-10">
         <div className="mx-auto max-w-3xl space-y-6">
+          {/* La façon de répondre, choisie une fois, avant de commencer :
+              seulement si l'énoncé a des questions numérotées. */}
+          {choixPossible && (
+            <section className="card p-5">
+              <ChoixReponse valeur={modeReponse} onChange={setModeReponse} />
+            </section>
+          )}
+
           {/* Énoncé */}
           <section className="card p-6">
             <h2 className="flex items-center gap-2 text-sm font-semibold tracking-wide text-brand-600 uppercase dark:text-brand-400">
@@ -292,6 +306,7 @@ function DetailExercice({ exerciceId }) {
           <RepondreExercice
             key={exercice.id}
             exercice={exercice}
+            mode={modeReponse}
             indiceDisponible={Boolean(exercice.indice)}
             onBesoinIndice={() => setIndiceVisible(true)}
             onReussi={() => marquerExerciceTravaille(exercice.id)}
