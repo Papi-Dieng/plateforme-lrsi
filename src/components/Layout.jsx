@@ -120,9 +120,15 @@ const icones = {
   "/projet": "info",
 };
 
+// La barre reste en place quand la page défile : son contenu colle en
+// haut de l'écran (`sticky`). Ça ne marche que parce que le cadre de la
+// coque coupe ses coins avec `overflow-clip` et non `overflow-hidden`,
+// qui empêcherait tout élément collant à l'intérieur (la barre du haut
+// aussi). Ne pas revenir à `overflow-hidden`.
 function BarreLaterale() {
   return (
-    <aside className="hidden w-[76px] shrink-0 flex-col items-center border-r border-ink-200 bg-ink-50 py-5 lg:flex dark:border-ink-800 dark:bg-ink-950">
+    <aside className="hidden w-[76px] shrink-0 border-r border-ink-200 bg-ink-50 lg:block dark:border-ink-800 dark:bg-ink-950">
+      <div className="sticky top-0 flex h-[calc(100dvh-2.5rem)] flex-col items-center overflow-y-auto py-5">
       <Link to="/tableau-de-bord" aria-label="Tableau de bord" className="mb-6">
         <Logo className="size-10" />
       </Link>
@@ -153,6 +159,7 @@ function BarreLaterale() {
       </nav>
 
       <BoutonTheme />
+      </div>
     </aside>
   );
 }
@@ -702,7 +709,7 @@ export default function Layout() {
 
       <div
         className={cx(
-          "mx-auto flex w-full max-w-[1440px] overflow-hidden bg-white lg:rounded-3xl lg:shadow-xl lg:ring-1 lg:ring-ink-300/50 dark:bg-ink-900 dark:lg:ring-ink-800",
+          "mx-auto flex w-full max-w-[1440px] overflow-clip bg-white lg:rounded-3xl lg:shadow-xl lg:ring-1 lg:ring-ink-300/50 dark:bg-ink-900 dark:lg:ring-ink-800",
           pleinEcran ? "h-full" : "min-h-screen lg:min-h-[calc(100vh-2.5rem)]"
         )}
       >
