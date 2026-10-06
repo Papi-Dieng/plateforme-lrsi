@@ -312,10 +312,6 @@ export function CoursDetail() {
                       <p className="mt-1.5 text-sm/6 text-ink-600 dark:text-ink-400">
                         {c.resume}
                       </p>
-                      <p className="mt-2.5 flex items-center gap-1.5 text-xs text-ink-500 dark:text-ink-400">
-                        <Icon name="clock" className="size-3.5" />
-                        Volume indicatif : {c.duree}
-                      </p>
                       {/* Le texte écrit dans l'admin passe avant le PDF :
                           « Lire ici » l'affiche, le PDF reste à télécharger.
                           La lecture est détectée toute seule (`onLu`). */}

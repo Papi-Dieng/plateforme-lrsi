@@ -336,9 +336,6 @@ export default function Accueil() {
                   <th scope="col" className="hidden pb-3 font-medium sm:table-cell">
                     Matière
                   </th>
-                  <th scope="col" className="pb-3 text-right font-medium">
-                    Volume
-                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -372,9 +369,6 @@ export default function Accueil() {
                           {c.matiere.nomCourt}
                         </span>
                       </span>
-                    </td>
-                    <td className="py-2.5 text-right text-xs whitespace-nowrap text-ink-500 sm:py-3.5 sm:text-sm dark:text-ink-400">
-                      {c.duree}
                     </td>
                   </tr>
                 ))}

@@ -124,9 +124,8 @@ export function EditeurMatiere({ element: m, changer, motDePasse }) {
                 </Badge>
               </summary>
               <div className="space-y-3 border-t border-ink-200 p-4 dark:border-ink-800">
-                <div className="grid gap-3 sm:grid-cols-[1fr_120px_150px_140px]">
+                <div className="grid gap-3 sm:grid-cols-[1fr_150px_140px]">
                   <Champ label="Titre" value={c.titre} maxLength={150} onChange={(e) => changerChapitre(i, { titre: e.target.value })} />
-                  <Champ label="Durée" value={c.duree} maxLength={20} placeholder="3 h" onChange={(e) => changerChapitre(i, { duree: e.target.value })} />
                   <Choix
                     label="Statut"
                     value={c.statut}
@@ -169,7 +168,7 @@ export function EditeurMatiere({ element: m, changer, motDePasse }) {
           icone="plus"
           className="mt-3"
           onClick={() =>
-            changer({ chapitres: [...chapitres, { titre: "", resume: "", duree: "", statut: "bientot", semestre: chapitres.at(-1)?.semestre ?? 1, format: "texte", contenu: "" }] })
+            changer({ chapitres: [...chapitres, { titre: "", resume: "", statut: "bientot", semestre: chapitres.at(-1)?.semestre ?? 1, format: "texte", contenu: "" }] })
           }
         >
           Ajouter un chapitre

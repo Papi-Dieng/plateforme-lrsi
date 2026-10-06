@@ -96,7 +96,6 @@ const nettoyerMatiere = (m) => ({
       return {
         titre: texte(c?.titre, 150),
         resume: texte(c?.resume, 600),
-        duree: texte(c?.duree, 20),
         ...((numero === 1 || numero === 2) && { semestre: numero }),
         statut: unParmi(c?.statut, ["disponible", "bientot"], "bientot"),
         format: !contenu && pdf ? "pdf" : "texte",
