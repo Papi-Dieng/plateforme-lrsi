@@ -1,4 +1,4 @@
-import PageJuridique from "../components/PageJuridique";
+import PageJuridique, { EtiquetteDonnees } from "../components/PageJuridique";
 import { nomEditeur, site } from "../data/site";
 import { iaActive } from "../ia";
 import { comptesActifs } from "../data/comptes";
@@ -115,7 +115,9 @@ const articles = [
       },
       ...(iaActive
         ? [
-            "Attention : Google peut conserver et utiliser les échanges de l'offre gratuite de Gemini pour améliorer ses services, y compris en les faisant relire par des personnes. N'écris donc rien de personnel ou de confidentiel dans les outils d'IA.",
+            {
+              note: "Attention : Google peut conserver et utiliser les échanges de l'offre gratuite de Gemini pour améliorer ses services, y compris en les faisant relire par des personnes. N'écris donc rien de personnel ou de confidentiel dans les outils d'IA.",
+            },
           ]
         : []),
     ],
@@ -182,6 +184,23 @@ export default function Confidentialite() {
       titre="Politique de confidentialité"
       texte="Ce que la plateforme garde, ce qui sort de ton appareil, vers qui, et tes droits."
       articles={articles}
+      visuel={
+        <EtiquetteDonnees
+          nonFait={[
+            ["Publicité", "Aucune"],
+            ["Mesure d'audience", "Aucune"],
+            ["Traceurs", "Aucun"],
+            ["Cookies déposés", "Aucun"],
+            ["Données vendues ou partagées", "Aucune"],
+          ]}
+          garde={[
+            ["Ta progression, en mode invité", "Sur ton appareil"],
+            ...(comptesActifs ? [["Ton mot de passe", "Chiffré"]] : []),
+            ["Statistiques des QCM", "Anonymes"],
+          ]}
+          pied="Loi sénégalaise n° 2008-12 du 25 janvier 2008 · Recours possible auprès de la CDP"
+        />
+      }
     />
   );
 }

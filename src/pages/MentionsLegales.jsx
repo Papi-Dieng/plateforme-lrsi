@@ -1,4 +1,4 @@
-import PageJuridique from "../components/PageJuridique";
+import PageJuridique, { FicheIdentite } from "../components/PageJuridique";
 import { nomEditeur, site } from "../data/site";
 import { iaActive } from "../ia";
 import { comptesActifs } from "../data/comptes";
@@ -22,10 +22,8 @@ const articles = [
           ["Contact", site.contact],
         ],
       },
-      ...(site.equipe?.length
-        ? ["L'équipe :", { liste: site.equipe.map((m) => [m.nom, m.role]) }]
-        : []),
-      "Ce site n'est pas un service officiel de l'établissement.",
+      ...(site.equipe?.length ? [{ equipe: site.equipe }] : []),
+      { note: "Ce site n'est pas un service officiel de l'établissement." },
     ],
   },
   {
@@ -33,16 +31,18 @@ const articles = [
     titre: "Hébergement",
     paragraphes: [
       {
-        liste: [
-          ["Le site", "GitHub Pages, service de GitHub, Inc., San Francisco, États-Unis."],
-          ["Le relais et les fichiers publiés", "Cloudflare Workers, service de Cloudflare, Inc., San Francisco, États-Unis."],
+        hebergeurs: [
+          { role: "Le site", nom: "GitHub Pages", service: "Service de GitHub, Inc.", lieu: "San Francisco, États-Unis" },
+          { role: "Le relais et les fichiers publiés", nom: "Cloudflare Workers", service: "Service de Cloudflare, Inc.", lieu: "San Francisco, États-Unis" },
           ...(comptesActifs
             ? [
-                ["Les comptes et leur base de données", "Supabase, service de Supabase, Inc., San Francisco, États-Unis."],
-                ["Les emails du compte", "Brevo, service de Sendinblue SAS, Paris, France."],
+                { role: "Les comptes et leur base de données", nom: "Supabase", service: "Service de Supabase, Inc.", lieu: "San Francisco, États-Unis" },
+                { role: "Les emails du compte", nom: "Brevo", service: "Service de Sendinblue SAS", lieu: "Paris, France" },
               ]
             : []),
-          ...(iaActive ? [["L'intelligence artificielle", "Google Gemini, service de Google LLC, Mountain View, États-Unis."]] : []),
+          ...(iaActive
+            ? [{ role: "L'intelligence artificielle", nom: "Google Gemini", service: "Service de Google LLC", lieu: "Mountain View, États-Unis" }]
+            : []),
         ],
       },
     ],
@@ -82,6 +82,18 @@ export default function MentionsLegales() {
       titre="Mentions légales"
       texte="Qui publie la plateforme, et qui l'héberge."
       articles={articles}
+      visuel={
+        <FicheIdentite
+          lignes={[
+            { label: "Site", valeur: site.nom },
+            { label: "Nature", valeur: "Projet étudiant non commercial" },
+            ...(site.editeur ? [{ label: "Responsable", valeur: site.editeur }] : []),
+            { label: "Contact", valeur: site.contact },
+            { label: "Hébergement", valeur: "GitHub Pages · Cloudflare" },
+          ]}
+          equipe={site.equipe}
+        />
+      }
     />
   );
 }
