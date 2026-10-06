@@ -158,9 +158,11 @@ export default function Accueil() {
           </EtatVide>
         </div>
       ) : (
-        // Deux matières par ligne sur téléphone, trois à partir de `md`.
-        // La carte est la même partout (étiquette, titre, progression,
-        // compteurs, « Continuer »), simplement plus serrée sur téléphone.
+        // Sur téléphone, deux matières par ligne en rectangles posés à plat
+        // (choix du 6 octobre 2026) : étiquette et favori, titre, puis la
+        // barre de progression et un bouton rond « Continuer » sur une même
+        // ligne. À partir de `md`, trois cartes par ligne, avec leurs
+        // compteurs d'exercices et de QCM.
         // Toute la carte est cliquable : le lien du titre la couvre.
         <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:gap-5">
           {matieresFiltrees.map((m) => {
@@ -178,7 +180,7 @@ export default function Accueil() {
               <article
                 key={m.id}
                 className={cx(
-                  "relative flex min-w-0 flex-col rounded-2xl p-3.5 text-white md:rounded-3xl md:p-5",
+                  "relative flex min-w-0 flex-col rounded-2xl p-3 text-white md:rounded-3xl md:p-5",
                   theme.carte
                 )}
               >
@@ -202,7 +204,7 @@ export default function Accueil() {
                   />
                 </div>
 
-                <h2 className="mt-3 text-[15px] leading-snug font-semibold text-balance hyphens-auto md:mt-4 md:text-xl">
+                <h2 className="mt-2 text-sm leading-snug font-semibold text-balance md:mt-4 md:text-xl">
                   <Link
                     to={`/cours/${m.id}`}
                     className="after:absolute after:inset-0 after:rounded-2xl hover:underline md:after:rounded-3xl"
@@ -211,16 +213,43 @@ export default function Accueil() {
                   </Link>
                 </h2>
 
-                <div className="mt-auto pt-5 md:pt-8">
-                  <div className="flex items-center justify-between gap-2 text-[11px] md:text-xs">
+                {/* Téléphone : barre, chapitres lus et « Continuer » sur une ligne. */}
+                <div className="mt-auto flex items-center gap-2 pt-3 md:hidden">
+                  <div
+                    className={cx("h-1.5 min-w-0 flex-1 overflow-hidden rounded-full", surCarte.piste)}
+                    role="progressbar"
+                    aria-valuenow={pourcentage}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`Chapitres lus en ${m.nom}`}
+                  >
+                    <div
+                      className={cx("h-full rounded-full", surCarte.barre)}
+                      style={{ width: `${pourcentage}%` }}
+                    />
+                  </div>
+                  <span className={cx("shrink-0 text-[11px]", surCarte.attenue)}>
+                    {nbLus}/{dispo}
+                  </span>
+                  <Link
+                    to={`/cours/${m.id}`}
+                    aria-label={`Continuer : ${m.nom}`}
+                    className="relative z-10 grid size-8 shrink-0 place-items-center rounded-full bg-lime-400 text-ink-950 transition-colors hover:bg-lime-300"
+                  >
+                    <Icon name="arrow" className="size-4" />
+                  </Link>
+                </div>
+
+                {/* Ordinateur et tablette : la carte complète. */}
+                <div className="mt-auto hidden pt-8 md:block">
+                  <div className="flex items-center justify-between gap-2 text-xs">
                     <span className={surCarte.attenue}>Progression</span>
                     <span className={surCarte.attenue}>
-                      {nbLus}/{dispo}
-                      <span className="hidden sm:inline"> chapitre{dispo > 1 ? "s lus" : " lu"}</span>
+                      {nbLus}/{dispo} chapitre{dispo > 1 ? "s lus" : " lu"}
                     </span>
                   </div>
                   <div
-                    className={cx("mt-1.5 h-1.5 overflow-hidden rounded-full md:mt-2", surCarte.piste)}
+                    className={cx("mt-2 h-1.5 overflow-hidden rounded-full", surCarte.piste)}
                     role="progressbar"
                     aria-valuenow={pourcentage}
                     aria-valuemin={0}
@@ -233,11 +262,11 @@ export default function Accueil() {
                     />
                   </div>
 
-                  <div className="mt-4 flex flex-col gap-3 md:mt-5 md:flex-row md:flex-wrap md:items-center md:justify-between">
+                  <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
                     <div className="flex flex-wrap gap-1.5">
                       <span
                         className={cx(
-                          "rounded-full px-2 py-0.5 text-[11px] font-medium md:px-2.5 md:py-1",
+                          "rounded-full px-2.5 py-1 text-[11px] font-medium",
                           surCarte.puce
                         )}
                       >
@@ -245,7 +274,7 @@ export default function Accueil() {
                       </span>
                       <span
                         className={cx(
-                          "rounded-full px-2 py-0.5 text-[11px] font-medium md:px-2.5 md:py-1",
+                          "rounded-full px-2.5 py-1 text-[11px] font-medium",
                           surCarte.puce
                         )}
                       >
@@ -254,7 +283,7 @@ export default function Accueil() {
                     </div>
                     <Link
                       to={`/cours/${m.id}`}
-                      className="relative z-10 rounded-full bg-lime-400 px-4 py-2 text-center text-sm font-semibold text-ink-950 transition-colors hover:bg-lime-300"
+                      className="relative z-10 rounded-full bg-lime-400 px-4 py-2 text-sm font-semibold text-ink-950 transition-colors hover:bg-lime-300"
                     >
                       Continuer
                     </Link>
