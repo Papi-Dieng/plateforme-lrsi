@@ -1,11 +1,10 @@
 import { describe, expect, test } from "vitest";
 import { pourPublier, problemes } from "./brouillon";
-import { deplacer, extraireYoutube, identifiant, optionsCompetences } from "./outils";
+import { deplacer, extraireYoutube, identifiant } from "./outils";
 
 /* Un brouillon minimal et sans défaut, que chaque test abîme à sa façon. */
 const brouillon = () => ({
   matieres: [{ id: "reseaux", nom: "Réseaux", chapitres: [{ titre: "OSI" }] }],
-  competences: [{ id: "res-osi", nom: "Modèle OSI", matiere: "reseaux", chapitres: ["OSI"] }],
   exercices: [{ id: "ex", titre: "Couches", matiere: "reseaux", enonce: "Nommer les couches.", etapes: ["", " Lister "] }],
   qcms: [{ id: "q", titre: "OSI", matiere: "reseaux", questions: [{ enonce: "Combien ?", options: ["7", "", "4"], bonne: 2 }] }],
   videos: [],
@@ -23,12 +22,6 @@ describe("problemes : ce qui serait écarté ou cassé, dit avant de publier", (
     const b = brouillon();
     b.exercices[0].titre = "  ";
     expect(problemes(b)).toEqual([expect.stringContaining("n'a pas de titre : il serait supprimé")]);
-  });
-
-  test("une compétence qui renvoie vers un chapitre renommé", () => {
-    const b = brouillon();
-    b.matieres[0].chapitres[0].titre = "Le modèle OSI";
-    expect(problemes(b)).toEqual([expect.stringContaining("chapitre introuvable : « OSI »")]);
   });
 
   test("un exercice sans énoncé, ni écrit ni en PDF", () => {
@@ -94,13 +87,5 @@ describe("outils", () => {
     const liste = ["a", "b", "c"];
     expect(deplacer(liste, 0, 2)).toEqual(["b", "c", "a"]);
     expect(liste).toEqual(["a", "b", "c"]);
-  });
-
-  test("optionsCompetences : seulement celles de la matière, plus « Aucune »", () => {
-    const competences = [
-      { id: "a", nom: "A", matiere: "reseaux" },
-      { id: "b", nom: "B", matiere: "bdd" },
-    ];
-    expect(optionsCompetences(competences, "reseaux").map((o) => o.value)).toEqual(["", "a"]);
   });
 });

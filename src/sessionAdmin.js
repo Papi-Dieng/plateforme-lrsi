@@ -36,7 +36,7 @@ const MESSAGES_ERREUR = {
   quota: "Le quota gratuit de l'IA admin est atteint pour le moment. Réessaie plus tard.",
   surcharge: "Le service d'IA est saturé en ce moment. Réessaie dans quelques secondes.",
   "reponse-illisible": "L'IA a renvoyé une réponse illisible. Réessaie.",
-  "rien-a-traiter": "Il n'y a rien à traiter : vérifie qu'il y a des compétences ou des chapitres dans cette matière.",
+  "rien-a-traiter": "Il n'y a rien à traiter : vérifie qu'il y a des chapitres dans cette matière.",
 };
 
 export const messageErreurAdmin = (code) =>

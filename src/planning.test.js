@@ -16,24 +16,20 @@ const contexte = {
     },
     { id: "bdd", nom: "Bases de données", chapitres: [{ titre: "SQL", statut: "disponible" }] },
   ],
-  competences: [
-    { id: "res-osi", nom: "Modèle OSI", matiere: "reseaux", chapitres: ["OSI"] },
-    { id: "res-ip", nom: "Adressage", matiere: "reseaux", chapitres: ["IPv4", "IPv6"] },
-  ],
   exercices: [
-    { id: "ex-osi", titre: "Couches", matiere: "reseaux", competence: "res-osi" },
-    { id: "ex-ip", titre: "Sous-réseaux", matiere: "reseaux", competence: "res-ip" },
-    { id: "ex-sql", titre: "Jointures", matiere: "bdd", competence: "" },
+    { id: "ex-osi", titre: "Couches", matiere: "reseaux" },
+    { id: "ex-ip", titre: "Sous-réseaux", matiere: "reseaux" },
+    { id: "ex-sql", titre: "Jointures", matiere: "bdd" },
   ],
   qcms: [
-    { id: "q-osi", titre: "OSI", matiere: "reseaux", questions: [{ competence: "res-osi" }] },
-    { id: "q-ip", titre: "IPv4", matiere: "reseaux", questions: [{ competence: "res-ip" }] },
+    { id: "q-osi", titre: "OSI", matiere: "reseaux", questions: [{}] },
+    { id: "q-ip", titre: "IPv4", matiere: "reseaux", questions: [{}] },
   ],
   devoirs: [{ id: "d-res", titre: "Devoir réseaux", matiere: "reseaux" }],
-  // Adressage faible, OSI solide.
+  // Réseaux fragile, Bases de données solide (src/analyseMatieres.js).
   analyse: [
-    { id: "res-osi", nom: "Modèle OSI", matiere: "reseaux", chapitres: ["OSI"], niveau: "force", taux: 90 },
-    { id: "res-ip", nom: "Adressage", matiere: "reseaux", chapitres: ["IPv4", "IPv6"], niveau: "faiblesse", taux: 30 },
+    { id: "reseaux", nom: "Réseaux", niveau: "faiblesse", taux: 30 },
+    { id: "bdd", nom: "Bases de données", niveau: "force", taux: 90 },
   ],
   exercicesTravailles: {},
 };
@@ -63,17 +59,20 @@ describe("tachesPourEvaluation", () => {
   const taches = tachesPourEvaluation(evaluation, contexte);
   const cles = taches.map((t) => t.cle);
 
-  test("la compétence la plus faible passe en premier", () => {
-    expect(cles.slice(0, 3)).toEqual(["chapitre:reseaux:IPv4", "exercice:ex-ip", "qcm:q-ip"]);
+  test("une matière fragile : tout le cours et ses exercices en premier, avec la raison", () => {
+    expect(cles.slice(0, 4)).toEqual(["chapitre:reseaux:OSI", "chapitre:reseaux:IPv4", "exercice:ex-osi", "exercice:ex-ip"]);
+    expect(taches[0].detail).toContain("Réseaux à 30 %");
   });
 
   test("un chapitre « bientôt » n'est jamais proposé", () => {
     expect(cles).not.toContain("chapitre:reseaux:IPv6");
   });
 
-  test("une compétence solide n'est pas retravaillée, mais le reste de la matière est couvert", () => {
-    expect(cles).toContain("chapitre:reseaux:OSI");
-    expect(cles).toContain("exercice:ex-osi");
+  test("une matière solide : seulement ce qui n'est pas encore lu ou fait", () => {
+    const solide = tachesPourEvaluation({ ...evaluation, matiere: "bdd" }, contexte).map((t) => t.cle);
+    expect(solide.slice(0, 2)).toEqual(["chapitre:bdd:SQL", "exercice:ex-sql"]);
+    const relu = tachesPourEvaluation({ ...evaluation, matiere: "bdd" }, { ...contexte, chapitresLus: { "bdd::SQL": "2026-09-20" } });
+    expect(relu.map((t) => t.cle)).not.toContain("chapitre:bdd:SQL");
   });
 
   test("rien d'une autre matière", () => {
@@ -91,9 +90,10 @@ describe("tachesPourEvaluation", () => {
     for (const t of taches) expect(t.to).toMatch(/^\/(cours|exercices|qcm|examens)\//);
   });
 
-  test("un exercice déjà fait et un chapitre déjà lu ne reviennent pas", () => {
+  test("un exercice déjà fait et un chapitre déjà lu ne reviennent pas (matière non jugée)", () => {
     const autres = tachesPourEvaluation(evaluation, {
       ...contexte,
+      analyse: [],
       exercicesTravailles: { "ex-osi": { date: "2026-09-20" } },
       chapitresLus: { "reseaux::OSI": "2026-09-20" },
     }).map((t) => t.cle);

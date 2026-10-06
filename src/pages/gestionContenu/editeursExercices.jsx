@@ -7,19 +7,17 @@ import Apercu from "../../components/Apercu";
 import { CorrectionExercice, EnonceExercice } from "../../components/AffichageExercice";
 import {
   GenerateurQcm,
-  SuggestionCompetence,
   RemplirDepuisPdf,
   SuggestionARetenir,
 } from "../../components/AssistantAdmin";
-import { texteExercice, texteQuestion } from "../../textesAgent";
-import { deplacer, optionsCompetences, optionsMatieres } from "./outils";
+import { deplacer, optionsMatieres } from "./outils";
 import { Bouton, BoutonApercu, Champ, ChampPdf, Choix, Ordre, Zone } from "./champs";
 
 /* ==================================================================
    Éditeurs des exercices (avec la vérification automatique) et des QCM.
    ================================================================== */
 
-export function EditeurExercice({ element: e, changer, matieres, competences, motDePasse }) {
+export function EditeurExercice({ element: e, changer, matieres, motDePasse }) {
   const [apercu, setApercu] = useState(false);
   return (
     <div className="space-y-4">
@@ -54,9 +52,8 @@ export function EditeurExercice({ element: e, changer, matieres, competences, mo
         </Apercu>
       )}
       <Champ label="Titre" value={e.titre} maxLength={150} onChange={(ev) => changer({ titre: ev.target.value })} />
-      <div className="grid gap-4 sm:grid-cols-4">
-        <Choix label="Matière" value={e.matiere} options={optionsMatieres(matieres)} onChange={(ev) => changer({ matiere: ev.target.value, competence: "" })} />
-        <Choix label="Compétence" value={e.competence ?? ""} options={optionsCompetences(competences, e.matiere)} onChange={(ev) => changer({ competence: ev.target.value })} />
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Choix label="Matière" value={e.matiere} options={optionsMatieres(matieres)} onChange={(ev) => changer({ matiere: ev.target.value })} />
         <Choix
           label="Difficulté"
           value={e.difficulte}
@@ -65,14 +62,6 @@ export function EditeurExercice({ element: e, changer, matieres, competences, mo
         />
         <Champ label="Durée" value={e.duree} maxLength={20} placeholder="20 min" onChange={(ev) => changer({ duree: ev.target.value })} />
       </div>
-      <SuggestionCompetence
-        matiere={matieres.find((m) => m.id === e.matiere)}
-        competences={competences}
-        texte={texteExercice(e)}
-        valeur={e.competence}
-        onAppliquer={(id) => changer({ competence: id })}
-        motDePasse={motDePasse}
-      />
       <Champ
         label="Mots-clés"
         aide="Séparés par des virgules. Ils aident la recherche et l'assistant."
@@ -170,7 +159,7 @@ export function EditeurExercice({ element: e, changer, matieres, competences, mo
   );
 }
 
-export function EditeurQcm({ element: q, changer, matieres, competences, motDePasse }) {
+export function EditeurQcm({ element: q, changer, matieres, motDePasse }) {
   const questions = q.questions;
   const changerQuestion = (i, modif) =>
     changer({ questions: questions.map((x, j) => (j === i ? { ...x, ...modif } : x)) });
@@ -196,7 +185,6 @@ export function EditeurQcm({ element: q, changer, matieres, competences, motDePa
         key={q.id}
         qcm={q}
         matiere={matieres.find((m) => m.id === q.matiere)}
-        competences={competences}
         motDePasse={motDePasse}
         onAjouter={(nouvelles) => changer({ questions: [...questions, ...nouvelles] })}
       />
@@ -260,18 +248,7 @@ export function EditeurQcm({ element: q, changer, matieres, competences, motDePa
                     </button>
                   )}
                 </fieldset>
-                <div className="grid gap-3 sm:grid-cols-[200px_1fr]">
-                  <div className="space-y-2">
-                    <Choix label="Compétence" value={x.competence ?? ""} options={optionsCompetences(competences, q.matiere)} onChange={(e) => changerQuestion(i, { competence: e.target.value })} />
-                    <SuggestionCompetence
-                      matiere={matieres.find((m) => m.id === q.matiere)}
-                      competences={competences}
-                      texte={texteQuestion(x)}
-                      valeur={x.competence}
-                      onAppliquer={(id) => changerQuestion(i, { competence: id })}
-                      motDePasse={motDePasse}
-                    />
-                  </div>
+                <div>
                   <Zone label="Explication" rows={2} value={x.explication} maxLength={1500} onChange={(e) => changerQuestion(i, { explication: e.target.value })} />
                 </div>
               </div>
@@ -289,7 +266,7 @@ export function EditeurQcm({ element: q, changer, matieres, competences, motDePa
       <Bouton
         icone="plus"
         onClick={() =>
-          changer({ questions: [...questions, { enonce: "", options: ["", "", "", ""], bonne: 0, competence: "", explication: "" }] })
+          changer({ questions: [...questions, { enonce: "", options: ["", "", "", ""], bonne: 0, explication: "" }] })
         }
       >
         Ajouter une question

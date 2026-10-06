@@ -2,8 +2,7 @@ import { matieres, getMatiere } from "./data/matieres";
 import { exercices } from "./data/exercices";
 import { qcms } from "./data/qcm";
 import { videosSuggerees } from "./data/videos";
-import { competences } from "./data/competences";
-import { faiblesses, modulesAAmeliorer, nonEvaluees } from "./competences";
+import { faiblesses, nonEvaluees } from "./analyseMatieres";
 
 /* ==================================================================
    Moteur de l'assistant de révision.
@@ -12,7 +11,7 @@ import { faiblesses, modulesAAmeliorer, nonEvaluees } from "./competences";
    n'invente jamais de contenu pédagogique : il comprend l'intention
    d'une question, cherche dans les données de la plateforme, et
    renvoie vers ce qui existe réellement — chapitres, exercices, QCM,
-   vidéos — en s'appuyant sur l'analyse de compétences déjà en place.
+   vidéos — en s'appuyant sur l'analyse par matière déjà en place.
 
    C'est une limite, et c'est aussi une garantie : il ne peut pas se
    tromper sur une notion, puisqu'il n'en explique aucune. Quand il
@@ -250,9 +249,6 @@ const videosTrouvees = (mots, maximum = 2) =>
     maximum
   );
 
-const competencesTrouvees = (mots, maximum = 2) =>
-  meilleurs(competences, mots, (c) => [[c.nom, 3]], maximum);
-
 /* ---------------------------------------------------------------- */
 /* Fabrication des liens affichés                                    */
 /* ---------------------------------------------------------------- */
@@ -331,12 +327,10 @@ function repondreAide() {
 }
 
 function repondrePriorite(analyse) {
-  const modules = modulesAAmeliorer(analyse);
   const fragiles = faiblesses(analyse);
 
-  if (modules.length === 0) {
-    const jamais = nonEvaluees(analyse);
-    const aucuneDonnee = jamais.length === competences.length;
+  if (fragiles.length === 0) {
+    const aucuneDonnee = nonEvaluees(analyse).length === analyse.length;
 
     return {
       intention: "priorite",
@@ -346,29 +340,29 @@ function repondrePriorite(analyse) {
             "Je ne devinerai pas ton niveau et je n'inventerai pas de faiblesse. Termine un QCM et je pourrai te dire sur quoi insister.",
           ]
         : [
-            "D'après tes résultats, aucune compétence n'est en difficulté pour l'instant.",
-            "Le plus utile serait donc d'élargir : il reste des compétences sur lesquelles tu n'as pas encore assez répondu pour que je puisse dire quoi que ce soit.",
+            "D'après tes résultats, aucune matière n'est en difficulté pour l'instant.",
+            "Le plus utile serait donc d'élargir : il reste des matières où tu n'as pas encore assez répondu pour que je puisse dire quoi que ce soit.",
           ],
       liens: qcms.slice(0, 2).map(lienQcm),
       suggestions: false,
     };
   }
 
-  const premier = modules[0];
-  const matiere = getMatiere(premier.matiere);
+  const premier = fragiles[0];
+  const matiere = getMatiere(premier.id);
 
   return {
     intention: "priorite",
     texte: [
-      `Je commencerais par « ${premier.chapitre} » en ${premier.nomMatiere}. La compétence « ${premier.motif} » est à ${premier.taux} %, c'est ton point le plus bas.`,
+      `Je commencerais par ${premier.nom} : tu y es à ${premier.taux} % aux QCM, c'est ta matière la plus fragile.`,
       fragiles.length > 1
-        ? `${fragiles.length} compétences sont à consolider au total, et ${modules.length} chapitres s'y rattachent.`
-        : "C'est la seule compétence à consolider pour l'instant.",
+        ? `${fragiles.length} matières sont à consolider au total. Relis le cours, puis refais ses exercices et ses QCM.`
+        : "C'est la seule matière à consolider pour l'instant. Relis le cours, puis refais ses exercices et ses QCM.",
     ],
     liens: [
       matiere ? lienMatiere(matiere) : null,
       ...exercices
-        .filter((e) => e.matiere === premier.matiere)
+        .filter((e) => e.matiere === premier.id)
         .slice(0, 2)
         .map(lienExercice),
     ].filter(Boolean),
@@ -379,17 +373,15 @@ function repondrePriorite(analyse) {
 function repondreExercice(mots, analyse) {
   let trouves = exercicesTrouves(mots);
 
-  // Aucun sujet reconnu : on propose alors ce qui correspond à la
-  // compétence la plus faible, ce qui reste un choix fondé.
+  // Aucun sujet reconnu : on propose alors les exercices de la matière
+  // la plus fragile, ce qui reste un choix fondé.
   let motif = null;
   if (trouves.length === 0) {
     const fragiles = faiblesses(analyse);
     if (fragiles.length > 0) {
       const cible = fragiles[0];
-      trouves = exercices
-        .filter((e) => e.competence === cible.id || e.matiere === cible.matiere)
-        .slice(0, 3);
-      motif = `Je n'ai pas reconnu de sujet précis, alors je pars de ton point faible : « ${cible.nom} », à ${cible.taux} %.`;
+      trouves = exercices.filter((e) => e.matiere === cible.id).slice(0, 3);
+      motif = `Je n'ai pas reconnu de sujet précis, alors je pars de ta matière la plus fragile : ${cible.nom}, à ${cible.taux} %.`;
     }
   }
 
@@ -424,7 +416,7 @@ function repondreQcm(mots) {
       `Voici de quoi t'interroger. ${
         trouves.length > 1 ? "Ces QCM se lancent" : "Ce QCM se lance"
       } en mode examen : minuteur, navigation entre les questions, correction à la fin.`,
-      "Chaque réponse est rattachée à une compétence, c'est ce qui me permettra ensuite de te dire où tu en es.",
+      "Chaque réponse compte dans le niveau de la matière, c'est ce qui me permettra ensuite de te dire où tu en es.",
     ],
     liens: trouves.map(lienQcm),
     suggestions: false,
@@ -434,7 +426,6 @@ function repondreQcm(mots) {
 function repondreRevision(mots) {
   const chapitres = chapitresTrouves(mots);
   const mats = chapitres.length === 0 ? matieresTrouvees(mots) : [];
-  const comps = competencesTrouvees(mots, 1);
 
   if (chapitres.length === 0 && mats.length === 0) return RIEN_TROUVE;
 
@@ -459,11 +450,6 @@ function repondreRevision(mots) {
   if (indisponible) {
     texte.push(
       "Attention : ce chapitre n'est pas encore publié. Sa mise en ligne attend l'autorisation du département et de l'enseignant."
-    );
-  }
-  if (comps.length > 0) {
-    texte.push(
-      `Sur la plateforme, ce sujet relève de la compétence « ${comps[0].nom} ».`
     );
   }
 

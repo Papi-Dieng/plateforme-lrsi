@@ -362,11 +362,9 @@ function SessionQcm({ qcmId }) {
     dejaEnregistre.current = true;
     const ecoule = tempsImparti - restant;
     setTempsFinal(ecoule);
-    // Le détail alimente l'analyse des compétences de la page progression.
-    const detail = qcm.questions.map((q, i) => ({
-      competence: q.competence ?? null,
-      correct: reponses[i] === q.bonne,
-    }));
+    // Le détail alimente les forces et faiblesses par matière (page
+    // progression, src/analyseMatieres.js).
+    const detail = qcm.questions.map((q, i) => ({ correct: reponses[i] === q.bonne }));
     enregistrerScore(qcm.id, score, total, ecoule, detail);
     // Les réponses, anonymes, pour les statistiques de l'admin (sauf refus).
     envoyerStats(qcm, qcm.questions.map((_, i) => reponses[i]));

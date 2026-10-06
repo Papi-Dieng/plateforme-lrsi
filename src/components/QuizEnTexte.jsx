@@ -18,8 +18,6 @@ import { EXEMPLE_QUIZ, ecrireQuizTexte, lireQuizTexte } from "../quizTexte";
    décrit dans `src/quizTexte.js`.
    ================================================================== */
 
-const cle = (t) => String(t ?? "").trim().toLowerCase();
-
 export default function QuizEnTexte({ qcm, onAjouter, onRemplacer }) {
   const [mode, setMode] = useState(null); // null, "ajouter" ou "modifier"
   const [texte, setTexte] = useState("");
@@ -29,22 +27,13 @@ export default function QuizEnTexte({ qcm, onAjouter, onRemplacer }) {
   const valides = lues.filter((q) => q.erreurs.length === 0);
   const enErreur = lues.length - valides.length;
 
-  // En modifiant, une question garde sa compétence : retrouvée par son
-  // énoncé, ou par sa place quand le nombre de questions n'a pas changé
-  // (corriger une faute dans l'énoncé ne doit pas la faire perdre).
-  const versQuestions = (liste) => {
-    const memePlace = mode === "modifier" && liste.length === qcm.questions.length;
-    return liste.map((q, i) => ({
+  const versQuestions = (liste) =>
+    liste.map((q) => ({
       enonce: q.enonce,
       options: q.options,
       bonne: q.bonne,
       explication: q.explication,
-      competence:
-        qcm.questions.find((x) => cle(x.enonce) === cle(q.enonce))?.competence ??
-        (memePlace ? qcm.questions[i].competence : "") ??
-        "",
     }));
-  };
 
   const ouvrir = (m) => {
     setMode(m);

@@ -59,11 +59,11 @@ configuration du projet, rien d'autre à régler. Chaque fichier de test vit
 | `src/quizTexte.js` | toutes les façons d'écrire un QCM en texte, erreurs signalées sans rien deviner, aller-retour texte → questions → texte |
 | `src/sauvegarde.js` | aller-retour complet sur un autre appareil, fichiers refusés (autre application, version plus récente, trop gros), aucune donnée de session ou d'admin |
 | `src/revisions.js` | intervalles 2, 5, 12, 30 jours, retour à 2 jours après un échec, rien ne change si on refait un QCM en avance |
-| `src/competences.js` | aucun verdict sous `MINIMUM_REPONSES`, seuils de force et de faiblesse, chapitres à relire sans doublon |
-| `src/planning.js` | dates (fins de mois, années bissextiles), points faibles d'abord, QCM la veille et devoir l'avant-veille, tâches par jour bornées |
+| `src/analyseMatieres.js` | réponses rangées dans la matière du QCM, aucun verdict sous `MINIMUM_REPONSES`, seuils de force et de faiblesse, chapitres à revoir (pas lus d'abord) |
+| `src/planning.js` | dates (fins de mois, années bissextiles), matière fragile d'abord, QCM la veille et devoir l'avant-veille, tâches par jour bornées |
 | `src/programmeIA.js` | créneaux libres (cours hebdomadaires, heures d'examen, heure déjà passée), répartition sans IA, événements de l'emploi du temps |
 | `src/pages/gestionContenu/` | problèmes signalés avant publication (titre manquant, chapitre renommé, énoncé absent…), nettoyage de ce qui part au relais, identifiants, liens YouTube |
-| `src/data/` | contenu par défaut cohérent : identifiants uniques, chapitres des compétences écrits mot pour mot, bonne réponse existante, explication présente |
+| `src/data/` | contenu par défaut cohérent : identifiants uniques, matières existantes, bonne réponse existante, explication présente |
 | `serveur-ia/` | origines refusées, consignes impossibles à remplacer, messages tronqués, limite par visiteur (mots de passe compris), espace admin fermé sans mot de passe, examens non autorisés cachés, vrais PDF seulement, liens https seulement, modèle de secours |
 
 Les tests du relais simulent Cloudflare (stockage KV, limiteur) et Gemini :
@@ -565,7 +565,6 @@ lrsi-platform/
 │   │   ├── qcm.js            questionnaires
 │   │   ├── examens.js        devoirs et examens passés
 │   │   ├── couleurs.js       une couleur par matière
-│   │   ├── competences.js    compétences et chapitres associés
 │   │   ├── avatars.jsx       les six avatars (couleurs et formes)
 │   │   ├── videos.js         emplacements de vidéos d'explication
 │   │   └── bibliotheque.js   ressources et leur statut d'autorisation
@@ -593,7 +592,7 @@ lrsi-platform/
 │   │   ├── GestionContenu.jsx    gérer tout le contenu (admin) : onglets, publication
 │   │   ├── gestionContenu/       ses morceaux :
 │   │   │   ├── types.js              les onglets et ce que chaque type sait faire
-│   │   │   ├── editeursCours.jsx     matières (avec le cours), compétences
+│   │   │   ├── editeursCours.jsx     matières (avec le cours)
 │   │   │   ├── editeursExercices.jsx exercices, QCM
 │   │   │   ├── editeursDocuments.jsx vidéos, devoirs, examens, bibliothèque
 │   │   │   ├── champs.jsx            champs de saisie, champ de PDF
@@ -615,7 +614,7 @@ lrsi-platform/
 │   ├── dictee.js             dictée vocale par la reconnaissance du navigateur
 │   ├── quizTexte.js          lit et écrit un QCM au format texte (admin)
 │   ├── progression.js        exercices travaillés, chapitres lus, scores, favoris, vidéos
-│   ├── competences.js        analyse : forces, faiblesses, modules
+│   ├── analyseMatieres.js    forces et faiblesses par matière, chapitres à revoir
 │   ├── revisions.js          révision espacée des QCM
 │   ├── planning.js           programme de révision jour par jour
 │   ├── emploiDuTemps.js      événements de l'emploi du temps, sans affichage
@@ -659,7 +658,7 @@ réécrire les pages.
 
 *Administration*, puis *Gérer le contenu* (`/#/admin/contenu`), avec le mot de
 passe admin. Neuf onglets : matières et cours (le texte de chaque chapitre),
-compétences, exercices, QCM, vidéos, devoirs, examens et bibliothèque.
+exercices, QCM, vidéos, devoirs, examens et bibliothèque.
 
 Vocabulaire : un **devoir** est un sujet rédigé pour la plateforme, fait avec
 un minuteur et corrigé à la fin ; un **examen** est un sujet passé de
@@ -707,7 +706,12 @@ recompilation, pas de push.
 - **Ma réponse, corrigée par l'IA** (`src/components/RepondreExercice.jsx`,
   route `/corriger-exercice` de `serveur-ia/avis.js`) : avant d'ouvrir la
   correction, l'étudiant écrit sa réponse comme sur sa copie et clique
-  « Faire corriger par l'IA ». L'IA la compare au corrigé de l'auteur (texte
+  « Faire corriger par l'IA ». Deux façons de répondre : **question par
+  question** (une case sous chaque question numérotée de l'énoncé, « 1. »,
+  « 2) », « Question 3 : »… lues par `src/questionsExercice.js` ; proposé
+  seulement s'il y en a au moins deux), ou **écrire ou coller sa réponse**
+  dans une seule case. Les réponses question par question partent ensemble,
+  chacune sous sa question, et une question laissée vide est signalée à l'IA. L'IA la compare au corrigé de l'auteur (texte
   écrit, sinon celui lu dans le PDF de correction) et donne un verdict :
   **juste**, **presque** ou **pas encore**, avec ce qui correspond au corrigé
   et ce qui n'y correspond pas. Elle ne fait que comparer : ni solution, ni
@@ -734,13 +738,10 @@ recompilation, pas de push.
 - Ce qui est caché (correction, corrigé) l'est dans la page, pas sur le
   relais : quelqu'un qui connaît l'adresse d'un PDF peut l'ouvrir. C'est
   déjà le cas des corrections écrites, qui sont dans le site.
-- **L'agent IA de l'admin** aide à ranger, et ne décide jamais seul. Dans
-  l'onglet Compétences, « Proposer des compétences » lit les chapitres et
-  leur cours et propose une liste à cocher. « Rattacher ce qui n'a pas de
-  compétence » classe d'un coup les exercices et questions sans compétence,
-  dans une liste à relire et corriger avant d'appliquer. Sur chaque exercice
-  et chaque question, « Suggérer avec l'IA » propose une compétence avec sa
-  raison. Rien n'entre dans le brouillon sans un clic. C'est un second agent,
+- **L'agent IA de l'admin** aide à remplir, et ne décide jamais seul : il
+  génère des questions de QCM, propose le « À retenir » d'un exercice, et
+  remplit un exercice ou découpe un TD à partir d'un PDF. Rien n'entre dans
+  le brouillon sans un clic. C'est un second agent,
   distinct de l'assistant des étudiants (`serveur-ia/agent-admin.js`), joignable
   seulement avec le mot de passe admin. Il a sa propre clé, créée dans un autre
   projet Google pour que son quota gratuit soit séparé :
@@ -750,8 +751,7 @@ recompilation, pas de push.
   npx wrangler secret put GEMINI_API_KEY_ADMIN
   ```
 
-  Sans cette clé, il utilise celle des étudiants. Le relais écarte toute
-  compétence ou tout chapitre que l'agent inventerait.
+  Sans cette clé, il utilise celle des étudiants.
 - **Écrire un QCM en texte** : dans un QCM, « Écrire le quiz en texte »,
   comme sur papier (format décrit dans `src/quizTexte.js`) :
 
@@ -769,22 +769,17 @@ recompilation, pas de push.
   explication après `>` ou `Explication :`. Un aperçu se met à jour pendant
   la saisie et signale les erreurs (aucune bonne réponse, plusieurs, réponses
   en double) sans rien deviner. « Modifier en texte » affiche tout le QCM
-  dans ce format pour le corriger comme un document ; une question garde sa
-  compétence, retrouvée par son énoncé ou par sa place.
+  dans ce format pour le corriger comme un document.
 - **Générer des questions de QCM** : dans un QCM, « Générer des questions
   avec l'IA ». On choisit les chapitres, le nombre (3 à 15) et le niveau ;
   l'agent lit le cours des chapitres (écrit ou extrait du PDF) et écrit des
-  questions à 4 réponses, avec explication et compétence. On les relit, la
+  questions à 4 réponses, avec explication. On les relit, la
   bonne réponse surlignée, et on garde celles qu'on coche. Le relais écarte
   les questions invalides (réponses en double ou vides, bonne réponse
   impossible, question déjà dans le QCM) et **mélange les réponses** : les
   modèles placent volontiers la bonne en premier, ce qui la ferait deviner.
   Sans cours rédigé, l'agent s'appuie sur ses connaissances : la page le
   signale, et la relecture compte d'autant plus.
-- Les **compétences** se gèrent dans leur onglet : nom, matière, et chapitres
-  à relire quand elle est faible. Renommer un chapitre met à jour les
-  compétences qui le citent. Supprimer une compétence la détache des
-  exercices et des questions de QCM, sans les supprimer.
 
 ### Dans les fichiers
 
@@ -824,57 +819,40 @@ Dans `src/data/exercices.js`. Les champs `indice`, `etapes`, `reponse` et
 `explication` alimentent respectivement le coup de pouce, la méthode pas à pas,
 le bloc de réponse et l'encadré « à retenir ».
 
-### Une compétence
+### Forces et faiblesses, par matière
 
-C'est ce qui permet à la plateforme de dire « relis ce chapitre » plutôt que
-« tu es faible en réseaux ». La chaîne est la suivante :
+Depuis le 6 octobre 2026, le niveau se mesure **par matière** (Réseaux,
+Systèmes, Algorithmique…) et non plus par compétence : les compétences ont
+été retirées du site, de l'admin et du relais, à la demande de l'équipe.
 
 ```text
-question ratée → compétence faible → chapitres à relire
+réponses aux QCM d'une matière → niveau de la matière → chapitres à revoir
 ```
 
-Trois endroits à renseigner, et seulement trois :
+Tout est calculé dans `src/analyseMatieres.js`, sans rien à renseigner :
+chaque réponse compte dans la matière du QCM.
 
-1. `src/data/competences.js` déclare la compétence, sa matière et les
-   chapitres qui la travaillent. Les titres de chapitres reprennent mot pour
-   mot ceux de `matieres.js`.
-2. Chaque question de `qcm.js` porte un champ `competence`.
-3. Chaque exercice de `exercices.js` porte le même champ.
+- **Seules les réponses aux QCM comptent**, parce qu'elles seules
+  enregistrent du juste et du faux. Les exercices comptent dans la
+  progression, jamais dans le niveau.
+- **Seule la dernière tentative** de chaque QCM est lue : refaire un
+  questionnaire met le niveau à jour au lieu de l'additionner.
+- **Le garde-fou** : en dessous de `MINIMUM_REPONSES` réponses dans une
+  matière, aucune étiquette n'est posée (« pas assez de réponses »). Juger sur
+  une ou deux questions découragerait pour rien. Volontairement bas pendant la
+  création : **à relever quand chaque matière aura une vingtaine de
+  questions.**
+- Force à partir de 80 %, faiblesse sous 50 %, « à consolider » entre les
+  deux.
+- **Chapitres à revoir** (page Ma progression) : dans chaque matière fragile,
+  les chapitres pas encore lus d'abord ; s'ils sont tous lus, tous sont à
+  relire. Le planning de révision met la matière fragile en tête de la même
+  façon, et l'assistant répond à « sur quoi travailler ? » par la matière la
+  plus fragile.
 
-```js
-// src/data/competences.js
-{
-  id: "res-adressage",
-  nom: "Adressage et sous-réseaux",
-  matiere: "reseaux",
-  chapitres: ["Adressage IPv4 et sous-réseaux", "Introduction à IPv6"],
-}
-
-// src/data/qcm.js, dans une question
-competence: "res-adressage",
-```
-
-**Ce qui entre dans le calcul, et ce qui n'y entre pas.** Seules les réponses
-aux QCM comptent, parce qu'elles seules enregistrent du juste et du faux.
-Ouvrir la correction d'un exercice prouve qu'on a travaillé, pas qu'on a
-réussi : les exercices comptent dans la progression, jamais dans le niveau.
-
-**Le garde-fou.** En dessous de `MINIMUM_REPONSES`, fixé dans
-`src/competences.js`, aucune étiquette n'est posée et la compétence s'affiche
-« pas assez de réponses ». Juger une compétence sur une ou deux questions n'a
-aucun sens, et annoncer une faiblesse à tort décourage pour rien. Cette
-constante est volontairement basse pendant la phase de création : **la relever
-vers 8 ou 10 dès que chaque filière approchera la vingtaine de QCM.**
-
-Enfin, seule la dernière tentative de chaque QCM alimente l'analyse. Refaire un
-questionnaire met donc à jour le niveau au lieu de l'additionner.
-
-**Où voir ce qu'il reste à écrire.** La page `/admin` liste les trente
-compétences triées des plus démunies aux plus fournies, avec leur nombre de
-questions. Elle affiche aussi l'objectif chiffré : il faut environ
-`compétences × MINIMUM_REPONSES` questions pour que toutes puissent recevoir un
-verdict. Cette page s'adresse à l'auteur, pas aux étudiants : elle vit dans la
-section « Coulisses » du menu profil, jamais dans la barre latérale.
+La page `/admin` montre combien de matières peuvent recevoir un verdict, et
+le nombre de questions de QCM de chacune, des moins fournies aux plus
+fournies : c'est la liste de ce qu'il reste à écrire.
 
 ### Une vidéo d'explication
 
@@ -929,10 +907,10 @@ qui fait la différence entre un questionnaire et un vrai outil de révision.
   cascade, dont une vue d'ensemble, un anneau de précision, une bande de
   régularité sur quatorze jours, les barres par matière et les résultats des
   QCM.
-- Analyse par compétence : forces, faiblesses et chapitres à relire, avec un
-  seuil minimal de réponses avant tout verdict (voir section 7).
+- Forces et faiblesses par matière, et chapitres à revoir, avec un seuil
+  minimal de réponses avant tout verdict (voir section 5).
 - Amorce d'espace d'administration : inventaire du contenu, couverture de
-  l'analyse et liste des compétences à alimenter. Page d'auteur, séparée du
+  l'analyse par matière et nombre de questions de chacune. Page d'auteur, séparée du
   parcours étudiant.
 - QCM en mode examen : minuteur avec temps imparti, navigation libre entre les
   questions, marquage « à revoir », effacement d'une réponse, confirmation
@@ -1007,9 +985,9 @@ une IA.
 | Il comprend | Il répond par |
 | --- | --- |
 | « je n'ai pas compris X » | le chapitre qui traite X, ses exercices, ses QCM, ses vidéos |
-| « donne-moi un exercice sur X » | les exercices correspondants, ou ceux de la compétence la plus faible |
+| « donne-moi un exercice sur X » | les exercices correspondants, ou ceux de la matière la plus fragile |
 | « interroge-moi sur X » | les QCM de la matière |
-| « sur quoi travailler ? » | la compétence la plus basse et ses chapitres, d'après les QCM terminés |
+| « sur quoi travailler ? » | la matière la plus fragile, d'après les QCM terminés |
 | le reste | « je n'ai rien trouvé », sans rien inventer |
 
 Toute la logique tient dans `src/assistant.js`, hors de React et sans état :
@@ -1063,8 +1041,8 @@ sont aussi recopiées dans le compte (voir « Les comptes étudiants »).
 Page *Mon planning* (`/#/planning`). L'étudiant note une évaluation (matière,
 date, nombre de tâches par jour) ; le site en tire un programme jour par jour
 jusqu'à la veille (`src/planning.js`), à partir de ses résultats de QCM :
-d'abord ses compétences les plus faibles, avec leurs chapitres à relire, leurs
-exercices pas encore faits et leurs QCM ; puis le reste de la matière ; un
+d'abord, si la matière est fragile, tout son cours à relire et ses exercices
+pas encore faits ; puis ce qui n'est pas encore lu ou fait ; un
 devoir en conditions réelles l'avant-veille, s'il en existe un ; refaire les
 QCM la veille. Ce qui ne tient pas dans les jours va dans « En plus, si tu as
 le temps ». Chaque tâche renvoie vers un contenu qui existe, se coche, et le

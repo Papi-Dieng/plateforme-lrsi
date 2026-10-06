@@ -1,9 +1,8 @@
 import { matieres } from "./data/matieres";
-import { competences } from "./data/competences";
 import { exercices } from "./data/exercices";
 import { qcms } from "./data/qcm";
 import { examens as devoirs } from "./data/examens";
-import { analyserCompetences } from "./competences";
+import { analyserMatieres } from "./analyseMatieres";
 import { lireChapitresLus, lireExercicesTravailles, lireScores } from "./progression";
 import { ajouterJours, aujourdhui, construirePlan, joursEntre, lirePlanning } from "./planning";
 import { lireRevisions, revisionsDues } from "./revisions";
@@ -58,11 +57,10 @@ export function programmeDesRappels(debut = aujourdhui()) {
   const contexte = {
     aujourdhui: debut,
     matieres,
-    competences,
     exercices,
     qcms,
     devoirs,
-    analyse: analyserCompetences(lireScores()),
+    analyse: analyserMatieres(lireScores()),
     exercicesTravailles: lireExercicesTravailles(),
     chapitresLus: lireChapitresLus(),
   };

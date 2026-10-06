@@ -7,12 +7,11 @@ import TexteLibre, { AIDE_MISE_EN_FORME } from "../../components/TexteLibre";
 import Apercu from "../../components/Apercu";
 import LectureTexte from "../../components/LectureTexte";
 import LecteurPdf from "../../components/LecteurPdf";
-import { deplacer, ICONES_MATIERE, optionsMatieres } from "./outils";
+import { deplacer, ICONES_MATIERE } from "./outils";
 import { Bouton, BoutonApercu, Champ, ChampPdf, Choix, Ordre, Zone } from "./champs";
 
 /* ==================================================================
-   Éditeurs des matières (avec le cours de chaque chapitre) et des
-   compétences.
+   Éditeur des matières, avec le cours de chaque chapitre.
    ================================================================== */
 
 /* Le cours d'un chapitre : un texte écrit, un PDF, ou les deux. Le
@@ -105,7 +104,7 @@ export function EditeurMatiere({ element: m, changer, motDePasse }) {
           Chaque chapitre appartient au semestre 1 ou au semestre 2 : la page de la matière
           montre les deux à part. Le texte du cours s'affiche aux étudiants sous le chapitre,
           et l'IA s'en sert pour répondre. Une ligne vide sépare deux paragraphes. Changer le titre d'un chapitre
-          détache les favoris et les compétences qui y renvoient.
+          détache les favoris qui y renvoient.
         </p>
         <div className="mt-3 space-y-3">
           {chapitres.map((c, i) => (
@@ -180,77 +179,3 @@ export function EditeurMatiere({ element: m, changer, motDePasse }) {
   );
 }
 
-/* Une compétence : ce que l'analyse mesure. Les questions de QCM et les
-   exercices y sont rattachés, et elle renvoie vers les chapitres à
-   relire quand elle est faible. */
-export function EditeurCompetence({ element: c, changer, matieres, usages }) {
-  const matiere = matieres.find((m) => m.id === c.matiere);
-  const titres = matiere?.chapitres.map((ch) => ch.titre) ?? [];
-  const orphelins = c.chapitres.filter((t) => !titres.includes(t));
-  const basculer = (titre) =>
-    changer({
-      chapitres: c.chapitres.includes(titre)
-        ? c.chapitres.filter((t) => t !== titre)
-        : [...c.chapitres, titre],
-    });
-
-  return (
-    <div className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Champ
-          label="Nom"
-          value={c.nom}
-          maxLength={120}
-          placeholder="Adressage et sous-réseaux"
-          onChange={(e) => changer({ nom: e.target.value })}
-        />
-        <Choix
-          label="Matière"
-          value={c.matiere}
-          options={optionsMatieres(matieres)}
-          onChange={(e) => changer({ matiere: e.target.value, chapitres: [] })}
-        />
-      </div>
-
-      <fieldset>
-        <legend className="text-xs font-semibold text-ink-600 dark:text-ink-300">
-          Chapitres à relire quand cette compétence est faible
-        </legend>
-        {titres.length === 0 ? (
-          <p className="mt-2 text-sm text-ink-500 dark:text-ink-400">Choisis d'abord une matière qui a des chapitres.</p>
-        ) : (
-          <div className="mt-2 space-y-1">
-            {titres.map((t) => (
-              <label
-                key={t}
-                className="flex items-center gap-3 rounded-lg px-2 py-1.5 text-sm text-ink-700 hover:bg-ink-50 dark:text-ink-300 dark:hover:bg-ink-800"
-              >
-                <input
-                  type="checkbox"
-                  checked={c.chapitres.includes(t)}
-                  onChange={() => basculer(t)}
-                  className="size-4 accent-brand-600"
-                />
-                {t}
-              </label>
-            ))}
-          </div>
-        )}
-        {orphelins.map((t) => (
-          <p key={t} className="mt-2 flex items-center gap-2 text-xs text-sun-700 dark:text-sun-400">
-            Chapitre introuvable : « {t} »
-            <button type="button" onClick={() => basculer(t)} className="font-medium underline">
-              retirer
-            </button>
-          </p>
-        ))}
-      </fieldset>
-
-      <p className="rounded-xl bg-ink-50 px-4 py-3 text-xs/5 text-ink-600 dark:bg-ink-950 dark:text-ink-400">
-        Utilisée par {usages.exercices} exercice(s) et {usages.questions} question(s) de QCM. Une
-        compétence n'est jugée qu'à partir de 3 réponses : prévois au moins 3 questions de QCM
-        qui s'y rattachent.
-      </p>
-    </div>
-  );
-}

@@ -1,7 +1,7 @@
 /* ==================================================================
    Le contenu pédagogique publié depuis l'espace admin.
 
-   Matières et cours, compétences, exercices, QCM, vidéos, devoirs
+   Matières et cours, exercices, QCM, vidéos, devoirs
    (`examens`), examens passés (`annales`) et bibliothèque
    (`ressources`) : un seul document JSON dans Cloudflare KV, sous la clé
    `contenu`. Le site le charge à l'ouverture ; tant que rien n'est
@@ -108,15 +108,6 @@ const nettoyerMatiere = (m) => ({
     .filter((c) => c.titre),
 });
 
-/* Une compétence renvoie vers des chapitres par leur titre exact :
-   c'est ce qui permet de dire « relis ce chapitre » sans rien inventer. */
-const nettoyerCompetence = (c) => ({
-  id: id(c?.id),
-  nom: texte(c?.nom, 120),
-  matiere: id(c?.matiere),
-  chapitres: textes(c?.chapitres, 20, 150),
-});
-
 /* Un exercice a un texte écrit, deux PDF (l'énoncé, et la correction
    montrée seulement quand l'étudiant la demande), ou les deux : le texte
    s'affiche sur le site, les PDF restent à télécharger. Le texte lu dans
@@ -129,7 +120,6 @@ function nettoyerExercice(e) {
     id: id(e?.id),
     titre: texte(e?.titre, 150),
     matiere: id(e?.matiere),
-    competence: id(e?.competence),
     difficulte: unParmi(e?.difficulte, ["Facile", "Moyen", "Difficile"], "Moyen"),
     duree: texte(e?.duree, 20),
     tags: textes(e?.tags, 10, 30),
@@ -159,7 +149,6 @@ const nettoyerQcm = (q) => ({
       return {
         enonce: texte(x?.enonce, 1000),
         options,
-        competence: id(x?.competence),
         bonne: entier(x?.bonne, 0, Math.max(options.length - 1, 0), 0),
         explication: texte(x?.explication, 1500),
       };
@@ -241,12 +230,6 @@ const nettoyerRessource = (r) => ({
 export function nettoyerContenu(brut) {
   return {
     matieres: uniques(liste(brut?.matieres, 30).map(nettoyerMatiere).filter((m) => m.nom)),
-    // Absentes d'une publication (page admin d'avant leur arrivée,
-    // restée en cache), les compétences ne sont pas vidées : la clé est
-    // omise, et le site garde les siennes.
-    competences: Array.isArray(brut?.competences)
-      ? uniques(liste(brut.competences, 300).map(nettoyerCompetence).filter((c) => c.nom))
-      : undefined,
     exercices: uniques(liste(brut?.exercices, 500).map(nettoyerExercice).filter((e) => e.titre)),
     qcms: uniques(liste(brut?.qcms, 200).map(nettoyerQcm).filter((q) => q.titre)),
     videos: uniques(liste(brut?.videos, 500).map(nettoyerVideo).filter((v) => v.titre)),

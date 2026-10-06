@@ -7,7 +7,7 @@
    - les créneaux libres de l'étudiant, datés (jour, début, fin) ;
    - les examens (matière, semestre, date, heure) ;
    - les tâches possibles de chaque matière, dans l'ordre de priorité
-     calculé par le site (compétences faibles d'abord), avec la date
+     calculé par le site (matière fragile d'abord), avec la date
      avant laquelle elles doivent être faites : l'examen de leur matière.
 
    Elle renvoie des séances : un créneau, une heure de début et de fin

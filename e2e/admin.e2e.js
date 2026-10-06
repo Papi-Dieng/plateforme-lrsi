@@ -8,7 +8,7 @@ import { MOT_DE_PASSE_ADMIN, aller, entrerEnInvite, expect, test } from "./outil
    bien le brouillon modifié. Le relais est simulé (e2e/outils.js).
    ================================================================== */
 
-const ONGLETS = ["Matières et cours", "Compétences", "Exercices", "QCM", "Vidéos", "Devoirs", "Examens", "Bibliothèque"];
+const ONGLETS = ["Matières et cours", "Exercices", "QCM", "Vidéos", "Devoirs", "Examens", "Bibliothèque"];
 
 // Chaque onglet affiche aussi son nombre d'éléments : « Exercices 12 ».
 const onglet = (page, nom) => page.getByRole("tab", { name: new RegExp(`^${nom} \\d+$`) });

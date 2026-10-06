@@ -5,9 +5,8 @@ import { Badge, Container, EnTetePage } from "../components/ui";
 import { cx } from "../components/classes";
 import {
   MINIMUM_REPONSES,
-  couvertureCompetences,
-} from "../competences";
-import { competences } from "../data/competences";
+  couvertureMatieres,
+} from "../analyseMatieres";
 import { matieres } from "../data/matieres";
 import { exercices } from "../data/exercices";
 import { qcms } from "../data/qcm";
@@ -74,31 +73,20 @@ function Compteur({ valeur, libelle, alerte }) {
 }
 
 export default function Admin() {
-  const couverture = useMemo(() => couvertureCompetences(), []);
+  const couverture = useMemo(() => couvertureMatieres(), []);
 
   const nbQuestions = qcms.reduce((n, q) => n + q.questions.length, 0);
   const nbChapitres = matieres.reduce((n, m) => n + m.chapitres.length, 0);
   const videosAvecLien = videosSuggerees.filter((v) => v.youtubeId).length;
   const ressourcesLibres = ressources.filter((r) => r.statut === "libre").length;
 
-  // Objectif : MINIMUM_REPONSES questions par compétence, au minimum.
-  const objectifQuestions = competences.length * MINIMUM_REPONSES;
-  const manquantes = Math.max(objectifQuestions - nbQuestions, 0);
-
-  // Liste de travail : les compétences les plus démunies d'abord.
+  // Liste de travail : les matières les moins fournies en questions d'abord.
   const aTraiter = useMemo(
     () =>
-      competences
-        .map((c) => {
-          const n = couverture.questionsPar[c.id] ?? 0;
-          const matiere = matieres.find((m) => m.id === c.matiere);
-          return {
-            ...c,
-            questions: n,
-            matiere,
-            etat:
-              n === 0 ? "vide" : n < MINIMUM_REPONSES ? "incomplet" : "prete",
-          };
+      matieres
+        .map((m) => {
+          const n = couverture.questionsPar[m.id] ?? 0;
+          return { ...m, questions: n, etat: n === 0 ? "vide" : n < MINIMUM_REPONSES ? "incomplet" : "prete" };
         })
         .sort((a, b) => a.questions - b.questions || a.nom.localeCompare(b.nom)),
     [couverture]
@@ -161,7 +149,7 @@ export default function Admin() {
                 Gérer le contenu
               </span>
               <span className="mt-0.5 block text-sm text-ink-500 dark:text-ink-400">
-                Matières et cours, compétences, exercices, QCM, vidéos,
+                Matières et cours, exercices, QCM, vidéos,
                 devoirs, examens et bibliothèque. Publié en un clic, visible
                 tout de suite par les étudiants.
               </span>
@@ -221,7 +209,6 @@ export default function Admin() {
               <Compteur valeur={exercices.length} libelle="exercices corrigés" />
               <Compteur valeur={qcms.length} libelle="QCM" />
               <Compteur valeur={nbQuestions} libelle="questions de QCM" />
-              <Compteur valeur={competences.length} libelle="compétences" />
               <Compteur
                 valeur={`${videosAvecLien}/${videosSuggerees.length}`}
                 libelle="vidéos avec un lien"
@@ -238,97 +225,35 @@ export default function Admin() {
           <Bloc
             icone="sparkles"
             ton="violet"
-            titre="Couverture de l'analyse par compétence"
-            description="De quoi la plateforme est capable de juger, et ce qui l'en empêche."
+            titre="Forces et faiblesses : couverture par matière"
+            description="Les matières sur lesquelles la plateforme peut juger un étudiant, d'après les questions de QCM."
           >
-            <div className="grid gap-5 lg:grid-cols-3">
-              <div className="lg:col-span-2">
-                <p className="text-2xl font-bold text-ink-900 dark:text-white">
-                  {couverture.avecQuestion}
-                  <span className="ml-1 text-sm font-medium text-ink-500 dark:text-ink-400">
-                    / {couverture.total} compétences
-                  </span>
-                </p>
-                <p className="mt-0.5 text-xs text-ink-500 dark:text-ink-400">
-                  ont au moins une question de QCM.
-                </p>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-ink-200 dark:bg-ink-800">
-                  <div
-                    className="h-full rounded-full bg-violet-500 transition-[width] duration-700"
-                    style={{
-                      width: `${Math.round((couverture.avecQuestion / couverture.total) * 100)}%`,
-                    }}
-                  />
-                </div>
-
-                <ul className="mt-4 space-y-2 text-sm/6 text-ink-600 dark:text-ink-400">
-                  <li className="flex gap-2">
-                    <Icon
-                      name="check"
-                      className="mt-1 size-3.5 shrink-0 text-ink-500 dark:text-ink-400"
-                    />
-                    {couverture.evaluables}{" "}
-                    {couverture.evaluables > 1 ? "atteignent" : "atteint"} le
-                    seuil de {MINIMUM_REPONSES} réponses, donc{" "}
-                    {couverture.evaluables > 1 ? "peuvent" : "peut"} recevoir un
-                    verdict.
-                  </li>
-                  {matieresSansQcm.length > 0 && (
-                    <li className="flex gap-2">
-                      <Icon
-                        name="bulb"
-                        className="mt-1 size-3.5 shrink-0 text-sun-500"
-                      />
-                      {matieresSansQcm.map((m) => m.nom).join(", ")}{" "}
-                      {matieresSansQcm.length > 1 ? "n'ont" : "n'a"} aucun QCM.
-                    </li>
-                  )}
-                  <li className="flex gap-2">
-                    <Icon
-                      name="info"
-                      className="mt-1 size-3.5 shrink-0 text-ink-500 dark:text-ink-400"
-                    />
-                    Le seuil est fixé à {MINIMUM_REPONSES} pendant la création.
-                    À relever vers 8 ou 10 quand chaque filière approchera la
-                    vingtaine de QCM.
-                  </li>
-                </ul>
-              </div>
-
-              <div className="rounded-2xl bg-ink-50 p-4 dark:bg-ink-950">
-                <p className="text-xs font-semibold tracking-wide text-ink-500 dark:text-ink-400 uppercase">
-                  Objectif d'écriture
-                </p>
-                <p className="mt-2 text-2xl font-bold text-ink-900 dark:text-white">
-                  {manquantes}
-                  <span className="ml-1 text-sm font-medium text-ink-500 dark:text-ink-400">
-                    questions
-                  </span>
-                </p>
-                <p className="mt-1 text-xs/5 text-ink-500 dark:text-ink-400">
-                  Il en faut environ {objectifQuestions} pour que les{" "}
-                  {competences.length} compétences franchissent le seuil de{" "}
-                  {MINIMUM_REPONSES}. Tu en as écrit {nbQuestions}.
-                </p>
-              </div>
+            <p className="text-2xl font-bold text-ink-900 dark:text-white">
+              {couverture.evaluables}
+              <span className="ml-1 text-sm font-medium text-ink-500 dark:text-ink-400">
+                / {couverture.total} matières
+              </span>
+            </p>
+            <p className="mt-0.5 text-xs text-ink-500 dark:text-ink-400">
+              ont au moins {MINIMUM_REPONSES} questions de QCM, donc peuvent recevoir un verdict.
+            </p>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-ink-200 dark:bg-ink-800">
+              <div
+                className="h-full rounded-full bg-violet-500 transition-[width] duration-700"
+                style={{ width: `${Math.round((couverture.evaluables / couverture.total) * 100)}%` }}
+              />
             </div>
-          </Bloc>
+            <p className="mt-4 flex gap-2 text-sm/6 text-ink-600 dark:text-ink-400">
+              <Icon name="info" className="mt-1 size-3.5 shrink-0 text-ink-500 dark:text-ink-400" />
+              Le seuil est fixé à {MINIMUM_REPONSES} réponses par matière pendant la création. À relever
+              quand chaque matière aura une vingtaine de questions ({nbQuestions} écrites aujourd'hui).
+            </p>
 
-          {/* ---- Liste de travail ---- */}
-          <Bloc
-            icone="pencil"
-            ton="flame"
-            titre="Compétences à alimenter"
-            description="Les plus démunies en premier. C'est ta liste de rédaction."
-          >
-            <div className="overflow-x-auto">
+            <div className="mt-5 overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="text-xs text-ink-500 dark:text-ink-400">
                     <th scope="col" className="pb-3 font-medium">
-                      Compétence
-                    </th>
-                    <th scope="col" className="hidden pb-3 font-medium sm:table-cell">
                       Matière
                     </th>
                     <th scope="col" className="pb-3 text-right font-medium">
@@ -340,44 +265,21 @@ export default function Admin() {
                   </tr>
                 </thead>
                 <tbody>
-                  {aTraiter.map((c) => (
-                    <tr
-                      key={c.id}
-                      className="border-t border-ink-200 dark:border-ink-800"
-                    >
+                  {aTraiter.map((m) => (
+                    <tr key={m.id} className="border-t border-ink-200 dark:border-ink-800">
                       <td className="py-3 pr-4">
-                        <span className="font-medium text-ink-900 dark:text-white">
-                          {c.nom}
-                        </span>
-                        <span className="mt-0.5 block font-mono text-[11px] text-ink-500 dark:text-ink-400">
-                          {c.id}
-                        </span>
-                      </td>
-                      <td className="hidden py-3 pr-4 sm:table-cell">
                         <span className="flex items-center gap-2">
-                          <span
-                            className={cx(
-                              "grid size-6 shrink-0 place-items-center rounded-full",
-                              themeMatiere(c.matiere).pastille
-                            )}
-                          >
-                            <Icon
-                              name={c.matiere?.icone ?? "book"}
-                              className="size-3"
-                            />
+                          <span className={cx("grid size-6 shrink-0 place-items-center rounded-full", themeMatiere(m).pastille)}>
+                            <Icon name={m.icone ?? "book"} className="size-3" />
                           </span>
-                          <span className="text-ink-600 dark:text-ink-400">
-                            {c.matiere?.nom}
-                          </span>
+                          <span className="font-medium text-ink-900 dark:text-white">{m.nom}</span>
                         </span>
                       </td>
                       <td className="py-3 pr-4 text-right font-mono text-ink-600 tabular-nums dark:text-ink-300">
-                        {c.questions}
+                        {m.questions}
                       </td>
                       <td className="py-3 text-right">
-                        <Badge ton={etats[c.etat].ton}>
-                          {etats[c.etat].label}
-                        </Badge>
+                        <Badge ton={etats[m.etat].ton}>{etats[m.etat].label}</Badge>
                       </td>
                     </tr>
                   ))}

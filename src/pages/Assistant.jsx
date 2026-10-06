@@ -6,7 +6,7 @@ import SaisieIA from "../components/SaisieIA";
 import { ETAPES_ASSISTANT } from "../chargementIA";
 import { cx } from "../components/classes";
 import { lireScores } from "../progression";
-import { analyserCompetences } from "../competences";
+import { analyserMatieres } from "../analyseMatieres";
 import { RACCOURCIS, repondre, questionsRapides } from "../assistant";
 import { decouperReponse, demanderIA, iaActive, raisonEchec } from "../ia";
 import { getMatiere } from "../data/matieres";
@@ -263,7 +263,7 @@ export default function Assistant() {
   // La demande à l'IA en cours, pour pouvoir l'arrêter.
   const enCours = useRef(null);
 
-  const analyse = useMemo(() => analyserCompetences(scores), [scores]);
+  const analyse = useMemo(() => analyserMatieres(scores), [scores]);
 
   // Chaque changement de la discussion est gardé aussitôt.
   useEffect(() => {

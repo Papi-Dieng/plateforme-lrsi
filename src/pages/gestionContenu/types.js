@@ -1,6 +1,6 @@
 import { typesRessource } from "../../data/bibliotheque";
 import { identifiant } from "./outils";
-import { EditeurCompetence, EditeurMatiere } from "./editeursCours";
+import { EditeurMatiere } from "./editeursCours";
 import { EditeurExercice, EditeurQcm } from "./editeursExercices";
 import { EditeurAnnale, EditeurExamen, EditeurRessource, EditeurVideo } from "./editeursDocuments";
 
@@ -11,7 +11,6 @@ import { EditeurAnnale, EditeurExamen, EditeurRessource, EditeurVideo } from "./
 
 export const ONGLETS = [
   { cle: "matieres", label: "Matières et cours", icone: "folder" },
-  { cle: "competences", label: "Compétences", icone: "layers" },
   { cle: "exercices", label: "Exercices", icone: "pencil" },
   { cle: "qcms", label: "QCM", icone: "target" },
   { cle: "videos", label: "Vidéos", icone: "video" },
@@ -36,24 +35,12 @@ export const TYPES = {
     titre: (m) => m.nom,
     detail: (m) => `${m.chapitres.length} chapitres`,
   },
-  competences: {
-    Editeur: EditeurCompetence,
-    nouveau: (tous, matiere) => ({
-      id: identifiant(`${matiere || "competence"}-competence`, tous),
-      nom: "",
-      matiere,
-      chapitres: [],
-    }),
-    titre: (c) => c.nom,
-    detail: (c) => `${c.chapitres.length} chapitre(s)`,
-  },
   exercices: {
     Editeur: EditeurExercice,
     nouveau: (tous, matiere) => ({
       id: identifiant("exercice", tous),
       titre: "",
       matiere,
-      competence: "",
       difficulte: "Moyen",
       duree: "",
       tags: [],

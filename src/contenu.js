@@ -1,6 +1,5 @@
 import { site } from "./data/site";
 import { matieres } from "./data/matieres";
-import { competences } from "./data/competences";
 import { exercices } from "./data/exercices";
 import { qcms } from "./data/qcm";
 import { videosSuggerees } from "./data/videos";
@@ -32,7 +31,6 @@ const DELAI_MAXIMUM = 4000;
 
 const TABLEAUX = {
   matieres,
-  competences,
   exercices,
   qcms,
   videos: videosSuggerees,
@@ -82,7 +80,7 @@ const valide = (c) =>
   Array.isArray(c.matieres) &&
   c.matieres.length > 0 &&
   c.matieres.every((m) => m && typeof m.id === "string" && Array.isArray(m.chapitres)) &&
-  ["competences", "exercices", "qcms", "videos", "examens", "annales", "ressources"].every((cle) => estListe(c[cle])) &&
+  ["exercices", "qcms", "videos", "examens", "annales", "ressources"].every((cle) => estListe(c[cle])) &&
   (c.qcms ?? []).every((q) => q && Array.isArray(q.questions));
 
 export async function chargerContenu() {

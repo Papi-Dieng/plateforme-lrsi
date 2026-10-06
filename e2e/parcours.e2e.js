@@ -1,5 +1,6 @@
 import { qcms } from "../src/data/qcm.js";
 import { exercices } from "../src/data/exercices.js";
+import { matieres } from "../src/data/matieres.js";
 import { site } from "../src/data/site.js";
 import { aller, entrerEnInvite, expect, test } from "./outils.js";
 
@@ -149,6 +150,66 @@ test.describe("exercice : ma réponse corrigée par l'IA", () => {
     await champ.fill("62 hôtes");
     await page.getByRole("button", { name: "Refaire corriger" }).click();
     await expect(page.getByRole("status").filter({ hasText: "C'est juste !" })).toBeVisible();
+  });
+});
+
+test.describe("exercice : répondre question par question, ou tout écrire", () => {
+  const numerote = {
+    id: "hotes-slash-27",
+    titre: "Calculer le nombre d'hôtes d'un sous-réseau",
+    matiere: "reseaux",
+    difficulte: "Facile",
+    duree: "10 min",
+    tags: [],
+    enonce: "Une entreprise reçoit l'adresse réseau 192.168.5.0/27.\n\n1. Quel est le masque en notation décimale ?\n2. Combien d'adresses utilisables ?\n3. Quelle est l'adresse de diffusion ?",
+    indice: "",
+    etapes: [],
+    reponse: "1. 255.255.255.224\n2. 30\n3. 192.168.5.31",
+    explication: "",
+  };
+
+  test("une case sous chaque question, et toutes les réponses partent ensemble", async ({ page, relais }) => {
+    relais.contenu = { matieres, exercices: [...exercices, numerote], qcms, videos: [], examens: [], annales: [], ressources: [] };
+    const envois = [];
+    await page.route(`${new URL(site.urlIA).origin}/corriger-exercice`, (route) => {
+      const entetes = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*" };
+      if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: entetes });
+      envois.push(route.request().postDataJSON());
+      return route.fulfill({ headers: entetes, json: { verdict: "partiel", justes: ["Le masque correspond."], erreurs: ["La question 2 ne correspond pas."] } });
+    });
+
+    await entrerEnInvite(page);
+    await aller(page, `/exercices/${numerote.id}`);
+    const choix = page.getByRole("group", { name: "Façon de répondre" });
+    await expect(choix.getByRole("button", { name: "Répondre question par question" })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByText("Quel est le masque en notation décimale ?").last()).toBeVisible();
+
+    const corriger = page.getByRole("button", { name: "Faire corriger par l'IA" });
+    await expect(corriger).toBeDisabled();
+    await page.getByRole("textbox", { name: "Ta réponse à la question 1" }).fill("255.255.255.224");
+    await page.getByRole("textbox", { name: "Ta réponse à la question 2" }).fill("32");
+    await corriger.click();
+    await expect(page.getByRole("status").filter({ hasText: "Presque" })).toBeVisible();
+    // Chaque réponse sous sa question ; la question laissée vide est signalée.
+    expect(envois[0].reponse).toBe(
+      "1. Quel est le masque en notation décimale ?\nRéponse : 255.255.255.224\n\n2. Combien d'adresses utilisables ?\nRéponse : 32\n\n3. Quelle est l'adresse de diffusion ?\nRéponse : (pas de réponse)"
+    );
+
+    // L'autre façon : une seule case, pour écrire ou coller toute la réponse.
+    await choix.getByRole("button", { name: "Écrire ou coller ma réponse" }).click();
+    await expect(page.getByRole("textbox", { name: "Ta réponse à la question 1" })).toHaveCount(0);
+    await page.getByRole("textbox", { name: "Ta réponse à l'exercice" }).fill("Masque 255.255.255.224, 30 hôtes, diffusion 192.168.5.31");
+    await page.getByRole("button", { name: "Refaire corriger" }).click();
+    await expect.poll(() => envois.length).toBe(2);
+    expect(envois[1].reponse).toBe("Masque 255.255.255.224, 30 hôtes, diffusion 192.168.5.31");
+  });
+
+  test("un énoncé sans questions numérotées : seulement la grande case", async ({ page }) => {
+    const sansNumeros = exercices.find((e) => e.reponse && !/^\s*1[.)]/m.test(e.enonce));
+    await entrerEnInvite(page);
+    await aller(page, `/exercices/${sansNumeros.id}`);
+    await expect(page.getByRole("textbox", { name: "Ta réponse à l'exercice" })).toBeVisible();
+    await expect(page.getByRole("group", { name: "Façon de répondre" })).toHaveCount(0);
   });
 });
 

@@ -44,9 +44,3 @@ export const optionsMatieres = (matieres) => [
   ...matieres.map((m) => ({ value: m.id, label: m.nom || m.id })),
 ];
 
-export const optionsCompetences = (competences, matiere) => [
-  { value: "", label: "Aucune" },
-  ...competences
-    .filter((c) => c.matiere === matiere)
-    .map((c) => ({ value: c.id, label: c.nom || c.id })),
-];

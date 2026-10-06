@@ -3,8 +3,8 @@
 
    L'étudiant note une évaluation (matière, date) ; le site en tire un
    programme jour par jour jusqu'à la veille, à partir de SES résultats :
-   d'abord ses compétences les plus faibles, avec leurs chapitres à
-   relire, leurs exercices et leurs QCM, puis le reste de la matière.
+   d'abord, si la matière est fragile (src/analyseMatieres.js), tout son
+   cours à relire et ses exercices, puis ce qui n'est pas encore fait.
    L'avant-veille, un devoir en conditions réelles s'il en existe un ;
    la veille, refaire les QCM de la matière.
 
@@ -17,8 +17,6 @@
    ================================================================== */
 
 export const CLE_PLANNING = "lrsi-planning";
-
-const ORDRE_NIVEAUX = { faiblesse: 0, "a-consolider": 1, "non-evaluee": 2, force: 3 };
 
 /* ---- Dates, en jours locaux « AAAA-MM-JJ » ---- */
 
@@ -70,11 +68,11 @@ export function ecrirePlanning(planning) {
 
 /* ---- Construire le programme ---- */
 
-/* Les tâches candidates, dans l'ordre où il vaut mieux les faire. */
-function taches(evaluation, { matieres, competences, exercices, qcms, analyse, exercicesTravailles, chapitresLus = {} }) {
+/* Les tâches candidates, dans l'ordre où il vaut mieux les faire.
+   `analyse` : le niveau de chaque matière (src/analyseMatieres.js). */
+function taches(evaluation, { matieres, exercices, analyse = [], exercicesTravailles, chapitresLus = {} }) {
   const matiere = matieres.find((m) => m.id === evaluation.matiere);
   if (!matiere) return [];
-  const niveauDe = new Map(analyse.map((c) => [c.id, c]));
   const liste = [];
   const vues = new Set();
   const ajouter = (t) => {
@@ -82,7 +80,6 @@ function taches(evaluation, { matieres, competences, exercices, qcms, analyse, e
     vues.add(t.cle);
     liste.push(t);
   };
-  const disponible = (titre) => matiere.chapitres.some((c) => c.titre === titre && c.statut === "disponible");
 
   const tacheChapitre = (titre, motif) => ({
     cle: `chapitre:${matiere.id}:${titre}`,
@@ -98,49 +95,26 @@ function taches(evaluation, { matieres, competences, exercices, qcms, analyse, e
     detail: motif,
     to: `/exercices/${e.id}`,
   });
-  const tacheQcm = (q, motif) => ({
-    cle: `qcm:${q.id}`,
-    type: "qcm",
-    titre: `Faire le QCM « ${q.titre} »`,
-    detail: motif,
-    to: `/qcm/${q.id}`,
-  });
 
-  // 1. Compétences de la matière, de la plus faible à la plus solide.
-  const aTravailler = competences
-    .filter((c) => c.matiere === matiere.id)
-    .map((c) => niveauDe.get(c.id) ?? { ...c, niveau: "non-evaluee", taux: null })
-    .sort(
-      (a, b) =>
-        ORDRE_NIVEAUX[a.niveau] - ORDRE_NIVEAUX[b.niveau] || (a.taux ?? 101) - (b.taux ?? 101)
-    );
+  const disponibles = matiere.chapitres.filter((c) => c.statut === "disponible");
+  const pasLu = (c) => !chapitresLus[`${matiere.id}::${c.titre}`];
+  const pasFait = (e) => e.matiere === matiere.id && !exercicesTravailles[e.id];
 
-  for (const c of aTravailler) {
-    if (c.niveau === "force") continue;
-    const motif =
-      c.niveau === "non-evaluee"
-        ? `Compétence « ${c.nom} » : pas encore assez de réponses pour la juger.`
-        : `Compétence « ${c.nom} » à ${c.taux} % : ${c.niveau === "faiblesse" ? "ton point le plus faible" : "à consolider"}.`;
-    for (const titre of c.chapitres ?? []) if (disponible(titre)) ajouter(tacheChapitre(titre, motif));
-    for (const e of exercices) {
-      if (e.competence === c.id && !exercicesTravailles[e.id]) ajouter(tacheExercice(e, motif));
-    }
-    for (const q of qcms) {
-      if (q.questions.some((x) => x.competence === c.id)) ajouter(tacheQcm(q, motif));
-    }
+  // 1. Matière fragile : tout le cours à relire (même les chapitres déjà
+  // lus) et les exercices pas encore faits, en tête du programme.
+  const niveau = analyse.find((a) => a.id === matiere.id);
+  if (niveau?.niveau === "faiblesse" || niveau?.niveau === "a-consolider") {
+    const motif = `${matiere.nom} à ${niveau.taux} % aux QCM : ${
+      niveau.niveau === "faiblesse" ? "une matière fragile, à reprendre" : "à consolider"
+    }.`;
+    for (const c of disponibles) ajouter(tacheChapitre(c.titre, motif));
+    for (const e of exercices) if (pasFait(e)) ajouter(tacheExercice(e, motif));
   }
 
-  // 2. Le reste de la matière : chapitres pas encore lus, puis exercices
-  // pas encore faits. (Un chapitre lu revient quand même au point 1 si sa
-  // compétence est faible : il faut alors le relire.)
-  for (const ch of matiere.chapitres) {
-    if (ch.statut === "disponible" && !chapitresLus[`${matiere.id}::${ch.titre}`]) {
-      ajouter(tacheChapitre(ch.titre, "Pour couvrir tout le programme."));
-    }
-  }
-  for (const e of exercices) {
-    if (e.matiere === matiere.id && !exercicesTravailles[e.id]) ajouter(tacheExercice(e, "Pour t'entraîner sur toute la matière."));
-  }
+  // 2. Sinon, ou en plus : les chapitres pas encore lus, puis les
+  // exercices pas encore faits.
+  for (const c of disponibles) if (pasLu(c)) ajouter(tacheChapitre(c.titre, "Pour couvrir tout le programme."));
+  for (const e of exercices) if (pasFait(e)) ajouter(tacheExercice(e, "Pour t'entraîner sur toute la matière."));
   return liste;
 }
 

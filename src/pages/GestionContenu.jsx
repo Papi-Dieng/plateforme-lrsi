@@ -15,14 +15,14 @@ import {
   restaurerContenu,
 } from "../contenu";
 import { extraireTextePdf } from "../extrairePdf";
-import { PanneauCompetencesIA, PanneauImportTD } from "../components/AssistantAdmin";
+import { PanneauImportTD } from "../components/AssistantAdmin";
 import { identifiant } from "./gestionContenu/outils";
 import { pourPublier, problemes } from "./gestionContenu/brouillon";
 import { Bouton } from "./gestionContenu/champs";
 import { ONGLETS, TYPES } from "./gestionContenu/types";
 
 /* ==================================================================
-   Gérer le contenu : matières et cours, compétences, exercices, QCM,
+   Gérer le contenu : matières et cours, exercices, QCM,
    vidéos, devoirs et examens (`examens` et `annales` dans le code :
    les noms internes datent d'avant le renommage).
 
@@ -64,7 +64,7 @@ export default function GestionContenu() {
       .then((c) => {
         if (annule) return;
         // Une publication plus ancienne peut ne pas avoir toutes les
-        // rubriques (les compétences sont arrivées après) : on complète
+        // rubriques (arrivées après elle) : on complète
         // avec le contenu du code.
         setBrouillon(c ? { ...copieContenuParDefaut(), ...c } : copieContenuParDefaut());
         setPublie(c?.publieLe ?? null);
@@ -118,39 +118,8 @@ export default function GestionContenu() {
     setModifie(true);
   };
   const changer = (modif) => {
-    // Renommer un chapitre met à jour les compétences qui le citent :
-    // sans cela, « relis ce chapitre » pointerait vers un titre disparu.
-    if (
-      onglet === "matieres" &&
-      modif.chapitres &&
-      modif.chapitres.length === selectionne.chapitres.length
-    ) {
-      const renommages = new Map();
-      selectionne.chapitres.forEach((c, i) => {
-        if (c.titre !== modif.chapitres[i].titre) renommages.set(c.titre, modif.chapitres[i].titre);
-      });
-      if (renommages.size) {
-        const matiere = selectionne.id;
-        setBrouillon((b) => ({
-          ...b,
-          competences: b.competences.map((c) =>
-            c.matiere !== matiere
-              ? c
-              : { ...c, chapitres: c.chapitres.map((t) => renommages.get(t) ?? t) }
-          ),
-        }));
-      }
-    }
     modifierListe(onglet, elements.map((e) => (e.id === selectionne.id ? { ...e, ...modif } : e)));
   };
-
-  const usagesCompetence = (id) => ({
-    exercices: brouillon.exercices.filter((e) => e.competence === id).length,
-    questions: brouillon.qcms.reduce(
-      (n, q) => n + q.questions.filter((x) => x.competence === id).length,
-      0
-    ),
-  });
 
   const ajouter = () => {
     const nouveau = type.nouveau(elements, filtre || brouillon.matieres[0]?.id || "");
@@ -160,7 +129,7 @@ export default function GestionContenu() {
 
   const supprimer = () => {
     if (onglet === "matieres") {
-      const lies = ["competences", "exercices", "qcms", "videos", "examens", "annales", "ressources"].reduce(
+      const lies = ["exercices", "qcms", "videos", "examens", "annales", "ressources"].reduce(
         (n, cle) => n + brouillon[cle].filter((e) => e.matiere === selectionne.id).length,
         0
       );
@@ -168,31 +137,6 @@ export default function GestionContenu() {
         window.alert(`Cette matière a encore ${lies} contenu(s) rattaché(s). Supprime-les ou change leur matière d'abord.`);
         return;
       }
-    }
-    if (onglet === "competences") {
-      // Une compétence supprimée est détachée des exercices et des
-      // questions, qui restent en place.
-      const u = usagesCompetence(selectionne.id);
-      const n = u.exercices + u.questions;
-      const message =
-        `Supprimer la compétence « ${selectionne.nom || selectionne.id} » ?` +
-        (n
-          ? `\n\n${u.exercices} exercice(s) et ${u.questions} question(s) y sont rattachés : ils seront détachés, pas supprimés.`
-          : "");
-      if (!window.confirm(message)) return;
-      const id = selectionne.id;
-      setBrouillon((b) => ({
-        ...b,
-        competences: b.competences.filter((c) => c.id !== id),
-        exercices: b.exercices.map((e) => (e.competence === id ? { ...e, competence: "" } : e)),
-        qcms: b.qcms.map((q) => ({
-          ...q,
-          questions: q.questions.map((x) => (x.competence === id ? { ...x, competence: "" } : x)),
-        })),
-      }));
-      setModifie(true);
-      setSelection((s) => ({ ...s, competences: null }));
-      return;
     }
     if (!window.confirm(`Supprimer « ${type.titre(selectionne) || selectionne.id} » ?`)) return;
     modifierListe(onglet, elements.filter((e) => e.id !== selectionne.id));
@@ -327,18 +271,6 @@ export default function GestionContenu() {
               />
             )}
 
-            {onglet === "competences" && (
-              <PanneauCompetencesIA
-                brouillon={brouillon}
-                appliquer={(transformer) => {
-                  setBrouillon(transformer);
-                  setModifie(true);
-                }}
-                motDePasse={motDePasse}
-                identifiant={identifiant}
-              />
-            )}
-
             <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
               {/* ---- Liste ---- */}
               <div className="space-y-3">
@@ -405,9 +337,7 @@ export default function GestionContenu() {
                       element={selectionne}
                       changer={changer}
                       matieres={brouillon.matieres}
-                      competences={brouillon.competences}
                       motDePasse={motDePasse}
-                      usages={onglet === "competences" ? usagesCompetence(selectionne.id) : null}
                     />
                   </>
                 )}

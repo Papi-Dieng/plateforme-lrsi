@@ -5,6 +5,7 @@ import { ETAPES_CORRECTION } from "../chargementIA";
 import { cx } from "./classes";
 import TexteLibre, { EnLigne } from "./TexteLibre";
 import { corrigerExercice, iaActive, raisonEchec, textesExercice } from "../ia";
+import { assemblerReponses, questionsDe } from "../questionsExercice";
 
 /* ==================================================================
    « Ma réponse », dans un exercice, avant la correction.
@@ -15,6 +16,12 @@ import { corrigerExercice, iaActive, raisonEchec, textesExercice } from "../ia";
    (consignes du relais, serveur-ia/avis.js) : la réponse attendue
    montrée ensuite est celle que l'auteur a saisie dans l'admin,
    affichée telle quelle par le site, sans passer par l'IA.
+
+   Deux façons de répondre (demande du 6 octobre 2026) : « question par
+   question », une case sous chaque question numérotée de l'énoncé
+   (src/questionsExercice.js), ou « écrire ou coller ma réponse », une
+   seule grande case. Le premier n'est proposé que si l'énoncé a au
+   moins deux questions numérotées.
 
    Après deux essais qui ne sont pas justes, l'indice est proposé ; une
    réponse juste compte l'exercice comme travaillé. Rien n'est gardé :
@@ -95,8 +102,18 @@ function Liste({ titre, elements, ton, icone }) {
   );
 }
 
+const MODES = [
+  { valeur: "questions", label: "Répondre question par question" },
+  { valeur: "libre", label: "Écrire ou coller ma réponse" },
+];
+
+const champ =
+  "w-full rounded-xl border border-ink-200 bg-white px-3.5 py-2.5 text-sm/6 text-ink-900 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-ink-700 dark:bg-ink-950 dark:text-white";
+
 export default function RepondreExercice({ exercice, onReussi, onBesoinIndice, indiceDisponible }) {
+  const [choix, setChoix] = useState(null);
   const [reponse, setReponse] = useState("");
+  const [reponses, setReponses] = useState({});
   const [resultat, setResultat] = useState(null);
   const [rates, setRates] = useState(0);
   const [etat, setEtat] = useState({ attente: false, erreur: "" });
@@ -104,12 +121,20 @@ export default function RepondreExercice({ exercice, onReussi, onBesoinIndice, i
   const { enonce, corrige } = textesExercice(exercice);
   if (!iaActive || !enonce || !corrige) return null;
 
+  const questions = questionsDe(enonce);
+  // Par défaut, question par question quand l'énoncé s'y prête.
+  const mode = questions.length ? choix ?? "questions" : "libre";
+  const aEnvoyer =
+    mode === "questions" ? assemblerReponses(questions, questions.map((_, i) => reponses[i] ?? "")) : reponse;
+  const vide =
+    mode === "questions" ? !Object.values(reponses).some((v) => v.trim()) : reponse.trim().length < 2;
+
   const corriger = async (e) => {
     e.preventDefault();
     setEtat({ attente: true, erreur: "" });
     setResultat(null);
     try {
-      const r = await corrigerExercice({ enonce, corrige, reponse });
+      const r = await corrigerExercice({ enonce, corrige, reponse: aEnvoyer });
       setResultat(r);
       setEtat({ attente: false, erreur: "" });
       if (r.verdict === "juste") onReussi?.();
@@ -128,26 +153,74 @@ export default function RepondreExercice({ exercice, onReussi, onBesoinIndice, i
         Ma réponse
       </h2>
       <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">
-        Écris ta réponse comme sur ta copie : l'IA la compare au corrigé de l'exercice et te dit si elle est juste.
+        Réponds comme sur ta copie : l'IA compare ta réponse au corrigé de l'exercice et te dit si elle est juste.
       </p>
 
+      {questions.length > 0 && (
+        <div role="group" aria-label="Façon de répondre" className="mt-4 grid gap-2 rounded-xl bg-ink-100 p-1 sm:grid-cols-2 dark:bg-ink-800">
+          {MODES.map((m) => (
+            <button
+              key={m.valeur}
+              type="button"
+              onClick={() => setChoix(m.valeur)}
+              aria-pressed={mode === m.valeur}
+              className={cx(
+                "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                mode === m.valeur
+                  ? "bg-white text-ink-950 shadow-sm dark:bg-ink-950 dark:text-white"
+                  : "text-ink-600 hover:text-ink-900 dark:text-ink-300 dark:hover:text-white"
+              )}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       <form onSubmit={corriger} className="mt-4 space-y-3">
-        <label htmlFor={`reponse-${exercice.id}`} className="sr-only">
-          Ta réponse à l'exercice
-        </label>
-        <textarea
-          id={`reponse-${exercice.id}`}
-          value={reponse}
-          onChange={(e) => setReponse(e.target.value)}
-          rows={6}
-          maxLength={4000}
-          placeholder="Écris ici tes résultats et ta démarche…"
-          className="w-full rounded-xl border border-ink-200 bg-white px-3.5 py-2.5 text-sm/6 text-ink-900 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-ink-700 dark:bg-ink-950 dark:text-white"
-        />
+        {mode === "questions" ? (
+          <ol className="space-y-4">
+            {questions.map((q, i) => (
+              <li key={q.numero}>
+                <label htmlFor={`reponse-${exercice.id}-${q.numero}`} className="block text-sm/6 text-ink-800 dark:text-ink-200">
+                  <span className="font-semibold">Question {q.numero}.</span> <EnLigne texte={q.texte} />
+                </label>
+                <textarea
+                  id={`reponse-${exercice.id}-${q.numero}`}
+                  aria-label={`Ta réponse à la question ${q.numero}`}
+                  value={reponses[i] ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setReponses((r) => ({ ...r, [i]: v }));
+                  }}
+                  rows={2}
+                  maxLength={1500}
+                  placeholder="Ta réponse…"
+                  className={cx("mt-1.5", champ)}
+                />
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <>
+            <label htmlFor={`reponse-${exercice.id}`} className="sr-only">
+              Ta réponse à l'exercice
+            </label>
+            <textarea
+              id={`reponse-${exercice.id}`}
+              value={reponse}
+              onChange={(e) => setReponse(e.target.value)}
+              rows={6}
+              maxLength={4000}
+              placeholder="Écris ou colle ici toute ta réponse : tes résultats et ta démarche…"
+              className={champ}
+            />
+          </>
+        )}
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="submit"
-            disabled={reponse.trim().length < 2 || etat.attente}
+            disabled={vide || etat.attente}
             className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
           >
             <Icon name="sparkles" className="size-4" />

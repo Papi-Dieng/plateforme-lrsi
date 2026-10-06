@@ -5,6 +5,7 @@ import { Bouton } from "../components/ui";
 import { cx } from "../components/classes";
 import {
   dateLisible,
+  lireChapitresLus,
   lireExercicesTravailles,
   lireFavoris,
   lireScores,
@@ -17,21 +18,21 @@ import { exercices } from "../data/exercices";
 import { qcms } from "../data/qcm";
 import {
   MINIMUM_REPONSES,
-  analyserCompetences,
+  analyserMatieres,
+  chapitresARevoir,
   faiblesses,
   forces,
-  modulesAAmeliorer,
   niveaux,
   nonEvaluees,
   reponsesEnregistrees,
-} from "../competences";
+} from "../analyseMatieres";
 
 /* ==================================================================
    Suivi de progression, en grille « bento ».
 
    Chaque carte répond à une question : où j'en suis, où ça coince, et
-   depuis quand je travaille. C'est la première brique du tableau de
-   bord d'analyse des compétences : on n'y mesure que ce qui est
+   depuis quand je travaille. Les forces et faiblesses se lisent par
+   matière (src/analyseMatieres.js) : on n'y mesure que ce qui est
    réellement mesurable aujourd'hui.
    ================================================================== */
 
@@ -264,13 +265,13 @@ export default function Progression() {
 
   const aReprendre = resultatsQcm.filter((r) => r.taux < SEUIL_REUSSITE);
 
-  /* ---- Compétences ---- */
+  /* ---- Forces et faiblesses, par matière ---- */
 
-  const analyse = useMemo(() => analyserCompetences(scores), [scores]);
+  const analyse = useMemo(() => analyserMatieres(scores), [scores]);
   const mesForces = forces(analyse);
   const mesFaiblesses = faiblesses(analyse);
   const enAttente = nonEvaluees(analyse);
-  const modules = modulesAAmeliorer(analyse);
+  const modules = chapitresARevoir(analyse, lireChapitresLus());
   const evaluees = mesForces.length + mesFaiblesses.length;
   const totalReponses = reponsesEnregistrees(analyse);
 
@@ -534,18 +535,18 @@ export default function Progression() {
           icone="target"
           ton="accent"
           titre="Forces et faiblesses"
-          description={`Par compétence, dès ${MINIMUM_REPONSES} réponses enregistrées.`}
+          description={`Par matière, dès ${MINIMUM_REPONSES} réponses de QCM enregistrées.`}
         >
           {evaluees === 0 ? (
             <div className="space-y-3">
               <p className="text-sm/6 text-ink-600 dark:text-ink-400">
-                Aucune compétence n'a encore assez de réponses pour être jugée.
-                Il en faut au moins {MINIMUM_REPONSES} par compétence, et tu en
+                Aucune matière n'a encore assez de réponses pour être jugée.
+                Il en faut au moins {MINIMUM_REPONSES} par matière, et tu en
                 as enregistré {totalReponses} au total.
               </p>
               <p className="text-sm/6 text-ink-600 dark:text-ink-400">
-                Termine d'autres QCM : chaque question rejoint automatiquement
-                la compétence qu'elle vise.
+                Termine d'autres QCM : chaque réponse compte dans la matière
+                du QCM.
               </p>
               <Bouton to="/qcm" taille="sm">
                 <Icon name="target" className="size-4" />
@@ -557,10 +558,19 @@ export default function Progression() {
               <ul className="space-y-4">
                 {[...mesForces, ...mesFaiblesses].map((c) => {
                   const n = niveaux[c.niveau];
+                  const matiere = getMatiere(c.id);
                   return (
                     <li key={c.id}>
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span className="flex items-center gap-2">
+                          <span
+                            className={cx(
+                              "grid size-7 shrink-0 place-items-center rounded-lg",
+                              themeMatiere(matiere).pastille
+                            )}
+                          >
+                            <Icon name={matiere?.icone ?? "book"} className="size-3.5" />
+                          </span>
                           <span className="text-sm font-medium text-ink-900 dark:text-white">
                             {c.nom}
                           </span>
@@ -584,9 +594,6 @@ export default function Progression() {
                           etiquette={`Niveau en ${c.nom}`}
                         />
                       </div>
-                      <p className="mt-1 text-xs text-ink-500 dark:text-ink-400">
-                        {c.nomMatiere}
-                      </p>
                     </li>
                   );
                 })}
@@ -594,7 +601,7 @@ export default function Progression() {
 
               {enAttente.length > 0 && (
                 <p className="mt-5 border-t border-ink-200 pt-4 text-xs text-ink-500 dark:border-ink-800 dark:text-ink-400">
-                  {enAttente.length} compétence{enAttente.length > 1 ? "s" : ""}{" "}
+                  {enAttente.length} matière{enAttente.length > 1 ? "s" : ""}{" "}
                   n'{enAttente.length > 1 ? "ont" : "a"} pas encore assez de
                   réponses pour être jugée{enAttente.length > 1 ? "s" : ""}.
                 </p>
@@ -609,14 +616,14 @@ export default function Progression() {
           large
           icone="book"
           ton="flame"
-          titre="Modules à améliorer"
-          description="Les chapitres à relire, déduits des compétences fragiles."
+          titre="Chapitres à revoir"
+          description="Dans tes matières fragiles, de la plus faible à la moins faible."
         >
           {modules.length === 0 ? (
             <p className="text-sm/6 text-ink-600 dark:text-ink-400">
               {evaluees === 0
-                ? "Cette liste se remplira dès que des compétences auront été évaluées."
-                : "Aucune compétence évaluée n'est sous le seuil. Rien à reprendre pour l'instant."}
+                ? "Cette liste se remplira dès que des matières auront été évaluées."
+                : "Aucune matière évaluée n'est sous le seuil. Rien à reprendre pour l'instant."}
             </p>
           ) : (
             <ul className="space-y-2.5">
@@ -642,7 +649,7 @@ export default function Progression() {
                         {m.chapitre}
                       </span>
                       <span className="block text-xs text-ink-500 dark:text-ink-400">
-                        {m.nomMatiere} · déclenché par « {m.motif} »
+                        {m.nomMatiere} · {m.dejaLu ? "à relire" : "pas encore lu"}
                       </span>
                     </span>
                     <span

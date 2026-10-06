@@ -9,17 +9,6 @@ export function problemes(b) {
   const liste = [];
   const ids = new Set(b.matieres.map((m) => m.id));
   for (const m of b.matieres) if (!m.nom.trim()) liste.push(`Une matière n'a pas de nom (${m.id}).`);
-  for (const c of b.competences) {
-    if (!c.nom.trim()) {
-      liste.push(`La compétence « ${c.id} » n'a pas de nom : elle serait supprimée.`);
-      continue;
-    }
-    if (!ids.has(c.matiere)) liste.push(`La compétence « ${c.nom} » n'a pas de matière.`);
-    const titres = b.matieres.find((m) => m.id === c.matiere)?.chapitres.map((ch) => ch.titre) ?? [];
-    for (const t of c.chapitres) {
-      if (!titres.includes(t)) liste.push(`La compétence « ${c.nom} » renvoie vers un chapitre introuvable : « ${t} ».`);
-    }
-  }
   for (const [cle, nom] of [
     ["exercices", "L'exercice"],
     ["qcms", "Le QCM"],

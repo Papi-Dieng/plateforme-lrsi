@@ -4,11 +4,10 @@ import Icon from "../components/Icon";
 import { Badge, Container, EnTetePage, EtatVide } from "../components/ui";
 import { cx } from "../components/classes";
 import { matieres, nomMatiere } from "../data/matieres";
-import { competences } from "../data/competences";
 import { exercices } from "../data/exercices";
 import { qcms } from "../data/qcm";
 import { examens as devoirs } from "../data/examens";
-import { analyserCompetences } from "../competences";
+import { analyserMatieres } from "../analyseMatieres";
 import { lireChapitresLus, lireExercicesTravailles, lireScores } from "../progression";
 import {
   aujourdhui,
@@ -195,11 +194,10 @@ export default function Planning() {
   // l'étudiant fait un QCM ou ouvre une correction, puis revient ici.
   const [contexte] = useState(() => ({
     matieres,
-    competences,
     exercices,
     qcms,
     devoirs,
-    analyse: analyserCompetences(lireScores()),
+    analyse: analyserMatieres(lireScores()),
     exercicesTravailles: lireExercicesTravailles(),
     chapitresLus: lireChapitresLus(),
   }));

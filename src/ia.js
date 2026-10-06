@@ -231,8 +231,8 @@ export function verifierReponse(reponse, { contient = [], exclut = [] }) {
 /* Agent de l'espace admin                                            */
 /* ---------------------------------------------------------------- */
 
-/* Une tâche confiée à l'agent admin (« rattacher »,
-   « proposer-competences »). Il ne fait que proposer : la page affiche
+/* Une tâche confiée à l'agent admin (« generer-qcm », « a-retenir »,
+   « extraire-exercices »). Il ne fait que proposer : la page affiche
    ses propositions, l'auteur choisit ce qui entre dans le brouillon. */
 /* Statistiques anonymes des QCM (voir `serveur-ia/stats.js`). */
 export const lireStatsAdmin = (motDePasse) => appelAdmin("/admin/stats", motDePasse);

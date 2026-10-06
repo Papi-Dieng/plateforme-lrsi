@@ -44,9 +44,9 @@ export function lireScores() {
 // que si la tentative améliore le meilleur score, pour que le temps affiché
 // corresponde bien au record.
 //
-// `detail` liste, question par question, la compétence visée et la réussite.
+// `detail` liste, question par question, la réussite.
 // Contrairement au score, il est TOUJOURS remplacé par la dernière tentative :
-// l'analyse des compétences doit refléter le niveau actuel, pas le meilleur
+// l'analyse par matière doit refléter le niveau actuel, pas le meilleur
 // jour. Refaire un QCM met donc à jour l'analyse sans la dédoubler.
 export function enregistrerScore(id, score, total, temps, detail) {
   const scores = lireScores();
