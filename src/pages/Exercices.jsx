@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import { CorrectionExercice, EnonceExercice } from "../components/AffichageExercice";
-import VerifierReponse from "../components/VerifierReponse";
+import RepondreExercice from "../components/RepondreExercice";
 import {
   Badge,
   Bouton,
@@ -288,16 +288,14 @@ function DetailExercice({ exerciceId }) {
           </section>
           )}
 
-          {/* Vérifier sa réponse avant la correction */}
-          {exercice.verification?.length > 0 && (
-            <VerifierReponse
-              key={exercice.id}
-              lignes={exercice.verification}
-              indiceDisponible={Boolean(exercice.indice)}
-              onBesoinIndice={() => setIndiceVisible(true)}
-              onReussi={() => marquerExerciceTravaille(exercice.id)}
-            />
-          )}
+          {/* Écrire sa réponse et la faire corriger par l'IA, avant la correction */}
+          <RepondreExercice
+            key={exercice.id}
+            exercice={exercice}
+            indiceDisponible={Boolean(exercice.indice)}
+            onBesoinIndice={() => setIndiceVisible(true)}
+            onReussi={() => marquerExerciceTravaille(exercice.id)}
+          />
 
           {/* Correction */}
           <section className="card overflow-hidden">

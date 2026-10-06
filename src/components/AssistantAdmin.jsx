@@ -865,7 +865,6 @@ export function PanneauImportTD({ brouillon, appliquer, motDePasse, identifiant,
           etapes: x.etapes,
           reponse: x.reponse,
           explication: x.explication,
-          verification: [],
         });
       }
       return { ...b, exercices: tous };

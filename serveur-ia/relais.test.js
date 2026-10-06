@@ -121,6 +121,38 @@ describe("origines", () => {
   });
 });
 
+describe("correction d'un exercice par l'IA", () => {
+  const corps = { enonce: "Combien d'hôtes dans un /26 ?", corrige: "Réponse : 62 hôtes.", reponse: "64 hôtes" };
+  const corriger = (c = corps) => relais.fetch(demande("/corriger-exercice", { corps: c }), env());
+
+  test("renvoie le verdict de l'IA, et lui interdit de révéler le corrigé", async () => {
+    geminiRepond(JSON.stringify({ verdict: "faux", justes: [], erreurs: ["Tu as oublié deux adresses."], piste: "Que retire-t-on toujours ?" }));
+    const r = await corriger();
+    expect(r.status).toBe(200);
+    expect(await r.json()).toEqual({ verdict: "faux", justes: [], erreurs: ["Tu as oublié deux adresses."], piste: "Que retire-t-on toujours ?" });
+    const [appel] = appelsGemini;
+    expect(appel.corps.systemInstruction.parts[0].text).toContain("Ne révèle JAMAIS la bonne réponse");
+    // La réponse de l'étudiant est isolée entre balises.
+    expect(appel.corps.contents[0].parts[0].text).toContain("<reponse>\n64 hôtes\n</reponse>");
+  });
+
+  test("un verdict inconnu n'est jamais pris pour « juste »", async () => {
+    geminiRepond(JSON.stringify({ verdict: "excellent", justes: [], erreurs: [], piste: "" }));
+    const r = await corriger();
+    expect(r.status).toBe(502);
+    expect(await r.json()).toEqual({ erreur: "reponse-illisible" });
+  });
+
+  test("sans énoncé, corrigé ou réponse : refusé sans appeler l'IA", async () => {
+    geminiRepond("ne doit pas servir");
+    for (const manque of ["enonce", "corrige", "reponse"]) {
+      const r = await corriger({ ...corps, [manque]: "" });
+      expect(r.status).toBe(400);
+    }
+    expect(appelsGemini).toHaveLength(0);
+  });
+});
+
 describe("assistant des étudiants", () => {
   test("renvoie le texte du modèle", async () => {
     geminiRepond("Le modèle OSI compte 7 couches.");

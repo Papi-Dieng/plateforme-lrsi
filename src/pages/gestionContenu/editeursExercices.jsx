@@ -166,55 +166,7 @@ export function EditeurExercice({ element: e, changer, matieres, competences, mo
         />
       </fieldset>
 
-      <VerificationExercice
-        lignes={e.verification ?? []}
-        changer={(verification) => changer({ verification })}
-      />
     </div>
-  );
-}
-
-/* Les résultats que l'étudiant peut vérifier lui-même, avant d'ouvrir la
-   correction : un libellé, et la réponse attendue. */
-export function VerificationExercice({ lignes, changer }) {
-  const modifier = (i, modif) => changer(lignes.map((l, j) => (j === i ? { ...l, ...modif } : l)));
-
-  return (
-    <fieldset className="space-y-3 rounded-xl border border-ink-200 p-4 dark:border-ink-800">
-      <legend className="px-1 text-xs font-semibold text-ink-600 dark:text-ink-300">
-        Vérification automatique (facultatif)
-      </legend>
-      <p className="text-xs/5 text-ink-500 dark:text-ink-400">
-        Les résultats que l'étudiant doit trouver. Il tape les siens et voit s'ils sont justes, sans
-        que la réponse lui soit montrée. Plusieurs écritures acceptées se séparent par « | » :{" "}
-        <code>/26 | 26</code>. Majuscules, accents et espaces ne comptent pas, et un nombre ou une
-        adresse IP vaut quelle que soit son écriture (<code>62</code> = <code>62,0</code>).
-      </p>
-      {lignes.map((l, i) => (
-        <div key={i} className="grid gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-          <Champ
-            label="Ce qu'il faut trouver"
-            value={l.libelle}
-            maxLength={120}
-            placeholder="Hôtes utilisables par sous-réseau"
-            onChange={(ev) => modifier(i, { libelle: ev.target.value })}
-          />
-          <Champ
-            label="Réponse attendue"
-            value={l.attendu}
-            maxLength={300}
-            placeholder="62"
-            onChange={(ev) => modifier(i, { attendu: ev.target.value })}
-          />
-          <Bouton variante="danger" icone="trash" onClick={() => changer(lignes.filter((_, j) => j !== i))}>
-            <span className="sr-only">Retirer cette ligne</span>
-          </Bouton>
-        </div>
-      ))}
-      <Bouton icone="plus" disabled={lignes.length >= 10} onClick={() => changer([...lignes, { libelle: "", attendu: "" }])}>
-        Ajouter un résultat à vérifier
-      </Bouton>
-    </fieldset>
   );
 }
 

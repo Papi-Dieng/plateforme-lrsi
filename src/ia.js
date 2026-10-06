@@ -247,6 +247,36 @@ export const demanderAgentAdmin = (tache, donnees, motDePasse) =>
 
 /* L'avis de l'IA sur une réponse rédigée dans un devoir : ce qui est
    juste, ce qui manque, ce qui est faux, un conseil. Jamais de note. */
+/* L'énoncé et le corrigé d'un exercice, en texte, pour que l'IA corrige
+   la réponse de l'étudiant (components/RepondreExercice.jsx). Le texte
+   écrit d'abord ; à défaut, celui lu dans les PDF. Un corrigé vide
+   (PDF scanné, sans texte) rend la correction par l'IA impossible. */
+export function textesExercice(e) {
+  const etapes = (e.etapes ?? []).filter((s) => s.trim());
+  const ecrit = [
+    etapes.length ? `Méthode : ${etapes.join(" ")}` : "",
+    e.reponse ? `Réponse : ${e.reponse}` : "",
+    e.explication ? `À retenir : ${e.explication}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+  return {
+    enonce: (e.enonce || e.texteEnonce || "").trim(),
+    corrige: (ecrit || e.texteCorrige || "").trim(),
+  };
+}
+
+export async function corrigerExercice({ enonce, corrige, reponse }) {
+  const r = await fetch(new URL("/corriger-exercice", site.urlIA), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ enonce, corrige, reponse }),
+  });
+  const donnees = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(donnees.erreur ?? `statut ${r.status}`);
+  return donnees;
+}
+
 export async function demanderAvisRedaction({ enonce, corrige, reponse }) {
   const r = await fetch(new URL("/avis-redaction", site.urlIA), {
     method: "POST",

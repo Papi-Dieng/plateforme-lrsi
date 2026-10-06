@@ -39,11 +39,6 @@ export function problemes(b) {
     }
   }
   for (const e of b.exercices) {
-    if ((e.verification ?? []).some((v) => !v.libelle.trim() || !v.attendu.trim())) {
-      liste.push(`L'exercice « ${e.titre || e.id} » a une ligne de vérification incomplète : elle serait ignorée.`);
-    }
-  }
-  for (const e of b.exercices) {
     if (!e.enonce?.trim() && !e.pdfEnonce) liste.push(`L'exercice « ${e.titre || e.id} » n'a ni énoncé écrit ni énoncé en PDF.`);
   }
   for (const x of b.examens) {

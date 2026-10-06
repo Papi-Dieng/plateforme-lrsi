@@ -56,7 +56,6 @@ configuration du projet, rien d'autre à régler. Chaque fichier de test vit
 
 | Fichier testé | Ce qui est vérifié |
 | --- | --- |
-| `src/verification.js` | nombres (`62` = `62,0`), adresses IP octet par octet, accents et majuscules ignorés, écritures séparées par `\|` |
 | `src/quizTexte.js` | toutes les façons d'écrire un QCM en texte, erreurs signalées sans rien deviner, aller-retour texte → questions → texte |
 | `src/sauvegarde.js` | aller-retour complet sur un autre appareil, fichiers refusés (autre application, version plus récente, trop gros), aucune donnée de session ou d'admin |
 | `src/revisions.js` | intervalles 2, 5, 12, 30 jours, retour à 2 jours après un échec, rien ne change si on refait un QCM en avance |
@@ -82,7 +81,7 @@ téléphone.
 
 | Fichier | Ce qui est parcouru |
 | --- | --- |
-| `e2e/parcours.e2e.js` | entrer en invité, pages réservées, page introuvable, thème gardé ; un QCM tout juste puis tout faux (score, révision dans 2 jours, progression, statistiques anonymes et leur refus) ; « Vérifier ma réponse » jusqu'à l'indice ; favori, sauvegarde téléchargée puis restaurée dans un navigateur vierge, fichier étranger refusé |
+| `e2e/parcours.e2e.js` | entrer en invité, pages réservées, page introuvable, thème gardé ; un QCM tout juste puis tout faux (score, révision dans 2 jours, progression, statistiques anonymes et leur refus) ; une réponse d'exercice corrigée par l'IA (simulée) jusqu'à l'indice, puis juste ; favori, sauvegarde téléchargée puis restaurée dans un navigateur vierge, fichier étranger refusé |
 | `e2e/pages.e2e.js` | chaque page s'ouvre, sans défilement horizontal ; menu du téléphone et barre latérale ; assistant qui répond sans IA ; mot de passe admin refusé ; vues du planning |
 | `e2e/admin.e2e.js` | « Gérer le contenu » avec le bon mot de passe : chaque onglet, une modification publiée (seul le brouillon modifié part au relais), un exercice sans titre signalé avant de publier |
 | `e2e/devoirs-planning.e2e.js` | un devoir : consignes, minuteur jusqu'à « Temps écoulé », corrigé seulement à la fin, auto-correction bornée au barème, avis de l'IA (ce qui part au relais) et son échec sans IA ; un programme de révision réparti sans IA, ajouté à l'emploi du temps et toujours là après rechargement |
@@ -171,11 +170,11 @@ testé, sur le modèle des existants :
 
 ```js
 import { describe, expect, test } from "vitest";
-import { reponseJuste } from "./verification";
+import { normaliserTelephone } from "./telephone";
 
-describe("reponseJuste", () => {
-  test("compare les nombres par leur valeur", () => {
-    expect(reponseJuste("62,0", "62")).toBe(true);
+describe("normaliserTelephone", () => {
+  test("ajoute l'indicatif du Sénégal à un numéro local", () => {
+    expect(normaliserTelephone("77 123 45 67")).toBe("221771234567");
   });
 });
 ```
@@ -511,7 +510,7 @@ lrsi-platform/
 │   ├── contenu.js            contenu publié depuis l'espace admin
 │   ├── fichiers.js           PDF téléversés (cours, exercices, devoirs)
 │   ├── agent-admin.js        l'agent IA de l'espace admin
-│   ├── avis.js               avis de l'IA sur une réponse rédigée (devoirs)
+│   ├── avis.js               avis de l'IA sur une rédaction (devoirs), correction d'un exercice
 │   ├── planning-ia.js        programme de révision composé par l'IA
 │   ├── stats.js              statistiques anonymes des QCM
 │   ├── comptes.js            inscription par téléphone
@@ -542,7 +541,7 @@ lrsi-platform/
 │   │   ├── SaisieIA.jsx      zone de saisie de l'assistant : raccourcis, image, dictée, stop
 │   │   ├── ChargementIA.jsx  animation d'attente de l'IA (d'après kokonutUI)
 │   │   ├── AffichageExercice.jsx  énoncé et correction d'un exercice
-│   │   ├── VerifierReponse.jsx    « Vérifier ma réponse » d'un exercice
+│   │   ├── RepondreExercice.jsx   « Ma réponse » d'un exercice, corrigée par l'IA
 │   │   ├── AvisRedaction.jsx      « Demander l'avis de l'IA » d'un devoir
 │   │   ├── LecteurPdf.jsx         un PDF téléversé, côté étudiant
 │   │   ├── LectureTexte.jsx       un texte écrit dans l'admin, côté étudiant
@@ -615,7 +614,6 @@ lrsi-platform/
 │   ├── images.js             réduit une image jointe avant de l'envoyer à l'IA
 │   ├── dictee.js             dictée vocale par la reconnaissance du navigateur
 │   ├── quizTexte.js          lit et écrit un QCM au format texte (admin)
-│   ├── verification.js       compare la réponse d'un étudiant à la réponse attendue
 │   ├── progression.js        exercices travaillés, chapitres lus, scores, favoris, vidéos
 │   ├── competences.js        analyse : forces, faiblesses, modules
 │   ├── revisions.js          révision espacée des QCM
@@ -638,7 +636,7 @@ lrsi-platform/
 ```
 
 Les tests de la logique vivent à côté du fichier qu'ils vérifient, avec le
-suffixe `.test.js` (`src/verification.test.js`, `src/data/donnees.test.js`…),
+suffixe `.test.js` (`src/telephone.test.js`, `src/data/donnees.test.js`…),
 et ne sont pas repris dans l'arbre ci-dessus.
 
 **Un mot de vocabulaire.** Dans cette version, une filière correspond à une
@@ -706,14 +704,20 @@ recompilation, pas de push.
   correction : l'énoncé s'affiche tout de suite, la correction seulement quand
   l'étudiant clique « voir la correction ». Un indice écrit reste possible.
   L'assistant IA lit le texte des deux, et donne l'indice avant la correction.
-- **Vérification automatique** d'un exercice (facultatif) : les résultats à
-  trouver et leur réponse attendue, plusieurs écritures séparées par `|`
-  (`/26 | 26`). L'étudiant tape les siens dans « Vérifier ma réponse » et voit
-  chacun passer au vert ou au rouge, sans que la bonne réponse soit montrée ;
-  après deux essais ratés, l'indice lui est proposé, et tout juste compte
-  l'exercice comme travaillé. La comparaison (`src/verification.js`) ignore
-  majuscules, accents et espaces, et compare nombres et adresses IP par leur
-  valeur (`62` = `62,0`, `192.168.010.001` = `192.168.10.1`).
+- **Ma réponse, corrigée par l'IA** (`src/components/RepondreExercice.jsx`,
+  route `/corriger-exercice` de `serveur-ia/avis.js`) : avant d'ouvrir la
+  correction, l'étudiant écrit sa réponse comme sur sa copie et clique
+  « Faire corriger par l'IA ». L'IA la compare au corrigé de l'auteur (texte
+  écrit, sinon celui lu dans le PDF de correction) et donne un verdict :
+  **juste**, **presque** ou **pas encore**, avec ce qui va, ce qui ne va pas
+  et une piste. Elle ne révèle jamais le corrigé, pour que l'étudiant puisse
+  réessayer ; un verdict inconnu est refusé par le relais. Après deux essais
+  qui ne sont pas justes, l'indice est proposé ; une réponse juste compte
+  l'exercice comme travaillé. Rien n'est gardé. Le bloc n'apparaît pas sans
+  IA branchée, ni pour un exercice sans corrigé lisible (PDF scanné). Il
+  remplace, depuis le 6 octobre 2026, l'ancienne « Vérifier ma réponse »
+  (résultats attendus saisis par l'admin, comparés sans IA), retirée du site
+  et de l'espace admin.
 - **Avis de l'IA sur une rédaction** : à la fin d'un devoir écrit partie par
   partie, sous chaque corrigé, l'étudiant peut recopier sa réponse et
   « Demander l'avis de l'IA » (`serveur-ia/avis.js`). L'IA la compare au

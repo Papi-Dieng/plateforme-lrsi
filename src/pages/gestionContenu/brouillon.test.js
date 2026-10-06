@@ -6,7 +6,7 @@ import { deplacer, extraireYoutube, identifiant, optionsCompetences } from "./ou
 const brouillon = () => ({
   matieres: [{ id: "reseaux", nom: "Réseaux", chapitres: [{ titre: "OSI" }] }],
   competences: [{ id: "res-osi", nom: "Modèle OSI", matiere: "reseaux", chapitres: ["OSI"] }],
-  exercices: [{ id: "ex", titre: "Couches", matiere: "reseaux", enonce: "Nommer les couches.", etapes: ["", " Lister "], verification: [] }],
+  exercices: [{ id: "ex", titre: "Couches", matiere: "reseaux", enonce: "Nommer les couches.", etapes: ["", " Lister "] }],
   qcms: [{ id: "q", titre: "OSI", matiere: "reseaux", questions: [{ enonce: "Combien ?", options: ["7", "", "4"], bonne: 2 }] }],
   videos: [],
   examens: [],

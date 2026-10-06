@@ -38,6 +38,26 @@ export const ETAPES_ASSISTANT = [
   },
 ];
 
+export const ETAPES_CORRECTION = [
+  {
+    statut: "Lecture de ta réponse",
+    lignes: [
+      "Lecture de ta réponse…",
+      "Lecture de l'énoncé et du corrigé…",
+      "Envoi à Gemini par le relais…",
+    ],
+  },
+  {
+    statut: "Correction",
+    lignes: [
+      "Comparaison avec le corrigé…",
+      "Ce qui est juste…",
+      "Ce qui ne va pas…",
+      "Une piste pour réessayer…",
+    ],
+  },
+];
+
 export const ETAPES_AVIS = [
   {
     statut: "Comparaison avec le corrigé",

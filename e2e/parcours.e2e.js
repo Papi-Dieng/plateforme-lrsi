@@ -1,5 +1,6 @@
 import { qcms } from "../src/data/qcm.js";
 import { exercices } from "../src/data/exercices.js";
+import { site } from "../src/data/site.js";
 import { aller, entrerEnInvite, expect, test } from "./outils.js";
 
 /* ==================================================================
@@ -105,35 +106,48 @@ test.describe("QCM", () => {
   });
 });
 
-test.describe("exercice : vérifier ma réponse", () => {
-  const exercice = exercices.find((e) => e.verification?.length && e.indice);
+test.describe("exercice : ma réponse corrigée par l'IA", () => {
+  const exercice = exercices.find((e) => e.indice && e.reponse);
 
-  test("dit ce qui est juste sans donner la réponse, puis propose l'indice", async ({ page }) => {
+  test("dit si c'est juste, propose l'indice après deux essais, sans montrer la correction", async ({ page }) => {
+    const envois = [];
+    const verdicts = ["faux", "partiel", "juste"];
+    await page.route(`${new URL(site.urlIA).origin}/corriger-exercice`, (route) => {
+      const entetes = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*" };
+      if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: entetes });
+      envois.push(route.request().postDataJSON());
+      const verdict = verdicts[envois.length - 1];
+      return route.fulfill({
+        headers: entetes,
+        json: { verdict, justes: verdict === "faux" ? [] : ["La méthode est la bonne."], erreurs: verdict === "juste" ? [] : ["Le résultat final ne va pas."], piste: "Revois le calcul des hôtes." },
+      });
+    });
+
     await entrerEnInvite(page);
     await aller(page, `/exercices/${exercice.id}`);
-    await expect(page.getByRole("heading", { name: "Vérifier ma réponse" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Vérifier ma réponse" })).toHaveCount(0);
+    const champ = page.getByRole("textbox", { name: "Ta réponse à l'exercice" });
+    const corriger = page.getByRole("button", { name: "Faire corriger par l'IA" });
+    await expect(corriger).toBeDisabled();
 
-    const champ = (l) => page.getByRole("textbox", { name: l.libelle });
-    const verifier = page.getByRole("button", { name: "Vérifier", exact: true });
-    await expect(verifier).toBeDisabled();
+    await champ.fill("64 hôtes");
+    await corriger.click();
+    await expect(page.getByRole("status").filter({ hasText: "Pas encore" })).toBeVisible();
+    await expect(page.getByText("Revois le calcul des hôtes.")).toBeVisible();
+    // Ce qui part au relais : l'énoncé, le corrigé de l'auteur et la réponse.
+    expect(envois[0]).toMatchObject({ reponse: "64 hôtes" });
+    expect(envois[0].corrige).toContain(exercice.reponse.slice(0, 20));
+    // La correction détaillée reste fermée.
+    await expect(page.getByRole("button", { name: "J'ai cherché, voir la correction" })).toBeVisible();
 
-    // Une seule réponse juste, écrite autrement que la réponse attendue.
-    const [premiere, ...autres] = exercice.verification;
-    await champ(premiere).fill(` ${premiere.attendu.split("|").at(-1).trim().toUpperCase()} `);
-    for (const l of autres) await champ(l).fill("0");
-    await verifier.click();
-    await expect(page.getByRole("status")).toHaveText(`1 sur ${exercice.verification.length} juste. Corrige ce qui est en rouge et revérifie.`);
-    for (const l of autres) await expect(champ(l)).toHaveAttribute("aria-invalid", "true");
-    await expect(page.getByText(autres[0].attendu)).toHaveCount(0);
+    await page.getByRole("button", { name: "Refaire corriger" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Presque" })).toBeVisible();
+    await page.getByRole("button", { name: "Affiche l'indice" }).click();
+    await expect(page.getByText(exercice.indice)).toBeVisible();
 
-    // Deuxième essai raté : l'indice est proposé.
-    await verifier.click();
-    await expect(page.getByRole("button", { name: "Affiche l'indice" })).toBeVisible();
-
-    // Tout juste.
-    for (const l of autres) await champ(l).fill(l.attendu.split("|")[0].trim());
-    await verifier.click();
-    await expect(page.getByRole("status")).toContainText("Tout est juste, bravo !");
+    await champ.fill("62 hôtes");
+    await page.getByRole("button", { name: "Refaire corriger" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "C'est juste !" })).toBeVisible();
   });
 });
 

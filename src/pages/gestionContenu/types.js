@@ -62,7 +62,6 @@ export const TYPES = {
       etapes: [],
       reponse: "",
       explication: "",
-      verification: [],
     }),
     titre: (e) => e.titre,
     detail: (e) => `${e.difficulte}${e.pdfEnonce ? (e.enonce ? " · texte + PDF" : " · PDF") : ""}`,

@@ -56,7 +56,7 @@ const articles = [
           titre: "Intelligence artificielle",
           paragraphes: [
             "L'assistant de révision, l'avis sur une réponse rédigée dans un devoir et le programme de révision peuvent faire appel à Google Gemini, un service d'intelligence artificielle. Ce qui lui est envoyé est détaillé dans la politique de confidentialité.",
-            "Une IA peut se tromper avec assurance. Ses réponses sont signalées comme telles ; l'avis sur une rédaction ne met jamais de note. En cas de doute, le cours, le corrigé et l'enseignant font foi.",
+            "Une IA peut se tromper avec assurance. Ses réponses sont signalées comme telles ; l'avis sur une rédaction ne met jamais de note, et la correction d'un exercice dit seulement si ta réponse est juste, presque juste ou fausse. En cas de doute, le cours, le corrigé et l'enseignant font foi.",
             "N'écris dans ces outils ni information personnelle (la tienne ou celle de quelqu'un d'autre), ni contenu illégal, injurieux ou sans rapport avec tes révisions. Pour les images, la même règle vaut : un énoncé, un schéma ou une capture de cours, jamais la photo d'une personne ni un document personnel (pièce d'identité, relevé de notes…).",
           ],
           liens: [{ to: "/confidentialite", label: "Ce qui est envoyé à l'IA" }],

@@ -143,12 +143,6 @@ function nettoyerExercice(e) {
     pdfCorrige,
     texteEnonce: pdfEnonce ? texte(e?.texteEnonce, 15000) : "",
     texteCorrige: pdfCorrige ? texte(e?.texteCorrige, 15000) : "",
-    // Les résultats que l'étudiant peut vérifier lui-même : un libellé et
-    // la réponse attendue (plusieurs écritures séparées par « | »).
-    verification: liste(e?.verification, 50)
-      .map((v) => ({ libelle: texte(v?.libelle, 120), attendu: texte(v?.attendu, 300) }))
-      .filter((v) => v.libelle && v.attendu)
-      .slice(0, 10),
   };
 }
 
