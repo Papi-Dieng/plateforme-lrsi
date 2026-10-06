@@ -10,6 +10,7 @@ import {
 import Icon from "./Icon";
 import FiletErreur from "./FiletErreur";
 import { AvisCodeSecours } from "./CodeSecours";
+import PiedDePageFaisceau from "./PiedDePageFaisceau";
 import { cx } from "./classes";
 import { initiales, useSession } from "../session";
 import { lireProfil, nomAffiche } from "../profil";
@@ -611,48 +612,43 @@ function BarreDuHaut({ ouvert, setOuvert }) {
 /* Pied de page compact                                                */
 /* ------------------------------------------------------------------ */
 
+/* Le pied de page « faisceau » (components/PiedDePageFaisceau.jsx),
+   demandé par l'équipe le 6 octobre 2026. Les adresses sont en « #/… » :
+   le site utilise des adresses à dièse (voir le README). */
+const COLONNES_PIED = [
+  {
+    title: "Informations",
+    links: [
+      { label: "Conditions d'utilisation", href: "#/conditions" },
+      { label: "Confidentialité", href: "#/confidentialite" },
+      { label: "Mentions légales", href: "#/mentions-legales" },
+    ],
+  },
+  {
+    title: "Le projet",
+    links: [
+      { label: "La démarche du projet", href: "#/projet" },
+      { label: "Nous écrire", href: `mailto:${site.contact}` },
+    ],
+  },
+];
+
 function PiedDePage() {
   return (
-    <footer className="border-t border-ink-200 px-4 py-6 sm:px-7 dark:border-ink-800">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs text-ink-500 dark:text-ink-400">
-          © {site.annee} {site.nom} — {site.filiere}
-        </p>
-        <div className="flex flex-wrap items-center gap-4">
-          <Link
-            to="/conditions"
-            className="text-xs font-medium text-ink-500 hover:text-brand-600 dark:text-ink-400"
-          >
-            Conditions d'utilisation
-          </Link>
-          <Link
-            to="/confidentialite"
-            className="text-xs font-medium text-ink-500 hover:text-brand-600 dark:text-ink-400"
-          >
-            Confidentialité
-          </Link>
-          <Link
-            to="/mentions-legales"
-            className="text-xs font-medium text-ink-500 hover:text-brand-600 dark:text-ink-400"
-          >
-            Mentions légales
-          </Link>
-          <Link
-            to="/projet"
-            className="text-xs font-medium text-ink-500 hover:text-brand-600 dark:text-ink-400"
-          >
-            La démarche du projet
-          </Link>
-          <a
-            href={`mailto:${site.contact}`}
-            className="text-xs font-medium text-ink-500 hover:text-brand-600 dark:text-ink-400"
-          >
-            Nous écrire
-          </a>
-          <BoutonTheme className="lg:hidden" />
-        </div>
-      </div>
-    </footer>
+    <PiedDePageFaisceau
+      brand={site.nom}
+      wordmark="sunucours"
+      label={`© ${site.annee} ${site.nom}`}
+      credits={[
+        { lead: "Plateforme de révision de la ", label: site.filiere },
+        { lead: "Projet étudiant, gratuit et ", label: "sans objectif commercial", tail: "." },
+      ]}
+      columns={COLONNES_PIED}
+    >
+      {/* Sur téléphone, il n'y a pas de barre latérale : le thème se
+          change ici. */}
+      <BoutonTheme className="lg:hidden" />
+    </PiedDePageFaisceau>
   );
 }
 

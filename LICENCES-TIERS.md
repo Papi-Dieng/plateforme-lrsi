@@ -6,6 +6,7 @@ Le site n'embarque aucune bibliothèque d'interface.
 | --- | --- | --- |
 | `src/components/ChargementIA.jsx` | « AI Loading State », kokonutUI, licence MIT | le code, réécrit en JavaScript et adapté (licence ci-dessous) |
 | `src/components/SaisieIA.jsx` | « AI Prompt Box », publié sur 21st.dev | **l'apparence seulement** : aucune licence n'étant indiquée, aucun code n'a été copié |
+| `src/components/PiedDePageFaisceau.jsx` | « Beam Wordmark Footer », publié sur 21st.dev par Kedhar (https://21st.dev/@kedhareswer) | **le code**, fourni par l'équipe le 6 octobre 2026 et réécrit en JavaScript ; aucune licence n'est indiquée sur la page d'origine (voir ci-dessous) |
 
 Pour kokonutUI (<https://kokonutui.com>,
 <https://github.com/kokonut-labs/kokonutui>), la licence MIT autorise à
@@ -18,6 +19,12 @@ qui change selon la situation. Tout est écrit pour ce projet, et chaque
 bouton fait vraiment ce qu'il annonce (voir le commentaire en tête du
 fichier). Si l'auteur du composant d'origine se fait connaître avec une
 licence, la citer ici.
+
+Pour le pied de page « faisceau », le code a été repris tel quel à la
+demande de l'équipe, alors qu'aucune licence n'est affichée. Son auteur est
+crédité ici et en tête du fichier. S'il demande une licence ou le retrait,
+la citer ici, ou revenir à l'ancien pied de page (historique Git, avant le
+6 octobre 2026).
 
 ## kokonutUI — licence MIT
 

@@ -62,7 +62,7 @@ const articles = [
     titre: "Propriété intellectuelle",
     paragraphes: [
       "Les contenus rédigés pour la plateforme appartiennent à leurs auteurs. Les ressources externes restent la propriété de leurs auteurs et sont citées avec leur licence. Les marques citées (YouTube, GitHub, Cloudflare, Google, Supabase, Brevo) appartiennent à leurs propriétaires.",
-      "Le site est construit avec des logiciels libres, notamment React, React Router, Vite et Tailwind CSS, sous licence MIT. Les icônes sont intégrées au site en SVG, et les avatars ont été dessinés pour le projet. L'animation d'attente de l'IA est adaptée d'un composant de kokonutUI (licence MIT) ; la zone de saisie de l'assistant s'inspire de l'apparence du composant « AI Prompt Box » publié sur 21st.dev, réécrit sans en reprendre le code ; de même pour le carrousel de l'équipe, qui s'inspire du « Team Carousel » de lightswind.",
+      "Le site est construit avec des logiciels libres, notamment React, React Router, Vite et Tailwind CSS, sous licence MIT. Les icônes sont intégrées au site en SVG, et les avatars ont été dessinés pour le projet. L'animation d'attente de l'IA est adaptée d'un composant de kokonutUI (licence MIT) ; la zone de saisie de l'assistant s'inspire de l'apparence du composant « AI Prompt Box » publié sur 21st.dev, réécrit sans en reprendre le code ; de même pour le carrousel de l'équipe, qui s'inspire du « Team Carousel » de lightswind. Le pied de page reprend le composant « Beam Wordmark Footer » de Kedhar, publié sur 21st.dev.",
     ],
     liens: [{ to: "/conditions", label: "Conditions d'utilisation" }],
   },
