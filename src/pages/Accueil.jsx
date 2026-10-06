@@ -152,12 +152,12 @@ export default function Accueil() {
           </EtatVide>
         </div>
       ) : (
-        // Trois matières par ligne sur toutes les tailles d'écran, comme sur
-        // ordinateur. Sous `md`, la carte se fait compacte (environ 110 px
-        // de large sur un téléphone) : nom court, barre de progression, et
-        // toute la carte cliquable (lien étiré du titre) ; les compteurs et
+        // Deux matières par ligne sur téléphone, trois à partir de `md`.
+        // Sous `md`, la carte se fait compacte (environ 165 px de large sur
+        // un téléphone) : nom, barre de progression, et toute la carte
+        // cliquable (lien étiré du titre) ; le badge, les compteurs et
         // « Continuer » ne s'affichent qu'à partir de `md`.
-        <div className="mt-6 grid grid-cols-3 gap-2.5 sm:gap-4 xl:gap-5">
+        <div className="mt-6 grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-3 xl:gap-5">
           {matieresFiltrees.map((m) => {
             const theme = themeMatiere(m);
             // Progression : les chapitres que l'étudiant a cochés « lu »,
@@ -197,11 +197,10 @@ export default function Accueil() {
                   />
                 </div>
 
-                {/* Sur téléphone, le nom court tient lieu de titre, sur
-                    toute la largeur de la carte. */}
-                <h2 className="mt-1 text-[13px] leading-tight font-semibold hyphens-auto md:hidden">
+                {/* Sur téléphone, le titre prend toute la largeur de la carte. */}
+                <h2 className="mt-1 text-sm leading-snug font-semibold text-balance hyphens-auto md:hidden">
                   <Link to={`/cours/${m.id}`} className="after:absolute after:inset-0 after:rounded-2xl">
-                    {m.nomCourt}
+                    {m.nom}
                   </Link>
                 </h2>
 
@@ -216,7 +215,7 @@ export default function Accueil() {
                     <span className={cx("hidden md:inline", surCarte.attenue)}>Progression</span>
                     <span className={cx("text-[11px] md:text-xs", surCarte.attenue)}>
                       {nbLus}/{dispo}
-                      <span className="hidden md:inline"> chapitre{dispo > 1 ? "s lus" : " lu"}</span>
+                      {" "}chapitre{dispo > 1 ? "s lus" : " lu"}
                     </span>
                   </div>
                   <div
@@ -276,15 +275,18 @@ export default function Accueil() {
       {/* ---------------------------------------------------------- */}
       {/* Prochains chapitres et suggestion                           */}
       {/* ---------------------------------------------------------- */}
-      <div className="mt-5 grid gap-5 xl:grid-cols-3">
-        <section className="rounded-3xl bg-ink-50 p-5 sm:p-6 xl:col-span-2 dark:bg-ink-950">
-          <div className="flex items-center justify-between gap-4">
-            <h2 className="text-lg font-semibold text-ink-900 dark:text-white">
+      {/* Côte à côte sur toutes les tailles d'écran, comme sur ordinateur.
+          Sur téléphone, les textes secondaires (résumé des chapitres,
+          matière) laissent la place à l'essentiel. */}
+      <div className="mt-5 grid grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-2.5 sm:gap-5 xl:grid-cols-3">
+        <section className="min-w-0 rounded-2xl bg-ink-50 p-3 sm:rounded-3xl sm:p-6 xl:col-span-2 dark:bg-ink-950">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+            <h2 className="text-base font-semibold text-ink-900 sm:text-lg dark:text-white">
               Mes prochains chapitres
             </h2>
             <Link
               to="/cours"
-              className="text-sm font-medium text-flame-700 hover:text-flame-800 dark:text-flame-400"
+              className="text-xs font-medium text-flame-700 hover:text-flame-800 sm:text-sm dark:text-flame-400"
             >
               Voir tous les cours
             </Link>
@@ -295,7 +297,7 @@ export default function Accueil() {
               Aucun chapitre disponible pour cette sélection.
             </p>
           ) : (
-            <table className="mt-5 w-full text-left">
+            <table className="mt-3 w-full text-left sm:mt-5">
               <thead>
                 <tr className="text-xs text-ink-500 dark:text-ink-400">
                   <th scope="col" className="pb-3 font-medium">
@@ -315,14 +317,14 @@ export default function Accueil() {
                     key={`${c.matiere.id}-${c.titre}`}
                     className="border-t border-ink-200 dark:border-ink-800"
                   >
-                    <td className="py-3.5 pr-4">
+                    <td className="py-2.5 pr-2 sm:py-3.5 sm:pr-4">
                       <Link
                         to={`/cours/${c.matiere.id}`}
-                        className="font-medium text-ink-900 hover:text-brand-600 dark:text-white dark:hover:text-brand-300"
+                        className="text-sm font-medium text-ink-900 hover:text-brand-600 sm:text-base dark:text-white dark:hover:text-brand-300"
                       >
                         {c.titre}
                       </Link>
-                      <span className="mt-0.5 block text-xs text-ink-500 dark:text-ink-400">
+                      <span className="mt-0.5 hidden text-xs text-ink-500 sm:block dark:text-ink-400">
                         {c.resume}
                       </span>
                     </td>
@@ -341,7 +343,7 @@ export default function Accueil() {
                         </span>
                       </span>
                     </td>
-                    <td className="py-3.5 text-right text-sm whitespace-nowrap text-ink-500 dark:text-ink-400">
+                    <td className="py-2.5 text-right text-xs whitespace-nowrap text-ink-500 sm:py-3.5 sm:text-sm dark:text-ink-400">
                       {c.duree}
                     </td>
                   </tr>
@@ -352,38 +354,39 @@ export default function Accueil() {
         </section>
 
         {/* Suggestion */}
-        <aside className="flex flex-col rounded-3xl bg-lime-400 p-6">
-          <p className="text-sm font-medium text-lime-900">
+        <aside className="flex min-w-0 flex-col rounded-2xl bg-lime-400 p-3 sm:rounded-3xl sm:p-6">
+          <p className="text-xs font-medium text-lime-900 sm:text-sm">
             À tester pour vérifier tes acquis
           </p>
 
-          <span className="mt-4 self-start rounded-lg bg-ink-950 px-2.5 py-1 text-xs font-semibold text-white">
+          <span className="mt-3 self-start rounded-lg bg-ink-950 px-2 py-0.5 text-[11px] font-semibold text-white sm:mt-4 sm:px-2.5 sm:py-1 sm:text-xs">
             {matiereDuQcm?.nomCourt ?? "QCM"}
           </span>
 
-          <h2 className="mt-4 text-3xl leading-tight font-bold text-balance text-ink-950">
+          <h2 className="mt-2 text-base leading-tight font-bold text-balance text-ink-950 sm:mt-4 sm:text-3xl">
             {qcmEnAvant.titre}
           </h2>
 
-          <p className="mt-3 text-sm/6 text-lime-900">{qcmEnAvant.description}</p>
+          <p className="mt-2 text-xs/5 text-lime-900 sm:mt-3 sm:text-sm/6">{qcmEnAvant.description}</p>
 
-          <div className="mt-5 flex flex-wrap gap-2">
-            <span className="rounded-full bg-ink-950/10 px-3 py-1 text-xs font-medium text-ink-950">
+          <div className="mt-3 mb-4 flex flex-wrap gap-1.5 sm:mt-5 sm:mb-6 sm:gap-2">
+            <span className="rounded-full bg-ink-950/10 px-2 py-0.5 text-[11px] font-medium text-ink-950 sm:px-3 sm:py-1 sm:text-xs">
               {qcmEnAvant.questions.length} questions
             </span>
-            <span className="rounded-full bg-ink-950/10 px-3 py-1 text-xs font-medium text-ink-950">
+            <span className="rounded-full bg-ink-950/10 px-2 py-0.5 text-[11px] font-medium text-ink-950 sm:px-3 sm:py-1 sm:text-xs">
               {qcmEnAvant.duree}
             </span>
-            <span className="rounded-full bg-ink-950/10 px-3 py-1 text-xs font-medium text-ink-950">
+            <span className="rounded-full bg-ink-950/10 px-2 py-0.5 text-[11px] font-medium text-ink-950 sm:px-3 sm:py-1 sm:text-xs">
               Corrigé expliqué
             </span>
           </div>
 
           <Link
             to={`/qcm/${qcmEnAvant.id}`}
-            className="mt-auto block rounded-2xl bg-flame-500 px-5 py-3.5 text-center text-sm font-semibold text-ink-950 transition-colors hover:bg-flame-400"
+            aria-label="Commencer le QCM"
+            className="mt-auto block rounded-xl bg-flame-500 px-3 py-2.5 text-center text-xs font-semibold text-ink-950 transition-colors hover:bg-flame-400 sm:rounded-2xl sm:px-5 sm:py-3.5 sm:text-sm"
           >
-            Commencer le QCM
+            Commencer<span className="hidden sm:inline"> le QCM</span>
           </Link>
         </aside>
       </div>
