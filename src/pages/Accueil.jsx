@@ -94,7 +94,13 @@ export default function Accueil() {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrer par matière">
+        {/* Sur téléphone, une seule ligne qui défile au doigt (de bord à
+            bord), au lieu de trois lignes de pastilles. */}
+        <div
+          className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0"
+          role="group"
+          aria-label="Filtrer par matière"
+        >
           {filtres.map((f) => {
             const actif = f.value === matiereActive;
             return (
@@ -104,7 +110,7 @@ export default function Accueil() {
                 onClick={() => choisirMatiere(f.value)}
                 aria-pressed={actif}
                 className={cx(
-                  "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+                  "shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors",
                   actif
                     ? "bg-brand-600 text-white"
                     : "border border-brand-200 text-brand-700 hover:bg-brand-50 dark:border-ink-700 dark:text-ink-300 dark:hover:bg-ink-800"
@@ -153,11 +159,10 @@ export default function Accueil() {
         </div>
       ) : (
         // Deux matières par ligne sur téléphone, trois à partir de `md`.
-        // Sous `md`, la carte se fait compacte (environ 165 px de large sur
-        // un téléphone) : nom, barre de progression, et toute la carte
-        // cliquable (lien étiré du titre) ; le badge, les compteurs et
-        // « Continuer » ne s'affichent qu'à partir de `md`.
-        <div className="mt-6 grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-3 xl:gap-5">
+        // La carte est la même partout (étiquette, titre, progression,
+        // compteurs, « Continuer »), simplement plus serrée sur téléphone.
+        // Toute la carte est cliquable : le lien du titre la couvre.
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:gap-5">
           {matieresFiltrees.map((m) => {
             const theme = themeMatiere(m);
             // Progression : les chapitres que l'étudiant a cochés « lu »,
@@ -173,14 +178,14 @@ export default function Accueil() {
               <article
                 key={m.id}
                 className={cx(
-                  "relative flex min-w-0 flex-col rounded-2xl p-3 text-white md:rounded-3xl md:p-5",
+                  "relative flex min-w-0 flex-col rounded-2xl p-3.5 text-white md:rounded-3xl md:p-5",
                   theme.carte
                 )}
               >
-                <div className="flex items-start justify-between gap-1 md:gap-3">
+                <div className="flex items-start justify-between gap-2 md:gap-3">
                   <span
                     className={cx(
-                      "hidden rounded-lg px-2.5 py-1 text-xs font-semibold md:inline",
+                      "truncate rounded-lg px-2 py-0.5 text-[11px] font-semibold md:px-2.5 md:py-1 md:text-xs",
                       theme.badgeCarte
                     )}
                   >
@@ -193,29 +198,25 @@ export default function Accueil() {
                     libelle={m.nom}
                     variante="surCouleur"
                     taille="sm"
-                    className="relative z-10 -m-1 ml-auto shrink-0 md:size-8"
+                    className="relative z-10 -m-1 shrink-0 md:size-8"
                   />
                 </div>
 
-                {/* Sur téléphone, le titre prend toute la largeur de la carte. */}
-                <h2 className="mt-1 text-sm leading-snug font-semibold text-balance hyphens-auto md:hidden">
-                  <Link to={`/cours/${m.id}`} className="after:absolute after:inset-0 after:rounded-2xl">
+                <h2 className="mt-3 text-[15px] leading-snug font-semibold text-balance hyphens-auto md:mt-4 md:text-xl">
+                  <Link
+                    to={`/cours/${m.id}`}
+                    className="after:absolute after:inset-0 after:rounded-2xl hover:underline md:after:rounded-3xl"
+                  >
                     {m.nom}
                   </Link>
                 </h2>
 
-                <h2 className="mt-4 hidden text-xl leading-snug font-semibold text-balance md:block">
-                  <Link to={`/cours/${m.id}`} className="hover:underline">
-                    {m.nom}
-                  </Link>
-                </h2>
-
-                <div className="mt-auto pt-4 md:pt-8">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className={cx("hidden md:inline", surCarte.attenue)}>Progression</span>
-                    <span className={cx("text-[11px] md:text-xs", surCarte.attenue)}>
+                <div className="mt-auto pt-5 md:pt-8">
+                  <div className="flex items-center justify-between gap-2 text-[11px] md:text-xs">
+                    <span className={surCarte.attenue}>Progression</span>
+                    <span className={surCarte.attenue}>
                       {nbLus}/{dispo}
-                      {" "}chapitre{dispo > 1 ? "s lus" : " lu"}
+                      <span className="hidden sm:inline"> chapitre{dispo > 1 ? "s lus" : " lu"}</span>
                     </span>
                   </div>
                   <div
@@ -232,11 +233,11 @@ export default function Accueil() {
                     />
                   </div>
 
-                  <div className="mt-5 hidden flex-wrap items-center justify-between gap-3 md:flex">
+                  <div className="mt-4 flex flex-col gap-3 md:mt-5 md:flex-row md:flex-wrap md:items-center md:justify-between">
                     <div className="flex flex-wrap gap-1.5">
                       <span
                         className={cx(
-                          "rounded-full px-2.5 py-1 text-[11px] font-medium",
+                          "rounded-full px-2 py-0.5 text-[11px] font-medium md:px-2.5 md:py-1",
                           surCarte.puce
                         )}
                       >
@@ -244,7 +245,7 @@ export default function Accueil() {
                       </span>
                       <span
                         className={cx(
-                          "rounded-full px-2.5 py-1 text-[11px] font-medium",
+                          "rounded-full px-2 py-0.5 text-[11px] font-medium md:px-2.5 md:py-1",
                           surCarte.puce
                         )}
                       >
@@ -253,7 +254,7 @@ export default function Accueil() {
                     </div>
                     <Link
                       to={`/cours/${m.id}`}
-                      className="rounded-full bg-lime-400 px-4 py-2 text-sm font-semibold text-ink-950 transition-colors hover:bg-lime-300"
+                      className="relative z-10 rounded-full bg-lime-400 px-4 py-2 text-center text-sm font-semibold text-ink-950 transition-colors hover:bg-lime-300"
                     >
                       Continuer
                     </Link>
