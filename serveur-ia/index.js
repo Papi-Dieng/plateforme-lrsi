@@ -43,7 +43,7 @@ import {
 import { menagePdfs, servirPdf, televerserPdf } from "./fichiers.js";
 import { API_GEMINI, interrogerGemini, listeModeles } from "./gemini.js";
 import { executerTacheAdmin } from "./agent-admin.js";
-import { avisRedaction, corrigerExercice } from "./avis.js";
+import { corrigerExercice } from "./avis.js";
 import { effacerStats, enregistrerStats, lireStats } from "./stats.js";
 import { composerPlanning } from "./planning-ia.js";
 import { inscrireTelephone } from "./comptes.js";
@@ -401,10 +401,9 @@ export default {
       }
     }
 
-    // L'avis de l'IA sur une réponse rédigée dans un devoir : soumis,
+    // La correction d'une réponse par l'IA (`avis.js`), pour les exercices
+    // et les devoirs : verdict juste, presque juste ou faux. Soumise,
     // comme l'assistant, à la limite de requêtes par visiteur.
-    // La correction d'un exercice par l'IA (`avis.js`) : verdict juste,
-    // presque juste ou faux, sans révéler le corrigé. Même limite.
     if (chemin === "/corriger-exercice") {
       let corps;
       try {
@@ -421,21 +420,6 @@ export default {
       }
     }
 
-    if (chemin === "/avis-redaction") {
-      let corps;
-      try {
-        corps = await requete.json();
-      } catch {
-        return json({ erreur: "format" }, 400, cors);
-      }
-      try {
-        const r = await avisRedaction(corps, env);
-        return r.erreur ? json({ erreur: r.erreur }, r.statut, cors) : json(r.resultat, 200, cors);
-      } catch (e) {
-        console.log("Avis sur une rédaction", e);
-        return json({ erreur: "reseau" }, 502, cors);
-      }
-    }
 
     let corps;
     try {

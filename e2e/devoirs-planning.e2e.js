@@ -47,43 +47,47 @@ test.describe("devoir", () => {
     await expect(page.getByText("Ma note, d'après mon auto-correction").locator("..")).toContainText(`${attendu} / ${total}`);
   });
 
-  test("l'avis de l'IA : la réponse part au relais, l'avis s'affiche sans note", async ({ page }) => {
-    let envoye = null;
+  test("les réponses s'écrivent pendant le devoir, et l'IA les corrige une fois terminé", async ({ page }) => {
+    const envois = [];
     // Cette route passe avant celle d'e2e/outils.js, qui refuserait l'IA.
-    await page.route(/\/avis-redaction$/, (route) => {
-      envoye = route.request().postDataJSON();
-      route.fulfill({
-        headers: { "Access-Control-Allow-Origin": "*" },
-        json: { justes: ["Les sept couches sont citées."], manques: ["L'adresse utilisée par le routeur."], erreurs: [], conseil: "Relis la couche 3." },
-      });
+    await page.route(/\/corriger-exercice$/, (route) => {
+      const entetes = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*" };
+      if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: entetes });
+      envois.push(route.request().postDataJSON());
+      return route.fulfill({ headers: entetes, json: { verdict: "partiel", justes: ["Les sept couches correspondent au corrigé."], erreurs: ["La question 2 ne correspond pas."] } });
     });
     await entrerEnInvite(page);
     await aller(page, `/examens/${devoir.id}`);
     await page.getByRole("button", { name: "Commencer le devoir" }).click();
+
+    // Pendant l'épreuve : une case par question, pas encore de correction.
+    const partie = page.locator("section").filter({ hasText: devoir.parties[0].titre });
+    const reponse1 = partie.getByRole("textbox", { name: "Ta réponse à la question 1" });
+    await reponse1.fill("Physique, liaison, réseau, transport, session, présentation, application.");
+    await expect(page.getByRole("button", { name: "Faire corriger par l'IA" })).toHaveCount(0);
+
+    // Terminé : les réponses sont toujours là, et se font corriger.
     await page.getByRole("button", { name: "Terminer et voir le corrigé" }).click();
-
-    await page.getByRole("button", { name: "Demander l'avis de l'IA sur ma réponse" }).first().click();
-    await page.getByLabel("Recopie ce que tu as écrit pour cette partie").fill("Physique, liaison, réseau, transport, session, présentation, application.");
-    await page.getByRole("button", { name: "Demander l'avis", exact: true }).click();
-
-    await expect(page.getByText("Les sept couches sont citées.")).toBeVisible();
-    await expect(page.getByText("Relis la couche 3.")).toBeVisible();
-    expect(envoye).toEqual({
-      enonce: devoir.parties[0].enonce,
-      corrige: devoir.parties[0].corrige,
-      reponse: "Physique, liaison, réseau, transport, session, présentation, application.",
-    });
+    await expect(reponse1).toHaveValue("Physique, liaison, réseau, transport, session, présentation, application.");
+    await partie.getByRole("button", { name: "Faire corriger par l'IA" }).click();
+    await expect(partie.getByRole("status").filter({ hasText: "Presque" })).toBeVisible();
+    await expect(partie.getByText("La question 2 ne correspond pas.")).toBeVisible();
+    expect(envois[0]).toMatchObject({ enonce: devoir.parties[0].enonce, corrige: devoir.parties[0].corrige });
+    expect(envois[0].reponse).toContain("Réponse : Physique, liaison, réseau");
+    // La note reste l'auto-correction de l'étudiant.
+    await expect(partie.getByRole("spinbutton", { name: "Mes points" })).toHaveValue("");
   });
 
-  test("sans IA, l'avis échoue proprement et le corrigé reste là", async ({ page }) => {
+  test("sans IA, la correction échoue proprement et le corrigé reste là", async ({ page }) => {
     await entrerEnInvite(page);
     await aller(page, `/examens/${devoir.id}`);
     await page.getByRole("button", { name: "Commencer le devoir" }).click();
+    const partie = page.locator("section").filter({ hasText: devoir.parties[0].titre });
+    await partie.getByRole("textbox", { name: "Ta réponse à la question 1" }).fill("Une réponse.");
     await page.getByRole("button", { name: "Terminer et voir le corrigé" }).click();
-    await page.getByRole("button", { name: "Demander l'avis de l'IA sur ma réponse" }).first().click();
-    await page.getByLabel("Recopie ce que tu as écrit pour cette partie").fill("Une réponse.");
-    await page.getByRole("button", { name: "Demander l'avis", exact: true }).click();
-    await expect(page.getByRole("button", { name: "Demander l'avis", exact: true })).toBeEnabled();
+    await partie.getByRole("button", { name: "Faire corriger par l'IA" }).click();
+    await expect(partie.getByRole("alert")).toBeVisible();
+    await expect(partie.getByRole("button", { name: "Faire corriger par l'IA" })).toBeEnabled();
     await expect(page.getByText("Corrigé", { exact: true }).first()).toBeVisible();
   });
 });

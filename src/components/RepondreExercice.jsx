@@ -29,6 +29,11 @@ import { assemblerReponses, questionsDe } from "../questionsExercice";
 
    Absent si l'IA n'est pas branchée ou si l'exercice n'a pas de corrigé
    lisible (PDF scanné, sans texte).
+
+   `RepondreAvecIA` est le bloc lui-même, partagé avec les devoirs
+   (pages/Examens.jsx, une partie à la fois) : pendant l'épreuve il est
+   « verrouillé », l'étudiant écrit mais ne peut pas encore faire
+   corriger ; la correction s'ouvre quand il termine le devoir.
    ================================================================== */
 
 const VERDICTS = {
@@ -111,6 +116,39 @@ const champ =
   "w-full rounded-xl border border-ink-200 bg-white px-3.5 py-2.5 text-sm/6 text-ink-900 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-ink-700 dark:bg-ink-950 dark:text-white";
 
 export default function RepondreExercice({ exercice, onReussi, onBesoinIndice, indiceDisponible }) {
+  const { enonce, corrige } = textesExercice(exercice);
+  return (
+    <RepondreAvecIA
+      id={exercice.id}
+      enonce={enonce}
+      corrige={corrige}
+      reponseAttendue={<ReponseAttendue exercice={exercice} />}
+      onReussi={onReussi}
+      onBesoinIndice={onBesoinIndice}
+      indiceDisponible={indiceDisponible}
+    />
+  );
+}
+
+/* Le bloc « Ma réponse ».
+   - `reponseAttendue` : ce qui s'affiche sous le verdict (la réponse de
+     l'admin pour un exercice ; rien pour un devoir, dont le corrigé est
+     déjà affiché par la page) ;
+   - `verrouille` : on peut écrire, pas encore faire corriger ;
+   - `encadre` : dans sa propre carte, ou à l'intérieur d'une autre ;
+   - `libelle` : le nom de la grande case, pour les lecteurs d'écran. */
+export function RepondreAvecIA({
+  id,
+  enonce,
+  corrige,
+  reponseAttendue = null,
+  verrouille = false,
+  encadre = true,
+  libelle = "Ta réponse à l'exercice",
+  onReussi,
+  onBesoinIndice,
+  indiceDisponible,
+}) {
   const [choix, setChoix] = useState(null);
   const [reponse, setReponse] = useState("");
   const [reponses, setReponses] = useState({});
@@ -118,7 +156,6 @@ export default function RepondreExercice({ exercice, onReussi, onBesoinIndice, i
   const [rates, setRates] = useState(0);
   const [etat, setEtat] = useState({ attente: false, erreur: "" });
 
-  const { enonce, corrige } = textesExercice(exercice);
   if (!iaActive || !enonce || !corrige) return null;
 
   const questions = questionsDe(enonce);
@@ -146,14 +183,18 @@ export default function RepondreExercice({ exercice, onReussi, onBesoinIndice, i
 
   const verdict = resultat && VERDICTS[resultat.verdict];
 
+  const Titre = encadre ? "h2" : "h3";
+
   return (
-    <section className="card p-6">
-      <h2 className="flex items-center gap-2 font-semibold text-ink-900 dark:text-white">
+    <section className={encadre ? "card p-6" : "mt-5 border-t border-ink-200 pt-5 dark:border-ink-800"}>
+      <Titre className="flex items-center gap-2 font-semibold text-ink-900 dark:text-white">
         <Icon name="pencil" className="size-4.5 text-brand-600 dark:text-brand-400" />
         Ma réponse
-      </h2>
+      </Titre>
       <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">
-        Réponds comme sur ta copie : l'IA compare ta réponse au corrigé de l'exercice et te dit si elle est juste.
+        {verrouille
+          ? "Écris tes réponses ici pendant le devoir. Quand tu le termines, l'IA les compare au corrigé et te dit si elles sont justes."
+          : "Réponds comme sur ta copie : l'IA compare ta réponse au corrigé et te dit si elle est juste."}
       </p>
 
       {questions.length > 0 && (
@@ -182,11 +223,11 @@ export default function RepondreExercice({ exercice, onReussi, onBesoinIndice, i
           <ol className="space-y-4">
             {questions.map((q, i) => (
               <li key={q.numero}>
-                <label htmlFor={`reponse-${exercice.id}-${q.numero}`} className="block text-sm/6 text-ink-800 dark:text-ink-200">
+                <label htmlFor={`reponse-${id}-${q.numero}`} className="block text-sm/6 text-ink-800 dark:text-ink-200">
                   <span className="font-semibold">Question {q.numero}.</span> <EnLigne texte={q.texte} />
                 </label>
                 <textarea
-                  id={`reponse-${exercice.id}-${q.numero}`}
+                  id={`reponse-${id}-${q.numero}`}
                   aria-label={`Ta réponse à la question ${q.numero}`}
                   value={reponses[i] ?? ""}
                   onChange={(e) => {
@@ -203,11 +244,11 @@ export default function RepondreExercice({ exercice, onReussi, onBesoinIndice, i
           </ol>
         ) : (
           <>
-            <label htmlFor={`reponse-${exercice.id}`} className="sr-only">
-              Ta réponse à l'exercice
+            <label htmlFor={`reponse-${id}`} className="sr-only">
+              {libelle}
             </label>
             <textarea
-              id={`reponse-${exercice.id}`}
+              id={`reponse-${id}`}
               value={reponse}
               onChange={(e) => setReponse(e.target.value)}
               rows={6}
@@ -217,6 +258,7 @@ export default function RepondreExercice({ exercice, onReussi, onBesoinIndice, i
             />
           </>
         )}
+        {!verrouille && (
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="submit"
@@ -230,6 +272,7 @@ export default function RepondreExercice({ exercice, onReussi, onBesoinIndice, i
             Ta réponse est envoyée à Google Gemini pour être corrigée, et n'est pas gardée.
           </p>
         </div>
+        )}
       </form>
 
       {etat.attente && <ChargementIA etapes={ETAPES_CORRECTION} className="pt-4" />}
@@ -249,7 +292,7 @@ export default function RepondreExercice({ exercice, onReussi, onBesoinIndice, i
           </div>
           <Liste titre="Ce qui correspond au corrigé" elements={resultat.justes} ton="text-accent-700 dark:text-accent-400" icone="check" />
           <Liste titre="Ce qui ne correspond pas" elements={resultat.erreurs} ton="text-flame-700 dark:text-flame-400" icone="close" />
-          <ReponseAttendue exercice={exercice} />
+          {reponseAttendue}
           {rates >= 2 && indiceDisponible && resultat.verdict !== "juste" && (
             <button
               type="button"
@@ -261,7 +304,7 @@ export default function RepondreExercice({ exercice, onReussi, onBesoinIndice, i
             </button>
           )}
           <p className="text-[11px] text-ink-500 dark:text-ink-400">
-            Comparaison faite par une IA : elle peut se tromper. La réponse attendue et ton enseignant font foi.
+            Comparaison faite par une IA : elle peut se tromper. Le corrigé et ton enseignant font foi.
           </p>
         </div>
       )}

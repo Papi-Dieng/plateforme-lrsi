@@ -277,13 +277,3 @@ export async function corrigerExercice({ enonce, corrige, reponse }) {
   return donnees;
 }
 
-export async function demanderAvisRedaction({ enonce, corrige, reponse }) {
-  const r = await fetch(new URL("/avis-redaction", site.urlIA), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ enonce, corrige, reponse }),
-  });
-  const donnees = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(donnees.erreur ?? `statut ${r.status}`);
-  return donnees;
-}

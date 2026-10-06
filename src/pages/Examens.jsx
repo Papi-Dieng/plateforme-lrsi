@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import TexteLibre from "../components/TexteLibre";
 import LecteurPdf from "../components/LecteurPdf";
-import AvisRedaction from "../components/AvisRedaction";
+import { RepondreAvecIA } from "../components/RepondreExercice";
 import { Badge, Container, EnTetePage, EtatVide, Filtres } from "../components/ui";
 import { cx } from "../components/classes";
 import { annales, examens, getExamen, totalPoints } from "../data/examens";
@@ -19,10 +19,13 @@ import { themeMatiere } from "../data/couleurs";
    restent, pour que le contenu déjà publié continue de fonctionner.
 
    Un devoir se passe en conditions réelles : le sujet complet,
-   un minuteur, et le corrigé seulement à la fin. L'étudiant se note
-   alors lui-même, partie par partie, en comparant sa copie au
-   corrigé : une copie rédigée ne se corrige pas automatiquement, et
-   une note inventée par la machine serait pire que pas de note.
+   un minuteur, et le corrigé seulement à la fin. L'étudiant écrit ses
+   réponses sous chaque partie pendant l'épreuve (question par question,
+   ou tout d'un bloc) ; une fois le devoir terminé, l'IA les compare au
+   corrigé et dit si elles sont justes (components/RepondreExercice.jsx).
+   La note, elle, reste son auto-correction : une note inventée par la
+   machine serait pire que pas de note. Un devoir donné en PDF n'a pas
+   de texte lisible par l'IA : il se corrige seulement à la main.
 
    Les examens ne sont que des liens vers des sujets dont la
    publication a été autorisée ; la plateforme n'en héberge aucun.
@@ -283,11 +286,15 @@ export function ExamenSession() {
                   {examen.format === "pdf"
                     ? `Sujet en PDF, noté sur ${total} points.`
                     : `${examen.parties.length} parties, ${total} points au total.`}{" "}
-                  Rédige tes réponses sur une feuille, comme un jour d'examen.
+                  {examen.format === "pdf"
+                    ? "Rédige tes réponses sur une feuille, comme un jour d'examen."
+                    : "Écris tes réponses sous chaque partie, question par question ou d'un bloc (ou sur une feuille, comme un jour d'examen)."}
                 </li>
                 <li>
-                  Le corrigé ne s'affiche qu'à la fin, et tu te notes toi-même
-                  {examen.format === "pdf" ? "." : ", partie par partie."}
+                  Le corrigé ne s'affiche qu'à la fin
+                  {examen.format === "pdf"
+                    ? ", et tu te notes toi-même."
+                    : " : l'IA compare alors tes réponses au corrigé, et tu te notes toi-même, partie par partie."}
                 </li>
               </ul>
               {examen.consignes && (
@@ -368,13 +375,24 @@ export function ExamenSession() {
                 </h2>
                 <TexteLibre texte={p.enonce} className="mt-3" />
 
+                {/* Écrire ses réponses pendant le devoir ; les faire corriger
+                    par l'IA une fois le devoir terminé. Même bloc que les
+                    exercices : question par question, ou tout écrire. */}
+                <RepondreAvecIA
+                  id={`${examen.id}-${i}`}
+                  enonce={p.enonce}
+                  corrige={p.corrige}
+                  encadre={false}
+                  verrouille={etape === "epreuve"}
+                  libelle={`Ta réponse à la partie ${i + 1}`}
+                />
+
                 {etape === "corrige" && (
                   <div className="mt-5 rounded-xl border border-accent-400/40 bg-accent-50/60 p-4 dark:bg-accent-500/10">
                     <p className="text-xs font-semibold uppercase tracking-wide text-accent-700 dark:text-accent-400">
                       Corrigé
                     </p>
                     <TexteLibre texte={p.corrige || "Pas de corrigé pour cette partie."} className="mt-1" />
-                    <AvisRedaction enonce={p.enonce} corrige={p.corrige} />
                     <label className="mt-4 flex items-center gap-3 text-sm text-ink-700 dark:text-ink-300">
                       Mes points
                       <input

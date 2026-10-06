@@ -470,7 +470,7 @@ latérale laisse place à un menu dans la barre du haut.
 | `/favoris` | Mes favoris | Matières, chapitres, exercices, QCM et vidéos mis de côté |
 | `/progression` | Ma progression | Tableau de bord en grille : vue d'ensemble, précision, régularité, matières, QCM |
 | `/examens` | Devoirs et examens | Devoirs chronométrés avec corrigé à la fin, et examens passés autorisés |
-| `/examens/:id` | Session de devoir | Sujet, minuteur, puis corrigé et avis de l'IA sur la rédaction |
+| `/examens/:id` | Session de devoir | Sujet, minuteur, réponses écrites sur le site, puis corrigé et correction par l'IA |
 | `/planning` | Mon planning | Emploi du temps (mois, semaine, jour, liste) et programme de révision composé par l'IA |
 | `/assistant` | Assistant de révision | Guide qui retrouve chapitres, exercices et QCM, et dit par où commencer |
 | `/parametres` | Paramètres | Thème, session, données conservées sur l'appareil |
@@ -510,7 +510,7 @@ lrsi-platform/
 │   ├── contenu.js            contenu publié depuis l'espace admin
 │   ├── fichiers.js           PDF téléversés (cours, exercices, devoirs)
 │   ├── agent-admin.js        l'agent IA de l'espace admin
-│   ├── avis.js               avis de l'IA sur une rédaction (devoirs), correction d'un exercice
+│   ├── avis.js               correction d'une réponse par l'IA (exercices et devoirs)
 │   ├── planning-ia.js        programme de révision composé par l'IA
 │   ├── stats.js              statistiques anonymes des QCM
 │   ├── comptes.js            inscription par téléphone
@@ -542,7 +542,6 @@ lrsi-platform/
 │   │   ├── ChargementIA.jsx  animation d'attente de l'IA (d'après kokonutUI)
 │   │   ├── AffichageExercice.jsx  énoncé et correction d'un exercice
 │   │   ├── RepondreExercice.jsx   « Ma réponse » d'un exercice, corrigée par l'IA
-│   │   ├── AvisRedaction.jsx      « Demander l'avis de l'IA » d'un devoir
 │   │   ├── LecteurPdf.jsx         un PDF téléversé, côté étudiant
 │   │   ├── LectureTexte.jsx       un texte écrit dans l'admin, côté étudiant
 │   │   ├── TexteLibre.jsx         mise en forme simple, jamais de HTML
@@ -724,14 +723,16 @@ recompilation, pas de push.
   remplace, depuis le 6 octobre 2026, l'ancienne « Vérifier ma réponse »
   (résultats attendus saisis par l'admin, comparés sans IA), retirée du site
   et de l'espace admin.
-- **Avis de l'IA sur une rédaction** : à la fin d'un devoir écrit partie par
-  partie, sous chaque corrigé, l'étudiant peut recopier sa réponse et
-  « Demander l'avis de l'IA » (`serveur-ia/avis.js`). L'IA la compare au
-  corrigé et dit ce qui est juste, ce qui manque et ce qui est faux, avec un
-  conseil. Elle ne note jamais : une IA qui met une note se trompe parfois avec
-  assurance, et l'étudiant garde son auto-correction. C'est l'assistant des
-  étudiants (sa clé, sa limite par visiteur) ; la réponse de l'étudiant est
-  isolée dans la demande pour qu'une instruction glissée dedans soit ignorée.
+- **Les devoirs se corrigent comme les exercices** (depuis le 6 octobre
+  2026) : sous chaque partie d'un devoir écrit, le même bloc « Ma réponse »
+  (`RepondreAvecIA`, question par question ou d'un bloc). L'étudiant écrit
+  pendant l'épreuve, sans pouvoir faire corriger ; une fois le devoir
+  terminé, ses réponses restent en place et l'IA les compare au corrigé de la
+  partie (même route `/corriger-exercice`). La note reste son
+  auto-correction : l'IA ne note jamais. Un devoir donné en PDF n'a pas de
+  texte lisible par l'IA, il n'a donc pas ce bloc ; les examens passés ne
+  sont que des liens, sans corrigé à comparer. Ce bloc remplace l'ancien
+  « Demander l'avis de l'IA », retiré du site et du relais.
 - Un **devoir** peut se donner en deux PDF, le sujet et le corrigé : le
   sujet s'affiche au lancement du minuteur, le corrigé à la fin, et
   l'étudiant se note sur le total indiqué.
@@ -953,7 +954,7 @@ qui fait la différence entre un questionnaire et un vrai outil de révision.
   « Me tester »), une image jointe (bouton, coller ou glisser), la dictée
   vocale quand le navigateur la propose, et un bouton Stop qui arrête
   vraiment la réponse en cours. Animation d'attente qui décrit les étapes
-  réelles, aussi pour l'avis sur une rédaction et le programme de révision.
+  réelles, aussi pour la correction des réponses et le programme de révision.
   Origines et licences : `LICENCES-TIERS.md`.
 - Filet en cas de plantage (`src/components/FiletErreur.jsx`) : une page qui
   plante affiche un message au lieu d'une page blanche, et une version

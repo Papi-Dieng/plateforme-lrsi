@@ -34,9 +34,9 @@ const usagesIA = [
   },
   {
     icone: "pencil",
-    titre: "Avis sur une rédaction",
+    titre: "Correction des réponses",
     texte:
-      "Dans un devoir, l'étudiant recopie sa réponse et reçoit un avis comparé au corrigé. Jamais de note.",
+      "Dans un exercice ou un devoir, l'étudiant écrit sa réponse, question par question ou d'un bloc, et l'IA la compare au corrigé : juste, presque ou pas encore. Jamais de note.",
   },
   {
     icone: "clock",

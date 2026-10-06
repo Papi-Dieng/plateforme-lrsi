@@ -53,27 +53,6 @@ export const ETAPES_CORRECTION = [
       "Comparaison avec le corrigé…",
       "Ce qui est juste…",
       "Ce qui ne va pas…",
-      "Une piste pour réessayer…",
-    ],
-  },
-];
-
-export const ETAPES_AVIS = [
-  {
-    statut: "Comparaison avec le corrigé",
-    lignes: [
-      "Lecture de ta réponse…",
-      "Lecture de l'énoncé et du corrigé…",
-      "Envoi à Gemini par le relais…",
-    ],
-  },
-  {
-    statut: "Rédaction de l'avis",
-    lignes: [
-      "Ce qui est juste…",
-      "Ce qui manque…",
-      "Ce qui est faux…",
-      "Un conseil pour la suite…",
     ],
   },
 ];
