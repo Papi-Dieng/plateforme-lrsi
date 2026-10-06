@@ -709,9 +709,11 @@ recompilation, pas de push.
   correction, l'étudiant écrit sa réponse comme sur sa copie et clique
   « Faire corriger par l'IA ». L'IA la compare au corrigé de l'auteur (texte
   écrit, sinon celui lu dans le PDF de correction) et donne un verdict :
-  **juste**, **presque** ou **pas encore**, avec ce qui va, ce qui ne va pas
-  et une piste. Elle ne révèle jamais le corrigé, pour que l'étudiant puisse
-  réessayer ; un verdict inconnu est refusé par le relais. Après deux essais
+  **juste**, **presque** ou **pas encore**, avec ce qui correspond au corrigé
+  et ce qui n'y correspond pas. Elle ne fait que comparer : ni solution, ni
+  explication, ni piste de son cru. La réponse attendue montrée ensuite est
+  celle saisie dans l'admin (champ Réponse, sinon la méthode), affichée par
+  le site sans passer par l'IA. Un verdict inconnu est refusé par le relais. Après deux essais
   qui ne sont pas justes, l'indice est proposé ; une réponse juste compte
   l'exercice comme travaillé. Rien n'est gardé. Le bloc n'apparaît pas sans
   IA branchée, ni pour un exercice sans corrigé lisible (PDF scanné). Il

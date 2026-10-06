@@ -3,6 +3,7 @@ import Icon from "./Icon";
 import ChargementIA from "./ChargementIA";
 import { ETAPES_CORRECTION } from "../chargementIA";
 import { cx } from "./classes";
+import TexteLibre, { EnLigne } from "./TexteLibre";
 import { corrigerExercice, iaActive, raisonEchec, textesExercice } from "../ia";
 
 /* ==================================================================
@@ -10,9 +11,10 @@ import { corrigerExercice, iaActive, raisonEchec, textesExercice } from "../ia";
 
    L'étudiant écrit sa réponse comme sur sa copie ; l'IA la compare au
    corrigé de l'auteur et dit si elle est juste, presque juste ou
-   fausse, ce qui va et ce qui ne va pas, avec une piste. Elle ne
-   révèle pas le corrigé (consignes du relais, serveur-ia/avis.js) :
-   l'étudiant corrige sa réponse et refait corriger autant qu'il veut.
+   fausse, et ce qui correspond ou non. Elle ne rédige rien de son cru
+   (consignes du relais, serveur-ia/avis.js) : la réponse attendue
+   montrée ensuite est celle que l'auteur a saisie dans l'admin,
+   affichée telle quelle par le site, sans passer par l'IA.
 
    Après deux essais qui ne sont pas justes, l'indice est proposé ; une
    réponse juste compte l'exercice comme travaillé. Rien n'est gardé :
@@ -25,23 +27,56 @@ import { corrigerExercice, iaActive, raisonEchec, textesExercice } from "../ia";
 const VERDICTS = {
   juste: {
     titre: "C'est juste !",
-    texte: "Bravo. Compare quand même ta méthode avec la correction détaillée.",
+    texte: "Bravo, ta réponse correspond au corrigé.",
     icone: "check",
     classe: "border-accent-300 bg-accent-50 text-accent-900 dark:border-accent-500/30 dark:bg-accent-500/10 dark:text-accent-100",
   },
   partiel: {
     titre: "Presque",
-    texte: "Une partie est juste. Reprends ce qui ne va pas, puis refais corriger.",
+    texte: "Une partie correspond au corrigé, pas tout.",
     icone: "info",
     classe: "border-sun-400/50 bg-sun-100/60 text-sun-900 dark:border-sun-500/30 dark:bg-sun-500/10 dark:text-sun-100",
   },
   faux: {
     titre: "Pas encore",
-    texte: "Ce n'est pas la bonne réponse. Lis la piste, corrige, et réessaie.",
+    texte: "Ta réponse ne correspond pas au corrigé.",
     icone: "close",
     classe: "border-flame-300 bg-flame-50 text-flame-900 dark:border-flame-500/30 dark:bg-flame-500/10 dark:text-flame-100",
   },
 };
+
+/* La réponse saisie par l'auteur dans l'admin, sans IA : le champ
+   « Réponse », sinon la méthode ; à défaut, la correction en PDF, plus
+   bas dans la page. */
+function ReponseAttendue({ exercice }) {
+  const etapes = (exercice.etapes ?? []).filter((e) => e.trim());
+  if (!exercice.reponse && etapes.length === 0) {
+    return (
+      <p className="text-sm text-ink-600 dark:text-ink-300">
+        La réponse attendue est dans la correction détaillée, juste en dessous.
+      </p>
+    );
+  }
+  return (
+    <div className="rounded-xl border border-accent-300 bg-white px-4 py-3 dark:border-accent-500/30 dark:bg-ink-950">
+      <p className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-accent-700 uppercase dark:text-accent-400">
+        <Icon name="check" className="size-3.5" />
+        Réponse attendue
+      </p>
+      {exercice.reponse ? (
+        <TexteLibre texte={exercice.reponse} className="mt-1.5 text-sm/6 text-ink-800 dark:text-ink-200" />
+      ) : (
+        <ol className="mt-1.5 list-decimal space-y-1 pl-5 text-sm/6 text-ink-800 dark:text-ink-200">
+          {etapes.map((e) => (
+            <li key={e}>
+              <EnLigne texte={e} />
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  );
+}
 
 function Liste({ titre, elements, ton, icone }) {
   if (!elements?.length) return null;
@@ -93,7 +128,7 @@ export default function RepondreExercice({ exercice, onReussi, onBesoinIndice, i
         Ma réponse
       </h2>
       <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">
-        Écris ta réponse comme sur ta copie : l'IA te dit si elle est juste, sans te donner la correction.
+        Écris ta réponse comme sur ta copie : l'IA la compare au corrigé de l'exercice et te dit si elle est juste.
       </p>
 
       <form onSubmit={corriger} className="mt-4 space-y-3">
@@ -139,14 +174,9 @@ export default function RepondreExercice({ exercice, onReussi, onBesoinIndice, i
               <strong className="font-semibold">{verdict.titre}</strong> {verdict.texte}
             </p>
           </div>
-          <Liste titre="Ce qui est juste" elements={resultat.justes} ton="text-accent-700 dark:text-accent-400" icone="check" />
-          <Liste titre="Ce qui ne va pas" elements={resultat.erreurs} ton="text-flame-700 dark:text-flame-400" icone="close" />
-          {resultat.piste && resultat.verdict !== "juste" && (
-            <p className="rounded-lg bg-brand-50 px-3 py-2 text-sm/6 text-ink-700 dark:bg-brand-500/10 dark:text-ink-200">
-              <span className="font-semibold">Piste : </span>
-              {resultat.piste}
-            </p>
-          )}
+          <Liste titre="Ce qui correspond au corrigé" elements={resultat.justes} ton="text-accent-700 dark:text-accent-400" icone="check" />
+          <Liste titre="Ce qui ne correspond pas" elements={resultat.erreurs} ton="text-flame-700 dark:text-flame-400" icone="close" />
+          <ReponseAttendue exercice={exercice} />
           {rates >= 2 && indiceDisponible && resultat.verdict !== "juste" && (
             <button
               type="button"
@@ -158,7 +188,7 @@ export default function RepondreExercice({ exercice, onReussi, onBesoinIndice, i
             </button>
           )}
           <p className="text-[11px] text-ink-500 dark:text-ink-400">
-            Correction faite par une IA : elle peut se tromper. La correction détaillée et ton enseignant font foi.
+            Comparaison faite par une IA : elle peut se tromper. La réponse attendue et ton enseignant font foi.
           </p>
         </div>
       )}

@@ -109,7 +109,7 @@ test.describe("QCM", () => {
 test.describe("exercice : ma réponse corrigée par l'IA", () => {
   const exercice = exercices.find((e) => e.indice && e.reponse);
 
-  test("dit si c'est juste, propose l'indice après deux essais, sans montrer la correction", async ({ page }) => {
+  test("dit si c'est juste, montre la réponse saisie dans l'admin, propose l'indice après deux essais", async ({ page }) => {
     const envois = [];
     const verdicts = ["faux", "partiel", "juste"];
     await page.route(`${new URL(site.urlIA).origin}/corriger-exercice`, (route) => {
@@ -119,7 +119,7 @@ test.describe("exercice : ma réponse corrigée par l'IA", () => {
       const verdict = verdicts[envois.length - 1];
       return route.fulfill({
         headers: entetes,
-        json: { verdict, justes: verdict === "faux" ? [] : ["La méthode est la bonne."], erreurs: verdict === "juste" ? [] : ["Le résultat final ne va pas."], piste: "Revois le calcul des hôtes." },
+        json: { verdict, justes: verdict === "faux" ? [] : ["La méthode correspond au corrigé."], erreurs: verdict === "juste" ? [] : ["Le résultat final ne correspond pas au corrigé."] },
       });
     });
 
@@ -133,12 +133,13 @@ test.describe("exercice : ma réponse corrigée par l'IA", () => {
     await champ.fill("64 hôtes");
     await corriger.click();
     await expect(page.getByRole("status").filter({ hasText: "Pas encore" })).toBeVisible();
-    await expect(page.getByText("Revois le calcul des hôtes.")).toBeVisible();
+    await expect(page.getByText("Le résultat final ne correspond pas au corrigé.")).toBeVisible();
+    // La réponse attendue est celle de l'admin, affichée par le site.
+    await expect(page.getByText("Réponse attendue", { exact: true })).toBeVisible();
+    await expect(page.getByText(exercice.reponse.split("\n")[0].slice(0, 30), { exact: false }).first()).toBeVisible();
     // Ce qui part au relais : l'énoncé, le corrigé de l'auteur et la réponse.
     expect(envois[0]).toMatchObject({ reponse: "64 hôtes" });
     expect(envois[0].corrige).toContain(exercice.reponse.slice(0, 20));
-    // La correction détaillée reste fermée.
-    await expect(page.getByRole("button", { name: "J'ai cherché, voir la correction" })).toBeVisible();
 
     await page.getByRole("button", { name: "Refaire corriger" }).click();
     await expect(page.getByRole("status").filter({ hasText: "Presque" })).toBeVisible();

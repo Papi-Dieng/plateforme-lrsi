@@ -125,19 +125,21 @@ describe("correction d'un exercice par l'IA", () => {
   const corps = { enonce: "Combien d'hôtes dans un /26 ?", corrige: "Réponse : 62 hôtes.", reponse: "64 hôtes" };
   const corriger = (c = corps) => relais.fetch(demande("/corriger-exercice", { corps: c }), env());
 
-  test("renvoie le verdict de l'IA, et lui interdit de révéler le corrigé", async () => {
-    geminiRepond(JSON.stringify({ verdict: "faux", justes: [], erreurs: ["Tu as oublié deux adresses."], piste: "Que retire-t-on toujours ?" }));
+  test("renvoie le verdict de l'IA, qui ne fait que comparer au corrigé", async () => {
+    // Une « piste » écrite par l'IA malgré la consigne n'est pas transmise.
+    geminiRepond(JSON.stringify({ verdict: "faux", justes: [], erreurs: ["Le nombre d'hôtes ne correspond pas au corrigé."], piste: "Ma propre solution" }));
     const r = await corriger();
     expect(r.status).toBe(200);
-    expect(await r.json()).toEqual({ verdict: "faux", justes: [], erreurs: ["Tu as oublié deux adresses."], piste: "Que retire-t-on toujours ?" });
+    expect(await r.json()).toEqual({ verdict: "faux", justes: [], erreurs: ["Le nombre d'hôtes ne correspond pas au corrigé."] });
     const [appel] = appelsGemini;
-    expect(appel.corps.systemInstruction.parts[0].text).toContain("Ne révèle JAMAIS la bonne réponse");
+    expect(appel.corps.systemInstruction.parts[0].text).toContain("Ne rédige JAMAIS ta propre solution");
+    expect(appel.corps.systemInstruction.parts[0].text).toContain("la SEULE référence");
     // La réponse de l'étudiant est isolée entre balises.
     expect(appel.corps.contents[0].parts[0].text).toContain("<reponse>\n64 hôtes\n</reponse>");
   });
 
   test("un verdict inconnu n'est jamais pris pour « juste »", async () => {
-    geminiRepond(JSON.stringify({ verdict: "excellent", justes: [], erreurs: [], piste: "" }));
+    geminiRepond(JSON.stringify({ verdict: "excellent", justes: [], erreurs: [] }));
     const r = await corriger();
     expect(r.status).toBe(502);
     expect(await r.json()).toEqual({ erreur: "reponse-illisible" });
