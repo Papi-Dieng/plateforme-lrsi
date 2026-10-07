@@ -16,7 +16,6 @@
 export const videosSuggerees = [
   {
     id: "sugg-osi",
-    accroche: "OSI",
     titre: "Le modèle OSI expliqué couche par couche",
     resume: "Pour visualiser l'encapsulation avant le TD.",
     matiere: "reseaux",
@@ -25,7 +24,6 @@ export const videosSuggerees = [
   },
   {
     id: "sugg-sous-reseaux",
-    accroche: "/26",
     titre: "Découper un réseau en sous-réseaux",
     resume: "La méthode de calcul, pas à pas.",
     matiere: "reseaux",
@@ -34,7 +32,6 @@ export const videosSuggerees = [
   },
   {
     id: "sugg-ordonnancement",
-    accroche: "FIFO·SJF·RR",
     titre: "Ordonnancement : FIFO, SJF et tourniquet",
     resume: "Les diagrammes d'exécution en images.",
     matiere: "systemes",
@@ -43,7 +40,6 @@ export const videosSuggerees = [
   },
   {
     id: "sugg-complexite",
-    accroche: "O(n²)",
     titre: "La complexité en grand O, sans mathématiques",
     resume: "Comparer deux algorithmes en une minute.",
     matiere: "algorithmique",
@@ -52,7 +48,6 @@ export const videosSuggerees = [
   },
   {
     id: "sugg-sql",
-    accroche: "JOIN",
     titre: "Les jointures SQL illustrées",
     resume: "INNER, LEFT et RIGHT, enfin clairs.",
     matiere: "bdd",
