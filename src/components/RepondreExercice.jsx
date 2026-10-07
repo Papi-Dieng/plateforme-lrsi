@@ -44,19 +44,22 @@ const VERDICTS = {
     titre: "C'est juste !",
     texte: "Bravo, ta réponse correspond au corrigé.",
     icone: "check",
-    classe: "border-accent-300 bg-accent-50 text-accent-900 dark:border-accent-500/30 dark:bg-accent-500/10 dark:text-accent-100",
+    classe: "border-lime-500/50 bg-lime-50 dark:border-lime-400/30 dark:bg-lime-400/8",
+    pastille: "bg-lime-400 text-ink-950",
   },
   partiel: {
     titre: "Presque",
     texte: "Une partie correspond au corrigé, pas tout.",
     icone: "info",
-    classe: "border-sun-400/50 bg-sun-100/60 text-sun-900 dark:border-sun-500/30 dark:bg-sun-500/10 dark:text-sun-100",
+    classe: "border-sun-400/50 bg-[#fffbeb] dark:border-sun-400/30 dark:bg-sun-500/10",
+    pastille: "bg-[#ffc94d] text-ink-950",
   },
   faux: {
     titre: "Pas encore",
     texte: "Ta réponse ne correspond pas au corrigé.",
     icone: "close",
-    classe: "border-flame-300 bg-flame-50 text-flame-900 dark:border-flame-500/30 dark:bg-flame-500/10 dark:text-flame-100",
+    classe: "border-flame-300 bg-flame-50 dark:border-flame-500/30 dark:bg-flame-500/10",
+    pastille: "bg-flame-500 text-white",
   },
 };
 
@@ -96,12 +99,12 @@ function ReponseAttendue({ exercice }) {
 function Liste({ titre, elements, ton, icone }) {
   if (!elements?.length) return null;
   return (
-    <div>
-      <p className={cx("flex items-center gap-1.5 text-xs font-semibold tracking-wide uppercase", ton)}>
+    <div className="min-w-0 flex-1 px-5 py-4">
+      <p className={cx("flex items-center gap-1.5 font-mono text-[11px] font-bold tracking-[0.06em] uppercase", ton)}>
         <Icon name={icone} className="size-3.5" />
         {titre}
       </p>
-      <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm/6 text-ink-700 dark:text-ink-300">
+      <ul className="mt-2 list-disc space-y-1 pl-5 text-[15px]/6 text-ink-800 dark:text-ink-200">
         {elements.map((e) => (
           <li key={e}>{e}</li>
         ))}
@@ -145,14 +148,16 @@ export function ChoixReponse({ valeur, onChange, className }) {
 }
 
 const champ =
-  "w-full rounded-xl border border-ink-200 bg-white px-3.5 py-2.5 text-sm/6 text-ink-900 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-ink-700 dark:bg-ink-950 dark:text-white";
+  "w-full rounded-[16px] border border-ink-200 bg-white px-4 py-3 text-[15px]/6 text-ink-900 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-ink-700 dark:bg-ink-950 dark:text-white";
 
-export default function RepondreExercice({ exercice, mode, onReussi, onBesoinIndice, indiceDisponible }) {
+export default function RepondreExercice({ exercice, mode, numero, ancre, onReussi, onBesoinIndice, indiceDisponible }) {
   const { enonce, corrige } = textesExercice(exercice);
   return (
     <RepondreAvecIA
       id={exercice.id}
       mode={mode}
+      numero={numero}
+      ancre={ancre}
       enonce={enonce}
       corrige={corrige}
       reponseAttendue={<ReponseAttendue exercice={exercice} />}
@@ -182,6 +187,8 @@ export function RepondreAvecIA({
   encadre = true,
   libelle = "Ta réponse à l'exercice",
   mode: modeChoisi = "questions",
+  numero,
+  ancre,
   onReussi,
   onBesoinIndice,
   indiceDisponible,
@@ -222,12 +229,28 @@ export function RepondreAvecIA({
   const Titre = encadre ? "h2" : "h3";
 
   return (
-    <section className={encadre ? "card p-6" : "mt-5 border-t border-ink-200 pt-5 dark:border-ink-800"}>
-      <Titre className="flex items-center gap-2 font-semibold text-ink-900 dark:text-white">
-        <Icon name="pencil" className="size-4.5 text-brand-600 dark:text-brand-400" />
+    <section
+      id={ancre}
+      className={
+        encadre
+          ? "scroll-mt-24 rounded-[28px] border border-ink-200 bg-white p-6 sm:p-8 dark:border-ink-800 dark:bg-ink-900"
+          : "mt-5 border-t border-ink-200 pt-5 dark:border-ink-800"
+      }
+    >
+      <Titre
+        className={cx(
+          "flex items-baseline gap-3 font-extrabold tracking-[-0.03em] text-ink-950 dark:text-white",
+          encadre ? "text-[26px] leading-tight sm:text-[30px]" : "text-lg"
+        )}
+      >
+        {numero ? (
+          <span className="font-mono text-xs font-bold tracking-[0.06em] text-brand-600 dark:text-brand-400">{String(numero).padStart(2, "0")}</span>
+        ) : (
+          <Icon name="pencil" className="size-4.5 self-center text-brand-600 dark:text-brand-400" />
+        )}
         Ma réponse
       </Titre>
-      <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">
+      <p className="mt-2 text-[15px] text-ink-600 dark:text-ink-300">
         {verrouille
           ? "Écris tes réponses ici pendant le devoir. Quand tu le termines, l'IA les compare au corrigé et te dit si elles sont justes."
           : "Réponds comme sur ta copie : l'IA compare ta réponse au corrigé et te dit si elle est juste."}
@@ -238,8 +261,8 @@ export function RepondreAvecIA({
           <ol className="space-y-4">
             {questions.map((q, i) => (
               <li key={q.numero}>
-                <label htmlFor={`reponse-${id}-${q.numero}`} className="block text-sm/6 text-ink-800 dark:text-ink-200">
-                  <span className="font-semibold">Question {q.numero}.</span> <EnLigne texte={q.texte} />
+                <label htmlFor={`reponse-${id}-${q.numero}`} className="block text-[15px]/6 text-ink-800 dark:text-ink-200">
+                  <span className="font-extrabold text-ink-950 dark:text-white">Question {q.numero}.</span> <EnLigne texte={q.texte} />
                 </label>
                 <textarea
                   id={`reponse-${id}-${q.numero}`}
@@ -259,7 +282,7 @@ export function RepondreAvecIA({
           </ol>
         ) : (
           <>
-            <label htmlFor={`reponse-${id}`} className="sr-only">
+            <label htmlFor={`reponse-${id}`} className="block text-sm font-extrabold text-ink-950 dark:text-white">
               {libelle}
             </label>
             <textarea
@@ -284,7 +307,7 @@ export function RepondreAvecIA({
           <button
             type="submit"
             disabled={vide || etat.attente}
-            className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+            className="inline-flex min-h-12 items-center gap-2 rounded-[14px] bg-brand-600 px-5 text-[15px] font-extrabold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Icon name="sparkles" className="size-4" />
             {etat.attente ? "Correction en cours…" : resultat ? "Refaire corriger" : "Faire corriger par l'IA"}
@@ -320,29 +343,38 @@ export function RepondreAvecIA({
       )}
 
       {verdict && (
-        <div aria-live="polite" className="mt-4 space-y-3">
-          <div role="status" className={cx("flex gap-3 rounded-xl border px-4 py-3", verdict.classe)}>
-            <Icon name={verdict.icone} className="mt-0.5 size-5 shrink-0" />
-            <p className="text-sm/6">
-              <strong className="font-semibold">{verdict.titre}</strong> {verdict.texte}
+        <div aria-live="polite" className="mt-5 space-y-4">
+          <div className={cx("overflow-hidden rounded-[22px] border", verdict.classe)}>
+            <div role="status" className="flex gap-4 px-5 py-4">
+              <span className={cx("grid size-10 shrink-0 place-items-center rounded-xl", verdict.pastille)}>
+                <Icon name={verdict.icone} className="size-5" />
+              </span>
+              <p>
+                <strong className="block text-xl font-extrabold tracking-tight text-ink-950 dark:text-white">{verdict.titre}</strong>
+                <span className="text-[15px] text-ink-700 dark:text-ink-200">{verdict.texte}</span>
+              </p>
+            </div>
+            {(resultat.justes?.length > 0 || resultat.erreurs?.length > 0) && (
+              <div className="flex flex-col divide-y divide-ink-950/10 border-t border-ink-950/10 sm:flex-row sm:divide-x sm:divide-y-0 dark:divide-white/10 dark:border-white/10">
+                <Liste titre="Ce qui correspond au corrigé" elements={resultat.justes} ton="text-lime-800 dark:text-lime-300" icone="check" />
+                <Liste titre="Ce qui ne correspond pas" elements={resultat.erreurs} ton="text-flame-700 dark:text-flame-300" icone="close" />
+              </div>
+            )}
+            <p className="border-t border-ink-950/10 px-5 py-3 text-xs text-ink-600 dark:border-white/10 dark:text-ink-300">
+              Comparaison faite par une IA : elle peut se tromper. Le corrigé et ton enseignant font foi.
             </p>
           </div>
-          <Liste titre="Ce qui correspond au corrigé" elements={resultat.justes} ton="text-accent-700 dark:text-accent-400" icone="check" />
-          <Liste titre="Ce qui ne correspond pas" elements={resultat.erreurs} ton="text-flame-700 dark:text-flame-400" icone="close" />
           {reponseAttendue}
           {rates >= 2 && indiceDisponible && resultat.verdict !== "juste" && (
             <button
               type="button"
               onClick={onBesoinIndice}
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-sun-800 hover:underline dark:text-sun-400"
+              className="inline-flex items-center gap-1.5 text-sm font-bold text-sun-900 hover:underline dark:text-sun-400"
             >
               <Icon name="bulb" className="size-4" />
-              Affiche l'indice
+              Affiche l&apos;indice
             </button>
           )}
-          <p className="text-[11px] text-ink-500 dark:text-ink-400">
-            Comparaison faite par une IA : elle peut se tromper. Le corrigé et ton enseignant font foi.
-          </p>
         </div>
       )}
     </section>
