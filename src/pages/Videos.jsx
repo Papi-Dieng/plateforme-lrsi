@@ -24,7 +24,7 @@ const normalise = (s) =>
     .replace(/[̀-ͯ]/g, "");
 
 const deux = (n) => String(n).padStart(2, "0");
-const AMBRE = "text-[#ffc94d]";
+const AMBRE = "text-[#8a5a00] dark:text-[#ffc94d]";
 const mono = "font-mono text-[11px] font-bold tracking-[0.14em] uppercase";
 const lienYoutube = (id) => `https://www.youtube.com/watch?v=${id}`;
 const miniature = (id) => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
@@ -99,7 +99,7 @@ function Carrousel({ videos, index, setIndex, onLire }) {
               onClick={() => (d === 0 ? onLire(v) : aller(d))}
               className={cx(
                 "absolute top-0 left-1/2 w-[min(78vw,560px)] transition-all duration-500 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#ffc94d]",
-                d === 0 ? "z-10" : "z-0 opacity-60 max-sm:hidden"
+                d === 0 ? "z-10" : "z-0 brightness-90 max-sm:hidden"
               )}
               style={{
                 transform: `translateX(calc(-50% + ${d * 64}%)) rotateY(${d * -28}deg) scale(${d === 0 ? 1 : 0.82})`,
@@ -113,7 +113,7 @@ function Carrousel({ videos, index, setIndex, onLire }) {
 
       {n > 1 && (
         <div className="mx-auto mt-6 flex max-w-4xl items-center gap-3 px-4">
-          <button type="button" onClick={() => aller(-1)} aria-label="Vidéo précédente" className="grid size-11 shrink-0 place-items-center rounded-full border border-white/20 hover:bg-white/10">
+          <button type="button" onClick={() => aller(-1)} aria-label="Vidéo précédente" className="grid size-11 shrink-0 place-items-center rounded-full border border-ink-200 dark:border-ink-700 hover:bg-ink-100 dark:hover:bg-ink-800">
             <Icon name="arrow" className="size-4 rotate-180" />
           </button>
           <ol className="flex min-w-0 flex-1 gap-2">
@@ -124,7 +124,7 @@ function Carrousel({ videos, index, setIndex, onLire }) {
                   onClick={() => setIndex(i)}
                   aria-current={i === index}
                   aria-label={`Afficher la vidéo ${i + 1}`}
-                  className={cx("block w-full border-t-4 pt-2 text-left", i === index ? "border-[#ffc94d] text-[#ffc94d]" : "border-white/15 text-white/60 hover:text-white")}
+                  className={cx("block w-full border-t-4 pt-2 text-left", i === index ? "border-[#ffc94d] text-[#8a5a00] dark:text-[#ffc94d]" : "border-ink-200 dark:border-ink-700 text-ink-600 dark:text-ink-300 hover:text-ink-950 dark:hover:text-white")}
                 >
                   <span className={cx(mono, "block truncate text-[10px] max-sm:hidden")} aria-hidden="true">
                     {deux(i + 1)} {motCourt(v)}
@@ -133,7 +133,7 @@ function Carrousel({ videos, index, setIndex, onLire }) {
               </li>
             ))}
           </ol>
-          <button type="button" onClick={() => aller(1)} aria-label="Vidéo suivante" className="grid size-11 shrink-0 place-items-center rounded-full border border-white/20 hover:bg-white/10">
+          <button type="button" onClick={() => aller(1)} aria-label="Vidéo suivante" className="grid size-11 shrink-0 place-items-center rounded-full border border-ink-200 dark:border-ink-700 hover:bg-ink-100 dark:hover:bg-ink-800">
             <Icon name="arrow" className="size-4" />
           </button>
         </div>
@@ -150,13 +150,13 @@ function Carrousel({ videos, index, setIndex, onLire }) {
           data-titre={video.titre}
           className="mx-auto mt-3 max-w-2xl text-4xl font-extrabold tracking-[-0.05em] text-balance before:content-[attr(data-titre)] sm:text-5xl"
         />
-        {video.resume && <p className="mt-3 text-white/75">{video.resume}</p>}
+        {video.resume && <p className="mt-3 text-ink-600 dark:text-ink-300">{video.resume}</p>}
         <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
           <button type="button" onClick={() => onLire(video)} className="inline-flex min-h-12 items-center gap-2 rounded-[14px] bg-[#ffc94d] px-6 font-extrabold text-[#0f181b] shadow-[0_10px_40px_-8px_#ffc94d80] hover:bg-[#ffd673]">
             <Icon name="play" className="size-4" fill="currentColor" stroke="none" />
             Regarder
           </button>
-          <BoutonFavori type="video" reference={video.id} libelle={video.titre} variante="sombre" taille="lg" avecTexte />
+          <BoutonFavori type="video" reference={video.id} libelle={video.titre} taille="lg" avecTexte />
           <a href={lienYoutube(video.youtubeId)} target="_blank" rel="noopener noreferrer" className={cx("inline-flex min-h-12 items-center gap-1.5 px-2 font-extrabold hover:underline", AMBRE)}>
             Ouvrir sur YouTube
             <Icon name="external" className="size-3.5" />
@@ -215,13 +215,13 @@ export default function Videos() {
   const vedette = v.toutes[i];
 
   return (
-    <div className="dark min-h-full bg-[#0f181b] text-white">
+    <div className="min-h-full bg-white text-ink-950 dark:bg-ink-950 dark:text-white">
       {/* ---- En-tête et vidéo à l'affiche ---- */}
-      <section className="bg-[#1b2328] px-4 pt-14 pb-16">
+      <section className="bg-ink-50 dark:bg-ink-900 px-4 pt-14 pb-16">
         <div className="text-center">
           <p className={cx(mono, AMBRE)}>Comprendre autrement</p>
           <h1 className="mt-4 text-5xl font-extrabold tracking-[-0.05em] text-balance sm:text-6xl">Vidéos d'explication</h1>
-          <p className="mx-auto mt-4 max-w-xl text-white/75">
+          <p className="mx-auto mt-4 max-w-xl text-ink-600 dark:text-ink-300">
             Des vidéos choisies pour débloquer une notion avant de reprendre le cours. Elles restent hébergées par YouTube : la plateforme n'en garde que le lien.
           </p>
         </div>
@@ -232,7 +232,7 @@ export default function Videos() {
           <div className="mt-10 text-center">
             <p className={cx(mono, AMBRE)}>0 vidéo à l'affiche</p>
             <h2 className="mt-3 text-3xl font-extrabold tracking-[-0.04em]">Pas encore de vidéo</h2>
-            <p className="mt-2 text-white/75">Les vidéos d'explication arriveront ici au fur et à mesure que l'équipe les choisit.</p>
+            <p className="mt-2 text-ink-600 dark:text-ink-300">Les vidéos d'explication arriveront ici au fur et à mesure que l'équipe les choisit.</p>
           </div>
         )}
       </section>
@@ -247,14 +247,14 @@ export default function Videos() {
                 Rechercher une vidéo
               </label>
               <div className="relative">
-                <Icon name="search" className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-white/60" />
+                <Icon name="search" className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-ink-600 dark:text-ink-300" />
                 <input
                   id="recherche-videos"
                   type="search"
                   value={recherche}
                   onChange={(e) => setRecherche(e.target.value)}
                   placeholder="Rechercher une vidéo, une notion…"
-                  className="min-h-11 w-full rounded-[14px] border border-white/15 bg-[#1b2328] pr-4 pl-11 text-white placeholder:text-white/55 focus:border-[#ffc94d] focus:outline-none"
+                  className="min-h-11 w-full rounded-[14px] border border-ink-200 dark:border-ink-700 bg-white dark:bg-ink-900 pr-4 pl-11 placeholder:text-ink-500 focus:border-[#ffc94d] focus:outline-none"
                 />
               </div>
             </div>
@@ -269,7 +269,7 @@ export default function Videos() {
                 onClick={() => setMatiere(o.value)}
                 className={cx(
                   "inline-flex min-h-9 items-center gap-2 rounded-full border px-3.5 text-sm font-bold",
-                  matiere === o.value ? "border-[#ffc94d] bg-[#ffc94d] text-[#0f181b]" : "border-white/20 text-white hover:bg-white/10"
+                  matiere === o.value ? "border-[#ffc94d] bg-[#ffc94d] text-[#0f181b]" : "border-ink-200 dark:border-ink-700 hover:bg-ink-100 dark:hover:bg-ink-800"
                 )}
               >
                 {o.label}
@@ -278,21 +278,21 @@ export default function Videos() {
             ))}
           </div>
 
-          <p className="mt-5 text-sm text-white/70">
+          <p className="mt-5 text-sm text-ink-600 dark:text-ink-300">
             {resultats.length} vidéo{resultats.length > 1 ? "s" : ""} affichée{resultats.length > 1 ? "s" : ""}.
           </p>
 
           {resultats.length === 0 ? (
             <div className="mt-6">
               <p className="text-lg font-extrabold">Aucune vidéo pour cette sélection</p>
-              <p className="mt-1 text-white/70">Change de matière ou de recherche.</p>
+              <p className="mt-1 text-ink-600 dark:text-ink-300">Change de matière ou de recherche.</p>
               <button
                 type="button"
                 onClick={() => {
                   setMatiere("toutes");
                   setRecherche("");
                 }}
-                className="mt-4 min-h-11 rounded-[14px] border border-white/20 px-4 font-extrabold hover:bg-white/10"
+                className="mt-4 min-h-11 rounded-[14px] border border-ink-200 dark:border-ink-700 px-4 font-extrabold hover:bg-ink-100 dark:hover:bg-ink-800"
               >
                 Réinitialiser le filtre
               </button>
@@ -304,9 +304,9 @@ export default function Videos() {
                   <button type="button" onClick={() => v.lire(video)} className="group block w-full text-left">
                     <Miniature video={video} />
                     <span className="mt-3 block font-extrabold tracking-[-0.02em] group-hover:text-[#ffc94d]">{video.titre}</span>
-                    <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-white/70">
+                    <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink-600 dark:text-ink-300">
                       {nomMatiere(video.matiere)}
-                      {v.vues.includes(video.id) && <span className="rounded bg-white/10 px-1.5 py-0.5 font-bold">Déjà ouverte</span>}
+                      {v.vues.includes(video.id) && <span className="rounded bg-ink-100 dark:bg-ink-800 px-1.5 py-0.5 font-bold">Déjà ouverte</span>}
                     </span>
                   </button>
                   <BoutonFavori
