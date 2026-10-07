@@ -1,0 +1,1 @@
+import{_ as e,h as t}from"./Icon-Du2OPi8h.js";import{d as n,h as r}from"./progression-BAgkUUSW.js";import{t as i}from"./videos-Bu6uHuyk.js";var a=e(t(),1);function o(){let[e,t]=(0,a.useState)(n),[o,s]=(0,a.useState)(null);return{toutes:(0,a.useMemo)(()=>i.filter(e=>e.youtubeId),[]),vues:e,enLecture:o,fermerLecteur:()=>s(null),lire:e=>{s(e),t(r(e.id))}}}export{o as t};
