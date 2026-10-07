@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import TexteLibre from "../components/TexteLibre";
 import LecteurPdf from "../components/LecteurPdf";
 import { ChoixReponse, RepondreAvecIA } from "../components/RepondreExercice";
 import { questionsDe } from "../questionsExercice";
+import { corrigerExercice, iaActive, raisonEchec } from "../ia";
 import { Container, EtatVide } from "../components/ui";
 import { cx } from "../components/classes";
 import { mono } from "../components/styleAdmin";
@@ -25,9 +26,13 @@ import { themeMatiere } from "../data/couleurs";
    réponses sous chaque partie pendant l'épreuve (question par question,
    ou tout d'un bloc) ; une fois le devoir terminé, l'IA les compare au
    corrigé et dit si elles sont justes (components/RepondreExercice.jsx).
-   La note, elle, reste son auto-correction : une note inventée par la
-   machine serait pire que pas de note. Un devoir donné en PDF n'a pas
-   de texte lisible par l'IA : il se corrige seulement à la main.
+   Dès qu'il appuie sur « Terminer », toutes les parties écrites partent
+   à la correction en même temps, et la note se remplit seule : juste =
+   tous les points, presque = la moitié, faux ou vide = 0 (demande du
+   7 octobre 2026). Chaque case « Mes points » reste modifiable : la note
+   de l'IA est une proposition, l'étudiant a le dernier mot. Si l'IA ne
+   répond pas, la partie se note à la main. Un devoir donné en PDF n'a
+   pas de texte lisible par l'IA : il se corrige seulement à la main.
 
    Les examens ne sont que des liens vers des sujets dont la
    publication a été autorisée ; la plateforme n'en héberge aucun.
@@ -345,6 +350,10 @@ export function ExamenSession() {
   const [notes, setNotes] = useState({});
   // La façon de répondre, choisie avant de commencer, pour toutes les parties.
   const [modeReponse, setModeReponse] = useState("questions");
+  // Ce qui est écrit sous chaque partie, et la correction de chacune.
+  const ecrit = useRef({});
+  const [corrections, setCorrections] = useState({});
+  const [notesIA, setNotesIA] = useState({});
 
   // Un seul minuteur, qui ne tourne que pendant l'épreuve. Le temps
   // restant se calcule depuis l'heure de fin : il reste juste même si
@@ -379,10 +388,38 @@ export function ExamenSession() {
     setEtape("epreuve");
     window.scrollTo({ top: 0 });
   };
+  // La note proposée pour une partie, d'après le verdict de l'IA.
+  const pointsPour = (verdict, max) =>
+    verdict === "juste" ? max : verdict === "partiel" ? Math.round(max) / 2 : 0;
+  const noterAuto = (i, verdict) => {
+    const n = pointsPour(verdict, examen.parties[i].points);
+    setNotes((x) => ({ ...x, [i]: n }));
+    setNotesIA((x) => ({ ...x, [i]: true }));
+  };
+
   const terminer = () => {
     setEtape("corrige");
     window.scrollTo({ top: 0 });
+    if (examen.format === "pdf" || !iaActive) return;
+    examen.parties.forEach((p, i) => {
+      if (!p.corrige) return;
+      const { texte = "", vide = true } = ecrit.current[i] ?? {};
+      if (vide) {
+        // Rien d'écrit : 0, sans rien envoyer.
+        setNotes((x) => ({ ...x, [i]: 0 }));
+        return;
+      }
+      setCorrections((c) => ({ ...c, [i]: { attente: true } }));
+      corrigerExercice({ enonce: p.enonce, corrige: p.corrige, reponse: texte })
+        .then((r) => {
+          setCorrections((c) => ({ ...c, [i]: { resultat: r } }));
+          noterAuto(i, r.verdict);
+        })
+        .catch((e) => setCorrections((c) => ({ ...c, [i]: { erreur: raisonEchec(e.message) } })));
+    });
   };
+  const corrigeEnCours = Object.values(corrections).some((c) => c.attente);
+  const parIA = Object.keys(notesIA).length > 0;
 
   const pdf = examen.format === "pdf";
   const etapes = [
@@ -392,7 +429,7 @@ export function ExamenSession() {
       : `${examen.parties.length} parties, ${total} points au total. Écris tes réponses sous chaque partie, question par question ou d'un bloc (ou sur une feuille, comme un jour d'examen).`,
     pdf
       ? "Le corrigé ne s'affiche qu'à la fin, et tu te notes toi-même."
-      : "Le corrigé ne s'affiche qu'à la fin : l'IA compare alors tes réponses au corrigé, et tu te notes toi-même, partie par partie.",
+      : "Le corrigé ne s'affiche qu'à la fin : l'IA compare alors toutes tes réponses au corrigé et te donne ta note. Tu peux encore changer les points de chaque partie.",
   ];
 
   return (
@@ -530,6 +567,11 @@ export function ExamenSession() {
                   verrouille={etape === "epreuve"}
                   mode={modeReponse}
                   libelle={`Ta réponse à la partie ${i + 1}`}
+                  onReponse={(texte, vide) => {
+                    ecrit.current[i] = { texte, vide };
+                  }}
+                  correction={corrections[i]}
+                  onCorrige={(r) => noterAuto(i, r.verdict)}
                 />
 
                 {etape === "corrige" && (
@@ -537,7 +579,18 @@ export function ExamenSession() {
                     <BlocCorrige>
                       <TexteLibre texte={p.corrige || "Pas de corrigé pour cette partie."} grand />
                     </BlocCorrige>
-                    <ChampPoints valeur={notes[i]} max={p.points} onChange={(v) => setNotes((n) => ({ ...n, [i]: v }))} />
+                    <ChampPoints
+                      valeur={notes[i]}
+                      max={p.points}
+                      onChange={(v) => {
+                        setNotes((n) => ({ ...n, [i]: v }));
+                        setNotesIA((x) => {
+                          const { [i]: _retire, ...reste } = x;
+                          return reste;
+                        });
+                      }}
+                    />
+                    {notesIA[i] && <p className="mt-1.5 text-xs text-ink-600 dark:text-ink-300">Points proposés par l'IA : tu peux les changer.</p>}
                   </>
                 )}
               </section>
@@ -546,7 +599,13 @@ export function ExamenSession() {
           {etape === "corrige" && (
             <div className="flex flex-wrap items-center justify-between gap-6 rounded-[28px] bg-[#1b2328] p-7 text-white sm:p-9 dark:ring-1 dark:ring-white/10" style={QUADRILLAGE}>
               <div>
-                <p className={cx("text-xs text-ink-300", mono)}>Ma note, d&apos;après mon auto-correction</p>
+                <p className={cx("text-xs text-ink-300", mono)}>
+                  {corrigeEnCours
+                    ? "Ma note, l'IA corrige encore…"
+                    : parIA
+                      ? "Ma note, proposée par l'IA"
+                      : "Ma note, d'après mon auto-correction"}
+                </p>
                 <p className="mt-2 text-[64px] leading-none font-extrabold tracking-[-0.05em]">
                   {obtenu}
                   <span className="text-[32px] text-[#ffc94d]"> / {total}</span>
@@ -560,6 +619,8 @@ export function ExamenSession() {
                   type="button"
                   onClick={() => {
                     setNotes({});
+                    setNotesIA({});
+                    setCorrections({});
                     setEtape("consignes");
                   }}
                   className={cx("inline-flex min-h-12 items-center gap-2 rounded-[14px] px-5 text-[15px] font-extrabold transition-colors hover:brightness-105", AMBRE)}

@@ -66,16 +66,22 @@ test.describe("devoir", () => {
     await reponse1.fill("Physique, liaison, réseau, transport, session, présentation, application.");
     await expect(page.getByRole("button", { name: "Faire corriger par l'IA" })).toHaveCount(0);
 
-    // Terminé : les réponses sont toujours là, et se font corriger.
+    // Terminé : les réponses sont toujours là, et toutes se font corriger
+    // d'un coup, sans bouton à cliquer partie par partie.
     await page.getByRole("button", { name: "Terminer et voir le corrigé" }).click();
     await expect(reponse1).toHaveValue("Physique, liaison, réseau, transport, session, présentation, application.");
-    await partie.getByRole("button", { name: "Faire corriger par l'IA" }).click();
     await expect(partie.getByRole("status").filter({ hasText: "Presque" })).toBeVisible();
     await expect(partie.getByText("La question 2 ne correspond pas.")).toBeVisible();
+    await expect(partie.getByRole("button", { name: "Faire corriger par l'IA" })).toHaveCount(0);
+    expect(envois).toHaveLength(1);
     expect(envois[0]).toMatchObject({ enonce: devoir.parties[0].enonce, corrige: devoir.parties[0].corrige });
     expect(envois[0].reponse).toContain("Réponse : Physique, liaison, réseau");
-    // La note reste l'auto-correction de l'étudiant.
-    await expect(partie.getByRole("spinbutton", { name: "Mes points" })).toHaveValue("");
+    // La note se remplit seule (presque juste = la moitié), et reste modifiable.
+    const points = partie.getByRole("spinbutton", { name: "Mes points" });
+    await expect(points).toHaveValue(String(devoir.parties[0].points / 2));
+    await expect(page.getByText("Ma note, proposée par l'IA").locator("..")).toContainText(`${devoir.parties[0].points / 2} / ${total}`);
+    await points.fill("1");
+    await expect(page.getByText(/^Ma note, /).locator("..")).toContainText(`1 / ${total}`);
   });
 
   test("la façon de répondre se choisit avant de commencer, pour toutes les parties", async ({ page }) => {
@@ -101,6 +107,8 @@ test.describe("devoir", () => {
     const partie = page.locator("section").filter({ hasText: devoir.parties[0].titre });
     await partie.getByRole("textbox", { name: "Ta réponse à la question 1" }).fill("Une réponse.");
     await page.getByRole("button", { name: "Terminer et voir le corrigé" }).click();
+    // La correction automatique échoue : on le dit, et on peut relancer.
+    await expect(partie.getByRole("alert")).toBeVisible();
     await partie.getByRole("button", { name: "Faire corriger par l'IA" }).click();
     await expect(partie.getByRole("alert")).toBeVisible();
     await expect(partie.getByRole("button", { name: "Faire corriger par l'IA" })).toBeEnabled();

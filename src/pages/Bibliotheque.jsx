@@ -11,8 +11,8 @@ import { matieres, nomMatiere } from "../data/matieres";
    Uniquement des ressources dont la diffusion est autorisée. Mise en
    page d'après la maquette « Bibliothèque » (7 octobre 2026) : chaque
    ressource est un livre posé sur une carte pastel, avec sa vraie
-   couverture quand on la connaît — `couverture` (adresse d'image) ou
-   `isbn` (lu chez Open Library). Sinon, ou si l'image ne vient pas,
+   couverture quand on la connaît (`couverture`, une image du site
+   lui-même). Sinon, ou si l'image ne vient pas,
    une couverture est composée à partir du titre. Les ressources en
    attente d'autorisation gardent leur place, sans rien publier.
    ================================================================== */
@@ -24,8 +24,9 @@ const TEINTES = [
   { carte: "bg-[#fbe3f1]", sol: "bg-[#f4c9e2]", point: "bg-[#c2489a]", livre: "bg-[#a83a85]" },
 ];
 const mono = "font-mono text-[11px] font-bold tracking-[0.12em]";
+// Une couverture du dépôt (public/couvertures) se lit depuis la base du site.
 const couvertureDe = (r) =>
-  r.couverture || (r.isbn ? `https://covers.openlibrary.org/b/isbn/${r.isbn}-M.jpg?default=false` : null);
+  !r.couverture ? null : /^https?:/.test(r.couverture) ? r.couverture : `${import.meta.env.BASE_URL}${r.couverture}`;
 const deux = (n) => String(n).padStart(2, "0");
 
 function Livre({ r, teinte }) {

@@ -1,16 +1,17 @@
 // Bibliothèque : uniquement des ressources dont la diffusion est autorisée.
 //
 // statut = "libre"   → ressource publiée par son auteur en accès libre, lien externe
-// isbn        → la couverture est lue chez Open Library (covers.openlibrary.org) ;
-// couverture → ou une adresse d'image donnée directement. Sans l'un ni
-//               l'autre, la page compose une couverture.
+// couverture  → l'image de la vraie couverture : un fichier de public/
+//               (« couvertures/x.jpg », servi par le site lui-même, rien
+//               n'est demandé ailleurs) ou une adresse complète. Sans elle,
+//               la page compose une couverture à partir du titre.
 // statut = "attente" → ressource identifiée mais NON publiée tant que
 //                      l'autorisation n'est pas obtenue. Aucun fichier n'est hébergé.
 
 export const ressources = [
   {
     titre: "Computer Networks: A Systems Approach",
-    isbn: "9780123850591",
+    couverture: "couvertures/cn.jpg",
     auteurs: "Larry Peterson et Bruce Davie",
     type: "Livre",
     langue: "Anglais",
@@ -22,7 +23,7 @@ export const ressources = [
   },
   {
     titre: "Operating Systems: Three Easy Pieces",
-    isbn: "9781985086593",
+    couverture: "couvertures/ostep.jpg",
     auteurs: "Remzi et Andrea Arpaci-Dusseau",
     type: "Livre",
     langue: "Anglais",
@@ -34,7 +35,7 @@ export const ressources = [
   },
   {
     titre: "The Linux Command Line",
-    isbn: "9781593279523",
+    couverture: "couvertures/tlcl.jpg",
     auteurs: "William Shotts",
     type: "Livre",
     langue: "Anglais",
@@ -46,7 +47,7 @@ export const ressources = [
   },
   {
     titre: "Open Data Structures",
-    isbn: "9781927356388",
+    couverture: "couvertures/ods.jpg",
     auteurs: "Pat Morin",
     type: "Livre",
     langue: "Anglais",
@@ -58,7 +59,7 @@ export const ressources = [
   },
   {
     titre: "Think Python",
-    isbn: "9781491939369",
+    couverture: "couvertures/tp.jpg",
     auteurs: "Allen B. Downey",
     type: "Livre",
     langue: "Anglais",

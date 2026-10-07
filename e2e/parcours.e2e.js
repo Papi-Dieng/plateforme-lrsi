@@ -54,7 +54,6 @@ test.describe("QCM", () => {
       await expect(page.getByRole("heading", { name: q.enonce })).toBeVisible();
       const lettre = String.fromCharCode(65 + choix(q, i));
       await page.getByRole("button", { name: new RegExp(`^${lettre}\\.`) }).click();
-      await page.getByRole("button", { name: i + 1 < total ? "Enregistrer et suivant" : "Terminer le QCM" }).first().click();
     }
     await expect(page.getByRole("dialog", { name: "Terminer le questionnaire ?" })).toBeVisible();
     await page.getByRole("button", { name: "Voir mon résultat" }).click();

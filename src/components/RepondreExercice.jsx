@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
 import ChargementIA from "./ChargementIA";
 import { ETAPES_CORRECTION } from "../chargementIA";
@@ -177,7 +177,12 @@ export default function RepondreExercice({ exercice, mode, numero, ancre, onReus
    - `libelle` : le nom de la grande case, pour les lecteurs d'écran ;
    - `mode` : la façon de répondre choisie au début (ChoixReponse) ;
      sans questions numérotées dans l'énoncé, c'est toujours la grande
-     case. */
+     case ;
+   - `onReponse(texte, vide)` : tient la page au courant de ce qui est
+     écrit (un devoir corrige toutes ses parties d'un coup) ;
+   - `correction` : { attente, resultat, erreur } d'une correction lancée
+     par la page ; le bouton ne réapparaît alors qu'en cas d'échec ;
+   - `onCorrige(resultat)` : appelé à chaque correction réussie. */
 export function RepondreAvecIA({
   id,
   enonce,
@@ -192,6 +197,9 @@ export function RepondreAvecIA({
   onReussi,
   onBesoinIndice,
   indiceDisponible,
+  onReponse,
+  correction,
+  onCorrige,
 }) {
   const [reponse, setReponse] = useState("");
   const [reponses, setReponses] = useState({});
@@ -200,14 +208,22 @@ export function RepondreAvecIA({
   const [etat, setEtat] = useState({ attente: false, erreur: "" });
   const [voirAttendue, setVoirAttendue] = useState(false);
 
-  if (!enonce || !corrige) return null;
-
-  const questions = questionsDe(enonce);
+  const questions = questionsDe(enonce ?? "");
   const mode = questions.length ? modeChoisi : "libre";
   const aEnvoyer =
     mode === "questions" ? assemblerReponses(questions, questions.map((_, i) => reponses[i] ?? "")) : reponse;
   const vide =
     mode === "questions" ? !Object.values(reponses).some((v) => v.trim()) : reponse.trim().length < 2;
+
+  const prevenir = useRef(onReponse);
+  useEffect(() => {
+    prevenir.current = onReponse;
+  });
+  useEffect(() => {
+    prevenir.current?.(aEnvoyer, vide);
+  }, [aEnvoyer, vide]);
+
+  if (!enonce || !corrige) return null;
 
   const corriger = async (e) => {
     e.preventDefault();
@@ -217,6 +233,7 @@ export function RepondreAvecIA({
       const r = await corrigerExercice({ enonce, corrige, reponse: aEnvoyer });
       setResultat(r);
       setEtat({ attente: false, erreur: "" });
+      onCorrige?.(r);
       if (r.verdict === "juste") onReussi?.();
       else setRates((n) => n + 1);
     } catch (err) {
@@ -224,7 +241,12 @@ export function RepondreAvecIA({
     }
   };
 
-  const verdict = resultat && VERDICTS[resultat.verdict];
+  // Ce qu'on montre : sa propre correction si on l'a relancée, sinon
+  // celle que la page a faite pour tout le devoir.
+  const parSoi = resultat || etat.attente || etat.erreur;
+  const vu = parSoi ? { resultat, attente: etat.attente, erreur: etat.erreur } : (correction ?? {});
+  const verdict = vu.resultat && VERDICTS[vu.resultat.verdict];
+  const avecBouton = !correction || Boolean(vu.erreur);
 
   const Titre = encadre ? "h2" : "h3";
 
@@ -252,7 +274,7 @@ export function RepondreAvecIA({
       </Titre>
       <p className="mt-2 text-[15px] text-ink-600 dark:text-ink-300">
         {verrouille
-          ? "Écris tes réponses ici pendant le devoir. Quand tu le termines, l'IA les compare au corrigé et te dit si elles sont justes."
+          ? "Écris tes réponses ici pendant le devoir. Quand tu le termines, l'IA les compare au corrigé et te propose une note."
           : "Réponds comme sur ta copie : l'IA compare ta réponse au corrigé et te dit si elle est juste."}
       </p>
 
@@ -302,7 +324,7 @@ export function RepondreAvecIA({
             {reponseAttendue ? " Compare toi-même ta réponse à la réponse attendue." : " Compare toi-même ta réponse au corrigé."}
           </p>
         )}
-        {!verrouille && iaActive && (
+        {!verrouille && iaActive && avecBouton && (
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="submit"
@@ -319,10 +341,10 @@ export function RepondreAvecIA({
         )}
       </form>
 
-      {etat.attente && <ChargementIA etapes={ETAPES_CORRECTION} className="pt-4" />}
-      {etat.erreur && (
+      {vu.attente && <ChargementIA etapes={ETAPES_CORRECTION} className="pt-4" />}
+      {vu.erreur && (
         <p role="alert" className="mt-3 text-sm text-flame-700 dark:text-flame-400">
-          {etat.erreur}
+          {vu.erreur}
         </p>
       )}
 
@@ -354,10 +376,10 @@ export function RepondreAvecIA({
                 <span className="text-[15px] text-ink-700 dark:text-ink-200">{verdict.texte}</span>
               </p>
             </div>
-            {(resultat.justes?.length > 0 || resultat.erreurs?.length > 0) && (
+            {(vu.resultat.justes?.length > 0 || vu.resultat.erreurs?.length > 0) && (
               <div className="flex flex-col divide-y divide-ink-950/10 border-t border-ink-950/10 sm:flex-row sm:divide-x sm:divide-y-0 dark:divide-white/10 dark:border-white/10">
-                <Liste titre="Ce qui correspond au corrigé" elements={resultat.justes} ton="text-lime-800 dark:text-lime-300" icone="check" />
-                <Liste titre="Ce qui ne correspond pas" elements={resultat.erreurs} ton="text-flame-700 dark:text-flame-300" icone="close" />
+                <Liste titre="Ce qui correspond au corrigé" elements={vu.resultat.justes} ton="text-lime-800 dark:text-lime-300" icone="check" />
+                <Liste titre="Ce qui ne correspond pas" elements={vu.resultat.erreurs} ton="text-flame-700 dark:text-flame-300" icone="close" />
               </div>
             )}
             <p className="border-t border-ink-950/10 px-5 py-3 text-xs text-ink-600 dark:border-white/10 dark:text-ink-300">
@@ -365,7 +387,7 @@ export function RepondreAvecIA({
             </p>
           </div>
           {reponseAttendue}
-          {rates >= 2 && indiceDisponible && resultat.verdict !== "juste" && (
+          {rates >= 2 && indiceDisponible && vu.resultat.verdict !== "juste" && (
             <button
               type="button"
               onClick={onBesoinIndice}

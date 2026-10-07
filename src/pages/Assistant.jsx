@@ -95,8 +95,8 @@ const iconesLien = {
 
 /* Mise en page d'après la maquette « Assistant de révision » (7 octobre
    2026) : salle sombre prune, un orbe pêche-rose pour l'assistant, les
-   réponses sans bulle, et à droite, sur grand écran, « Les coulisses »
-   — ce que l'assistant fait pour répondre et ce qu'il envoie à Gemini. */
+   réponses sans bulle. (« Les coulisses », le panneau de droite, a été
+   retiré à la demande le 7 octobre 2026.) */
 
 const ORBE = "rounded-full bg-[radial-gradient(circle_at_30%_30%,#ffc1a0,#ff8fb8_55%,#b9a4ff)]";
 const DEGRADE = "bg-gradient-to-r from-[#ffc1a0] to-[#ff9fbf]";
@@ -142,65 +142,6 @@ function Liens({ liens }) {
         ))}
       </ul>
     </>
-  );
-}
-
-/* ---- Les coulisses : ce que fait l'assistant pour répondre ---- */
-
-const COULISSES = [
-  { icone: "layers", titre: "Recherche dans la plateforme", texte: "Je lis ta question et je cherche les chapitres, exercices et QCM qui en parlent." },
-  { icone: "database", titre: "Préparation de la demande", texte: "J'ajoute les consignes de la matière et des extraits du cours, puis j'envoie le tout à Gemini par le relais." },
-  { icone: "sparkles", titre: "Rédaction de la réponse", texte: "Gemini rédige l'explication ; je la mets en forme et je t'amène aux contenus trouvés." },
-];
-
-function Coulisses({ trouves }) {
-  return (
-    <aside aria-label="Les coulisses" tabIndex={0} className="hidden w-[380px] shrink-0 overflow-y-auto rounded-[28px] border border-white/10 bg-[#1d1222]/80 p-6 xl:block">
-      <p className={cx(mono, "flex items-center gap-2 text-[#cfc3d6]")}>
-        <Icon name="layers" className="size-3.5" />
-        Les coulisses
-      </p>
-      <h2 className="mt-3 text-lg font-extrabold text-white">Comment je réponds</h2>
-      <p className="mt-1 text-sm/6 text-[#a99bb3]">
-        {iaActive
-          ? "Trois étapes à chaque question : le site cherche, le relais transmet, Gemini rédige."
-          : "Ici, aucune IA : je cherche seulement dans le contenu de la plateforme."}
-      </p>
-      <ol className="mt-5 space-y-3">
-        {(iaActive ? COULISSES : COULISSES.slice(0, 1)).map((e) => (
-          <li key={e.titre} className="flex gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#b9a4ff]/15 text-[#d1c4ff]">
-              <Icon name={e.icone} className="size-4" />
-            </span>
-            <span>
-              <span className="block text-sm font-extrabold text-white">{e.titre}</span>
-              <span className="mt-1 block text-sm/6 text-[#cfc3d6]">{e.texte}</span>
-            </span>
-          </li>
-        ))}
-      </ol>
-      {iaActive && (
-        <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-          <p className={cx(mono, "flex items-center gap-2 text-[10px] text-[#ffc1a0]")}>
-            <Icon name="target" className="size-3.5" />
-            Sans IA
-          </p>
-          <p className="mt-2 text-sm/6 font-semibold text-white">
-            Pour savoir sur quoi travailler en priorité, je lis seulement tes résultats de QCM : rien ne part chez Gemini.
-          </p>
-        </div>
-      )}
-      {trouves > 0 && (
-        <p className={cx(mono, "mt-6 flex items-center justify-between border-t border-white/10 pt-4 text-[10px] text-[#cfc3d6]")}>
-          Trouvé sur la plateforme, dernière réponse
-          <span className="grid size-6 place-items-center rounded-full bg-white/10 text-white">{trouves}</span>
-        </p>
-      )}
-      <p className="mt-6 flex gap-2 border-t border-white/10 pt-4 text-xs/5 text-[#a99bb3]">
-        <Icon name="info" className="mt-0.5 size-3.5 shrink-0" />
-        Une IA peut se tromper : en cas de doute, le cours et ton enseignant font foi.
-      </p>
-    </aside>
   );
 }
 
@@ -450,11 +391,10 @@ export default function Assistant() {
   };
 
 
-  const derniere = [...messages].reverse().find((m) => m.role === "assistant" && m.etat !== "attente");
   const icones = ["bulb", "pencil", "target", "graduation"];
 
   return (
-    <div className="dark relative flex h-full gap-5 bg-[#0f0b14] bg-[radial-gradient(ellipse_at_top_left,#3a1d2e_0%,transparent_55%),radial-gradient(ellipse_at_bottom_right,#2a1d44_0%,transparent_50%)] p-0 text-[#f4eef7] xl:p-5">
+    <div className="dark relative flex h-full gap-5 bg-[#0f0b14] bg-[radial-gradient(ellipse_at_top_left,#3a1d2e_0%,transparent_55%),radial-gradient(ellipse_at_bottom_right,#2a1d44_0%,transparent_50%)] text-[#f4eef7]">
       {historiqueOuvert && (
         <Historique
           liste={liste}
@@ -695,7 +635,6 @@ export default function Assistant() {
         </div>
       </div>
 
-      <Coulisses trouves={derniere?.reponse.liens.length ?? 0} />
     </div>
   );
 }

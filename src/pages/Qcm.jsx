@@ -476,6 +476,11 @@ function SessionQcm({ qcmId }) {
   // Garde-fou : le score ne doit être enregistré qu'une seule fois par
   // tentative, même si la clôture est déclenchée deux fois de suite.
   const dejaEnregistre = useRef(false);
+  // Choisir une réponse passe à la question suivante après un court
+  // instant (le temps de voir le choix s'allumer) ; à la dernière, la
+  // confirmation de fin s'ouvre.
+  const avance = useRef(null);
+  useEffect(() => () => clearTimeout(avance.current), []);
 
   const recommencer = useCallback(() => {
     dejaEnregistre.current = false;
@@ -556,7 +561,16 @@ function SessionQcm({ qcmId }) {
   const sansReponse = total - repondues;
   const urgent = restant <= 60;
 
-  const repondre = (choix) => setReponses((r) => r.map((v, i) => (i === index ? choix : v)));
+  const allerA = (i) => {
+    clearTimeout(avance.current);
+    setIndex(i);
+  };
+  const repondre = (choix) => {
+    setReponses((r) => r.map((v, i) => (i === index ? choix : v)));
+    clearTimeout(avance.current);
+    const ici = index;
+    avance.current = setTimeout(() => (ici + 1 < total ? setIndex(ici + 1) : setAlerteFin(true)), 350);
+  };
   const effacer = () => setReponses((r) => r.map((v, i) => (i === index ? null : v)));
   const basculerMarque = () => setMarquees((m) => m.map((v, i) => (i === index ? !v : v)));
 
@@ -674,7 +688,7 @@ function SessionQcm({ qcmId }) {
               <div className="mt-8 flex flex-wrap items-center gap-2.5 border-t border-ink-100 pt-6 dark:border-ink-800">
                 <button
                   type="button"
-                  onClick={() => setIndex(index - 1)}
+                  onClick={() => allerA(index - 1)}
                   disabled={index === 0}
                   className="inline-flex min-h-12 items-center gap-2 rounded-[14px] px-3 text-sm font-bold text-ink-700 transition-colors hover:bg-ink-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-ink-200 dark:hover:bg-ink-800"
                 >
@@ -688,14 +702,21 @@ function SessionQcm({ qcmId }) {
                   <Icon name="bookmark" className="size-4" fill={marquees[index] ? "currentColor" : "none"} />
                   {marquees[index] ? "Ne plus marquer" : "Marquer à revoir"}
                 </button>
-                <button
-                  type="button"
-                  onClick={index + 1 >= total ? () => setAlerteFin(true) : () => setIndex(index + 1)}
-                  className="ml-auto inline-flex min-h-12 items-center gap-2.5 rounded-[14px] bg-lime-400 px-5.5 text-[15px] font-extrabold text-ink-950 transition-colors hover:bg-lime-300"
-                >
-                  {index + 1 >= total ? "Terminer le QCM" : "Enregistrer et suivant"}
-                  <Icon name="arrow" className="size-4" />
-                </button>
+                {index + 1 < total ? (
+                  <button type="button" onClick={() => allerA(index + 1)} className={cx(boutonClair, "ml-auto")}>
+                    Passer
+                    <Icon name="arrow" className="size-4" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setAlerteFin(true)}
+                    className="ml-auto inline-flex min-h-12 items-center gap-2.5 rounded-[14px] bg-lime-400 px-5.5 text-[15px] font-extrabold text-ink-950 transition-colors hover:bg-lime-300"
+                  >
+                    Terminer le QCM
+                    <Icon name="arrow" className="size-4" />
+                  </button>
+                )}
               </div>
             </section>
           </div>
@@ -706,7 +727,7 @@ function SessionQcm({ qcmId }) {
             reponses={reponses}
             marquees={marquees}
             index={index}
-            aller={setIndex}
+            aller={allerA}
             onTerminer={() => setAlerteFin(true)}
           />
         </div>
