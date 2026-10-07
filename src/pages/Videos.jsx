@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import BoutonFavori from "../components/BoutonFavori";
@@ -54,6 +54,14 @@ export default function Videos() {
     matieres.some((m) => m.id === params.get("m")) ? params.get("m") : "toutes"
   );
   const [recherche, setRecherche] = useState("");
+  const rangee = useRef(null);
+  // Une flèche fait défiler la rangée d'à peu près une carte.
+  const defiler = (sens) => {
+    const r = rangee.current;
+    if (!r) return;
+    const reduit = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    r.scrollBy({ left: sens * r.clientWidth * 0.8, behavior: reduit ? "auto" : "smooth" });
+  };
 
   const q = normalise(recherche.trim());
   const resultats = v.toutes.filter((video) => {
@@ -153,9 +161,20 @@ export default function Videos() {
               </button>
             </div>
           ) : (
-            <ul className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="relative mt-6">
+              {resultats.length > 1 && (
+                <div className="mb-3 flex justify-end gap-2">
+                  <button type="button" onClick={() => defiler(-1)} aria-label="Vidéos précédentes" className="grid size-11 place-items-center rounded-full border border-ink-200 hover:bg-ink-100 dark:border-ink-700 dark:hover:bg-ink-800">
+                    <Icon name="arrow" className="size-4 rotate-180" />
+                  </button>
+                  <button type="button" onClick={() => defiler(1)} aria-label="Vidéos suivantes" className="grid size-11 place-items-center rounded-full border border-ink-200 hover:bg-ink-100 dark:border-ink-700 dark:hover:bg-ink-800">
+                    <Icon name="arrow" className="size-4" />
+                  </button>
+                </div>
+              )}
+            <ul ref={rangee} tabIndex={0} aria-label="Vidéos, à faire défiler" className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-4 focus-visible:outline-2 focus-visible:outline-[#ffc94d]">
               {resultats.map((video) => (
-                <li key={video.id} className="relative">
+                <li key={video.id} className="relative w-72 shrink-0 snap-start sm:w-80">
                   <button type="button" onClick={() => v.lire(video)} className="group block w-full text-left">
                     <Miniature video={video} />
                     <span className="mt-3 block font-extrabold tracking-[-0.02em] group-hover:text-[#ffc94d]">{video.titre}</span>
@@ -174,6 +193,7 @@ export default function Videos() {
                 </li>
               ))}
             </ul>
+            </div>
           )}
         </section>
       )}
