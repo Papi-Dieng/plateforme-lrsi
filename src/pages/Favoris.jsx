@@ -1,14 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Icon from "../components/Icon";
-import {
-  Badge,
-  Bouton,
-  Container,
-  EnTetePage,
-  EtatVide,
-  Filtres,
-} from "../components/ui";
 import { cx } from "../components/classes";
 import {
   dateLisible,
@@ -17,7 +9,6 @@ import {
   retirerFavori,
 } from "../progression";
 import { getMatiere } from "../data/matieres";
-import { themeMatiere } from "../data/couleurs";
 import { getExercice } from "../data/exercices";
 import { getQcm } from "../data/qcm";
 import { videosSuggerees } from "../data/videos";
@@ -29,6 +20,12 @@ import { videosSuggerees } from "../data/videos";
    chaque référence au moment de l'affichage : si un contenu a été
    supprimé ou renommé depuis, le favori est signalé comme introuvable
    plutôt que de faire disparaître la ligne sans explication.
+
+   Mise en page d'après la maquette « Mes favoris » (7 octobre 2026) :
+   encre marine et rouge marque-page. Les filtres sont des signets qui
+   pendent du haut de la page ; un favori se retire en cliquant sur le
+   signet rouge de sa carte ; une matière occupe une carte large et
+   sombre.
    ================================================================== */
 
 const libellesType = {
@@ -47,12 +44,7 @@ function resoudre(favori) {
   if (type === "matiere") {
     const m = getMatiere(reference);
     if (!m) return null;
-    return {
-      titre: m.nom,
-      detail: m.resume,
-      matiere: m,
-      lien: `/cours/${m.id}`,
-    };
+    return { titre: m.nom, detail: m.resume, matiere: m, lien: `/cours/${m.id}` };
   }
 
   if (type === "chapitre") {
@@ -89,7 +81,7 @@ function resoudre(favori) {
       detail: q.description,
       matiere: getMatiere(q.matiere),
       lien: `/qcm/${q.id}`,
-      complement: `${q.questions.length} questions`,
+      questions: q.questions.length,
     };
   }
 
@@ -101,7 +93,8 @@ function resoudre(favori) {
       detail: v.resume ?? "",
       matiere: getMatiere(v.matiere),
       lien: "/videos",
-      complement: v.youtubeId ? "Lien prêt" : "Lien à ajouter",
+      complement: "Lien prêt",
+      accroche: v.accroche,
     };
   }
 
@@ -109,6 +102,136 @@ function resoudre(favori) {
 }
 
 /* ================================================================== */
+
+const ENCRE = "text-[#1c1838] dark:text-white";
+const ROUGE = "text-[#a3261a] dark:text-[#ff8a75]";
+const DOUX = "text-ink-600 dark:text-ink-300";
+const mono = "font-mono text-[11px] font-bold tracking-[0.16em] uppercase";
+const ENTAILLE = { clipPath: "polygon(0 0,100% 0,100% 100%,50% calc(100% - 14px),0 100%)" };
+const MARQUE = { clipPath: "polygon(0 0,100% 0,100% 100%,50% 75%,0 100%)" };
+
+function Signet({ actif, label, nombre, onClick }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={actif}
+      onClick={onClick}
+      className={cx(
+        "flex w-11 flex-col items-center gap-3 pt-4 transition-[height,background-color] sm:w-14",
+        actif
+          ? "h-56 bg-[#d4371f] pb-8 text-white sm:h-72"
+          : "h-36 bg-white pb-6 text-[#1c1838] shadow-[0_8px_18px_-8px_#1c183840] hover:h-40 sm:h-44 sm:hover:h-48 dark:bg-ink-800 dark:text-white"
+      )}
+      style={ENTAILLE}
+    >
+      <span className={cx(mono, "rotate-180 text-[10px] [writing-mode:vertical-rl]")}>{label}</span>
+      <span className="mt-auto text-xl font-black">{nombre}</span>
+    </button>
+  );
+}
+
+function Carte({ f, onRetirer }) {
+  const info = libellesType[f.type];
+  const c = f.contenu;
+  const large = Boolean(c) && f.type === "matiere";
+  const video = Boolean(c) && f.type === "video";
+
+  return (
+    <li className={cx((large || video) && "md:col-span-2")}>
+      <article
+        className={cx(
+          "relative flex h-full overflow-hidden border",
+          large
+            ? "border-[#1c1838] bg-[#1c1838] text-white dark:border-white/10"
+            : "border-[#1c1838]/10 bg-white dark:border-white/10 dark:bg-ink-900"
+        )}
+      >
+        {video && (
+          <div aria-hidden="true" className="hidden w-2/5 shrink-0 flex-col justify-between bg-[#1c1838] p-5 text-white sm:flex">
+            <span className={cx(mono, "text-[10px]")}>Vidéo</span>
+            <span className="text-5xl font-black tracking-[-0.06em] break-words">{c.accroche || "▶"}</span>
+          </div>
+        )}
+
+        <div className="flex min-w-0 flex-1 flex-col p-6">
+          <div className={cx("flex flex-wrap items-center gap-2.5 pr-10", !large && ENCRE)}>
+            <span className={cx("grid size-8 place-items-center", large ? "bg-white/10" : "bg-[#f3f2f8] dark:bg-white/10")}>
+              <Icon name={info.icone} className="size-4" />
+            </span>
+            <span className={cx(mono, "text-[10px]")}>{info.singulier}</span>
+            {c?.complement && (
+              <span
+                className={cx(
+                  mono,
+                  "border px-1.5 py-0.5 text-[9px]",
+                  c.complement === "Bientôt" ? "border-[#d4371f]/30 bg-[#fde8e4] text-[#a3261a]" : "border-current"
+                )}
+              >
+                {c.complement}
+              </span>
+            )}
+          </div>
+
+          {c ? (
+            <>
+              <Link
+                to={c.lien}
+                className={cx(
+                  "mt-4 block font-black tracking-[-0.03em] text-balance hover:underline",
+                  large ? "text-4xl sm:text-5xl" : cx("text-xl", ENCRE)
+                )}
+              >
+                {c.titre}
+              </Link>
+              {f.type === "exercice" && c.detail ? (
+                <>
+                  <p className={cx(mono, "mt-3 text-[10px]", ROUGE)}>Énoncé</p>
+                  <p className="mt-2 line-clamp-4 bg-[#f3f2f8] p-3 text-sm/6 text-ink-700 dark:bg-white/5 dark:text-ink-200">{c.detail}</p>
+                </>
+              ) : (
+                c.detail && <p className={cx("mt-3 line-clamp-3 text-sm/6", large ? "text-white/80" : DOUX)}>{c.detail}</p>
+              )}
+              {c.questions > 0 && (
+                <p className={cx(mono, "mt-4 text-[10px]", ENCRE)}>
+                  <span className={ROUGE}>{c.questions}</span> questions
+                </p>
+              )}
+              <span className="h-5 shrink-0" aria-hidden="true" />
+              <p
+                className={cx(
+                  "mt-auto flex flex-wrap justify-between gap-x-4 gap-y-1 border-t pt-4 text-xs",
+                  large ? "border-white/15 text-white/80" : cx("border-[#1c1838]/10 dark:border-white/10", DOUX)
+                )}
+              >
+                {!large && c.matiere && <span className={cx("font-bold", ENCRE)}>{c.matiere.nom}</span>}
+                {f.date && <span>ajouté le {dateLisible(f.date)}</span>}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className={cx("mt-4 text-xl font-black", ENCRE)}>Contenu introuvable</p>
+              <p className={cx("mt-2 text-sm/6", DOUX)}>
+                Cette référence n'existe plus. Elle a sans doute été renommée ou retirée.
+              </p>
+              <p className={cx("mt-auto pt-4 font-mono text-[11px]", DOUX)}>
+                {f.type} · {f.reference}
+              </p>
+            </>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => onRetirer(f)}
+          aria-label={`Retirer ${c?.titre ?? f.reference} des favoris`}
+          title="Retirer des favoris"
+          className="absolute top-0 right-5 h-12 w-7 bg-[#d4371f] transition-[height] hover:h-14 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4371f]"
+          style={MARQUE}
+        />
+      </article>
+    </li>
+  );
+}
 
 export default function Favoris() {
   const [favoris, setFavoris] = useState(lireFavoris);
@@ -124,155 +247,109 @@ export default function Favoris() {
 
   const resolus = useMemo(
     () =>
-      favoris.map((f) => ({
-        ...f,
-        contenu: resoudre(f),
-      })),
+      favoris
+        .map((f) => ({ ...f, contenu: resoudre(f) }))
+        .sort((a, b) => String(b.date ?? "").localeCompare(String(a.date ?? ""))),
     [favoris]
   );
 
-  const comptes = useMemo(() => {
-    const c = {};
-    resolus.forEach((f) => {
-      c[f.type] = (c[f.type] ?? 0) + 1;
-    });
-    return c;
-  }, [resolus]);
-
-  const options = [
-    { value: "tous", label: `Tous (${resolus.length})` },
-    ...Object.keys(libellesType)
-      .filter((t) => comptes[t])
-      .map((t) => ({
-        value: t,
-        label: `${libellesType[t].label} (${comptes[t]})`,
-      })),
-  ];
-
+  const comptes = {};
+  resolus.forEach((f) => {
+    comptes[f.type] = (comptes[f.type] ?? 0) + 1;
+  });
+  const types = Object.keys(libellesType).filter((t) => comptes[t]);
   const affiches = resolus.filter((f) => type === "tous" || f.type === type);
-
   const retirer = (f) => setFavoris(retirerFavori(f.type, f.reference));
+  const vide = resolus.length === 0;
 
   return (
-    <>
-      <EnTetePage
-        surtitre="Ma sélection"
-        titre="Mes favoris"
-        texte="Tout ce que tu as mis de côté : matières, chapitres, exercices, QCM et vidéos. Le marque-page se trouve sur chaque carte."
-      />
+    <div className="bg-[#f3f2f8] dark:bg-ink-950">
+      <header className="border-b border-[#1c1838]/10 dark:border-white/10">
+        <div className="mx-auto flex max-w-6xl flex-wrap-reverse items-start justify-between gap-x-8 px-4 sm:px-6">
+          <div className="pt-12 pb-14 sm:pt-16">
+            <p className={cx(mono, ROUGE)}>Ma sélection</p>
+            <h1 className={cx("mt-6 text-7xl/[0.85] font-black tracking-[-0.06em] sm:text-9xl/[0.85]", ENCRE)}>
+              Mes <br />
+              favoris
+            </h1>
+            <p className={cx("mt-8 max-w-md", DOUX)}>
+              Tout ce que tu as mis de côté : matières, chapitres, exercices, QCM et vidéos. Le marque-page se trouve sur chaque carte.
+            </p>
+          </div>
 
-      <Container className="py-10">
-        {resolus.length === 0 ? (
-          <EtatVide
-            titre="Aucun favori pour l'instant"
-            texte="Clique sur le marque-page d'une matière, d'un chapitre, d'un exercice, d'un QCM ou d'une vidéo pour la retrouver ici."
-          >
-            <div className="flex flex-wrap justify-center gap-3">
-              <Bouton to="/cours">Parcourir les cours</Bouton>
-              <Bouton to="/exercices" variante="secondaire">
-                Voir les exercices
-              </Bouton>
+          <div className="max-w-full border-t-8 border-[#1c1838] dark:border-white/80">
+            <p id="filtre-favoris" className={cx(mono, "mt-3 mb-1 text-[10px]", DOUX)}>
+              Filtrer par type
+            </p>
+            {vide ? (
+              <div aria-hidden="true" className="flex gap-6 px-6">
+                {[36, 44, 32].map((h) => (
+                  <span key={h} className="w-14 border-2 border-dashed border-ink-300 dark:border-ink-600" style={{ height: h * 4 }} />
+                ))}
+              </div>
+            ) : (
+              <div role="group" aria-labelledby="filtre-favoris" className="flex items-start gap-2 sm:gap-3">
+                <Signet actif={type === "tous"} label="Tous" nombre={resolus.length} onClick={() => setType("tous")} />
+                {types.map((t) => (
+                  <Signet key={t} actif={type === t} label={libellesType[t].label} nombre={comptes[t]} onClick={() => setType(t)} />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
+        {vide ? (
+          <div className="flex flex-wrap items-center justify-between gap-10">
+            <div className="max-w-xl">
+              <h2 className={cx("text-5xl/[0.95] font-black tracking-[-0.05em]", ENCRE)}>Aucun favori pour l'instant</h2>
+              <p className={cx("mt-4", DOUX)}>
+                Clique sur le marque-page d'une matière, d'un chapitre, d'un exercice, d'un QCM ou d'une vidéo pour la retrouver ici.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link
+                  to="/cours"
+                  className="inline-flex min-h-12 items-center gap-2 bg-[#1c1838] px-5 font-extrabold text-white hover:bg-[#2c2752] dark:bg-white dark:text-[#1c1838]"
+                >
+                  Parcourir les cours
+                  <Icon name="arrow" className="size-4" />
+                </Link>
+                <Link
+                  to="/exercices"
+                  className={cx("inline-flex min-h-12 items-center border border-[#1c1838] px-5 font-extrabold hover:bg-white dark:border-white dark:hover:bg-white/10", ENCRE)}
+                >
+                  Voir les exercices
+                </Link>
+              </div>
             </div>
-          </EtatVide>
+            <div aria-hidden="true" className="w-full max-w-sm">
+              <p className={cx(mono, "text-right text-[10px]", ROUGE)}>Le marque-page</p>
+              <div className="relative mt-2 border border-dashed border-ink-300 bg-white/60 p-7 dark:border-ink-600 dark:bg-white/5">
+                <span className="absolute top-0 right-5 h-14 w-8 bg-[#d4371f]" style={MARQUE} />
+                <span className="block size-9 bg-ink-200 dark:bg-ink-700" />
+                <span className="mt-4 block h-4 w-4/5 bg-ink-200 dark:bg-ink-700" />
+                <span className="mt-3 block h-2.5 w-3/5 bg-ink-200 dark:bg-ink-700" />
+                <span className="mt-3 block h-2.5 w-2/5 bg-ink-200 dark:bg-ink-700" />
+              </div>
+            </div>
+          </div>
         ) : (
           <>
-            <Filtres
-              label="Filtrer par type de contenu"
-              options={options}
-              actif={type}
-              onChange={setType}
-            />
-
-            <ul className="mt-8 grid gap-4 md:grid-cols-2">
-              {affiches.map((f) => {
-                const info = libellesType[f.type];
-                const theme = themeMatiere(f.contenu?.matiere);
-
-                return (
-                  <li key={`${f.type}-${f.reference}`}>
-                    <div className="card flex h-full gap-4 p-5">
-                      <span
-                        className={cx(
-                          "grid size-10 shrink-0 place-items-center rounded-xl",
-                          f.contenu ? theme.pastille : "bg-ink-100 text-ink-500 dark:text-ink-400 dark:bg-ink-800"
-                        )}
-                      >
-                        <Icon name={info.icone} className="size-5" />
-                      </span>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <Badge>{info.singulier}</Badge>
-                          {f.contenu?.complement && (
-                            <Badge ton="neutre">{f.contenu.complement}</Badge>
-                          )}
-                        </div>
-
-                        {f.contenu ? (
-                          <>
-                            <Link
-                              to={f.contenu.lien}
-                              className="mt-2 block font-semibold text-ink-900 hover:text-brand-600 dark:text-white dark:hover:text-brand-300"
-                            >
-                              {f.contenu.titre}
-                            </Link>
-                            {f.contenu.detail && (
-                              <p className="mt-1 line-clamp-2 text-sm/6 text-ink-600 dark:text-ink-400">
-                                {f.contenu.detail}
-                              </p>
-                            )}
-                            <p className="mt-2 flex flex-wrap items-center gap-x-2 text-xs text-ink-500 dark:text-ink-400">
-                              {f.contenu.matiere && (
-                                <span className={theme.texte}>
-                                  {f.contenu.matiere.nom}
-                                </span>
-                              )}
-                              {f.date && (
-                                <>
-                                  <span aria-hidden="true">·</span>
-                                  <span>ajouté le {dateLisible(f.date)}</span>
-                                </>
-                              )}
-                            </p>
-                          </>
-                        ) : (
-                          <>
-                            <p className="mt-2 font-semibold text-ink-700 dark:text-ink-200">
-                              Contenu introuvable
-                            </p>
-                            <p className="mt-1 text-sm/6 text-ink-500 dark:text-ink-400">
-                              Cette référence n'existe plus. Elle a sans doute
-                              été renommée ou retirée.
-                            </p>
-                            <p className="mt-2 font-mono text-[11px] text-ink-500 dark:text-ink-400">
-                              {f.type} · {f.reference}
-                            </p>
-                          </>
-                        )}
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => retirer(f)}
-                        aria-label={`Retirer ${f.contenu?.titre ?? f.reference} des favoris`}
-                        title="Retirer des favoris"
-                        className="grid size-8 shrink-0 self-start place-items-center rounded-lg text-sun-600 transition-colors hover:bg-sun-100 dark:text-sun-400 dark:hover:bg-sun-500/15"
-                      >
-                        <Icon
-                          name="bookmark"
-                          className="size-5"
-                          fill="currentColor"
-                        />
-                      </button>
-                    </div>
-                  </li>
-                );
-              })}
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <h2 className={cx("text-4xl font-black tracking-[-0.05em]", ENCRE)}>
+                {affiches.length} favori{affiches.length > 1 ? "s" : ""}
+              </h2>
+              <p className={cx(mono, "text-[10px]", DOUX)}>Du plus récent au plus ancien</p>
+            </div>
+            <ul className="mt-8 grid gap-5 md:grid-cols-3">
+              {affiches.map((f) => (
+                <Carte key={`${f.type}-${f.reference}`} f={f} onRetirer={retirer} />
+              ))}
             </ul>
           </>
         )}
-
-      </Container>
-    </>
+      </div>
+    </div>
   );
 }
