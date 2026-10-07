@@ -180,6 +180,21 @@ const paths = {
   pause: <path d="M9 5.5v13M15 5.5v13" />,
   stop: <rect x="6.5" y="6.5" width="11" height="11" rx="2" fill="currentColor" />,
   haut: <path d="M12 19V5M6 11l6-6 6 6" />,
+  oeil: (
+    <>
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" />
+      <circle cx="12" cy="12" r="2.8" />
+    </>
+  ),
+  oeilBarre: <path d="M3 3l18 18M10.6 5.6A9 9 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.7 3.4M6.6 6.6C3.9 8.4 2.5 12 2.5 12S6 18.5 12 18.5c1.8 0 3.3-.5 4.6-1.2M9.9 9.9a2.8 2.8 0 0 0 4.2 4.2" />,
+  sortie: <path d="M14.5 4H18a1.5 1.5 0 0 1 1.5 1.5v13A1.5 1.5 0 0 1 18 20h-3.5M10 8l-4 4 4 4M6 12h10" />,
+  cle: (
+    <>
+      <circle cx="8" cy="15" r="4" />
+      <path d="m11 12 8.5-8.5M16 7l2.5 2.5M14 9l2 2" />
+    </>
+  ),
+  route: <path d="M6 20V4M6 4h10l-2 3.5L16 11H6M18 20h-8" />,
 };
 
 export default function Icon({ name, className = "size-5", ...rest }) {

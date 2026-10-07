@@ -1,4 +1,4 @@
-import { lazy } from "react";
+import { Suspense, lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import { Bouton, Container, EtatVide } from "./components/ui";
@@ -36,6 +36,7 @@ const MentionsLegales = aLaDemande(() => import("./pages/MentionsLegales"));
 const Favoris = aLaDemande(() => import("./pages/Favoris"));
 const Assistant = aLaDemande(() => import("./pages/Assistant"));
 const Planning = aLaDemande(() => import("./pages/Planning"));
+const LayoutAdmin = lazy(() => import("./components/LayoutAdmin"));
 const Admin = aLaDemande(() => import("./pages/Admin"));
 const EducationIA = aLaDemande(() => import("./pages/EducationIA"));
 const GestionContenu = aLaDemande(() => import("./pages/GestionContenu"));
@@ -109,6 +110,22 @@ export default function App() {
       <Route path="/nouveau-mot-de-passe" element={<NouveauMotDePasse />} />
 
       {/* Application */}
+      {/* L'espace d'administration, avec sa propre coque */}
+      <Route
+        element={
+          <Protege>
+            <Suspense fallback={null}>
+              <LayoutAdmin />
+            </Suspense>
+          </Protege>
+        }
+      >
+        <Route path="admin" element={<Admin />} />
+        <Route path="admin/contenu" element={<GestionContenu />} />
+        <Route path="admin/ia" element={<EducationIA />} />
+        <Route path="admin/stats" element={<StatsAdmin />} />
+      </Route>
+
       <Route element={<Layout />}>
         <Route
           path="tableau-de-bord"
@@ -177,38 +194,6 @@ export default function App() {
           element={
             <Protege>
               <Parametres />
-            </Protege>
-          }
-        />
-        <Route
-          path="admin"
-          element={
-            <Protege>
-              <Admin />
-            </Protege>
-          }
-        />
-        <Route
-          path="admin/contenu"
-          element={
-            <Protege>
-              <GestionContenu />
-            </Protege>
-          }
-        />
-        <Route
-          path="admin/ia"
-          element={
-            <Protege>
-              <EducationIA />
-            </Protege>
-          }
-        />
-        <Route
-          path="admin/stats"
-          element={
-            <Protege>
-              <StatsAdmin />
             </Protege>
           }
         />

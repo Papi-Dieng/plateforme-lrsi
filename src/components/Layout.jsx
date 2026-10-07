@@ -72,7 +72,7 @@ function themeInitial() {
   return document.documentElement.classList.contains("dark") ? "dark" : "light";
 }
 
-function BoutonTheme({ className }) {
+export function BoutonTheme({ className }) {
   const [theme, setTheme] = useState(themeInitial);
 
   useEffect(() => {
@@ -665,7 +665,7 @@ function RetourEnHaut() {
 /* Pendant qu'une page chargée à la demande arrive (voir App.jsx). Il
    n'apparaît qu'après un court délai : sur une bonne connexion, la
    page arrive avant et rien ne clignote. */
-function ChargementPage() {
+export function ChargementPage() {
   return (
     <div role="status" className="flex animate-[apparition_0s_0.3s_both] items-center justify-center gap-3 py-24 text-sm text-ink-500 dark:text-ink-400">
       <span className="size-4 animate-spin rounded-full border-2 border-ink-300 border-t-brand-600 dark:border-ink-700 dark:border-t-brand-400" />

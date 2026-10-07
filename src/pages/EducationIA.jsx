@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import Icon from "../components/Icon";
-import { Badge, Container, EnTetePage } from "../components/ui";
+import { Badge } from "../components/ui";
+import { EnTeteAdmin } from "../components/LayoutAdmin";
 import { cx } from "../components/classes";
 import ConnexionAdmin, {
   champAdmin,
 } from "../components/ConnexionAdmin";
 import {
   ecrireSessionAdmin as ecrireSession,
-  lireSessionAdmin as lireSession,
   messageErreurAdmin as messageErreur,
+  useSessionAdmin,
 } from "../sessionAdmin";
 import { matieres } from "../data/matieres";
 import { themeMatiere } from "../data/couleurs";
@@ -83,12 +83,12 @@ function BoutonAction({ onClick, disabled, variante = "principal", icone, childr
       onClick={onClick}
       disabled={disabled}
       className={cx(
-        "inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex min-h-11 items-center gap-2 rounded-[14px] px-4.5 text-sm font-extrabold transition-colors disabled:cursor-not-allowed disabled:opacity-50",
         variante === "principal"
           ? "bg-brand-600 text-white hover:bg-brand-700"
           : variante === "danger"
             ? "text-flame-600 hover:bg-flame-100 dark:text-flame-400 dark:hover:bg-flame-500/10"
-            : "border border-ink-200 text-ink-700 hover:bg-ink-50 dark:border-ink-700 dark:text-ink-200 dark:hover:bg-ink-800"
+            : "border border-ink-200 bg-white text-ink-950 hover:bg-ink-50 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-100 dark:hover:bg-ink-800"
       )}
     >
       {icone && <Icon name={icone} className="size-4" />}
@@ -102,7 +102,7 @@ function Compteur({ valeur, max }) {
     <p
       className={cx(
         "mt-1 text-right text-[11px]",
-        valeur.length > max * 0.9 ? "text-sun-700 dark:text-sun-400" : "text-ink-500 dark:text-ink-400"
+        valeur.length > max * 0.9 ? "text-sun-900 dark:text-sun-400" : "text-ink-500 dark:text-ink-400"
       )}
     >
       {valeur.length} / {max}
@@ -135,7 +135,7 @@ function OngletConsignes({ fiche, modifier, matiere }) {
     <div>
       <label
         htmlFor="consignes"
-        className="text-sm font-semibold text-ink-900 dark:text-white"
+        className="text-[15px] font-extrabold text-ink-950 dark:text-white"
       >
         Ce que l'IA doit faire pour {matiere.nom}
       </label>
@@ -176,8 +176,8 @@ function OngletExemples({ fiche, modifier }) {
       </p>
       <div className="mt-4 space-y-4">
         {fiche.exemples.map((e, i) => (
-          <div key={i} className="rounded-xl border border-ink-200 p-4 dark:border-ink-800">
-            <label className="text-xs font-semibold text-ink-600 dark:text-ink-300">
+          <div key={i} className="rounded-[20px] border border-ink-200 p-5 dark:border-ink-800">
+            <label className="text-sm font-extrabold text-ink-950 dark:text-white">
               Question de l'étudiant
               <input
                 value={e.question}
@@ -186,7 +186,7 @@ function OngletExemples({ fiche, modifier }) {
                 className={cx(champ, "mt-1.5 font-normal")}
               />
             </label>
-            <label className="mt-3 block text-xs font-semibold text-ink-600 dark:text-ink-300">
+            <label className="mt-4 block text-sm font-extrabold text-ink-950 dark:text-white">
               Réponse idéale
               <textarea
                 rows={5}
@@ -281,8 +281,8 @@ function OngletTests({ fiche, modifier, matiere, motDePasse, modifie }) {
   return (
     <div className="space-y-8">
       {/* ---- Essai libre ---- */}
-      <div className="rounded-xl bg-ink-50 p-4 dark:bg-ink-950">
-        <p className="text-sm font-semibold text-ink-900 dark:text-white">
+      <div className="rounded-[20px] bg-ink-50 p-5 dark:bg-ink-950">
+        <p className="text-[15px] font-extrabold text-ink-950 dark:text-white">
           Poser une question à l'IA
         </p>
         <p className="mt-0.5 text-xs text-ink-500 dark:text-ink-400">
@@ -331,7 +331,7 @@ function OngletTests({ fiche, modifier, matiere, motDePasse, modifie }) {
           à l'IA.
         </p>
         {modifie && (
-          <p className="mt-2 text-xs font-medium text-sun-700 dark:text-sun-400">
+          <p className="mt-2 text-xs font-medium text-sun-900 dark:text-sun-400">
             Enregistre d'abord : les tests utilisent la fiche enregistrée.
           </p>
         )}
@@ -351,7 +351,7 @@ function OngletTests({ fiche, modifier, matiere, motDePasse, modifie }) {
                       : "border-ink-200 dark:border-ink-800"
                 )}
               >
-                <label className="text-xs font-semibold text-ink-600 dark:text-ink-300">
+                <label className="text-sm font-extrabold text-ink-950 dark:text-white">
                   Question
                   <input
                     value={t.question}
@@ -361,7 +361,7 @@ function OngletTests({ fiche, modifier, matiere, motDePasse, modifie }) {
                   />
                 </label>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <label className="text-xs font-semibold text-ink-600 dark:text-ink-300">
+                  <label className="text-sm font-extrabold text-ink-950 dark:text-white">
                     La réponse doit contenir
                     <textarea
                       rows={3}
@@ -371,7 +371,7 @@ function OngletTests({ fiche, modifier, matiere, motDePasse, modifie }) {
                       className={cx(champ, "mt-1.5 font-mono font-normal text-[13px]")}
                     />
                   </label>
-                  <label className="text-xs font-semibold text-ink-600 dark:text-ink-300">
+                  <label className="text-sm font-extrabold text-ink-950 dark:text-white">
                     La réponse ne doit pas contenir
                     <textarea
                       rows={3}
@@ -464,7 +464,7 @@ function OngletTests({ fiche, modifier, matiere, motDePasse, modifie }) {
 /* ================================================================== */
 
 export default function EducationIA() {
-  const [motDePasse, setMotDePasse] = useState(lireSession);
+  const motDePasse = useSessionAdmin();
   const [matiereId, setMatiereId] = useState(matieres[0].id);
   const [onglet, setOnglet] = useState("consignes");
   const [fiche, setFiche] = useState(null);
@@ -475,11 +475,18 @@ export default function EducationIA() {
 
   const deconnecter = (message = "") => {
     ecrireSession("");
-    setMotDePasse("");
-    setFiche(null);
-    setModifie(false);
     setEtat({ type: message ? "erreur" : "", texte: message });
   };
+
+  // Session fermée (barre latérale, mot de passe refusé) : la fiche part avec elle.
+  const [sessionVue, setSessionVue] = useState(motDePasse);
+  if (sessionVue !== motDePasse) {
+    setSessionVue(motDePasse);
+    if (!motDePasse) {
+      setFiche(null);
+      setModifie(false);
+    }
+  }
 
   useEffect(() => {
     if (!motDePasse) return;
@@ -541,77 +548,53 @@ export default function EducationIA() {
 
   return (
     <>
-      <EnTetePage
-        surtitre="Espace d'administration"
+      <EnTeteAdmin
         titre="Éduquer l'IA"
         texte="Matière par matière : ce que l'assistant doit faire, des réponses modèles à imiter, et des tests pour vérifier. Le cours des chapitres, qu'il lit aussi, se saisit dans « Gérer le contenu »."
-      >
-        <Link
-          to="/admin"
-          className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-300"
-        >
-          ← Retour à l'administration
-        </Link>
-      </EnTetePage>
+      />
 
-      <Container className="space-y-6 py-10">
+      <div className="space-y-6">
         {!iaActive ? (
           <div className="card p-6 text-sm text-ink-700 dark:text-ink-300">
-            L'IA n'est pas branchée : `urlIA` est vide dans `src/data/site.js`.
+            L&apos;IA n&apos;est pas branchée : `urlIA` est vide dans `src/data/site.js`.
           </div>
         ) : !motDePasse ? (
-          <>
-            {etat.type === "erreur" && (
-              <p className="text-sm text-flame-600 dark:text-flame-400">{etat.texte}</p>
-            )}
-            <ConnexionAdmin
-              onConnecte={(mdp) => {
-                setEtat({ type: "", texte: "" });
-                setMotDePasse(mdp);
-              }}
-            />
-          </>
+          <ConnexionAdmin
+            message={etat.type === "erreur" ? etat.texte : ""}
+            onConnecte={() => setEtat({ type: "", texte: "" })}
+          />
         ) : (
           <>
             {/* ---- Tout le site d'un coup : banc général et tests des matières ---- */}
             <BancSite motDePasse={motDePasse} Reponse={ReponseIA} />
 
             {/* ---- Choix de la matière ---- */}
-            <div>
-              <p className="text-sm font-semibold text-ink-900 dark:text-white">Matière</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {matieres.map((m) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => changerMatiere(m.id)}
-                    aria-pressed={m.id === matiereId}
-                    className={cx(
-                      "inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm transition-colors",
-                      m.id === matiereId
-                        ? "border-brand-500 bg-brand-600 font-semibold text-white"
-                        : "border-ink-200 text-ink-700 hover:border-brand-300 dark:border-ink-700 dark:text-ink-300"
-                    )}
-                  >
-                    <span
-                      className={cx(
-                        "grid size-5 place-items-center rounded-md",
-                        themeMatiere(m).pastille
-                      )}
-                    >
-                      <Icon name={m.icone} className="size-3" />
-                    </span>
-                    {m.nomCourt}
-                  </button>
-                ))}
-              </div>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <p className="mr-2 font-mono text-[11px] font-bold tracking-[0.06em] text-ink-500 dark:text-ink-400">MATIÈRE</p>
+              {matieres.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => changerMatiere(m.id)}
+                  aria-pressed={m.id === matiereId}
+                  className={cx(
+                    "inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-bold transition-colors",
+                    m.id === matiereId
+                      ? "border-ink-950 bg-ink-950 text-white dark:border-white dark:bg-white dark:text-ink-950"
+                      : "border-ink-200 bg-white text-ink-950 hover:border-ink-400 dark:border-ink-700 dark:bg-ink-900 dark:text-white"
+                  )}
+                >
+                  <i className={cx("size-2.5 rounded-full", themeMatiere(m).point)} aria-hidden="true" />
+                  {m.nomCourt}
+                </button>
+              ))}
             </div>
 
-            <div className="card overflow-hidden">
+            <div className="overflow-hidden rounded-[28px] border border-ink-200 bg-white dark:border-ink-800 dark:bg-ink-900">
               {/* ---- Onglets ---- */}
               <div
                 role="tablist"
-                className="flex gap-1 overflow-x-auto border-b border-ink-200 px-3 pt-3 dark:border-ink-800"
+                className="flex gap-1 overflow-x-auto border-b border-ink-200 px-4 pt-2 dark:border-ink-800"
               >
                 {ONGLETS.map((o) => (
                   <button
@@ -621,19 +604,27 @@ export default function EducationIA() {
                     aria-selected={onglet === o.cle}
                     onClick={() => setOnglet(o.cle)}
                     className={cx(
-                      "inline-flex shrink-0 items-center gap-2 rounded-t-lg border-b-2 px-3.5 py-2.5 text-sm transition-colors",
+                      "inline-flex min-h-13 shrink-0 items-center gap-2.5 border-b-[3px] px-3.5 text-[15px] font-extrabold transition-colors",
                       onglet === o.cle
-                        ? "border-brand-500 font-semibold text-brand-700 dark:text-brand-300"
-                        : "border-transparent text-ink-500 dark:text-ink-400 hover:text-ink-800 dark:hover:text-ink-200"
+                        ? "border-brand-600 text-ink-950 dark:border-brand-400 dark:text-white"
+                        : "border-transparent text-ink-600 hover:text-ink-950 dark:text-ink-400 dark:hover:text-white"
                     )}
                   >
-                    <Icon name={o.icone} className="size-4" />
                     {o.label}
+                    {fiche && (
+                      <span className="rounded-md bg-ink-100 px-1.5 py-0.5 font-mono text-[11px] font-medium text-ink-600 dark:bg-ink-800 dark:text-ink-300">
+                        {o.cle === "consignes"
+                          ? `${fiche.consignes.length} / ${MAX.consignes}`
+                          : o.cle === "exemples"
+                            ? `${fiche.exemples.length} / 15`
+                            : `${fiche.tests.length} / 40`}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
 
-              <div className="p-5 sm:p-6">
+              <div className="p-5 sm:p-7">
                 {!fiche ? (
                   <p className="text-sm text-ink-500 dark:text-ink-400">
                     {etat.type === "erreur" ? etat.texte : "Chargement de la fiche…"}
@@ -655,7 +646,7 @@ export default function EducationIA() {
               </div>
 
               {/* ---- Enregistrement ---- */}
-              <div className="flex flex-wrap items-center gap-3 border-t border-ink-200 bg-ink-50 px-5 py-4 dark:border-ink-800 dark:bg-ink-950">
+              <div className="flex flex-wrap items-center gap-4 border-t border-ink-200 bg-ink-50 px-5 py-4 sm:px-7 dark:border-ink-800 dark:bg-ink-950">
                 <BoutonAction icone="check" disabled={!fiche || !modifie} onClick={enregistrer}>
                   Enregistrer
                 </BoutonAction>
@@ -663,7 +654,7 @@ export default function EducationIA() {
                   className={cx(
                     "text-xs",
                     modifie
-                      ? "font-medium text-sun-700 dark:text-sun-400"
+                      ? "font-medium text-sun-900 dark:text-sun-400"
                       : etat.type === "erreur"
                         ? "text-flame-600 dark:text-flame-400"
                         : etat.type === "ok"
@@ -673,18 +664,11 @@ export default function EducationIA() {
                 >
                   {modifie ? "Modifications non enregistrées." : etat.texte}
                 </p>
-                <button
-                  type="button"
-                  onClick={() => deconnecter()}
-                  className="ml-auto text-xs text-ink-500 hover:underline dark:text-ink-400"
-                >
-                  Se déconnecter
-                </button>
               </div>
             </div>
           </>
         )}
-      </Container>
+      </div>
     </>
   );
 }

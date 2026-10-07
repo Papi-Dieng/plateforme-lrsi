@@ -5,24 +5,47 @@
    est dans components/ConnexionAdmin.jsx.
    ================================================================== */
 
+import { useSyncExternalStore } from "react";
+
 const CLE_SESSION = "lrsi-admin-ia";
+
+// Copie en mémoire, si le navigateur refuse le stockage (navigation
+// privée) : la session dure alors le temps de la page.
+let enMemoire = "";
+const abonnes = new Set();
 
 export const lireSessionAdmin = () => {
   try {
     return sessionStorage.getItem(CLE_SESSION) ?? "";
   } catch {
-    return "";
+    return enMemoire;
   }
 };
 
 export const ecrireSessionAdmin = (valeur) => {
+  enMemoire = valeur || "";
   try {
     if (valeur) sessionStorage.setItem(CLE_SESSION, valeur);
     else sessionStorage.removeItem(CLE_SESSION);
   } catch {
-    /* navigation privée : on redemandera le mot de passe */
+    /* navigation privée : la copie en mémoire suffit */
   }
+  abonnes.forEach((f) => f());
 };
+
+/* Le mot de passe admin de la session, partagé par la coque et les
+   pages : se déconnecter depuis la barre latérale ferme toutes les
+   pages d'un coup. */
+export function useSessionAdmin() {
+  return useSyncExternalStore(
+    (f) => {
+      abonnes.add(f);
+      return () => abonnes.delete(f);
+    },
+    lireSessionAdmin,
+    () => ""
+  );
+}
 
 const MESSAGES_ERREUR = {
   "mot-de-passe": "Mot de passe incorrect.",

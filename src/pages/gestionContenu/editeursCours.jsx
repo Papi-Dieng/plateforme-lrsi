@@ -21,7 +21,7 @@ export function CoursChapitre({ chapitre: c, changer, motDePasse }) {
   const [apercu, setApercu] = useState(false);
   return (
     <fieldset className="space-y-4 rounded-xl border border-ink-200 p-4 dark:border-ink-800">
-      <legend className="px-1 text-xs font-semibold text-ink-600 dark:text-ink-300">Cours</legend>
+      <legend className="px-1 text-sm font-extrabold text-ink-950 dark:text-white">Cours</legend>
       <BoutonApercu onClick={() => setApercu(true)} desactive={!c.contenu?.trim() && !c.pdf} />
       {apercu && (
         <Apercu titre={c.titre || "Chapitre sans titre"} onFermer={() => setApercu(false)}>

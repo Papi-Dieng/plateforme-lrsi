@@ -14,32 +14,33 @@ import { formatTaille } from "./outils";
 
 export function Champ({ label, aide, className, ...props }) {
   return (
-    <label className={cx("block text-xs font-semibold text-ink-600 dark:text-ink-300", className)}>
+    <label className={cx("block text-sm font-extrabold text-ink-950 dark:text-white", className)}>
       {label}
-      <input {...props} className={cx(champ, "mt-1.5 font-normal")} />
-      {aide && <span className="mt-1 block font-normal text-ink-500 dark:text-ink-400">{aide}</span>}
+      <input {...props} className={cx(champ, "mt-2 font-normal")} />
+      {aide && <span className="mt-1.5 block text-[13px]/5 font-normal text-ink-500 dark:text-ink-400">{aide}</span>}
     </label>
   );
 }
 
 export function Zone({ label, aide, className, mono, ...props }) {
   return (
-    <label className={cx("block text-xs font-semibold text-ink-600 dark:text-ink-300", className)}>
+    <label className={cx("block text-sm font-extrabold text-ink-950 dark:text-white", className)}>
       {label}
       <textarea
         {...props}
-        className={cx(champ, "mt-1.5 font-normal", mono && "font-mono text-[13px]")}
+        wrap={mono ? "off" : undefined}
+        className={cx(champ, "mt-2 font-normal", mono && "border-ink-950! bg-[#0b0e17]! font-mono text-[13px]/6 text-ink-100! placeholder:text-ink-500 dark:border-ink-700!")}
       />
-      {aide && <span className="mt-1 block font-normal text-ink-500 dark:text-ink-400">{aide}</span>}
+      {aide && <span className="mt-1.5 block text-[13px]/5 font-normal text-ink-500 dark:text-ink-400">{aide}</span>}
     </label>
   );
 }
 
 export function Choix({ label, options, className, ...props }) {
   return (
-    <label className={cx("block text-xs font-semibold text-ink-600 dark:text-ink-300", className)}>
+    <label className={cx("block text-sm font-extrabold text-ink-950 dark:text-white", className)}>
       {label}
-      <select {...props} className={cx(champ, "mt-1.5 font-normal")}>
+      <select {...props} className={cx(champ, "mt-2 font-normal")}>
         {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}
@@ -57,18 +58,59 @@ export function Bouton({ onClick, disabled, variante = "secondaire", icone, chil
       onClick={onClick}
       disabled={disabled}
       className={cx(
-        "inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex min-h-11 items-center gap-2 rounded-[14px] px-4 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50",
         variante === "principal"
           ? "bg-brand-600 text-white hover:bg-brand-700"
           : variante === "danger"
             ? "text-flame-600 hover:bg-flame-100 dark:text-flame-400 dark:hover:bg-flame-500/10"
-            : "border border-ink-200 text-ink-700 hover:bg-ink-50 dark:border-ink-700 dark:text-ink-200 dark:hover:bg-ink-800",
+            : "border border-ink-200 bg-white text-ink-950 hover:bg-ink-50 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-100 dark:hover:bg-ink-800",
         className
       )}
     >
       {icone && <Icon name={icone} className="size-4" />}
       {children}
     </button>
+  );
+}
+
+/* Une section numérotée de l'éditeur, dans sa propre carte : « 01 Fiche »,
+   « 02 Énoncé »… (maquette « admin Sunu Cours »). */
+export function Section({ numero, titre, aide, children }) {
+  return (
+    <section className="rounded-[24px] border border-ink-200 bg-white p-5 sm:p-7 dark:border-ink-800 dark:bg-ink-900">
+      <h3 className="flex items-baseline gap-3 text-[24px] font-extrabold tracking-tight text-ink-950 dark:text-white">
+        <span className="font-mono text-xs font-bold text-brand-600 dark:text-brand-400">{String(numero).padStart(2, "0")}</span>
+        {titre}
+      </h3>
+      {aide && <p className="mt-1.5 text-[13px]/5 text-ink-500 dark:text-ink-400">{aide}</p>}
+      <div className="mt-5 space-y-5">{children}</div>
+    </section>
+  );
+}
+
+/* Un choix parmi quelques valeurs, en boutons côte à côte (Facile,
+   Moyen, Difficile). */
+export function Segments({ label, valeur, options, onChange }) {
+  return (
+    <fieldset>
+      <legend className="text-sm font-extrabold text-ink-950 dark:text-white">{label}</legend>
+      <div className="mt-2 flex rounded-[14px] border border-ink-200 bg-white p-1 dark:border-ink-700 dark:bg-ink-950">
+        {options.map((o) => (
+          <button
+            key={o}
+            type="button"
+            aria-pressed={valeur === o}
+            onClick={() => onChange(o)}
+            className={cx(
+              "min-h-10 flex-1 rounded-[10px] px-3 text-sm font-bold transition-colors",
+              valeur === o ? "bg-ink-950 text-white dark:bg-white dark:text-ink-950" : "text-ink-600 hover:bg-ink-100 dark:text-ink-300 dark:hover:bg-ink-800"
+            )}
+          >
+            {o}
+          </button>
+        ))}
+      </div>
+    </fieldset>
   );
 }
 
@@ -160,9 +202,11 @@ export function ChampPdf({ libelle, pdf, onChange, onRetirer, motDePasse, lireTe
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-semibold text-ink-600 dark:text-ink-300">{libelle}</p>
+      <p className="text-sm font-extrabold text-ink-950 dark:text-white">{libelle}</p>
+      {aide && <p className="text-[13px]/5 text-ink-500 dark:text-ink-400">{aide}</p>}
+      <div className="flex flex-wrap items-center gap-3 rounded-[16px] border border-dashed border-ink-300 bg-ink-50/70 px-4 py-3 dark:border-ink-700 dark:bg-ink-950">
       {pdf ? (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl bg-ink-50 px-4 py-3 dark:bg-ink-950">
+        <>
           <Icon name="file" className="size-5 text-flame-500" />
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-medium text-ink-900 dark:text-white">{pdf.nom}</span>
@@ -189,13 +233,13 @@ export function ChampPdf({ libelle, pdf, onChange, onRetirer, motDePasse, lireTe
               Retirer
             </button>
           )}
-        </div>
+        </>
       ) : (
-        <p className="text-sm text-ink-500 dark:text-ink-400">Aucun PDF.</p>
+        <p className="min-w-0 flex-1 text-sm text-ink-500 dark:text-ink-400">Aucun PDF.</p>
       )}
 
-      <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-ink-200 px-3.5 py-2 text-sm font-semibold text-ink-700 hover:bg-ink-50 dark:border-ink-700 dark:text-ink-200 dark:hover:bg-ink-800">
-        <Icon name="plus" className="size-4" />
+      <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-[14px] border border-ink-200 bg-white px-4 text-sm font-bold text-ink-950 hover:bg-ink-50 focus-within:ring-2 focus-within:ring-brand-500/40 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-100 dark:hover:bg-ink-800">
+        <Icon name="haut" className="size-4" />
         {pdf ? "Remplacer le PDF" : "Choisir un PDF"}
         <input
           type="file"
@@ -208,7 +252,7 @@ export function ChampPdf({ libelle, pdf, onChange, onRetirer, motDePasse, lireTe
           }}
         />
       </label>
-      {aide && <p className="text-xs text-ink-500 dark:text-ink-400">{aide}</p>}
+      </div>
 
       {etat.texte && (
         <p

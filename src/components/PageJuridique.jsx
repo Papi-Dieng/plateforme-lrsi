@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import Icon from "./Icon";
+import CarrouselEquipe from "./CarrouselEquipe";
 import { Container } from "./ui";
 import { cx } from "./classes";
 import { initiales } from "../session";
@@ -27,7 +28,7 @@ import { site } from "../data/site";
        paragraphe est un texte (le premier sert de chapeau), ou
          { liste: [[terme, explication], …] }  des lignes numérotées 1.1…,
          { hebergeurs: [{ role, nom, service, lieu }, …] }  par pays,
-         { equipe: [{ nom, role, photo }, …] }  les portraits,
+         { equipe: [{ nom, role, photo }, …] }  le carrousel de l'équipe,
          { note: "…" }  un encadré « À retenir » ;
        `liens` : [{ to | href, label }].
 
@@ -47,8 +48,6 @@ const ancre = (i) => `article-${numero(i)}`;
 const sigle = /\(([^)]+)\)\s*$/.exec(site.filiere)?.[1] ?? "";
 const filiereLongue = site.filiere.replace(/\s*\([^)]*\)\s*$/, "");
 
-// Les couleurs des portraits sans photo, dans l'ordre de la maquette.
-const FONDS_PORTRAIT = ["#1f47e0", "#0d101a", "#1a37b5", "#2a3350"];
 const PASTILLES = [
   "bg-brand-600 text-white",
   "bg-lime-400 text-ink-950",
@@ -93,39 +92,6 @@ function Lien({ lien }) {
       {lien.label}
       <Icon name="external" className="size-4" />
     </a>
-  );
-}
-
-function Portrait({ membre, rang }) {
-  // Photo introuvable (version hors ligne, fichier absent) : les initiales.
-  const [echec, setEchec] = useState(false);
-  const photo = membre.photo && !echec;
-  return (
-    <figure className="m-0">
-      <div
-        className="relative aspect-[4/5] overflow-hidden rounded-[20px] text-white"
-        style={{ background: FONDS_PORTRAIT[rang % FONDS_PORTRAIT.length] }}
-      >
-        {photo ? (
-          <>
-            <img src={membre.photo} alt="" loading="lazy" className="size-full object-cover" onError={() => setEchec(true)} />
-            <span className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent" aria-hidden="true" />
-          </>
-        ) : (
-          <>
-            <span className={cx("absolute top-3 left-3 rounded-full bg-white/12 px-2.5 py-1 text-[10px]", mono)}>PHOTO À VENIR</span>
-            {/* Décor : écrit par CSS, pour ne pas être lu ni compté comme texte. */}
-            <span
-              aria-hidden="true"
-              data-i={initiales(membre.nom)}
-              className="absolute top-7 -right-1.5 text-8xl leading-none font-extrabold tracking-[-0.06em] text-white/11 before:content-[attr(data-i)]"
-            />
-          </>
-        )}
-        <figcaption className="absolute inset-x-3.5 bottom-3.5 text-[19px]/tight font-bold tracking-tight">{membre.nom}</figcaption>
-      </div>
-      <p className="mx-0.5 mt-2.5 text-[13.5px]/snug text-ink-500 dark:text-ink-400">{membre.role}</p>
-    </figure>
   );
 }
 
@@ -195,16 +161,11 @@ function Paragraphe({ contenu, article, chapeau }) {
     );
   }
   if (contenu.equipe) {
+    // Le même carrousel que la page Projet : on fait glisser pour voir les autres.
     return (
       <div>
         <p className={cx("mt-7 mb-3.5 text-[11.5px] font-bold text-ink-500 dark:text-ink-400", mono)}>L&apos;ÉQUIPE</p>
-        <ul className="grid grid-cols-2 gap-3.5">
-          {contenu.equipe.map((m, k) => (
-            <li key={m.nom}>
-              <Portrait membre={m} rang={k} />
-            </li>
-          ))}
-        </ul>
+        <CarrouselEquipe membres={contenu.equipe} defilement={3000} />
       </div>
     );
   }

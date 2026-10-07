@@ -1,0 +1,1 @@
+import{n as e,t}from"./LayoutAdmin-B2CniZM3.js";export{t as EnTeteAdmin,e as default};

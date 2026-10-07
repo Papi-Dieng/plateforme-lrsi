@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import Icon from "../components/Icon";
-import { Badge, Container, EnTetePage } from "../components/ui";
+import { EnTeteAdmin } from "../components/LayoutAdmin";
+import { mono } from "../components/styleAdmin";
 import { cx } from "../components/classes";
 import ConnexionAdmin, {
   champAdmin,
 } from "../components/ConnexionAdmin";
-import { ecrireSessionAdmin, lireSessionAdmin, messageErreurAdmin } from "../sessionAdmin";
+import { ecrireSessionAdmin, messageErreurAdmin, useSessionAdmin } from "../sessionAdmin";
 import { effacerStatsAdmin, lireStatsAdmin } from "../ia";
 import { matieres, nomMatiere } from "../data/matieres";
+import { themeMatiere } from "../data/couleurs";
 
 /* ==================================================================
    Les questions de QCM les plus ratées, d'après les réponses anonymes
@@ -49,57 +50,81 @@ function analyser(qcms) {
   return lignes.sort((a, b) => b.taux - a.taux || b.total - a.total);
 }
 
-function Question({ l }) {
+// Le niveau d'alerte d'un taux d'échec : couleur du chiffre et étiquette.
+const niveau = (taux) =>
+  taux >= 60
+    ? { classe: "text-flame-600 dark:text-flame-400", pastille: "bg-flame-100 text-flame-800 dark:bg-flame-500/15 dark:text-flame-300", label: "À réexpliquer en priorité" }
+    : taux >= 35
+      ? { classe: "text-sun-900 dark:text-sun-400", pastille: "bg-sun-100 text-sun-900 dark:bg-sun-500/15 dark:text-sun-100", label: "À surveiller" }
+      : { classe: "text-lime-800 dark:text-lime-400", pastille: "bg-lime-100 text-lime-900 dark:bg-lime-400/15 dark:text-lime-200", label: "Bien comprise" };
+
+function Question({ l, rang }) {
+  const n = niveau(l.taux);
+  const matiere = matieres.find((m) => m.id === l.qcm.matiere);
   return (
-    <li className="card p-5">
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge ton={l.taux >= 60 ? "flame" : l.taux >= 35 ? "sun" : "accent"}>{l.taux} % d&apos;échec</Badge>
-        <span className="text-xs text-ink-500 dark:text-ink-400">
-          {l.total} réponse{l.total > 1 ? "s" : ""} · {l.qcm.titre} · {nomMatiere(l.qcm.matiere)}
-        </span>
+    <li className="flex flex-col gap-6 rounded-[28px] border border-ink-200 bg-white p-6 sm:flex-row sm:gap-10 sm:p-8 dark:border-ink-800 dark:bg-ink-900">
+      <div className="shrink-0 sm:w-44">
+        <p className={cx("text-xs text-ink-500 dark:text-ink-400", mono)}>N° {String(rang).padStart(2, "0")}</p>
+        <p className={cx("mt-2 text-[64px] leading-none font-extrabold tracking-[-0.05em]", n.classe)}>
+          {l.taux}
+          <span className="ml-1 text-2xl">%</span>
+        </p>
+        <p className="sr-only">d&apos;échec</p>
+        <span className={cx("mt-3 inline-flex rounded-full px-3 py-1 text-xs font-bold", n.pastille)}>{n.label}</span>
       </div>
-      <p className="mt-2 font-medium text-ink-900 dark:text-white">{l.enonce}</p>
-      <ul className="mt-3 space-y-1.5">
-        {l.options.map((o, i) => {
-          const part = Math.round((l.choix[i] / l.total) * 100);
-          return (
-            <li key={i} className="text-sm">
-              <div className="flex items-center gap-2">
-                <span
-                  className={cx(
-                    "min-w-0 flex-1 truncate",
-                    i === l.bonne ? "font-semibold text-accent-700 dark:text-accent-400" : "text-ink-700 dark:text-ink-300"
+      <div className="min-w-0 flex-1">
+        <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] text-ink-500 dark:text-ink-400">
+          <span className="inline-flex items-center gap-1.5 font-bold text-ink-950 dark:text-white">
+            {matiere && <i className={cx("size-2 rounded-full", themeMatiere(matiere).point)} aria-hidden="true" />}
+            {matiere?.nomCourt ?? nomMatiere(l.qcm.matiere)}
+          </span>
+          <span>{l.qcm.titre}</span>
+          <span>
+            · {l.total} réponse{l.total > 1 ? "s" : ""}
+          </span>
+        </p>
+        <p className="mt-2 text-lg/snug font-extrabold text-ink-950 dark:text-white">{l.enonce}</p>
+        <ul className="mt-4 space-y-3">
+          {l.options.map((o, i) => {
+            const part = Math.round((l.choix[i] / l.total) * 100);
+            return (
+              <li key={i}>
+                <div className="flex items-center gap-2.5 text-sm">
+                  <span className="min-w-0 truncate font-mono text-ink-800 dark:text-ink-200">{o}</span>
+                  {i === l.bonne && (
+                    <span className="shrink-0 rounded-full bg-lime-100 px-2.5 py-0.5 text-xs font-bold text-lime-900 dark:bg-lime-400/15 dark:text-lime-200">
+                      Bonne réponse
+                    </span>
                   )}
-                >
-                  {i === l.bonne ? "✓ " : ""}
-                  {o}
-                  {i === l.piege && <span className="ml-2 text-xs font-semibold text-flame-600 dark:text-flame-400">piège le plus choisi</span>}
-                </span>
-                <span className="w-16 shrink-0 text-right text-xs text-ink-500 dark:text-ink-400">
-                  {l.choix[i]} · {part} %
-                </span>
-              </div>
-              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-ink-100 dark:bg-ink-800">
-                <div
-                  className={cx("h-full rounded-full", i === l.bonne ? "bg-accent-500" : i === l.piege ? "bg-flame-500" : "bg-ink-300 dark:bg-ink-600")}
-                  style={{ width: `${part}%` }}
-                />
-              </div>
-            </li>
-          );
-        })}
+                  {i === l.piege && (
+                    <span className="shrink-0 rounded-full bg-flame-100 px-2.5 py-0.5 text-xs font-bold text-flame-800 dark:bg-flame-500/15 dark:text-flame-300">
+                      Piège le plus choisi
+                    </span>
+                  )}
+                  <span className="ml-auto shrink-0 font-mono text-xs text-ink-500 dark:text-ink-400">
+                    {l.choix[i]} · {part} %
+                  </span>
+                </div>
+                <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-ink-100 dark:bg-ink-800">
+                  <div
+                    className={cx("h-full rounded-full", i === l.bonne ? "bg-lime-600" : i === l.piege ? "bg-flame-500" : "bg-ink-300 dark:bg-ink-600")}
+                    style={{ width: `${part}%` }}
+                  />
+                </div>
+              </li>
+            );
+          })}
+        </ul>
         {l.sansReponse > 0 && (
-          <li className="text-xs text-ink-500 dark:text-ink-400">
-            Sans réponse (temps écoulé) : {l.sansReponse}
-          </li>
+          <p className="mt-4 text-[13px] text-ink-500 dark:text-ink-400">Sans réponse (temps écoulé) : {l.sansReponse}</p>
         )}
-      </ul>
+      </div>
     </li>
   );
 }
 
 export default function StatsAdmin() {
-  const [motDePasse, setMotDePasse] = useState(lireSessionAdmin);
+  const motDePasse = useSessionAdmin();
   const [qcms, setQcms] = useState(null);
   const [etat, setEtat] = useState({ type: "", texte: "" });
   const [matiere, setMatiere] = useState("");
@@ -111,10 +136,7 @@ export default function StatsAdmin() {
       .then((r) => actif && setQcms(r.qcms))
       .catch((e) => {
         if (!actif) return;
-        if (e.message === "mot-de-passe") {
-          ecrireSessionAdmin("");
-          setMotDePasse("");
-        }
+        if (e.message === "mot-de-passe") ecrireSessionAdmin("");
         setEtat({ type: "erreur", texte: messageErreurAdmin(e.message) });
       });
     return () => {
@@ -140,33 +162,23 @@ export default function StatsAdmin() {
 
   return (
     <>
-      <EnTetePage
-        surtitre="Coulisses"
+      <EnTeteAdmin
         titre="Questions les plus ratées"
         texte="D'après les réponses anonymes des étudiants aux QCM : ce qu'il faut réexpliquer en priorité."
-      >
-        <Link to="/admin" className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-300">
-          ← Retour à l&apos;administration
-        </Link>
-      </EnTetePage>
+      />
 
-      <Container className="space-y-6 py-10">
-        {etat.texte && (
-          <p className={cx("text-sm", etat.type === "erreur" ? "text-flame-600 dark:text-flame-400" : "text-ink-500 dark:text-ink-400")}>{etat.texte}</p>
-        )}
+      <div className="space-y-5">
         {!motDePasse ? (
           <ConnexionAdmin
-            onConnecte={(mdp) => {
-              setEtat({ type: "", texte: "" });
-              setMotDePasse(mdp);
-            }}
+            message={etat.type === "erreur" ? etat.texte : ""}
+            onConnecte={() => setEtat({ type: "", texte: "" })}
           />
         ) : !qcms ? (
-          <p className="text-sm text-ink-500 dark:text-ink-400">Chargement des statistiques…</p>
+          <p className="text-sm text-ink-500 dark:text-ink-400">{etat.texte || "Chargement des statistiques…"}</p>
         ) : (
           <>
-            <div className="flex flex-wrap items-center gap-3">
-              <select value={matiere} onChange={(e) => setMatiere(e.target.value)} aria-label="Matière" className={cx(champAdmin, "w-auto")}>
+            <div className="flex flex-wrap items-center gap-4 rounded-[24px] border border-ink-200 bg-white p-4 dark:border-ink-800 dark:bg-ink-900">
+              <select value={matiere} onChange={(e) => setMatiere(e.target.value)} aria-label="Matière" className={cx(champAdmin, "sm:w-80!")}>
                 <option value="">Toutes les matières</option>
                 {matieres.map((m) => (
                   <option key={m.id} value={m.id}>
@@ -174,44 +186,54 @@ export default function StatsAdmin() {
                   </option>
                 ))}
               </select>
-              <span className="text-sm text-ink-500 dark:text-ink-400">
-                {sessions} QCM terminé{sessions > 1 ? "s" : ""} · {lignes.length} question{lignes.length > 1 ? "s" : ""}
+              <span className="text-sm text-ink-600 dark:text-ink-300">
+                <b className="text-ink-950 dark:text-white">{sessions}</b> QCM terminé{sessions > 1 ? "s" : ""} ·{" "}
+                <b className="text-ink-950 dark:text-white">{lignes.length}</b> question{lignes.length > 1 ? "s" : ""}
               </span>
               <button
                 type="button"
                 onClick={effacer}
                 disabled={qcms.length === 0}
-                className="ml-auto text-sm font-medium text-flame-600 hover:underline disabled:opacity-40 dark:text-flame-400"
+                className="ml-auto inline-flex min-h-11 items-center gap-2 rounded-[14px] border border-flame-200 px-4 text-sm font-bold text-flame-600 transition-colors hover:bg-flame-50 disabled:opacity-40 dark:border-flame-500/30 dark:text-flame-400 dark:hover:bg-flame-500/10"
               >
+                <Icon name="trash" className="size-4" />
                 Remettre à zéro
               </button>
             </div>
 
+            {etat.texte && (
+              <p role="status" className={cx("text-sm", etat.type === "erreur" ? "text-flame-600 dark:text-flame-400" : "text-ink-500 dark:text-ink-400")}>
+                {etat.texte}
+              </p>
+            )}
+
             {lignes.length === 0 ? (
-              <div className="card flex gap-3 p-5 text-sm/6 text-ink-600 dark:text-ink-400">
-                <Icon name="info" className="mt-0.5 size-4.5 shrink-0 text-brand-500" />
+              <div className="flex gap-3 rounded-[20px] border border-brand-200 bg-brand-50 px-5 py-4 text-sm/6 text-ink-700 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-ink-200">
+                <Icon name="info" className="mt-0.5 size-4.5 shrink-0 text-brand-600 dark:text-brand-400" />
                 <p>
-                  Pas encore de réponses. Elles arrivent à chaque QCM terminé par un étudiant (sauf s&apos;il a
-                  refusé dans ses paramètres). Seuls les QCM publiés depuis l&apos;admin sont comptés.
+                  <strong className="font-bold text-ink-950 dark:text-white">Pas encore de réponses.</strong> Elles arrivent à
+                  chaque QCM terminé par un étudiant (sauf s&apos;il a refusé dans ses paramètres). Seuls les QCM publiés depuis
+                  l&apos;admin sont comptés.
                 </p>
               </div>
             ) : (
               <>
                 {fiables.length > 0 && (
-                  <ol className="space-y-3">
-                    {fiables.map((l) => (
-                      <Question key={l.cle} l={l} />
+                  <ol className="space-y-4">
+                    {fiables.map((l, i) => (
+                      <Question key={l.cle} l={l} rang={i + 1} />
                     ))}
                   </ol>
                 )}
                 {peuDeReponses.length > 0 && (
-                  <details className="card p-5">
-                    <summary className="cursor-pointer text-sm font-semibold text-brand-600 dark:text-brand-300">
+                  <details className="group rounded-[24px] border border-ink-200 bg-white dark:border-ink-800 dark:bg-ink-900">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-6 py-5 text-[15px] font-extrabold text-ink-950 dark:text-white">
                       Moins de {MINIMUM} réponses : pas encore significatif ({peuDeReponses.length})
+                      <Icon name="chevron" className="size-5 transition-transform group-open:rotate-180" />
                     </summary>
-                    <ol className="mt-4 space-y-3">
-                      {peuDeReponses.map((l) => (
-                        <Question key={l.cle} l={l} />
+                    <ol className="space-y-4 px-4 pb-4">
+                      {peuDeReponses.map((l, i) => (
+                        <Question key={l.cle} l={l} rang={fiables.length + i + 1} />
                       ))}
                     </ol>
                   </details>
@@ -219,13 +241,14 @@ export default function StatsAdmin() {
               </>
             )}
 
-            <p className="text-xs text-ink-500 dark:text-ink-400">
-              Anonyme : pour chaque question, seulement des compteurs de réponses. Ni nom, ni
-              identifiant, ni adresse IP, ni date par étudiant ne sont gardés. Les étudiants peuvent refuser l&apos;envoi dans leurs paramètres.
+            <p className="flex gap-2.5 text-[13px]/5 text-ink-500 dark:text-ink-400">
+              <Icon name="shield" className="mt-0.5 size-4 shrink-0" />
+              Anonyme : pour chaque question, seulement des compteurs de réponses. Ni nom, ni identifiant, ni adresse IP, ni
+              date par étudiant ne sont gardés. Les étudiants peuvent refuser l&apos;envoi dans leurs paramètres.
             </p>
           </>
         )}
-      </Container>
+      </div>
     </>
   );
 }

@@ -37,6 +37,8 @@ export const TYPES = {
   },
   exercices: {
     Editeur: EditeurExercice,
+    // Ses sections (Fiche, Énoncé, Correction) sont chacune dans leur carte.
+    enSections: true,
     nouveau: (tous, matiere) => ({
       id: identifiant("exercice", tous),
       titre: "",

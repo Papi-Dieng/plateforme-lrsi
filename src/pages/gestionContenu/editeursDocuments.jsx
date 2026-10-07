@@ -185,7 +185,7 @@ export function EditeurAnnale({ element: a, changer, matieres }) {
       />
       <Champ label="Lien vers le corrigé (facultatif)" value={a.lienCorrige} placeholder="https://…" onChange={(e) => changer({ lienCorrige: e.target.value })} />
       <fieldset className="rounded-xl border border-ink-200 p-4 dark:border-ink-800">
-        <legend className="px-1 text-xs font-semibold text-ink-600 dark:text-ink-300">Autorisation</legend>
+        <legend className="px-1 text-sm font-extrabold text-ink-950 dark:text-white">Autorisation</legend>
         <label className="flex items-start gap-3 text-sm text-ink-700 dark:text-ink-300">
           <input
             type="checkbox"
@@ -252,7 +252,7 @@ export function EditeurRessource({ element: r, changer, matieres, motDePasse }) 
       <Zone label="Présentation" rows={2} value={r.note} maxLength={600} onChange={(e) => changer({ note: e.target.value })} />
 
       <fieldset className="space-y-3 rounded-xl border border-ink-200 p-4 dark:border-ink-800">
-        <legend className="px-1 text-xs font-semibold text-ink-600 dark:text-ink-300">Document</legend>
+        <legend className="px-1 text-sm font-extrabold text-ink-950 dark:text-white">Document</legend>
         <ChoixFormat
           valeur={source}
           onChange={(s) => changer({ source: s })}

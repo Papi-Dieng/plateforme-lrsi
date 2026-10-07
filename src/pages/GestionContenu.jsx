@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import Icon from "../components/Icon";
-import { Container, EnTetePage } from "../components/ui";
+import { EnTeteAdmin } from "../components/LayoutAdmin";
 import { cx } from "../components/classes";
 import ConnexionAdmin, { champAdmin as champ } from "../components/ConnexionAdmin";
-import { ecrireSessionAdmin, lireSessionAdmin, messageErreurAdmin } from "../sessionAdmin";
+import { ecrireSessionAdmin, messageErreurAdmin, useSessionAdmin } from "../sessionAdmin";
 import { iaActive } from "../ia";
+import { themeMatiere } from "../data/couleurs";
 import {
   copieContenu,
   copieContenuParDefaut,
@@ -18,7 +18,6 @@ import { extraireTextePdf } from "../extrairePdf";
 import { PanneauImportTD } from "../components/AssistantAdmin";
 import { identifiant } from "./gestionContenu/outils";
 import { pourPublier, problemes } from "./gestionContenu/brouillon";
-import { Bouton } from "./gestionContenu/champs";
 import { ONGLETS, TYPES } from "./gestionContenu/types";
 
 /* ==================================================================
@@ -37,10 +36,14 @@ import { ONGLETS, TYPES } from "./gestionContenu/types";
    Les identifiants (adresse d'un exercice, d'un QCM…) sont fabriqués à
    la création et ne changent plus : la progression et les favoris des
    étudiants y sont attachés.
+
+   Mise en page d'après la maquette « admin Sunu Cours » : barre de
+   publication sombre, onglets en pastilles, liste à gauche, éditeur à
+   droite. La déconnexion est dans la barre latérale de l'admin.
    ================================================================== */
 
 export default function GestionContenu() {
-  const [motDePasse, setMotDePasse] = useState(lireSessionAdmin);
+  const motDePasse = useSessionAdmin();
   const [brouillon, setBrouillon] = useState(null);
   const [modifie, setModifie] = useState(false);
   const [onglet, setOnglet] = useState("matieres");
@@ -49,9 +52,19 @@ export default function GestionContenu() {
   const [etat, setEtat] = useState({ type: "", texte: "" });
   const [publie, setPublie] = useState(null);
 
+  // Session fermée (barre latérale, mot de passe refusé) : le brouillon
+  // part avec elle.
+  const [sessionVue, setSessionVue] = useState(motDePasse);
+  if (sessionVue !== motDePasse) {
+    setSessionVue(motDePasse);
+    if (!motDePasse) {
+      setBrouillon(null);
+      setModifie(false);
+    }
+  }
+
   const deconnecter = (message = "") => {
     ecrireSessionAdmin("");
-    setMotDePasse("");
     setEtat({ type: message ? "erreur" : "", texte: message });
   };
 
@@ -101,9 +114,9 @@ export default function GestionContenu() {
 
   if (!iaActive) {
     return (
-      <Container className="py-10">
-        <div className="card p-6 text-sm">Le relais n'est pas configuré : `urlIA` est vide dans `src/data/site.js`.</div>
-      </Container>
+      <div className="py-10">
+        <div className="card p-6 text-sm">Le relais n&apos;est pas configuré : `urlIA` est vide dans `src/data/site.js`.</div>
+      </div>
     );
   }
 
@@ -175,66 +188,70 @@ export default function GestionContenu() {
 
   return (
     <>
-      <EnTetePage
-        surtitre="Espace d'administration"
+      <EnTeteAdmin
         titre="Gérer le contenu"
         texte="Matières et cours, exercices, QCM, vidéos et examens. Tu modifies un brouillon : rien ne change pour les étudiants avant « Publier »."
-      >
-        <Link to="/admin" className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-300">
-          ← Retour à l'administration
-        </Link>
-      </EnTetePage>
+      />
 
-      <Container className="space-y-6 py-10">
+      <div className="space-y-5">
         {!motDePasse ? (
-          <>
-            {etat.type === "erreur" && <p className="text-sm text-flame-600 dark:text-flame-400">{etat.texte}</p>}
-            <ConnexionAdmin
-              onConnecte={(mdp) => {
-                setEtat({ type: "", texte: "" });
-                setMotDePasse(mdp);
-              }}
-            />
-          </>
+          <ConnexionAdmin
+            message={etat.type === "erreur" ? etat.texte : ""}
+            onConnecte={() => setEtat({ type: "", texte: "" })}
+          />
         ) : !brouillon ? (
           <p className="text-sm text-ink-500 dark:text-ink-400">Chargement du contenu…</p>
         ) : (
           <>
             {/* ---- Barre de publication ---- */}
-            <div className="card sticky top-2 z-10 flex flex-wrap items-center gap-3 p-4">
-              <Bouton variante="principal" icone="rocket" disabled={!modifie} onClick={publier}>
-                Publier
-              </Bouton>
-              <Bouton icone="arrow" disabled={!publie} onClick={restaurer} className="[&>svg]:rotate-180">
-                Restaurer la version précédente
-              </Bouton>
-              <p
+            <div className="sticky top-3 z-10 flex flex-wrap items-center gap-4 rounded-[24px] bg-[#0b0e17] px-5 py-4 text-white shadow-[0_20px_40px_-24px_rgb(0_0_0/0.6)] sm:px-6 dark:ring-1 dark:ring-white/10">
+              <span
+                aria-hidden="true"
                 className={cx(
-                  "text-xs",
+                  "size-3 shrink-0 rounded-full ring-4",
                   modifie
-                    ? "font-medium text-sun-700 dark:text-sun-400"
+                    ? "bg-[#ffc94d] ring-[#ffc94d]/20"
                     : etat.type === "erreur"
-                      ? "text-flame-600 dark:text-flame-400"
-                      : etat.type === "ok"
-                        ? "text-accent-700 dark:text-accent-400"
-                        : "text-ink-500 dark:text-ink-400"
+                      ? "bg-flame-500 ring-flame-500/20"
+                      : "bg-lime-400 ring-lime-400/20"
                 )}
-              >
-                {modifie
-                  ? `Brouillon non publié${alertes.length ? ` · ${alertes.length} point(s) à vérifier` : ""}.`
-                  : etat.texte}
-              </p>
-              <button
-                type="button"
-                onClick={() => (!modifie || window.confirm("Le brouillon non publié sera perdu. Continuer ?")) && deconnecter()}
-                className="ml-auto text-xs text-ink-500 hover:underline dark:text-ink-400"
-              >
-                Se déconnecter
-              </button>
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-[15px] font-extrabold">
+                  {modifie ? "Brouillon non publié." : etat.type === "erreur" ? "Le relais n'a pas répondu." : "Tout est publié."}
+                </p>
+                <p role="status" className="text-[13px]/5 text-ink-300">
+                  {modifie
+                    ? alertes.length
+                      ? `${alertes.length} point(s) à vérifier avant de publier.`
+                      : "Rien ne change pour les étudiants avant « Publier »."
+                    : etat.texte}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2.5">
+                <button
+                  type="button"
+                  disabled={!publie}
+                  onClick={restaurer}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-[14px] border border-white/15 px-4 text-sm font-bold text-ink-100 transition-colors hover:bg-white/8 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Icon name="arrow" className="size-4 rotate-180" />
+                  Restaurer la version précédente
+                </button>
+                <button
+                  type="button"
+                  disabled={!modifie}
+                  onClick={publier}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-[14px] bg-lime-400 px-5 text-sm font-extrabold text-ink-950 transition-colors hover:bg-lime-300 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Icon name="haut" className="size-4" />
+                  Publier
+                </button>
+              </div>
             </div>
 
             {/* ---- Onglets ---- */}
-            <div role="tablist" className="flex gap-1 overflow-x-auto border-b border-ink-200 dark:border-ink-800">
+            <div role="tablist" className="flex gap-1 overflow-x-auto rounded-[22px] border border-ink-200 bg-white p-1.5 dark:border-ink-800 dark:bg-ink-900">
               {ONGLETS.map((o) => (
                 <button
                   key={o.cle}
@@ -243,15 +260,19 @@ export default function GestionContenu() {
                   aria-selected={onglet === o.cle}
                   onClick={() => setOnglet(o.cle)}
                   className={cx(
-                    "inline-flex shrink-0 items-center gap-2 border-b-2 px-3.5 py-2.5 text-sm transition-colors",
+                    "inline-flex min-h-11 shrink-0 items-center gap-2.5 rounded-2xl px-4 text-sm font-bold transition-colors",
                     onglet === o.cle
-                      ? "border-brand-500 font-semibold text-brand-700 dark:text-brand-300"
-                      : "border-transparent text-ink-500 dark:text-ink-400 hover:text-ink-800 dark:hover:text-ink-200"
+                      ? "bg-ink-950 text-white dark:bg-white dark:text-ink-950"
+                      : "text-ink-700 hover:bg-ink-100 dark:text-ink-300 dark:hover:bg-ink-800"
                   )}
                 >
-                  <Icon name={o.icone} className="size-4" />
                   {o.label}
-                  <span className="rounded-full bg-ink-100 px-1.5 text-[11px] text-ink-500 dark:text-ink-400 dark:bg-ink-800">
+                  <span
+                    className={cx(
+                      "rounded-lg px-1.5 py-0.5 font-mono text-[11px]",
+                      onglet === o.cle ? "bg-lime-400 text-ink-950" : "bg-ink-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300"
+                    )}
+                  >
                     {brouillon[o.cle].length}
                   </span>
                 </button>
@@ -271,9 +292,9 @@ export default function GestionContenu() {
               />
             )}
 
-            <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+            <div className="grid items-start gap-5 lg:grid-cols-[290px_1fr]">
               {/* ---- Liste ---- */}
-              <div className="space-y-3">
+              <div className="space-y-3 rounded-[24px] border border-ink-200 bg-white p-3.5 dark:border-ink-800 dark:bg-ink-900">
                 {onglet !== "matieres" && (
                   <select
                     value={filtre}
@@ -289,65 +310,85 @@ export default function GestionContenu() {
                     ))}
                   </select>
                 )}
-                <ul className="max-h-[60vh] space-y-1 overflow-y-auto">
-                  {visibles.map((e) => (
-                    <li key={e.id}>
-                      <button
-                        type="button"
-                        onClick={() => setSelection((s) => ({ ...s, [onglet]: e.id }))}
-                        className={cx(
-                          "w-full rounded-xl px-3 py-2.5 text-left transition-colors",
-                          e.id === selectionne?.id
-                            ? "bg-brand-600 text-white"
-                            : "hover:bg-ink-100 dark:hover:bg-ink-800"
-                        )}
-                      >
-                        <span className="block truncate text-sm font-medium">{type.titre(e) || "Sans titre"}</span>
-                        <span className={cx("block text-[11px]", e.id === selectionne?.id ? "text-white/70" : "text-ink-500 dark:text-ink-400")}>
-                          {type.detail(e)}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
+                <ul className="max-h-[65vh] space-y-1 overflow-y-auto">
+                  {visibles.map((e) => {
+                    const actif = e.id === selectionne?.id;
+                    const matiere = brouillon.matieres.find((m) => m.id === (onglet === "matieres" ? e.id : e.matiere));
+                    return (
+                      <li key={e.id}>
+                        <button
+                          type="button"
+                          onClick={() => setSelection((s) => ({ ...s, [onglet]: e.id }))}
+                          className={cx(
+                            "w-full rounded-2xl border-2 px-3 py-2.5 text-left transition-colors",
+                            actif
+                              ? "border-brand-600 bg-brand-50 dark:border-brand-400 dark:bg-brand-500/10"
+                              : "border-transparent hover:bg-ink-50 dark:hover:bg-ink-800"
+                          )}
+                        >
+                          <span className="block text-sm/5 font-bold text-ink-950 dark:text-white">{type.titre(e) || "Sans titre"}</span>
+                          <span className="mt-1 flex items-center gap-1.5 text-xs text-ink-500 dark:text-ink-400">
+                            {matiere && <i className={cx("size-2 shrink-0 rounded-full", themeMatiere(matiere).point)} aria-hidden="true" />}
+                            <span className="truncate">{type.detail(e)}</span>
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
                   {visibles.length === 0 && <li className="px-3 py-2 text-sm text-ink-500 dark:text-ink-400">Rien pour le moment.</li>}
                 </ul>
-                <Bouton icone="plus" onClick={ajouter} disabled={onglet !== "matieres" && brouillon.matieres.length === 0}>
+                <button
+                  type="button"
+                  onClick={ajouter}
+                  disabled={onglet !== "matieres" && brouillon.matieres.length === 0}
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-ink-200 text-sm font-bold text-ink-950 transition-colors hover:bg-ink-50 disabled:opacity-50 dark:border-ink-700 dark:text-white dark:hover:bg-ink-800"
+                >
+                  <Icon name="plus" className="size-4" />
                   Ajouter
-                </Bouton>
+                </button>
               </div>
 
               {/* ---- Éditeur ---- */}
-              <div className="card p-5 sm:p-6">
+              <div className="min-w-0">
                 {!selectionne ? (
-                  <p className="text-sm text-ink-500 dark:text-ink-400">
+                  <p className="rounded-[24px] border border-dashed border-ink-300 p-8 text-sm text-ink-500 dark:border-ink-700 dark:text-ink-400">
                     Choisis un élément dans la liste, ou clique sur « Ajouter ».
                   </p>
                 ) : (
                   <>
-                    <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-ink-200 pb-4 dark:border-ink-800">
-                      <p className="text-xs text-ink-500 dark:text-ink-400">
-                        Identifiant : <code className="font-mono">{selectionne.id}</code>
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-sm text-ink-500 dark:text-ink-400">
+                        Identifiant : <code className="font-mono text-ink-800 dark:text-ink-200">{selectionne.id}</code>
                       </p>
-                      <Bouton variante="danger" icone="trash" onClick={supprimer}>
+                      <button
+                        type="button"
+                        onClick={supprimer}
+                        className="inline-flex min-h-11 items-center gap-2 rounded-[14px] border border-flame-200 bg-white px-4 text-sm font-bold text-flame-600 transition-colors hover:bg-flame-50 dark:border-flame-500/30 dark:bg-ink-900 dark:text-flame-400 dark:hover:bg-flame-500/10"
+                      >
+                        <Icon name="trash" className="size-4" />
                         Supprimer
-                      </Bouton>
+                      </button>
                     </div>
-                    <Editeur
-                      key={selectionne.id}
-                      element={selectionne}
-                      changer={changer}
-                      matieres={brouillon.matieres}
-                      motDePasse={motDePasse}
-                    />
+                    {/* Un éditeur découpé en sections (Fiche, Énoncé, Correction)
+                        dessine ses propres cartes ; les autres tiennent dans une seule. */}
+                    <div className={cx(!type.enSections && "rounded-[24px] border border-ink-200 bg-white p-5 sm:p-7 dark:border-ink-800 dark:bg-ink-900")}>
+                      <Editeur
+                        key={selectionne.id}
+                        element={selectionne}
+                        changer={changer}
+                        matieres={brouillon.matieres}
+                        motDePasse={motDePasse}
+                      />
+                    </div>
                   </>
                 )}
               </div>
             </div>
 
             {alertes.length > 0 && (
-              <div className="rounded-xl border border-sun-400/50 bg-sun-100/60 p-4 text-sm dark:bg-sun-500/10">
-                <p className="font-semibold text-sun-900 dark:text-sun-300">À vérifier avant de publier</p>
-                <ul className="mt-2 list-disc space-y-1 pl-5 text-sun-900 dark:text-sun-200">
+              <div className="rounded-[20px] border border-sun-400/50 bg-sun-100/60 p-5 text-sm dark:bg-sun-500/10">
+                <p className="font-bold text-sun-900 dark:text-sun-100">À vérifier avant de publier</p>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-sun-900 dark:text-sun-100">
                   {alertes.slice(0, 10).map((a) => (
                     <li key={a}>{a}</li>
                   ))}
@@ -362,7 +403,7 @@ export default function GestionContenu() {
             )}
           </>
         )}
-      </Container>
+      </div>
     </>
   );
 }

@@ -11,7 +11,7 @@ import {
   SuggestionARetenir,
 } from "../../components/AssistantAdmin";
 import { deplacer, optionsMatieres } from "./outils";
-import { Bouton, BoutonApercu, Champ, ChampPdf, Choix, Ordre, Zone } from "./champs";
+import { Bouton, BoutonApercu, Champ, ChampPdf, Choix, Ordre, Section, Segments, Zone } from "./champs";
 
 /* ==================================================================
    Éditeurs des exercices (avec la vérification automatique) et des QCM.
@@ -20,7 +20,7 @@ import { Bouton, BoutonApercu, Champ, ChampPdf, Choix, Ordre, Zone } from "./cha
 export function EditeurExercice({ element: e, changer, matieres, motDePasse }) {
   const [apercu, setApercu] = useState(false);
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <BoutonApercu onClick={() => setApercu(true)} desactive={!e.enonce?.trim() && !e.pdfEnonce} />
       {apercu && (
         <Apercu titre={e.titre || "Exercice sans titre"} onFermer={() => setApercu(false)}>
@@ -51,15 +51,11 @@ export function EditeurExercice({ element: e, changer, matieres, motDePasse }) {
           </section>
         </Apercu>
       )}
+      <Section numero={1} titre="Fiche">
       <Champ label="Titre" value={e.titre} maxLength={150} onChange={(ev) => changer({ titre: ev.target.value })} />
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-[1fr_auto_8rem]">
         <Choix label="Matière" value={e.matiere} options={optionsMatieres(matieres)} onChange={(ev) => changer({ matiere: ev.target.value })} />
-        <Choix
-          label="Difficulté"
-          value={e.difficulte}
-          options={["Facile", "Moyen", "Difficile"].map((d) => ({ value: d, label: d }))}
-          onChange={(ev) => changer({ difficulte: ev.target.value })}
-        />
+        <Segments label="Difficulté" valeur={e.difficulte} options={["Facile", "Moyen", "Difficile"]} onChange={(d) => changer({ difficulte: d })} />
         <Champ label="Durée" value={e.duree} maxLength={20} placeholder="20 min" onChange={(ev) => changer({ duree: ev.target.value })} />
       </div>
       <Champ
@@ -74,11 +70,11 @@ export function EditeurExercice({ element: e, changer, matieres, motDePasse }) {
         motDePasse={motDePasse}
         onAppliquer={changer}
       />
+      </Section>
       {/* Le texte écrit s'affiche sur le site (« Lire ici », plein écran) ;
           les PDF, facultatifs, restent à télécharger. Sans texte, les
           étudiants lisent les PDF. */}
-      <fieldset className="space-y-4 rounded-xl border border-ink-200 p-4 dark:border-ink-800">
-        <legend className="px-1 text-xs font-semibold text-ink-600 dark:text-ink-300">Énoncé</legend>
+      <Section numero={2} titre="Énoncé">
         <Zone
           label="Énoncé écrit (affiché sur le site)"
           rows={6}
@@ -105,12 +101,8 @@ export function EditeurExercice({ element: e, changer, matieres, motDePasse }) {
           maxLength={1500}
           onChange={(ev) => changer({ indice: ev.target.value })}
         />
-      </fieldset>
-      <fieldset className="space-y-4 rounded-xl border border-ink-200 p-4 dark:border-ink-800">
-        <legend className="px-1 text-xs font-semibold text-ink-600 dark:text-ink-300">Correction</legend>
-        <p className="text-xs/5 text-ink-500 dark:text-ink-400">
-          Ici, seulement la solution : l'énoncé va dans le cadre « Énoncé » au-dessus.
-        </p>
+      </Section>
+      <Section numero={3} titre="Correction" aide="Ici, seulement la solution : l'énoncé va dans le cadre « Énoncé » au-dessus.">
         <Zone
           label="Méthode, étape par étape"
           aide="Comment on trouve la solution. Chaque ligne devient une étape numérotée (1, 2, 3…) sur le site."
@@ -153,7 +145,7 @@ export function EditeurExercice({ element: e, changer, matieres, motDePasse }) {
           onChange={(pdf, t) => changer({ pdfCorrige: pdf, texteCorrige: t })}
           onRetirer={() => changer({ pdfCorrige: null, texteCorrige: "" })}
         />
-      </fieldset>
+      </Section>
 
     </div>
   );

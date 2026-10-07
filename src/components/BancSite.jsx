@@ -113,92 +113,118 @@ export default function BancSite({ motDePasse, Reponse }) {
   const termines = (lignes ?? []).filter((l) => !l.attente);
   const reussis = termines.filter((l) => l.problemes?.length === 0).length;
 
+  // Avant le premier lancement, la grille montre les questions du banc
+  // général, en attente.
+  const cases = lignes ?? casGeneraux.map((c) => ({ nom: c.nom, source: "Banc général", question: c.question, avant: true }));
+
   return (
-    <section className="card space-y-4 p-5">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="grid size-9 place-items-center rounded-xl bg-brand-600 text-white">
-          <Icon name="target" className="size-4.5" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <h2 className="font-semibold text-ink-900 dark:text-white">Tester tout le site</h2>
-          <p className="text-xs text-ink-500 dark:text-ink-400">
-            Les {casGeneraux.length} questions du banc général, puis les tests de chaque matière, posés
-            comme par un étudiant. Compter quelques secondes par question.
-          </p>
-        </div>
+    <section
+      className="rounded-[28px] bg-[#0b0e17] p-6 text-white sm:p-8 dark:ring-1 dark:ring-white/10"
+      style={{
+        backgroundImage:
+          "linear-gradient(rgb(255 255 255/0.03) 1px,transparent 1px),linear-gradient(90deg,rgb(255 255 255/0.03) 1px,transparent 1px)",
+        backgroundSize: "56px 56px",
+      }}
+    >
+      <h2 className="text-[30px] leading-tight font-extrabold tracking-[-0.03em]">Tester tout le site</h2>
+      <p className="mt-2 max-w-[560px] text-[15px]/6 text-ink-200">
+        Les {casGeneraux.length} questions du banc général, puis les tests de chaque matière, posés comme par un étudiant.
+        Compter quelques secondes par question.
+      </p>
+
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={telecharger}
+          disabled={enCours || termines.length === 0}
+          className="inline-flex min-h-11 items-center gap-2 rounded-[14px] border border-white/15 px-4 text-sm font-bold text-ink-100 transition-colors hover:bg-white/8 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <Icon name="haut" className="size-4 rotate-180" />
+          Télécharger le rapport (.md)
+        </button>
         {enCours ? (
           <button
             type="button"
             onClick={() => (arret.current = true)}
-            className="rounded-xl border border-ink-200 px-3.5 py-2 text-sm font-semibold text-ink-700 hover:bg-ink-50 dark:border-ink-700 dark:text-ink-200 dark:hover:bg-ink-800"
+            className="inline-flex min-h-11 items-center gap-2 rounded-[14px] bg-white px-4.5 text-sm font-extrabold text-ink-950 hover:bg-ink-100"
           >
+            <Icon name="stop" className="size-4" />
             Arrêter
           </button>
         ) : (
           <button
             type="button"
             onClick={lancer}
-            className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+            className="inline-flex min-h-11 items-center gap-2 rounded-[14px] bg-lime-400 px-4.5 text-sm font-extrabold text-ink-950 transition-colors hover:bg-lime-300"
           >
-            <Icon name="rocket" className="size-4" />
+            <Icon name="play" className="size-4" />
             Lancer le banc complet
           </button>
+        )}
+        {lignes && (
+          <p className="text-sm font-bold">
+            {reussis} / {termines.length} réussis
+            {termines.length < lignes.length && <span className="font-normal text-ink-300"> · {lignes.length} au total</span>}
+          </p>
         )}
       </div>
 
       {etat.texte && (
-        <p role="status" className={cx("text-xs/5", etat.type === "erreur" ? "text-flame-600 dark:text-flame-400" : "text-ink-500 dark:text-ink-400")}>
+        <p role="status" className={cx("mt-3 text-[13px]/5", etat.type === "erreur" ? "text-flame-300" : "text-ink-300")}>
           {etat.texte}
         </p>
       )}
 
-      {lignes && (
-        <>
-          <div className="flex flex-wrap items-center gap-3">
-            <p className="text-sm font-semibold text-ink-900 dark:text-white">
-              {reussis} / {termines.length} réussis
-              {termines.length < lignes.length && <span className="font-normal text-ink-500 dark:text-ink-400"> · {lignes.length} au total</span>}
-            </p>
-            {!enCours && termines.length > 0 && (
-              <button type="button" onClick={telecharger} className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-300">
-                Télécharger le rapport (.md)
-              </button>
-            )}
-          </div>
-          <ul className="max-h-[60vh] space-y-2 overflow-y-auto">
-            {lignes.map((l, i) => (
-              <li
-                key={i}
-                className={cx(
-                  "rounded-xl border p-3",
-                  l.attente
-                    ? "border-ink-200 dark:border-ink-800"
-                    : l.problemes?.length === 0
-                      ? "border-accent-400/60"
-                      : "border-flame-400/60"
-                )}
-              >
-                <details>
-                  <summary className="flex cursor-pointer list-none items-start gap-2 text-sm">
-                    <span className="shrink-0">{l.attente ? "…" : l.problemes?.length === 0 ? "✅" : "❌"}</span>
-                    <span className="min-w-0 flex-1">
-                      <span className="font-medium text-ink-900 dark:text-white">{l.nom}</span>
-                      <span className="text-xs text-ink-500 dark:text-ink-400"> · {l.source}</span>
-                      {l.problemes?.length > 0 && (
-                        <span className="block text-xs text-flame-600 dark:text-flame-400">{l.erreur ?? l.problemes.join(" ; ")}</span>
-                      )}
-                    </span>
-                  </summary>
-                  <div className="mt-2 space-y-2 border-t border-ink-200 pt-2 dark:border-ink-800">
-                    <p className="text-xs text-ink-500 dark:text-ink-400">Question : {l.question}</p>
-                    {l.texte && <Reponse texte={l.texte} />}
-                  </div>
-                </details>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+      <ol className="mt-6 grid max-h-[70vh] gap-2.5 overflow-y-auto sm:grid-cols-2 xl:grid-cols-3">
+        {cases.map((l, i) => {
+          const etatCase = l.avant || l.attente ? "attente" : l.problemes?.length === 0 ? "ok" : "ko";
+          return (
+            <li
+              key={i}
+              className={cx(
+                "rounded-[16px] border bg-white/4",
+                etatCase === "ok" ? "border-lime-400/50" : etatCase === "ko" ? "border-flame-400/60" : "border-white/10"
+              )}
+            >
+              <details className="group">
+                <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 px-3.5 py-2.5 text-sm/5 font-bold">
+                  <span className="w-5 shrink-0 font-mono text-[11px] font-medium text-[#8eaaff]">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="min-w-0 flex-1">
+                    {l.nom}
+                    {l.source !== "Banc général" && <span className="block text-xs font-medium text-ink-300">{l.source}</span>}
+                  </span>
+                  <span
+                    className={cx(
+                      "grid size-5 shrink-0 place-items-center rounded-full",
+                      etatCase === "ok" ? "bg-lime-400 text-ink-950" : etatCase === "ko" ? "bg-flame-500 text-white" : "border-2 border-ink-500"
+                    )}
+                  >
+                    {etatCase === "ok" && <Icon name="check" className="size-3" />}
+                    {etatCase === "ko" && <Icon name="close" className="size-3" />}
+                    <span className="sr-only">{etatCase === "ok" ? "réussi" : etatCase === "ko" ? "échoué" : "pas encore lancé"}</span>
+                  </span>
+                </summary>
+                <div className="space-y-2 border-t border-white/10 px-3.5 py-3 text-[13px]/5">
+                  <p className="text-ink-300">Question : {l.question}</p>
+                  {l.problemes?.length > 0 && <p className="font-bold text-flame-300">{l.erreur ?? l.problemes.join(" ; ")}</p>}
+                  {l.texte && (
+                    <div className="rounded-xl bg-white p-3 text-ink-900">
+                      <Reponse texte={l.texte} />
+                    </div>
+                  )}
+                </div>
+              </details>
+            </li>
+          );
+        })}
+      </ol>
+
+      <div className={cx("mt-5 flex flex-wrap justify-between gap-2 text-xs text-ink-300")}>
+        <span className="font-mono tracking-[0.06em]">
+          BANC GÉNÉRAL · {casGeneraux.length} QUESTIONS{!lignes && " · PAS ENCORE LANCÉ"}
+        </span>
+        <span>Les tests ne sont jamais montrés à l&apos;IA.</span>
+      </div>
     </section>
   );
 }
