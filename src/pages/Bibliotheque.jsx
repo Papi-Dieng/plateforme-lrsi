@@ -161,10 +161,12 @@ export default function Bibliotheque() {
                         {r.auteurs} · {r.langue}
                       </span>
                       <span className="mt-2 flex-1 text-sm/6 text-ink-600 dark:text-ink-300">{r.note}</span>
-                      <span className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-ink-50 px-2.5 py-1 text-xs font-bold text-[#1a1530] dark:bg-ink-800 dark:text-ink-100">
+                      {r.licence && (
+                        <span className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-ink-50 px-2.5 py-1 text-xs font-bold text-[#1a1530] dark:bg-ink-800 dark:text-ink-100">
                         <Icon name="check" className="size-3.5 text-[#d9480f]" />
                         {r.licence}
                       </span>
+                      )}
                       <span className="mt-4 inline-flex items-center gap-1.5 border-b-2 border-[#ef5a2a] pb-0.5 text-sm font-extrabold text-[#1a1530] w-fit dark:text-white">
                         {r.url ? "Consulter sur le site de l'auteur" : "Ouvrir le PDF"}
                         <Icon name={r.url ? "external" : "file"} className="size-3.5" />
