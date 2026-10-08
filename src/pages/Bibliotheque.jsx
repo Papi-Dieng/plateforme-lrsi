@@ -3,6 +3,7 @@ import Icon from "../components/Icon";
 import { cx } from "../components/classes";
 import { ressources } from "../data/bibliotheque";
 import { urlPdf } from "../contenu";
+import { useCouverture } from "../couvertures";
 import { matieres, nomMatiere } from "../data/matieres";
 
 /* ==================================================================
@@ -11,8 +12,8 @@ import { matieres, nomMatiere } from "../data/matieres";
    Uniquement des ressources dont la diffusion est autorisée. Mise en
    page d'après la maquette « Bibliothèque » (7 octobre 2026) : chaque
    ressource est un livre posé sur une carte pastel, avec sa vraie
-   couverture quand on la connaît (`couverture`, une image du site
-   lui-même). Sinon, ou si l'image ne vient pas,
+   couverture, trouvée par src/couvertures.js (image du site, lien du
+   livre, ou recherche par titre). Sinon, ou si l'image ne vient pas,
    une couverture est composée à partir du titre. Les ressources en
    attente d'autorisation gardent leur place, sans rien publier.
    ================================================================== */
@@ -24,15 +25,13 @@ const TEINTES = [
   { carte: "bg-[#fbe3f1]", sol: "bg-[#f4c9e2]", point: "bg-[#c2489a]", livre: "bg-[#a83a85]" },
 ];
 const mono = "font-mono text-[11px] font-bold tracking-[0.12em]";
-// Une couverture du dépôt (public/couvertures) se lit depuis la base du site.
-const couvertureDe = (r) =>
-  !r.couverture ? null : /^https?:/.test(r.couverture) ? r.couverture : `${import.meta.env.BASE_URL}${r.couverture}`;
 const deux = (n) => String(n).padStart(2, "0");
 
 function Livre({ r, teinte }) {
-  const src = couvertureDe(r);
-  const [echec, setEchec] = useState(false);
-  const composee = !src || echec;
+  const src = useCouverture(r);
+  // L'adresse qui a échoué : une autre adresse (trouvée plus tard) sera essayée.
+  const [echec, setEchec] = useState(null);
+  const composee = !src || echec === src;
   const sombre = ["bg-[#2a2350]", "bg-[#a83a85]"].includes(teinte.livre);
 
   return (
@@ -43,7 +42,7 @@ function Livre({ r, teinte }) {
           <span className="text-[11px]/[1.1] font-extrabold">{r.titre}</span>
         </span>
       ) : (
-        <img src={src} alt="" loading="lazy" onError={() => setEchec(true)} className="size-full rounded-r-md bg-white object-cover" />
+        <img src={src} alt="" loading="lazy" onError={() => setEchec(src)} className="size-full rounded-r-md bg-white object-cover" />
       )}
       <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1.5 rounded-l-sm bg-black/25" />
     </span>

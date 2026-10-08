@@ -29,10 +29,11 @@ import { themeMatiere } from "../data/couleurs";
    Dès qu'il appuie sur « Terminer », toutes les parties écrites partent
    à la correction en même temps, et la note se remplit seule : juste =
    tous les points, presque = la moitié, faux ou vide = 0 (demande du
-   7 octobre 2026). Chaque case « Mes points » reste modifiable : la note
-   de l'IA est une proposition, l'étudiant a le dernier mot. Si l'IA ne
-   répond pas, la partie se note à la main. Un devoir donné en PDF n'a
-   pas de texte lisible par l'IA : il se corrige seulement à la main.
+   7 octobre 2026). Depuis le 8 octobre, à la demande, l'étudiant ne
+   saisit plus ses points : seule l'IA note. Si elle ne répond pas pour
+   une partie, celle-ci reste « pas encore notée » et se relance sous la
+   partie. Un devoir donné en PDF n'a pas de texte lisible par l'IA : il
+   n'a pas de note, seulement son corrigé.
 
    Les examens ne sont que des liens vers des sujets dont la
    publication a été autorisée ; la plateforme n'en héberge aucun.
@@ -314,21 +315,22 @@ export function ExamensListe() {
 /* Faire un devoir                                                     */
 /* ------------------------------------------------------------------ */
 
-function ChampPoints({ valeur, max, onChange }) {
+// Les points d'une partie, donnés par l'IA : on les lit, on ne les tape pas.
+function PointsIA({ valeur, max, correction }) {
+  const texte =
+    valeur != null
+      ? `${valeur} / ${max}`
+      : correction?.attente
+        ? "Correction en cours…"
+        : correction?.erreur
+          ? "Pas encore notée"
+          : "—";
   return (
-    <label className="mt-5 flex items-center gap-3 text-sm font-extrabold text-ink-950 dark:text-white">
-      Mes points
-      <input
-        type="number"
-        min={0}
-        max={max}
-        step={0.5}
-        value={valeur ?? ""}
-        onChange={(e) => onChange(Math.min(Math.max(Number(e.target.value), 0), max))}
-        className="h-12 w-20 rounded-[14px] border border-ink-200 bg-white px-3 text-center font-mono text-base font-bold dark:border-ink-700 dark:bg-ink-950"
-      />
-      <span className="font-mono font-medium text-ink-500 dark:text-ink-400">/ {max}</span>
-    </label>
+    <p className="mt-5 flex items-center gap-3 text-sm font-extrabold text-ink-950 dark:text-white">
+      <Icon name="sparkles" className="size-4 text-brand-600 dark:text-brand-400" />
+      Points donnés par l&apos;IA
+      <span className="rounded-[12px] bg-ink-100 px-3 py-1.5 font-mono text-base dark:bg-ink-800">{texte}</span>
+    </p>
   );
 }
 
@@ -353,7 +355,6 @@ export function ExamenSession() {
   // Ce qui est écrit sous chaque partie, et la correction de chacune.
   const ecrit = useRef({});
   const [corrections, setCorrections] = useState({});
-  const [notesIA, setNotesIA] = useState({});
 
   // Un seul minuteur, qui ne tourne que pendant l'épreuve. Le temps
   // restant se calcule depuis l'heure de fin : il reste juste même si
@@ -394,7 +395,6 @@ export function ExamenSession() {
   const noterAuto = (i, verdict) => {
     const n = pointsPour(verdict, examen.parties[i].points);
     setNotes((x) => ({ ...x, [i]: n }));
-    setNotesIA((x) => ({ ...x, [i]: true }));
   };
 
   const terminer = () => {
@@ -419,7 +419,9 @@ export function ExamenSession() {
     });
   };
   const corrigeEnCours = Object.values(corrections).some((c) => c.attente);
-  const parIA = Object.keys(notesIA).length > 0;
+  const nonNotees = examen.format === "pdf"
+    ? 0
+    : examen.parties.filter((p, i) => p.corrige && notes[i] == null && !corrections[i]?.attente).length;
 
   const pdf = examen.format === "pdf";
   const etapes = [
@@ -428,8 +430,8 @@ export function ExamenSession() {
       ? `Sujet en PDF, noté sur ${total} points. Rédige tes réponses sur une feuille, comme un jour d'examen.`
       : `${examen.parties.length} parties, ${total} points au total. Écris tes réponses sous chaque partie, question par question ou d'un bloc (ou sur une feuille, comme un jour d'examen).`,
     pdf
-      ? "Le corrigé ne s'affiche qu'à la fin, et tu te notes toi-même."
-      : "Le corrigé ne s'affiche qu'à la fin : l'IA compare alors toutes tes réponses au corrigé et te donne ta note. Tu peux encore changer les points de chaque partie.",
+      ? "Le corrigé ne s'affiche qu'à la fin. Un devoir en PDF n'est pas noté automatiquement : compare ta copie au corrigé."
+      : "Le corrigé ne s'affiche qu'à la fin : l'IA compare alors toutes tes réponses au corrigé et te donne ta note, partie par partie.",
   ];
 
   return (
@@ -537,7 +539,6 @@ export function ExamenSession() {
                       <p className="text-sm">Le corrigé de ce devoir n&apos;a pas encore été publié.</p>
                     )}
                   </BlocCorrige>
-                  <ChampPoints valeur={notes[0]} max={total} onChange={(v) => setNotes({ 0: v })} />
                 </section>
               )}
             </>
@@ -579,18 +580,7 @@ export function ExamenSession() {
                     <BlocCorrige>
                       <TexteLibre texte={p.corrige || "Pas de corrigé pour cette partie."} grand />
                     </BlocCorrige>
-                    <ChampPoints
-                      valeur={notes[i]}
-                      max={p.points}
-                      onChange={(v) => {
-                        setNotes((n) => ({ ...n, [i]: v }));
-                        setNotesIA((x) => {
-                          const { [i]: _retire, ...reste } = x;
-                          return reste;
-                        });
-                      }}
-                    />
-                    {notesIA[i] && <p className="mt-1.5 text-xs text-ink-600 dark:text-ink-300">Points proposés par l'IA : tu peux les changer.</p>}
+                    {p.corrige && <PointsIA valeur={notes[i]} max={p.points} correction={corrections[i]} />}
                   </>
                 )}
               </section>
@@ -600,26 +590,34 @@ export function ExamenSession() {
             <div className="flex flex-wrap items-center justify-between gap-6 rounded-[28px] bg-[#1b2328] p-7 text-white sm:p-9 dark:ring-1 dark:ring-white/10" style={QUADRILLAGE}>
               <div>
                 <p className={cx("text-xs text-ink-300", mono)}>
-                  {corrigeEnCours
-                    ? "Ma note, l'IA corrige encore…"
-                    : parIA
-                      ? "Ma note, proposée par l'IA"
-                      : "Ma note, d'après mon auto-correction"}
+                  {pdf ? "Pas de note automatique" : corrigeEnCours ? "Ma note, l'IA corrige encore…" : "Ma note, donnée par l'IA"}
                 </p>
-                <p className="mt-2 text-[64px] leading-none font-extrabold tracking-[-0.05em]">
-                  {obtenu}
-                  <span className="text-[32px] text-[#ffc94d]"> / {total}</span>
-                  {total > 0 && total !== 20 && (
-                    <span className="ml-3 text-lg font-semibold tracking-normal text-ink-300">soit {Math.round((obtenu / total) * 200) / 10} / 20</span>
-                  )}
-                </p>
+                {pdf ? (
+                  <p className="mt-2 max-w-md text-base/7 text-ink-200">L&apos;IA ne lit pas un devoir en PDF : compare ta copie au corrigé ci-dessus.</p>
+                ) : !iaActive ? (
+                  <p className="mt-2 max-w-md text-base/7 text-ink-200">La note automatique demande une connexion et la version en ligne du site.</p>
+                ) : (
+                  <>
+                    <p className="mt-2 text-[64px] leading-none font-extrabold tracking-[-0.05em]">
+                      {obtenu}
+                      <span className="text-[32px] text-[#ffc94d]"> / {total}</span>
+                      {total > 0 && total !== 20 && (
+                        <span className="ml-3 text-lg font-semibold tracking-normal text-ink-300">soit {Math.round((obtenu / total) * 200) / 10} / 20</span>
+                      )}
+                    </p>
+                    {nonNotees > 0 && !corrigeEnCours && (
+                      <p className="mt-3 text-sm text-[#ffc94d]">
+                        {nonNotees} partie{nonNotees > 1 ? "s" : ""} pas encore notée{nonNotees > 1 ? "s" : ""} : relance la correction sous la partie.
+                      </p>
+                    )}
+                  </>
+                )}
               </div>
               <div className="flex flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={() => {
                     setNotes({});
-                    setNotesIA({});
                     setCorrections({});
                     setEtape("consignes");
                   }}

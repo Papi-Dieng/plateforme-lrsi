@@ -104,6 +104,10 @@ const articles = [
             "Les miniatures des vidéos sont chargées depuis les serveurs de YouTube dès qu'une vidéo s'affiche dans une liste : YouTube reçoit alors ton adresse IP. La vidéo elle-même ne se charge qu'au clic, en mode de confidentialité renforcée (youtube-nocookie.com) ; en la regardant, tu es soumis aux règles de Google.",
           ],
           [
+            "Couvertures des livres (archive.org, Open Library, Google Livres)",
+            "Quand la bibliothèque s'affiche, la couverture d'un livre est chargée depuis le site vers lequel mène son lien (archive.org, Open Library ou Google Livres), ou cherchée chez Open Library d'après son titre et son auteur. Ces services reçoivent alors ton adresse IP, rien d'autre. Certaines couvertures sont rangées sur la plateforme elle-même et ne contactent personne.",
+          ],
+          [
             "La dictée vocale, seulement quand tu appuies sur le micro",
             "Ta voix est transcrite par le service de reconnaissance vocale de ton navigateur : dans Chrome, le son part chez Google ; dans Safari, chez Apple. La plateforme ne reçoit que le texte, et seulement si tu l'envoies. Le navigateur te demande d'abord l'autorisation d'utiliser le micro.",
           ],

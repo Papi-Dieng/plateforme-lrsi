@@ -15,7 +15,7 @@ test.describe("devoir", () => {
   const devoir = examens[0];
   const total = devoir.parties.reduce((n, p) => n + p.points, 0);
 
-  test("consignes, sujet et minuteur, corrigé à la fin, puis auto-correction", async ({ page }) => {
+  test("consignes, sujet et minuteur, corrigé à la fin, puis note donnée par l'IA", async ({ page }) => {
     await page.clock.install({ time: JEUDI });
     await entrerEnInvite(page);
     await aller(page, `/examens/${devoir.id}`);
@@ -38,13 +38,10 @@ test.describe("devoir", () => {
     await page.getByRole("button", { name: "Terminer et voir le corrigé" }).click();
     await expect(page.getByText("Corrigé", { exact: true })).toHaveCount(devoir.parties.length);
 
-    // L'étudiant se note partie par partie, sans dépasser le barème.
-    const points = page.getByRole("spinbutton", { name: "Mes points" });
-    await expect(points).toHaveCount(devoir.parties.length);
-    await points.nth(0).fill(String(devoir.parties[0].points + 10));
-    await points.nth(1).fill("5");
-    const attendu = devoir.parties[0].points + 5;
-    await expect(page.getByText("Ma note, d'après mon auto-correction").locator("..")).toContainText(`${attendu} / ${total}`);
+    // Plus aucune case pour se noter : la note vient de l'IA. Rien n'a
+    // été écrit, donc chaque partie vaut 0, sans rien envoyer.
+    await expect(page.getByRole("spinbutton")).toHaveCount(0);
+    await expect(page.getByText("Ma note, donnée par l'IA").locator("..")).toContainText(`0 / ${total}`);
   });
 
   test("les réponses s'écrivent pendant le devoir, et l'IA les corrige une fois terminé", async ({ page }) => {
@@ -76,12 +73,10 @@ test.describe("devoir", () => {
     expect(envois).toHaveLength(1);
     expect(envois[0]).toMatchObject({ enonce: devoir.parties[0].enonce, corrige: devoir.parties[0].corrige });
     expect(envois[0].reponse).toContain("Réponse : Physique, liaison, réseau");
-    // La note se remplit seule (presque juste = la moitié), et reste modifiable.
-    const points = partie.getByRole("spinbutton", { name: "Mes points" });
-    await expect(points).toHaveValue(String(devoir.parties[0].points / 2));
-    await expect(page.getByText("Ma note, proposée par l'IA").locator("..")).toContainText(`${devoir.parties[0].points / 2} / ${total}`);
-    await points.fill("1");
-    await expect(page.getByText(/^Ma note, /).locator("..")).toContainText(`1 / ${total}`);
+    // La note se remplit seule (presque juste = la moitié), sans case à remplir.
+    await expect(partie.getByText(`${devoir.parties[0].points / 2} / ${devoir.parties[0].points}`)).toBeVisible();
+    await expect(page.getByRole("spinbutton")).toHaveCount(0);
+    await expect(page.getByText("Ma note, donnée par l'IA").locator("..")).toContainText(`${devoir.parties[0].points / 2} / ${total}`);
   });
 
   test("la façon de répondre se choisit avant de commencer, pour toutes les parties", async ({ page }) => {
