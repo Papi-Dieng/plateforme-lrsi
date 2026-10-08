@@ -58,12 +58,23 @@ const LARGEUR = 1000;
 const MARGE = 70;
 const MILIEU = LARGEUR / 2;
 
-function Plan({ liste, lus, active, setActive, semestre }) {
-  const hauteur = 70 + liste.length * 62;
-  const yDe = (i) => 60 + i * 62;
+// Les lignes quittent leur voie avant le passage au semestre 2 pour
+// rouler ensemble au milieu du plan, en faisceau, puis rejoignent leur
+// voie de l'autre côté (comme sur la maquette).
+const A = 330; // fin des stations du semestre 1, début de la courbe
+const B = 440; // début du faisceau
+const C = 560; // fin du faisceau
+const D = 670; // fin de la courbe, début des stations du semestre 2
+
+function Plan({ liste, lus, active, setActive, semestre, onOuvrir }) {
+  const ecart = 56;
+  const hauteur = 80 + liste.length * ecart;
+  const yDe = (i) => 62 + i * ecart;
+  const centre = yDe((liste.length - 1) / 2);
+  const yFaisceau = (i) => centre + (i - (liste.length - 1) / 2) * 9;
   const xStations = (n, cote) => {
-    const debut = cote === 1 ? MARGE + 60 : MILIEU + 60;
-    const fin = cote === 1 ? MILIEU - 60 : LARGEUR - MARGE - 60;
+    const debut = cote === 1 ? MARGE + 55 : D + 30;
+    const fin = cote === 1 ? A - 30 : LARGEUR - MARGE - 55;
     return Array.from({ length: n }, (_, k) => (n === 1 ? (debut + fin) / 2 : debut + ((fin - debut) * k) / (n - 1)));
   };
 
@@ -72,11 +83,13 @@ function Plan({ liste, lus, active, setActive, semestre }) {
       <svg viewBox={`0 0 ${LARGEUR} ${hauteur}`} className="min-w-[760px]" role="group" aria-label="Plan des lignes : une ligne par matière, une station par chapitre">
         {semestre !== "2" && <text x={MARGE - 30} y="26" className="fill-ink-600 font-mono text-[11px] font-bold tracking-widest dark:fill-ink-300">ZONE 1 · SEMESTRE 1</text>}
         {semestre !== "1" && <text x={LARGEUR - MARGE + 30} y="26" textAnchor="end" className="fill-ink-600 font-mono text-[11px] font-bold tracking-widest dark:fill-ink-300">ZONE 2 · SEMESTRE 2</text>}
+        <rect x={MILIEU} y="0" width={LARGEUR - MILIEU} height={hauteur} className="fill-ink-950/[0.035] dark:fill-white/[0.04]" />
         <line x1={MILIEU} y1="38" x2={MILIEU} y2={hauteur - 26} className="stroke-ink-400" strokeDasharray="3 5" />
         <text x={MILIEU} y={hauteur - 8} textAnchor="middle" className="fill-ink-600 font-mono text-[10px] tracking-widest dark:fill-ink-300">PASSAGE AU SEMESTRE 2</text>
 
         {liste.map((m, i) => {
           const y = yDe(i);
+          const yf = yFaisceau(i);
           const c = couleur(m);
           const allumee = active === m.id;
           const estompee = active && !allumee;
@@ -89,7 +102,7 @@ function Plan({ liste, lus, active, setActive, semestre }) {
           return (
             <g key={m.id} className="transition-opacity duration-300" opacity={estompee ? 0.35 : 1} onMouseEnter={() => setActive(m.id)} onFocus={() => setActive(m.id)}>
               <path
-                d={`M${MARGE} ${y} H${LARGEUR - MARGE}`}
+                d={`M${MARGE} ${y} H${A} C${A + 60} ${y} ${B - 60} ${yf} ${B} ${yf} H${C} C${C + 60} ${yf} ${D - 60} ${y} ${D} ${y} H${LARGEUR - MARGE}`}
                 stroke={c}
                 strokeWidth={allumee ? 9 : 6}
                 strokeLinecap="round"
@@ -114,10 +127,23 @@ function Plan({ liste, lus, active, setActive, semestre }) {
                 );
               })}
               {[MARGE - 26, LARGEUR - MARGE + 26].map((x) => (
-                <a key={x} href={`#/cours/${m.id}${cotes.length === 1 ? `?semestre=${cotes[0]}` : ""}`} aria-label={`Ouvrir la ligne ${rang(m) + 1} : ${m.nom}`}>
+                <g
+                  key={x}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Ouvrir la ligne ${rang(m) + 1} : ${m.nom}`}
+                  className="cursor-pointer outline-none [&:focus-visible>circle]:stroke-ink-950"
+                  onClick={() => onOuvrir(m.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onOuvrir(m.id);
+                    }
+                  }}
+                >
                   <circle cx={x} cy={y} r="15" fill={couleurTexte(m)} stroke="#fff" strokeWidth="3" />
-                  <text x={x} y={y + 5} textAnchor="middle" className="fill-white text-[14px] font-extrabold">{rang(m) + 1}</text>
-                </a>
+                  <text x={x} y={y + 5} textAnchor="middle" className="pointer-events-none fill-white text-[14px] font-extrabold">{rang(m) + 1}</text>
+                </g>
               ))}
               {!allumee && (
                 <text x={MARGE + 14} y={y - 12} className="text-[11px] font-bold" style={{ fill: couleurTexte(m) }}>
@@ -143,8 +169,20 @@ export function Cours() {
   const recherche = params.get("q") ?? "";
   const setRecherche = (v) => setParams(v ? { q: v } : {}, { replace: true });
   const [semestre, setSemestre] = useState("tous");
-  const [lus] = useState(lireChapitresLus);
+  const [lus, setLus] = useState(lireChapitresLus);
   const [active, setActive] = useState(matieres[0]?.id ?? null);
+  // La ligne ouverte sous les cartes (« ligne ouverte ci-dessous »).
+  const [ouverte, setOuverte] = useState(matieres[0]?.id ?? null);
+  const [partieChoisie, setPartieChoisie] = useState(null);
+  const ouvrir = (id) => {
+    setOuverte(id);
+    setActive(id);
+    setPartieChoisie(null);
+    requestAnimationFrame(() => {
+      const reduit = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      document.getElementById("ligne-ouverte")?.scrollIntoView({ behavior: reduit ? "auto" : "smooth", block: "start" });
+    });
+  };
 
   // Semestre 1 ou 2 : les matières qui ont des chapitres dans ce
   // semestre, et le lien ouvre directement cette partie.
@@ -166,6 +204,9 @@ export function Cours() {
   const nbChapitres = matieres.reduce((n, m) => n + m.chapitres.length, 0);
   const nbDispo = matieres.reduce((n, m) => n + m.chapitres.filter((c) => c.statut === "disponible").length, 0);
   const allumee = resultats.find((m) => m.id === active) ?? resultats[0];
+  const matiereOuverte = resultats.find((m) => m.id === ouverte) ?? null;
+  const partieOuverte =
+    partieChoisie ?? (semestre !== "tous" ? Number(semestre) : (matiereOuverte ? semestresMatiere(matiereOuverte)[0] : 1) ?? 1);
 
   return (
     <div className="bg-white dark:bg-ink-950">
@@ -254,12 +295,12 @@ export function Cours() {
         {/* ---- Le plan ---- */}
         {resultats.length > 0 && (
           <div className="mt-6">
-            <Plan liste={resultats} lus={lus} active={allumee?.id} setActive={setActive} semestre={semestre} />
+            <Plan liste={resultats} lus={lus} active={allumee?.id} setActive={setActive} semestre={semestre} onOuvrir={ouvrir} />
             <p className="mt-2 flex flex-wrap justify-between gap-2 text-xs text-ink-600 dark:text-ink-300">
               <span>
                 Ligne {allumee ? rang(allumee) + 1 : ""}, {allumee?.nom} : ses stations sont nommées sur le plan.
               </span>
-              <span>Survole une ligne pour la voir ; touche un numéro de ligne pour l'ouvrir.</span>
+              <span>Survole une ligne pour la voir ; touche un numéro de ligne pour l'ouvrir ci-dessous.</span>
             </p>
           </div>
         )}
@@ -294,10 +335,17 @@ export function Cours() {
               const dispo = liste.filter((c) => c.statut === "disponible").length;
               return (
                 <li key={m.id}>
-                  <Link
-                    to={filtre ? `/cours/${m.id}?semestre=${filtre}` : `/cours/${m.id}`}
+                  <button
+                    type="button"
+                    onClick={() => ouvrir(m.id)}
                     onMouseEnter={() => setActive(m.id)}
-                    className="group flex h-full overflow-hidden rounded-[22px] border border-ink-200 bg-white transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:border-ink-800 dark:bg-ink-900"
+                    aria-expanded={ouverte === m.id}
+                    aria-controls="ligne-ouverte"
+                    className={cx(
+                      "group flex h-full w-full overflow-hidden rounded-[22px] border-2 bg-white text-left transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:bg-ink-900",
+                      ouverte === m.id ? "" : "border-transparent shadow-[0_6px_24px_-14px_#0004] dark:border-ink-800"
+                    )}
+                    style={ouverte === m.id ? { borderColor: couleur(m) } : undefined}
                   >
                     <span className="flex w-16 shrink-0 flex-col items-center justify-between py-3 text-white" style={{ background: couleurTexte(m) }}>
                       <span className={cx(mono, "text-[9px]")}>Ligne</span>
@@ -310,20 +358,42 @@ export function Cours() {
                       </span>
                     </span>
                     <span className="flex min-w-0 flex-1 flex-col p-4">
+                      {ouverte === m.id && (
+                        <span className={cx(mono, "mb-1 text-[9px] text-(--t) dark:text-(--c)")} style={{ "--t": couleurTexte(m), "--c": `color-mix(in srgb, ${couleur(m)} 50%, white)` }}>
+                          Ligne ouverte ci-dessous
+                        </span>
+                      )}
                       <span className="text-lg/6 font-extrabold tracking-tight text-ink-950 dark:text-white">{m.nom}</span>
                       <span className="mt-2 flex-1 text-sm/6 text-ink-600 dark:text-ink-300">{m.resume}</span>
                       <span className="mt-3 flex items-center justify-between text-xs text-ink-600 dark:text-ink-300">
                         {liste.length} chapitres{filtre ? ` au semestre ${filtre}` : ""}, {dispo} disponible{dispo > 1 ? "s" : ""}
-                        <span className="grid size-7 place-items-center rounded-full border border-ink-200 transition-colors group-hover:border-transparent group-hover:text-white dark:border-ink-700">
-                          <Icon name="arrow" className="size-3.5" />
+                        <span
+                          className={cx("grid size-7 place-items-center rounded-full border transition-colors", ouverte === m.id ? "border-transparent text-white" : "border-ink-200 dark:border-ink-700")}
+                          style={ouverte === m.id ? { background: couleurTexte(m) } : undefined}
+                        >
+                          <Icon name="arrow" className={cx("size-3.5 transition-transform", ouverte === m.id && "rotate-90")} />
                         </span>
                       </span>
                     </span>
-                  </Link>
+                  </button>
                 </li>
               );
             })}
           </ul>
+        )}
+
+        {/* ---- La ligne ouverte ---- */}
+        {matiereOuverte && (
+          <PanneauLigne
+            key={matiereOuverte.id}
+            id="ligne-ouverte"
+            matiere={matiereOuverte}
+            partie={partieOuverte}
+            choisirPartie={setPartieChoisie}
+            lus={lus}
+            setLus={setLus}
+            className="mt-12"
+          />
         )}
       </Container>
     </div>
@@ -356,6 +426,26 @@ export function CoursDetail() {
     );
   }
 
+  return (
+    <div className="bg-white dark:bg-ink-950">
+      <Container className="py-6">
+        <Link to="/cours" className="inline-flex items-center gap-1.5 text-sm font-bold text-ink-700 hover:text-ink-950 dark:text-ink-300 dark:hover:text-white">
+          <Icon name="arrow" className="size-4 rotate-180" />
+          Toutes les matières
+        </Link>
+
+        <PanneauLigne matiere={matiere} Titre="h1" partie={partie} choisirPartie={choisirPartie} lus={lus} setLus={setLus} className="mt-4" />
+      </Container>
+    </div>
+  );
+}
+
+/* ================================================================== */
+/* Une ligne ouverte : la matière, ses stations, ses correspondances   */
+/* ================================================================== */
+
+function PanneauLigne({ matiere, Titre = "h2", partie, choisirPartie, lus, setLus, id, className }) {
+  const presents = semestresMatiere(matiere);
   const c0 = couleur(matiere);
   const exercicesLies = exercices.filter((e) => e.matiere === matiere.id);
   const qcmsLies = qcms.filter((q) => q.matiere === matiere.id);
@@ -369,14 +459,7 @@ export function CoursDetail() {
   const chapitres = chapitresDuSemestre(matiere, partie);
 
   return (
-    <div className="bg-white dark:bg-ink-950">
-      <Container className="py-6">
-        <Link to="/cours" className="inline-flex items-center gap-1.5 text-sm font-bold text-ink-700 hover:text-ink-950 dark:text-ink-300 dark:hover:text-white">
-          <Icon name="arrow" className="size-4 rotate-180" />
-          Toutes les matières
-        </Link>
-
-        <div className="mt-4 rounded-[32px] p-5 sm:p-8" style={{ background: `color-mix(in srgb, ${c0} 12%, transparent)` }}>
+        <div id={id} className={cx("scroll-mt-6 rounded-[32px] p-5 sm:p-8", className)} style={{ background: `color-mix(in srgb, ${c0} 12%, transparent)` }}>
           {/* ---- En-tête ---- */}
           <header className="flex flex-wrap items-start gap-5">
             <span className="grid size-20 shrink-0 place-items-center rounded-full border-[6px] border-white text-4xl font-extrabold text-white shadow-lg dark:border-ink-900" style={{ background: couleurTexte(matiere) }}>
@@ -386,7 +469,7 @@ export function CoursDetail() {
               <p className={cx(mono, "text-ink-700 dark:text-ink-300")}>
                 Ligne {rang(matiere) + 1} · {presents.map((n) => `Semestre ${n}`).join(" · ")}
               </p>
-              <h1 className="mt-1 text-4xl font-extrabold tracking-[-0.04em] text-ink-950 sm:text-5xl dark:text-white">{matiere.nom}</h1>
+              <Titre className="mt-1 text-4xl font-extrabold tracking-[-0.04em] text-ink-950 sm:text-5xl dark:text-white">{matiere.nom}</Titre>
               <p className="mt-3 max-w-2xl text-[15px]/7 text-ink-700 dark:text-ink-300">{matiere.resume}</p>
               <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-bold">
                 <span className="rounded-full px-2.5 py-1 text-white" style={{ background: couleurTexte(matiere) }}>
@@ -401,7 +484,7 @@ export function CoursDetail() {
                 )}
               </div>
             </div>
-            <BoutonFavori type="matiere" reference={matiere.id} libelle={matiere.nom} />
+            <BoutonFavori type="matiere" reference={matiere.id} libelle={matiere.nom} variante="encadre" avecTexte />
           </header>
 
           <div className="mt-8 grid items-start gap-6 lg:grid-cols-[1fr_20rem]">
@@ -570,7 +653,5 @@ export function CoursDetail() {
             </aside>
           </div>
         </div>
-      </Container>
-    </div>
   );
 }

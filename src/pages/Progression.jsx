@@ -49,7 +49,7 @@ const JOURS_COURTS = ["D", "L", "M", "M", "J", "V", "S"];
 const DEGRADE = "bg-gradient-to-r from-[#9b6bff] to-[#ff8fb3]";
 const ENCRE = "text-[#22183d] dark:text-white";
 const DOUX = "text-[#6b6280] dark:text-ink-300";
-const CARTE = "rounded-[28px] bg-white p-6 shadow-[0_20px_50px_-30px_#140f3680] sm:p-7 dark:bg-ink-900";
+const CARTE = "rounded-[28px] bg-white p-6 shadow-[0_20px_50px_-30px_#140f3680] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_30px_60px_-30px_#140f3699] sm:p-7 dark:bg-ink-900";
 
 // Couleurs des niveaux (forces et faiblesses).
 const TONS = {
@@ -129,13 +129,21 @@ const ETOILES = [
   [610, 140, 1.2], [700, 70, 1], [930, 50, 1.5], [980, 150, 1.1], [40, 190, 1.2],
 ];
 
-function Paysage({ ratio, faits, total }) {
+// Chaque plan du paysage suit la souris de quelques pixels (--px, --py,
+// posés par l'en-tête), les plus proches davantage : effet de profondeur.
+const plan = (dx, dy = dx / 3) => ({
+  transform: `translate(calc(var(--px, 0) * ${dx}px), calc(var(--py, 0) * ${dy}px))`,
+  transition: "transform 0.4s ease-out",
+});
+
+function Paysage({ ratio, faits, total, projete = null }) {
   // Le chemin, gardé en état (pas en ref) pour y lire la position du point.
   const [chemin, setChemin] = useState(null);
   // Le point part du départ et monte jusqu'à sa place sur le sentier.
   const t = useAvance(2200, 500);
   const part = Math.min(Math.max(ratio, 0), 1) * t;
   const q = chemin?.getTotalLength ? chemin.getPointAtLength(chemin.getTotalLength() * part) : { x: 330, y: 470 };
+  const cible = projete != null && chemin?.getTotalLength ? chemin.getPointAtLength(chemin.getTotalLength() * Math.min(projete, 1)) : null;
 
   return (
     <svg viewBox="0 0 1000 520" preserveAspectRatio="xMidYMax slice" className="absolute inset-0 size-full" aria-hidden="true">
@@ -145,25 +153,41 @@ function Paysage({ ratio, faits, total }) {
           <stop offset="1" stopColor="#ffb38c" stopOpacity="0" />
         </radialGradient>
       </defs>
-      {ETOILES.map(([x, y, rr], i) => (
-        <circle key={i} cx={x} cy={y} r={rr} fill="#fff" className="scintille" style={{ animationDelay: `${(i * 0.37) % 3}s` }} />
-      ))}
-      <g className="flotte">
-        <circle cx="860" cy="330" r="140" fill="url(#pg-soleil)" opacity="0.7" />
-        <circle cx="860" cy="340" r="52" fill="#ffd2a3" />
+      <g style={plan(-6)}>
+        {ETOILES.map(([x, y, rr], i) => (
+          <circle key={i} cx={x} cy={y} r={rr} fill="#fff" className="scintille" style={{ animationDelay: `${(i * 0.37) % 3}s` }} />
+        ))}
+      </g>
+      <g style={plan(-12)}>
+        <g className="flotte">
+          <circle cx="860" cy="330" r="140" fill="url(#pg-soleil)" opacity="0.7" />
+          <circle cx="860" cy="340" r="52" fill="#ffd2a3" />
+        </g>
       </g>
       <g className="derive" opacity="0.5">
         <path d="M120 170 h120 a18 18 0 0 0 -30 -22 a26 26 0 0 0 -48 -6 a20 20 0 0 0 -42 28Z" fill="#fff" opacity="0.35" />
         <path d="M620 210 h90 a14 14 0 0 0 -22 -18 a20 20 0 0 0 -38 -4 a16 16 0 0 0 -30 22Z" fill="#fff" opacity="0.25" />
       </g>
-      <path d="M0 380 L120 330 L220 360 L330 300 L430 350 L520 320 L640 360 L760 310 L880 350 L1000 320 V520 H0Z" fill="#5d3392" opacity="0.55" />
-      <path d="M0 430 L150 380 L260 410 L380 370 L480 410 L560 360 L705 290 L820 380 L1000 400 V520 H0Z" fill="#2a1f55" />
-      <path d="M0 470 C 200 440, 400 500, 1000 455 V520 H0Z" fill="#22183d" />
+      <path d="M-40 380 L120 330 L220 360 L330 300 L430 350 L520 320 L640 360 L760 310 L880 350 L1040 320 V560 H-40Z" fill="#5d3392" opacity="0.55" style={plan(10)} />
+      <g style={plan(20)}>
+      <path d="M-40 430 L150 380 L260 410 L380 370 L480 410 L560 360 L705 290 L820 380 L1040 400 V560 H-40Z" fill="#2a1f55" />
+      <path d="M-40 470 C 200 440, 400 500, 1040 455 V560 H-40Z" fill="#22183d" />
       {/* Le sentier entier en pointillés, et la part parcourue en clair. */}
       <path ref={setChemin} d={SENTIER} fill="none" stroke="#ffd2a3" strokeOpacity="0.35" strokeWidth="3" strokeDasharray="2 8" strokeLinecap="round" />
       <path d={SENTIER} pathLength={1} fill="none" stroke="#ffd2a3" strokeWidth="4" strokeLinecap="round" strokeDasharray={`${part} 1`} />
       <path d="M705 300 V270" stroke="#fff" strokeWidth="2" />
       <path d="M705 270 L728 278 L705 286Z" fill="#ffb38c" className="flotte" style={{ animationDuration: "2.5s" }} />
+      {cible && (
+        <g>
+          <circle cx={cible.x} cy={cible.y} r="11" fill="none" stroke="#fff" strokeWidth="2.5" strokeDasharray="4 3" />
+          <g transform={`translate(${cible.x - 36} ${cible.y + 18})`}>
+            <rect width="72" height="22" rx="11" fill="#22183d" stroke="#ffd2a3" />
+            <text x="36" y="15" textAnchor="middle" fontSize="10.5" fontWeight="800" fill="#ffd2a3">
+              Objectif
+            </text>
+          </g>
+        </g>
+      )}
       <circle cx={q.x} cy={q.y} r="9" fill="#ffd2a3" className="halo" />
       <circle cx={q.x} cy={q.y} r="9" fill="#ffd2a3" stroke="#fff" strokeWidth="3" />
       <g transform={`translate(${q.x - 34} ${q.y - 50})`}>
@@ -173,12 +197,13 @@ function Paysage({ ratio, faits, total }) {
           Toi {Math.round(faits * t)}/{total}
         </text>
       </g>
+      </g>
     </svg>
   );
 }
 
 // Demi-cercle de précision, avec le repère du seuil de réussite.
-function Jauge({ valeur, t = 1 }) {
+function Jauge({ valeur, t = 1, objectif = null }) {
   const r = 80;
   const longueur = Math.PI * r;
   const angle = Math.PI * (1 - SEUIL_REUSSITE / 100);
@@ -208,6 +233,17 @@ function Jauge({ valeur, t = 1 }) {
         stroke="#22183d"
         strokeWidth="3"
       />
+      {objectif != null && (
+        <circle
+          cx={100 + Math.cos(Math.PI * (1 - objectif / 100)) * r}
+          cy={100 - Math.sin(Math.PI * (1 - objectif / 100)) * r}
+          r="9"
+          fill="#fff"
+          stroke="#e8579c"
+          strokeWidth="4"
+          className="transition-all duration-200"
+        />
+      )}
     </svg>
   );
 }
@@ -328,14 +364,37 @@ export default function Progression() {
   const t = useAvance();
   const faitsTotal = bilan.exosFaits + bilan.qcmFaits;
   const totalContenus = bilan.exosTotal + bilan.qcmTotal;
+  const reste = Math.max(totalContenus - faitsTotal, 0);
+
+  // Les deux curseurs de la page : « et si j'en faisais encore… » (un
+  // point « Objectif » apparaît sur le sentier) et l'objectif de précision.
+  const [encore, setEncore] = useState(0);
+  const enPlus = Math.min(encore, reste);
+  const projete = enPlus > 0 && totalContenus ? (faitsTotal + enPlus) / totalContenus : null;
+  const [objectif, setObjectif] = useState(80);
+
+  // Le ciel suit la souris : la position, de -1 à 1, va dans --px / --py.
+  const suivre = (e) => {
+    const b = e.currentTarget.getBoundingClientRect();
+    e.currentTarget.style.setProperty("--px", ((e.clientX - b.left) / b.width - 0.5) * 2);
+    e.currentTarget.style.setProperty("--py", ((e.clientY - b.top) / b.height - 0.5) * 2);
+  };
+  const lacher = (e) => {
+    e.currentTarget.style.setProperty("--px", 0);
+    e.currentTarget.style.setProperty("--py", 0);
+  };
 
   return (
     <div className="bg-[#22183d] pb-16">
       {/* ---------------------------------------------------------- */}
       {/* Le ciel                                                     */}
       {/* ---------------------------------------------------------- */}
-      <header className="relative overflow-hidden bg-[linear-gradient(180deg,#2a1f55_0%,#5d3392_55%,#e8579c_100%)] px-4 pt-10 pb-56 text-white sm:px-8 sm:pb-64">
-        <Paysage ratio={totalContenus ? faitsTotal / totalContenus : 0} faits={faitsTotal} total={totalContenus} />
+      <header
+        onPointerMove={suivre}
+        onPointerLeave={lacher}
+        className="relative overflow-hidden bg-[linear-gradient(180deg,#2a1f55_0%,#5d3392_55%,#e8579c_100%)] px-4 pt-10 pb-56 text-white sm:px-8 sm:pb-64"
+      >
+        <Paysage ratio={totalContenus ? faitsTotal / totalContenus : 0} faits={faitsTotal} total={totalContenus} projete={projete} />
         <div className="relative mx-auto max-w-6xl">
           <p className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-bold backdrop-blur-sm">
             <Icon name="target" className="size-3.5" />
@@ -377,6 +436,29 @@ export default function Progression() {
               </div>
             ))}
           </dl>
+
+          {reste > 0 && (
+            <div className="mt-4 max-w-2xl rounded-[20px] border border-white/20 bg-white/10 p-4 backdrop-blur-md">
+              <label htmlFor="curseur-encore" className="flex flex-wrap items-baseline justify-between gap-2 text-sm font-bold">
+                <span>Et si j&apos;en faisais encore… ?</span>
+                <output htmlFor="curseur-encore" className="text-white/90">
+                  {enPlus === 0
+                    ? "Fais glisser le curseur"
+                    : `+${enPlus} exercice${enPlus > 1 ? "s" : ""} ou QCM : tu serais à ${Math.round(projete * 100)} % du chemin`}
+                </output>
+              </label>
+              <input
+                id="curseur-encore"
+                type="range"
+                min={0}
+                max={reste}
+                step={1}
+                value={enPlus}
+                onChange={(e) => setEncore(Number(e.target.value))}
+                className="mt-3 w-full cursor-grab accent-[#ffd2a3] active:cursor-grabbing"
+              />
+            </div>
+          )}
         </div>
       </header>
 
@@ -391,11 +473,17 @@ export default function Progression() {
             </TitreCarte>
             <ol className="mt-6 grid grid-cols-7 gap-1.5 sm:grid-cols-14">
               {activite.jours.map((j, n) => (
-                <li key={j.cle} title={`${j.cle}${j.actif ? " : activité" : ""}`} className="flex flex-col items-center">
+                <li key={j.cle} tabIndex={0} className="group relative flex flex-col items-center rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[#e8579c]">
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -top-11 left-1/2 z-10 -translate-x-1/2 scale-90 rounded-xl bg-[#22183d] px-2.5 py-1.5 text-[11px] font-bold whitespace-nowrap text-white opacity-0 shadow-lg transition-[opacity,transform] group-hover:scale-100 group-hover:opacity-100 group-focus-visible:scale-100 group-focus-visible:opacity-100"
+                  >
+                    {j.date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })} · {j.actif ? "actif" : "rien"}
+                  </span>
                   <span className="flex h-20 w-full items-end">
                     <span
                       className={cx(
-                        "barre-monte block w-full rounded-xl",
+                        "barre-monte block w-full rounded-xl transition-[filter,transform] group-hover:brightness-110 group-hover:scale-x-110",
                         j.actif ? "h-full bg-gradient-to-b from-[#ff8fb3] to-[#9b6bff]" : "h-6 bg-[#f1edf5] dark:bg-white/10",
                         n === activite.jours.length - 1 && "ring-2 ring-[#22183d] ring-offset-2 dark:ring-white"
                       )}
@@ -414,7 +502,7 @@ export default function Progression() {
           <section className={cx(CARTE, "apparition")} style={{ animationDelay: "180ms" }}>
             <TitreCarte icone="target" titre="Précision" texte="Moyenne de tes meilleurs scores." />
             <div className="relative mx-auto mt-4 w-full max-w-60">
-              <Jauge valeur={bilan.moyenne} t={t} />
+              <Jauge valeur={bilan.moyenne} t={t} objectif={bilan.moyenne === null ? null : objectif} />
               <span className={cx("absolute inset-x-0 bottom-1 text-center text-3xl font-extrabold", ENCRE)}>
                 {bilan.moyenne === null ? "—" : <><Compte valeur={bilan.moyenne} t={t} /> %</>}
               </span>
@@ -426,6 +514,29 @@ export default function Progression() {
                   ? "Au-dessus du seuil de réussite."
                   : `Le seuil de réussite est à ${SEUIL_REUSSITE} %.`}
             </p>
+            {bilan.moyenne !== null && (
+              <div className="mt-4">
+                <label htmlFor="curseur-objectif" className={cx("flex justify-between text-sm font-bold", ENCRE)}>
+                  Mon objectif
+                  <output htmlFor="curseur-objectif">{objectif} %</output>
+                </label>
+                <input
+                  id="curseur-objectif"
+                  type="range"
+                  min={50}
+                  max={100}
+                  step={5}
+                  value={objectif}
+                  onChange={(e) => setObjectif(Number(e.target.value))}
+                  className="mt-2 w-full cursor-grab accent-[#e8579c] active:cursor-grabbing"
+                />
+                <p className={cx("mt-1 text-xs", DOUX)}>
+                  {bilan.moyenne >= objectif
+                    ? "Objectif atteint : bravo !"
+                    : `Encore ${objectif - bilan.moyenne} point${objectif - bilan.moyenne > 1 ? "s" : ""} de moyenne à gagner.`}
+                </p>
+              </div>
+            )}
           </section>
         </div>
 
