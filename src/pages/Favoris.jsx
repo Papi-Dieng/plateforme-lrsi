@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Icon from "../components/Icon";
 import { cx } from "../components/classes";
@@ -92,9 +92,9 @@ function resoudre(favori) {
       titre: v.titre,
       detail: v.resume ?? "",
       matiere: getMatiere(v.matiere),
-      lien: "/videos",
-      complement: "Lien prêt",
-      accroche: v.accroche,
+      // Le titre ouvre la vidéo dans la page Vidéos.
+      lien: `/videos?v=${encodeURIComponent(v.id)}`,
+      youtubeId: v.youtubeId,
     };
   }
 
@@ -130,6 +130,55 @@ function Signet({ actif, label, nombre, onClick }) {
   );
 }
 
+/* Une vidéo mise en favori : sa miniature en fond, et la lecture sur
+   place. Le lecteur YouTube (mode confidentialité renforcée) ne se
+   charge qu'au premier clic ; ensuite le même bouton met en pause et
+   relance, en parlant au lecteur par messages (enablejsapi). */
+function LecteurFavori({ titre, youtubeId }) {
+  const [etat, setEtat] = useState("arret"); // arret → lecture ⇄ pause
+  const cadre = useRef(null);
+  const commander = (func) =>
+    cadre.current?.contentWindow?.postMessage(JSON.stringify({ event: "command", func, args: [] }), "https://www.youtube-nocookie.com");
+  const basculer = () => {
+    if (etat === "arret") setEtat("lecture");
+    else if (etat === "lecture") {
+      commander("pauseVideo");
+      setEtat("pause");
+    } else {
+      commander("playVideo");
+      setEtat("lecture");
+    }
+  };
+  return (
+    <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-[#1c1838] sm:aspect-auto sm:w-1/2">
+      {etat === "arret" ? (
+        <img src={`https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`} alt="" loading="lazy" className="absolute inset-0 size-full object-cover" />
+      ) : (
+        <iframe
+          ref={cadre}
+          src={`https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1&enablejsapi=1`}
+          title={titre}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin"
+          className="absolute inset-0 size-full"
+        />
+      )}
+      <button
+        type="button"
+        onClick={basculer}
+        aria-label={etat === "lecture" ? `Mettre en pause : ${titre}` : `Lire ici : ${titre}`}
+        className={cx(
+          "absolute grid place-items-center rounded-full bg-[#d4371f] text-white shadow-lg transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white",
+          etat === "arret" ? "top-1/2 left-1/2 size-16 -translate-1/2" : "bottom-3 left-3 size-11"
+        )}
+      >
+        <Icon name={etat === "lecture" ? "pause" : "play"} className={etat === "arret" ? "size-6" : "size-4"} fill={etat === "lecture" ? "none" : "currentColor"} stroke={etat === "lecture" ? "currentColor" : "none"} />
+      </button>
+    </div>
+  );
+}
+
 function Carte({ f, onRetirer }) {
   const info = libellesType[f.type];
   const c = f.contenu;
@@ -141,17 +190,13 @@ function Carte({ f, onRetirer }) {
       <article
         className={cx(
           "relative flex h-full overflow-hidden border",
+          video && "flex-col sm:flex-row",
           large
             ? "border-[#1c1838] bg-[#1c1838] text-white dark:border-white/10"
             : "border-[#1c1838]/10 bg-white dark:border-white/10 dark:bg-ink-900"
         )}
       >
-        {video && (
-          <div aria-hidden="true" className="hidden w-2/5 shrink-0 flex-col justify-between bg-[#1c1838] p-5 text-white sm:flex">
-            <span className={cx(mono, "text-[10px]")}>Vidéo</span>
-            <span className="text-5xl font-black tracking-[-0.06em] break-words">{c.accroche || "▶"}</span>
-          </div>
-        )}
+        {video && <LecteurFavori titre={c.titre} youtubeId={c.youtubeId} />}
 
         <div className="flex min-w-0 flex-1 flex-col p-6">
           <div className={cx("flex flex-wrap items-center gap-2.5 pr-10", !large && ENCRE)}>

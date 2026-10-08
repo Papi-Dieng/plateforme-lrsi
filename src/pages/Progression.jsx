@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Icon from "../components/Icon";
 import { cx } from "../components/classes";
@@ -77,7 +77,34 @@ function TitreCarte({ icone, titre, texte, ton = "bg-[#efe9ff] text-[#5434c9]", 
   );
 }
 
-function Barre({ valeur, etiquette, classe = DEGRADE, repere }) {
+/* Une avancée de 0 à 1 à l'ouverture de la page (fin ralentie), pour
+   faire monter les chiffres, la jauge et le point « Toi ». Avec
+   « réduire les animations », tout est en place tout de suite. */
+const sansMouvement = () => typeof window !== "undefined" && Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+
+function useAvance(duree = 1800, delai = 0) {
+  const [t, setT] = useState(() => (sansMouvement() ? 1 : 0));
+  useEffect(() => {
+    if (sansMouvement()) return;
+    let id;
+    const debut = performance.now() + delai;
+    const pas = (maintenant) => {
+      const x = Math.min(Math.max((maintenant - debut) / duree, 0), 1);
+      setT(1 - (1 - x) ** 3);
+      if (x < 1) id = requestAnimationFrame(pas);
+    };
+    id = requestAnimationFrame(pas);
+    return () => cancelAnimationFrame(id);
+  }, [duree, delai]);
+  return t;
+}
+
+// Un nombre qui compte jusqu'à sa valeur.
+function Compte({ valeur, t }) {
+  return <>{Math.round((valeur ?? 0) * t)}</>;
+}
+
+function Barre({ valeur, etiquette, classe = DEGRADE, repere, delai = 0 }) {
   return (
     <div
       className="relative h-2.5 rounded-full bg-[#f1edf5] dark:bg-white/10"
@@ -87,7 +114,7 @@ function Barre({ valeur, etiquette, classe = DEGRADE, repere }) {
       aria-valuemax={100}
       aria-label={etiquette}
     >
-      <div className={cx("h-full rounded-full transition-[width] duration-700", classe)} style={{ width: `${valeur}%` }} />
+      <div className={cx("barre-pousse h-full rounded-full transition-[width] duration-700", classe)} style={{ width: `${valeur}%`, animationDelay: `${delai}ms` }} />
       {repere != null && <span className="absolute -inset-y-1 w-0.5 rounded bg-[#22183d]/60 dark:bg-white/60" style={{ left: `${repere}%` }} />}
     </div>
   );
@@ -97,16 +124,18 @@ function Barre({ valeur, etiquette, classe = DEGRADE, repere }) {
 // Le point « Toi » suit la part du contenu déjà parcourue.
 const SENTIER = "M330 470 C 420 455, 470 440, 520 418 S 610 380, 640 345 S 690 320, 705 300";
 
+const ETOILES = [
+  [80, 60, 1.6], [190, 120, 1.1], [300, 40, 1.4], [420, 95, 1], [540, 30, 1.7],
+  [610, 140, 1.2], [700, 70, 1], [930, 50, 1.5], [980, 150, 1.1], [40, 190, 1.2],
+];
+
 function Paysage({ ratio, faits, total }) {
-  const ref = useRef(null);
-  const [point, setPoint] = useState({ x: 330, y: 470 });
-  useEffect(() => {
-    const p = ref.current;
-    if (!p?.getTotalLength) return;
-    const l = p.getTotalLength();
-    const q = p.getPointAtLength(l * Math.min(Math.max(ratio, 0), 1));
-    setPoint({ x: q.x, y: q.y });
-  }, [ratio]);
+  // Le chemin, gardé en état (pas en ref) pour y lire la position du point.
+  const [chemin, setChemin] = useState(null);
+  // Le point part du départ et monte jusqu'à sa place sur le sentier.
+  const t = useAvance(2200, 500);
+  const part = Math.min(Math.max(ratio, 0), 1) * t;
+  const q = chemin?.getTotalLength ? chemin.getPointAtLength(chemin.getTotalLength() * part) : { x: 330, y: 470 };
 
   return (
     <svg viewBox="0 0 1000 520" preserveAspectRatio="xMidYMax slice" className="absolute inset-0 size-full" aria-hidden="true">
@@ -116,26 +145,40 @@ function Paysage({ ratio, faits, total }) {
           <stop offset="1" stopColor="#ffb38c" stopOpacity="0" />
         </radialGradient>
       </defs>
-      <circle cx="860" cy="330" r="140" fill="url(#pg-soleil)" opacity="0.7" />
-      <circle cx="860" cy="340" r="52" fill="#ffd2a3" />
+      {ETOILES.map(([x, y, rr], i) => (
+        <circle key={i} cx={x} cy={y} r={rr} fill="#fff" className="scintille" style={{ animationDelay: `${(i * 0.37) % 3}s` }} />
+      ))}
+      <g className="flotte">
+        <circle cx="860" cy="330" r="140" fill="url(#pg-soleil)" opacity="0.7" />
+        <circle cx="860" cy="340" r="52" fill="#ffd2a3" />
+      </g>
+      <g className="derive" opacity="0.5">
+        <path d="M120 170 h120 a18 18 0 0 0 -30 -22 a26 26 0 0 0 -48 -6 a20 20 0 0 0 -42 28Z" fill="#fff" opacity="0.35" />
+        <path d="M620 210 h90 a14 14 0 0 0 -22 -18 a20 20 0 0 0 -38 -4 a16 16 0 0 0 -30 22Z" fill="#fff" opacity="0.25" />
+      </g>
       <path d="M0 380 L120 330 L220 360 L330 300 L430 350 L520 320 L640 360 L760 310 L880 350 L1000 320 V520 H0Z" fill="#5d3392" opacity="0.55" />
       <path d="M0 430 L150 380 L260 410 L380 370 L480 410 L560 360 L705 290 L820 380 L1000 400 V520 H0Z" fill="#2a1f55" />
       <path d="M0 470 C 200 440, 400 500, 1000 455 V520 H0Z" fill="#22183d" />
-      <path ref={ref} d={SENTIER} fill="none" stroke="#ffd2a3" strokeWidth="3" strokeLinecap="round" />
+      {/* Le sentier entier en pointillés, et la part parcourue en clair. */}
+      <path ref={setChemin} d={SENTIER} fill="none" stroke="#ffd2a3" strokeOpacity="0.35" strokeWidth="3" strokeDasharray="2 8" strokeLinecap="round" />
+      <path d={SENTIER} pathLength={1} fill="none" stroke="#ffd2a3" strokeWidth="4" strokeLinecap="round" strokeDasharray={`${part} 1`} />
       <path d="M705 300 V270" stroke="#fff" strokeWidth="2" />
-      <path d="M705 270 L728 278 L705 286Z" fill="#ffb38c" />
-      <circle cx={point.x} cy={point.y} r="9" fill="#ffd2a3" stroke="#fff" strokeWidth="3" />
-      <g transform={`translate(${point.x - 34} ${point.y - 50})`}>
+      <path d="M705 270 L728 278 L705 286Z" fill="#ffb38c" className="flotte" style={{ animationDuration: "2.5s" }} />
+      <circle cx={q.x} cy={q.y} r="9" fill="#ffd2a3" className="halo" />
+      <circle cx={q.x} cy={q.y} r="9" fill="#ffd2a3" stroke="#fff" strokeWidth="3" />
+      <g transform={`translate(${q.x - 34} ${q.y - 50})`}>
         <rect width="68" height="24" rx="12" fill="#fff" />
         <circle cx="12" cy="12" r="4" fill="#e8579c" />
-        <text x="21" y="16" fontSize="11" fontWeight="800" fill="#22183d">Toi {faits}/{total}</text>
+        <text x="21" y="16" fontSize="11" fontWeight="800" fill="#22183d">
+          Toi {Math.round(faits * t)}/{total}
+        </text>
       </g>
     </svg>
   );
 }
 
 // Demi-cercle de précision, avec le repère du seuil de réussite.
-function Jauge({ valeur }) {
+function Jauge({ valeur, t = 1 }) {
   const r = 80;
   const longueur = Math.PI * r;
   const angle = Math.PI * (1 - SEUIL_REUSSITE / 100);
@@ -155,8 +198,7 @@ function Jauge({ valeur }) {
         strokeWidth="16"
         strokeLinecap="round"
         strokeDasharray={longueur}
-        strokeDashoffset={longueur * (1 - (valeur ?? 0) / 100)}
-        className="transition-[stroke-dashoffset] duration-700"
+        strokeDashoffset={longueur * (1 - ((valeur ?? 0) * t) / 100)}
       />
       <line
         x1={100 + Math.cos(angle) * (r - 14)}
@@ -283,6 +325,7 @@ export default function Progression() {
     setConfirmation(false);
   };
 
+  const t = useAvance();
   const faitsTotal = bilan.exosFaits + bilan.qcmFaits;
   const totalContenus = bilan.exosTotal + bilan.qcmTotal;
 
@@ -327,7 +370,7 @@ export default function Progression() {
             ].map(([v, u, l]) => (
               <div key={l} className="rounded-[20px] border border-white/20 bg-white/10 p-4 backdrop-blur-md">
                 <dd className="text-3xl font-extrabold">
-                  {v}
+                  <Compte valeur={v} t={t} />
                   {u && <span className="ml-1 text-base font-bold text-white/80">{u}</span>}
                 </dd>
                 <dt className="mt-1 text-xs text-white/90">{l}</dt>
@@ -340,7 +383,7 @@ export default function Progression() {
       <div className="relative mx-auto -mt-16 max-w-6xl space-y-5 px-4 sm:px-8">
         {/* ---- Régularité et précision ---- */}
         <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
-          <section className={CARTE}>
+          <section className={cx(CARTE, "apparition")} style={{ animationDelay: "90ms" }}>
             <TitreCarte icone="clock" ton="bg-[#ffe6ef] text-[#b52a5e]" titre="Régularité" texte={`Tes ${JOURS_SUIVIS} derniers jours.`}>
               <p className={cx("self-end text-sm font-bold", ENCRE)}>
                 {activite.total} jour{activite.total > 1 ? "s" : ""} actif{activite.total > 1 ? "s" : ""}
@@ -352,10 +395,11 @@ export default function Progression() {
                   <span className="flex h-20 w-full items-end">
                     <span
                       className={cx(
-                        "block w-full rounded-xl",
+                        "barre-monte block w-full rounded-xl",
                         j.actif ? "h-full bg-gradient-to-b from-[#ff8fb3] to-[#9b6bff]" : "h-6 bg-[#f1edf5] dark:bg-white/10",
                         n === activite.jours.length - 1 && "ring-2 ring-[#22183d] ring-offset-2 dark:ring-white"
                       )}
+                      style={{ animationDelay: `${300 + n * 50}ms` }}
                     />
                   </span>
                   <span className={cx("mt-2 text-[11px] font-bold", ENCRE)} aria-hidden="true">{JOURS_COURTS[j.date.getDay()]}</span>
@@ -367,12 +411,12 @@ export default function Progression() {
             <p className={cx("mt-4 text-xs", DOUX)}>Une case s'allume dès qu'un exercice ou un QCM a été travaillé ce jour-là.</p>
           </section>
 
-          <section className={CARTE}>
+          <section className={cx(CARTE, "apparition")} style={{ animationDelay: "180ms" }}>
             <TitreCarte icone="target" titre="Précision" texte="Moyenne de tes meilleurs scores." />
             <div className="relative mx-auto mt-4 w-full max-w-60">
-              <Jauge valeur={bilan.moyenne} />
+              <Jauge valeur={bilan.moyenne} t={t} />
               <span className={cx("absolute inset-x-0 bottom-1 text-center text-3xl font-extrabold", ENCRE)}>
-                {bilan.moyenne === null ? "—" : `${bilan.moyenne} %`}
+                {bilan.moyenne === null ? "—" : <><Compte valeur={bilan.moyenne} t={t} /> %</>}
               </span>
             </div>
             <p className="mt-4 rounded-2xl bg-[#fff1e6] px-4 py-2.5 text-center text-sm font-bold text-[#9a3b12]">
@@ -386,10 +430,10 @@ export default function Progression() {
         </div>
 
         {/* ---- Progression par matière ---- */}
-        <section className={CARTE}>
+        <section className={cx(CARTE, "apparition")} style={{ animationDelay: "270ms" }}>
           <TitreCarte icone="layers" titre="Progression par matière" texte="Exercices et QCM ouverts, sur ceux disponibles." />
           <ul className="mt-5 divide-y divide-[#f1edf5] dark:divide-white/10">
-            {parMatiere.map((l) => (
+            {parMatiere.map((l, n) => (
               <li key={l.m.id} className="grid grid-cols-[2.5rem_1fr_auto] items-center gap-x-4 gap-y-2 py-3.5 sm:grid-cols-[2.5rem_14rem_1fr_4.5rem]">
                 <span className="grid size-10 place-items-center rounded-2xl bg-[#efe9ff] text-[#5434c9]">
                   <Icon name={l.m.icone ?? "book"} className="size-4" />
@@ -403,7 +447,7 @@ export default function Progression() {
                   </span>
                 </span>
                 <span className="col-span-3 max-sm:order-last sm:col-span-1">
-                  <Barre valeur={l.taux} etiquette={`Progression en ${l.m.nom}`} />
+                  <Barre valeur={l.taux} etiquette={`Progression en ${l.m.nom}`} delai={400 + n * 90} />
                 </span>
                 <span className="text-right">
                   <span className={cx("block text-lg font-extrabold", ENCRE)}>{l.taux} %</span>
@@ -416,7 +460,7 @@ export default function Progression() {
 
         {/* ---- Résultats et forces ---- */}
         <div className="grid items-start gap-5 lg:grid-cols-2">
-          <section className={CARTE}>
+          <section className={cx(CARTE, "apparition")} style={{ animationDelay: "360ms" }}>
             <TitreCarte icone="graduation" ton="bg-[#ffe6ef] text-[#b52a5e]" titre="Résultats des QCM" texte="Seul le meilleur score de chaque questionnaire est gardé." />
             {resultatsQcm.length === 0 ? (
               <p className={cx("mt-5 text-sm", DOUX)}>
@@ -459,7 +503,7 @@ export default function Progression() {
             )}
           </section>
 
-          <section className={CARTE}>
+          <section className={cx(CARTE, "apparition")} style={{ animationDelay: "450ms" }}>
             <TitreCarte icone="target" ton="bg-[#fff1d6] text-[#7a4b00]" titre="Forces et faiblesses" texte={`Par matière, dès ${MINIMUM_REPONSES} réponses de QCM enregistrées.`} />
             {evaluees === 0 ? (
               <div className="mt-5 space-y-3">
@@ -519,7 +563,7 @@ export default function Progression() {
 
         {/* ---- Chapitres à revoir et priorités ---- */}
         <div className="grid items-start gap-5 lg:grid-cols-[1.6fr_1fr]">
-          <section className={CARTE}>
+          <section className={cx(CARTE, "apparition")} style={{ animationDelay: "540ms" }}>
             <TitreCarte icone="book" ton="bg-[#ffe6ef] text-[#b52a5e]" titre="Chapitres à revoir" texte="Dans tes matières fragiles, de la plus faible à la moins faible." />
             {modules.length === 0 ? (
               <p className={cx("mt-5 text-sm/6", DOUX)}>

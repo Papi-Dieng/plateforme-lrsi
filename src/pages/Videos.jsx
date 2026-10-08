@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import BoutonFavori from "../components/BoutonFavori";
@@ -50,6 +50,16 @@ export default function Videos() {
   const v = useVideos();
   // `?m=reseaux` : arrivée depuis le tableau de bord, déjà filtrée.
   const [params] = useSearchParams();
+  // `?v=id` (depuis les favoris) : la vidéo s'ouvre tout de suite, une fois.
+  const demandee = params.get("v");
+  const ouverte = useRef(null);
+  useEffect(() => {
+    if (!demandee || ouverte.current === demandee) return;
+    const video = v.toutes.find((x) => x.id === demandee);
+    if (!video) return;
+    ouverte.current = demandee;
+    v.lire(video);
+  }, [demandee, v]);
   const [matiere, setMatiere] = useState(() =>
     matieres.some((m) => m.id === params.get("m")) ? params.get("m") : "toutes"
   );

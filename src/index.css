@@ -196,6 +196,85 @@
   animation-delay: 0.3s;
 }
 
+/* Mouvements des pages Cours et Ma progression. Tous s'éteignent avec
+   « prefers-reduced-motion » (règle ci-dessous).
+   - un trait qui se dessine : le chemin porte pathLength="1" ;
+   - une barre qui pousse (vers la droite) ou qui monte ;
+   - le soleil qui flotte, les étoiles qui scintillent, le halo du point
+     « Toi » qui respire. */
+@keyframes trace {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.ligne-trace {
+  stroke-dasharray: 1;
+  animation: trace 1.2s cubic-bezier(0.6, 0, 0.2, 1) backwards;
+}
+@keyframes pousse {
+  from {
+    transform: scaleX(0);
+  }
+}
+.barre-pousse {
+  transform-origin: left;
+  animation: pousse 1s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+@keyframes monte {
+  from {
+    transform: scaleY(0);
+  }
+}
+.barre-monte {
+  transform-origin: bottom;
+  animation: monte 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+@keyframes flotte {
+  50% {
+    transform: translateY(-8px);
+  }
+}
+.flotte {
+  animation: flotte 5s ease-in-out infinite;
+}
+@keyframes scintille {
+  50% {
+    opacity: 0.15;
+  }
+}
+.scintille {
+  animation: scintille 3s ease-in-out infinite;
+}
+@keyframes halo {
+  from {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+.halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: halo 2.2s ease-out infinite;
+}
+@keyframes derive {
+  from {
+    transform: translateX(-40px);
+  }
+  to {
+    transform: translateX(40px);
+  }
+}
+.derive {
+  animation: derive 18s ease-in-out infinite alternate;
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* Un anneau figé plutôt qu'une rotation accélérée à l'extrême. */
   .anneau-ia circle {
