@@ -95,7 +95,7 @@ const articles = [
             ? [
                 [
                   "Google Gemini, seulement quand tu utilises un outil d'IA",
-                  "Assistant de révision : ta question, les messages précédents de la conversation, les titres et textes des contenus de la plateforme liés à ta question, et l'image que tu joins, s'il y en a une. Elle est réduite dans ton navigateur avant l'envoi, ce qui retire ses informations cachées (lieu de la prise de vue, modèle du téléphone). Correction d'un exercice ou d'un devoir : la réponse que tu écris, avec l'énoncé et le corrigé. Programme de révision : les matières, dates et heures de tes examens, tes créneaux libres et les tâches proposées. Jamais ton profil, ton nom, tes scores ni tes favoris. Rien ne part tant que tu ne cliques pas.",
+                  "Assistant de révision : ta question, les messages précédents de la conversation, les titres et textes des contenus de la plateforme liés à ta question, et l'image que tu joins, s'il y en a une. Elle est réduite dans ton navigateur avant l'envoi, ce qui retire ses informations cachées (lieu de la prise de vue, modèle du téléphone). Correction d'un exercice ou d'un devoir : la réponse que tu écris, avec l'énoncé, le corrigé et, pour un devoir, son barème. Fiche de révision : le titre et le texte du chapitre, rien de toi. Programme de révision : les matières, dates et heures de tes examens, tes créneaux libres et les tâches proposées. Jamais ton profil, ton nom, tes scores ni tes favoris. Rien ne part tant que tu ne cliques pas.",
                 ],
               ]
             : []),

@@ -9,6 +9,7 @@ import { Bouton, Container, EtatVide } from "../components/ui";
 import { cx } from "../components/classes";
 import { getMatiere, matieres } from "../data/matieres";
 import BoutonFavori from "../components/BoutonFavori";
+import FicheRevision from "../components/FicheRevision";
 import { lireChapitresLus, marquerChapitreLu, refChapitre } from "../progression";
 import { tempsMinimumTexte } from "../components/detectionLecture";
 import { exercices } from "../data/exercices";
@@ -585,6 +586,15 @@ function PanneauLigne({ matiere, Titre = "h2", partie, choisirPartie, lus, setLu
                             >
                               <TexteLibre texte={c.contenu} />
                             </LectureTexte>
+                          )}
+                          {pret && (
+                            <FicheRevision
+                              reference={ref}
+                              titre={c.titre}
+                              texte={c.contenu || c.texteIA}
+                              couleur={couleurTexte(matiere)}
+                              className="mt-4"
+                            />
                           )}
                         </div>
                       </li>

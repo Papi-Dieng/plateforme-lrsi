@@ -16,6 +16,7 @@ const APPAREIL = {
   "lrsi-scores": JSON.stringify({ "osi-bases": { meilleur: 8, tentatives: 2 } }),
   "lrsi-exercices": JSON.stringify({ "sous-reseaux-1": { date: "2026-09-20" } }),
   "lrsi-chapitres-lus": JSON.stringify({ "reseaux:Le modèle OSI": "2026-09-21" }),
+  "lrsi-devoirs": JSON.stringify({ "devoir-1@2026-10-08": { devoir: "devoir-1", titre: "Devoir", note: 14, total: 20, date: "2026-10-08" } }),
   "lrsi-favoris": JSON.stringify([{ type: "qcm", id: "osi-bases" }]),
   "lrsi-videos-vues": JSON.stringify(["AbCdEf12345"]),
   "lrsi-planning": JSON.stringify({ evaluations: [], faites: {}, evenements: [] }),

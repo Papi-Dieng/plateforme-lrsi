@@ -44,6 +44,7 @@ import { menagePdfs, servirPdf, televerserPdf } from "./fichiers.js";
 import { API_GEMINI, interrogerGemini, listeModeles } from "./gemini.js";
 import { executerTacheAdmin } from "./agent-admin.js";
 import { corrigerExercice } from "./avis.js";
+import { ficheRevision } from "./fiches.js";
 import { effacerStats, enregistrerStats, lireStats } from "./stats.js";
 import { composerPlanning } from "./planning-ia.js";
 import { inscrireTelephone } from "./comptes.js";
@@ -262,7 +263,7 @@ export default {
     const admin = await motDePasseValide(motDePasse, env);
     const limiteur = chemin.startsWith("/comptes/")
       ? env.LIMITEUR_COMPTES ?? env.LIMITEUR
-      : chemin === "/corriger-exercice"
+      : chemin === "/corriger-exercice" || chemin === "/fiche-revision"
         ? env.LIMITEUR_CORRECTION ?? env.LIMITEUR
         : env.LIMITEUR;
     if (limiteur && !admin) {
@@ -411,6 +412,24 @@ export default {
     // La correction d'une réponse par l'IA (`avis.js`), pour les exercices
     // et les devoirs : verdict juste, presque juste ou faux. Soumise,
     // comme l'assistant, à la limite de requêtes par visiteur.
+    // La fiche de révision d'un chapitre (`fiches.js`), tirée du seul
+    // texte du cours. Même compteur que la correction.
+    if (chemin === "/fiche-revision") {
+      let corps;
+      try {
+        corps = await requete.json();
+      } catch {
+        return json({ erreur: "format" }, 400, cors);
+      }
+      try {
+        const r = await ficheRevision(corps, env);
+        return r.erreur ? json({ erreur: r.erreur }, r.statut, cors) : json(r.resultat, 200, cors);
+      } catch (e) {
+        console.log("Fiche de révision", e);
+        return json({ erreur: "reseau" }, 502, cors);
+      }
+    }
+
     if (chemin === "/corriger-exercice") {
       let corps;
       try {

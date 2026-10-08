@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import { Bouton, Container, EtatVide } from "../components/ui";
 import { cx } from "../components/classes";
@@ -8,9 +8,11 @@ import { getQcm, qcms } from "../data/qcm";
 import { getMatiere, matieres, nomMatiere } from "../data/matieres";
 import { themeMatiere } from "../data/couleurs";
 import BoutonFavori from "../components/BoutonFavori";
+import PartageResultat from "../components/PartageResultat";
 import { dureeLisible, enregistrerScore, lireScores } from "../progression";
 import { envoyerStats } from "../stats";
 import { noterTentative } from "../revisions";
+import { ID_EXAMEN_BLANC, MAX_QUESTIONS, MIN_QUESTIONS, composerExamenBlanc, lireReglages, questionsDisponibles } from "../examenBlanc";
 
 /* ==================================================================
    Les QCM : la liste, le questionnaire en cours, le résultat.
@@ -144,7 +146,7 @@ export function QcmListe() {
 
   const matieresAvecQcm = matieres.filter((m) => qcms.some((q) => q.matiere === m.id));
   const resultats = qcms.filter((q) => matiere === "toutes" || q.matiere === matiere);
-  const nbFaits = Object.keys(scores).length;
+  const nbFaits = Object.keys(scores).filter((id) => qcms.some((q) => q.id === id)).length;
   const nbQuestions = qcms.reduce((n, q) => n + q.questions.length, 0);
 
   const pastille = (actif) =>
@@ -208,6 +210,8 @@ export function QcmListe() {
       </header>
 
       <Container className="py-14">
+        <ReglageExamenBlanc matieresAvecQcm={matieresAvecQcm} />
+
         <div id="questionnaires" className="flex scroll-mt-24 flex-wrap items-end justify-between gap-4">
           <h2 className="text-[clamp(2.2rem,4.5vw,3.4rem)] leading-none font-extrabold tracking-[-0.045em] text-ink-950 dark:text-white">
             Choisis ton questionnaire
@@ -450,14 +454,124 @@ function Navigateur({ questions, reponses, marquees, index, aller, onTerminer })
 // réponses du précédent.
 export function QcmSession() {
   const { qcmId } = useParams();
+  const [params] = useSearchParams();
+  // Un nouveau tirage à chaque changement de réglages (adresse).
+  if (qcmId === ID_EXAMEN_BLANC) return <ExamenBlanc key={params.toString()} params={params} />;
   return <SessionQcm key={qcmId} qcmId={qcmId} />;
+}
+
+/* L'examen blanc : tiré une fois à l'ouverture, puis passé comme un QCM. */
+function ExamenBlanc({ params }) {
+  const [qcm] = useState(() => composerExamenBlanc(qcms, lireReglages(params, matieres)));
+  if (!qcm) {
+    return (
+      <Container className="py-20">
+        <EtatVide titre="Pas de question pour ces matières" texte="Choisis d'autres matières pour composer ton examen blanc.">
+          <Bouton to="/qcm#examen-blanc">Régler l'examen blanc</Bouton>
+        </EtatVide>
+      </Container>
+    );
+  }
+  return <SessionQcm qcm={qcm} />;
+}
+
+/* Le réglage de l'examen blanc, sur la liste des QCM : les matières
+   (toutes au départ), le nombre de questions, puis le départ. */
+function ReglageExamenBlanc({ matieresAvecQcm }) {
+  const naviguer = useNavigate();
+  const [choisies, setChoisies] = useState([]);
+  const dispo = questionsDisponibles(qcms, choisies).length;
+  const max = Math.min(MAX_QUESTIONS, dispo);
+  const [n, setN] = useState(20);
+  const nombre = Math.min(Math.max(n, Math.min(MIN_QUESTIONS, max)), max);
+  const basculer = (id) => setChoisies((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
+  const lancer = () => {
+    const p = new URLSearchParams({ n: String(nombre) });
+    if (choisies.length) p.set("m", choisies.join(","));
+    naviguer(`/qcm/${ID_EXAMEN_BLANC}?${p}`);
+  };
+  if (dispo === 0 && choisies.length === 0) return null;
+
+  const pastille = (actif) =>
+    cx(
+      "min-h-10 rounded-full border px-4 text-sm font-bold transition-colors",
+      actif ? "border-lime-400 bg-lime-400 text-ink-950" : "border-white/25 hover:bg-white/10"
+    );
+
+  return (
+    <section
+      id="examen-blanc"
+      aria-labelledby="titre-examen-blanc"
+      className="mb-12 scroll-mt-24 overflow-hidden rounded-[28px] bg-[#271627] p-6 text-white sm:p-9"
+      style={QUADRILLAGE}
+    >
+      <div className="flex flex-wrap items-start justify-between gap-6">
+        <div className="max-w-xl">
+          <p className={cx("text-xs font-medium text-lime-400", mono)}>S&apos;ENTRAÎNER AVANT L&apos;EXAMEN</p>
+          <h2 id="titre-examen-blanc" className="mt-2 text-[clamp(1.8rem,3.5vw,2.6rem)] leading-none font-extrabold tracking-[-0.04em]">
+            Examen blanc
+          </h2>
+          <p className="mt-3 text-[15px]/6 text-ink-200">
+            Des questions tirées au hasard dans les QCM des matières choisies, chronométrées : une minute par question. Chaque tirage est différent.
+          </p>
+        </div>
+        <span className="grid size-16 place-items-center rounded-[18px] bg-lime-400 text-ink-950">
+          <Icon name="clock" className="size-7" />
+        </span>
+      </div>
+
+      <div role="group" aria-label="Matières de l'examen blanc" className="mt-6 flex flex-wrap gap-2">
+        <button type="button" onClick={() => setChoisies([])} aria-pressed={choisies.length === 0} className={pastille(choisies.length === 0)}>
+          Toutes les matières
+        </button>
+        {matieresAvecQcm.map((m) => (
+          <button key={m.id} type="button" onClick={() => basculer(m.id)} aria-pressed={choisies.includes(m.id)} className={pastille(choisies.includes(m.id))}>
+            {m.nom}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-6 flex flex-wrap items-end gap-6">
+        <div className="min-w-0 flex-[1_1_18rem]">
+          <label htmlFor="examen-blanc-nombre" className="flex justify-between text-sm font-bold">
+            Nombre de questions
+            <output htmlFor="examen-blanc-nombre">
+              {nombre} question{nombre > 1 ? "s" : ""} · {nombre} min
+            </output>
+          </label>
+          <input
+            id="examen-blanc-nombre"
+            type="range"
+            min={Math.min(MIN_QUESTIONS, max)}
+            max={max}
+            value={nombre}
+            onChange={(e) => setN(Number(e.target.value))}
+            disabled={max <= 1}
+            className="mt-2 w-full cursor-grab accent-lime-400 active:cursor-grabbing"
+          />
+          <p className="mt-1 text-xs text-ink-300">
+            {dispo} question{dispo > 1 ? "s" : ""} disponible{dispo > 1 ? "s" : ""} pour ce choix.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={lancer}
+          disabled={dispo === 0}
+          className="inline-flex min-h-12 items-center gap-2.5 rounded-[14px] bg-lime-400 px-6 text-[15px] font-extrabold text-ink-950 transition-colors hover:bg-lime-300 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Commencer l&apos;examen blanc
+          <Icon name="arrow" className="size-4" />
+        </button>
+      </div>
+    </section>
+  );
 }
 
 const boutonClair =
   "inline-flex min-h-12 items-center gap-2 rounded-[14px] border border-ink-200 bg-white px-4 text-sm font-bold text-ink-950 transition-colors hover:bg-ink-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-ink-700 dark:bg-ink-900 dark:text-white dark:hover:bg-ink-800";
 
-function SessionQcm({ qcmId }) {
-  const qcm = getQcm(qcmId);
+function SessionQcm({ qcmId, qcm: fourni }) {
+  const qcm = fourni ?? getQcm(qcmId);
 
   const total = qcm?.questions.length ?? 0;
   const tempsImparti = useMemo(() => (qcm ? dureeEnSecondes(qcm.duree) : 300), [qcm]);
@@ -509,9 +623,13 @@ function SessionQcm({ qcmId }) {
     // progression, src/analyseMatieres.js).
     const detail = qcm.questions.map((q, i) => ({ correct: reponses[i] === q.bonne }));
     enregistrerScore(qcm.id, score, total, ecoule, detail);
-    // Les réponses, anonymes, pour les statistiques de l'admin (sauf refus).
-    envoyerStats(qcm, qcm.questions.map((_, i) => reponses[i]));
-    setRevision(noterTentative(qcm.id, total > 0 && (score / total) * 100 >= SEUIL_REUSSITE));
+    // L'examen blanc change à chaque tirage : ni statistiques ni
+    // révision espacée, seulement son score (et le jour d'activité).
+    if (!qcm.blanc) {
+      // Les réponses, anonymes, pour les statistiques de l'admin (sauf refus).
+      envoyerStats(qcm, qcm.questions.map((_, i) => reponses[i]));
+      setRevision(noterTentative(qcm.id, total > 0 && (score / total) * 100 >= SEUIL_REUSSITE));
+    }
     setTermine(true);
     setAlerteFin(false);
   }, [qcm, termine, tempsImparti, restant, score, total, reponses]);
@@ -524,8 +642,11 @@ function SessionQcm({ qcmId }) {
   }, [termine, qcm]);
 
   // Temps écoulé : le questionnaire se clôture tout seul.
+  // (Juste après l'affichage, pour ne pas enchaîner les rendus.)
   useEffect(() => {
-    if (restant === 0 && !termine && qcm) terminer();
+    if (restant !== 0 || termine || !qcm) return undefined;
+    const fin = setTimeout(terminer, 0);
+    return () => clearTimeout(fin);
   }, [restant, termine, qcm, terminer]);
 
   if (!qcm) {
@@ -579,7 +700,9 @@ function SessionQcm({ qcmId }) {
       <header className={PRUNE} style={QUADRILLAGE}>
         <Container className="flex flex-wrap items-end justify-between gap-5 pt-10 pb-10">
           <div className="min-w-0">
-            <p className={cx("text-xs font-medium text-lime-400", mono)}>{nomMatiere(qcm.matiere).toUpperCase()}</p>
+            <p className={cx("text-xs font-medium text-lime-400", mono)}>
+              {qcm.blanc ? (qcm.matieres ?? []).map((m) => nomMatiere(m)).join(" · ").toUpperCase() : nomMatiere(qcm.matiere).toUpperCase()}
+            </p>
             <h1 className="mt-3 text-[clamp(2.2rem,5.5vw,4rem)] leading-[0.95] font-extrabold tracking-[-0.045em] text-balance">{qcm.titre}</h1>
           </div>
           <Link
@@ -864,6 +987,8 @@ function EcranResultat({ qcm, score, total, temps, reponses, detailsVisibles, ba
                 Terminer
               </Link>
             </div>
+            {/* Un QCM réussi se partage (image sans donnée personnelle). */}
+            {reussi && <PartageResultat titre={qcm.titre} taux={taux} score={score} total={total} className="mt-4" />}
             <p className={cx("mt-5 text-[13px]", TEXTE_PRUNE)}>
               Seuil de réussite : {SEUIL_REUSSITE} %. Chaque bonne réponse vaut {POINTS_PAR_QUESTION} points.
             </p>
@@ -944,9 +1069,15 @@ function EcranResultat({ qcm, score, total, temps, reponses, detailsVisibles, ba
             </ol>
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              <Link to={`/cours/${qcm.matiere}`} className={boutonClair}>
-                Revoir le cours{matiere ? ` de ${matiere.nomCourt}` : ""}
-              </Link>
+              {qcm.matiere ? (
+                <Link to={`/cours/${qcm.matiere}`} className={boutonClair}>
+                  Revoir le cours{matiere ? ` de ${matiere.nomCourt}` : ""}
+                </Link>
+              ) : (
+                <Link to="/qcm#examen-blanc" className={boutonClair}>
+                  Nouvel examen blanc
+                </Link>
+              )}
               <Link to="/qcm" className="px-2 text-sm font-bold text-ink-800 underline underline-offset-4 hover:text-ink-950 dark:text-ink-200 dark:hover:text-white">
                 Choisir un autre QCM
               </Link>

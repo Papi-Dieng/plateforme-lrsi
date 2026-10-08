@@ -3,23 +3,25 @@
    sur un cours téléversé en PDF.
 
    pdf.js n'est chargé qu'ici, dans l'espace admin et au moment de
-   l'extraction, depuis jsDelivr : les étudiants ne le téléchargent
-   jamais, et la version hors ligne n'en porte pas le poids.
+   l'extraction : il est rangé avec le site (pdfjs-dist, plus aucun CDN
+   depuis le 8 octobre 2026), les étudiants ne le téléchargent jamais,
+   et la version hors ligne n'en porte pas le poids.
 
    Un PDF scanné (des photos de pages) ne contient pas de texte : on
    renvoie alors une chaîne vide, et l'admin en est prévenu.
    ================================================================== */
 
-const VERSION = "6.3.289";
-const BASE = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${VERSION}/build`;
 const MAX_CARACTERES = 30000;
 
 export async function extraireTextePdf(fichier) {
-  const pdfjs = await import(/* @vite-ignore */ `${BASE}/pdf.min.mjs`);
-  pdfjs.GlobalWorkerOptions.workerSrc = `${BASE}/pdf.worker.min.mjs`;
+  const [pdfjs, { default: ouvrier }] = await Promise.all([
+    import("pdfjs-dist"),
+    import("pdfjs-dist/build/pdf.worker.min.mjs?url"),
+  ]);
+  pdfjs.GlobalWorkerOptions.workerSrc = ouvrier;
 
   // On libère le PDF par la tâche de chargement : c'est elle qui porte
-  // `destroy` dans pdf.js 6, pas le document.
+  // `destroy`, pas le document.
   const chargement = pdfjs.getDocument({ data: await fichier.arrayBuffer() });
   try {
     return await lireTexte(await chargement.promise);

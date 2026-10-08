@@ -47,10 +47,24 @@ function applicationInstallable() {
       this.emitFile({ type: 'asset', fileName: 'manifest.webmanifest', source: JSON.stringify(manifeste, null, 2) })
 
       const publics = ['logo.svg', 'manifest.webmanifest', ...readdirSync('public/icones').map((f) => `icones/${f}`)]
-      const fichiers = ['./', './index.html', ...Object.keys(bundle), ...publics]
-        // pdf.js (couvertures des livres en PDF) pèse 1,7 Mo : il n'est
-        // pas mis en cache d'avance, seulement chargé quand il sert.
-        .filter((f, i, liste) => liste.indexOf(f) === i && !f.endsWith('.map') && !/pdf\.worker|couverturePdf/.test(f))
+      // Ce qui ne sert à rien hors ligne n'est pas téléchargé d'avance (il
+      // se charge normalement, en ligne, quand on en a besoin) :
+      // - pdf.js, pour les couvertures des livres en PDF (1,7 Mo) ;
+      // - Supabase : les comptes ne marchent pas sans réseau ;
+      // - l'espace admin, réservé à l'auteur et qui publie en ligne.
+      // On regarde les modules de chaque morceau, pas son nom.
+      const EN_LIGNE =
+        /node_modules[\\/](@supabase|pdfjs-dist|tslib|iceberg-js)|src[\\/](couverturePdf|sessionAdmin|banc-ia-questions|extrairePdf|textesAgent|quizTexte|pages[\\/](GestionContenu|EducationIA|StatsAdmin|BancSite|Admin|gestionContenu[\\/])|components[\\/](LayoutAdmin|ConnexionAdmin|BancSite|AssistantAdmin|Apercu|QuizEnTexte))/
+      const enLigneSeulement = (nom) => {
+        if (/pdf\.worker/.test(nom)) return true
+        const morceau = bundle[nom]
+        // Un morceau vide (simple façade) se juge à son module d'entrée.
+        const modules =
+          morceau?.type === 'chunk' ? [...Object.keys(morceau.modules ?? {}), morceau.facadeModuleId].filter(Boolean) : []
+        return modules.length > 0 && modules.every((id) => EN_LIGNE.test(id))
+      }
+      const fichiers = ['./', './index.html', ...Object.keys(bundle).filter((f) => !enLigneSeulement(f)), ...publics]
+        .filter((f, i, liste) => liste.indexOf(f) === i && !f.endsWith('.map'))
         .map((f) => (f.startsWith('./') ? f : `./${f}`))
       const version = createHash('sha256').update(fichiers.join('|')).digest('hex').slice(0, 12)
       const source = readFileSync('pwa/sw-modele.js', 'utf8')

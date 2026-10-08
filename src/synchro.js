@@ -29,7 +29,7 @@ export const CLE_RESERVE = "lrsi-synchro-en-attente";
 const INTERVALLE = 15_000;
 
 // Données rangées par identifiant : { id: { …, date } }.
-const DICTIONNAIRES = [CLES.scores, CLES.exercices, CLES.chapitresLus, CLE_REVISIONS, CLE_CONVERSATIONS];
+const DICTIONNAIRES = [CLES.scores, CLES.exercices, CLES.chapitresLus, CLES.devoirs, CLE_REVISIONS, CLE_CONVERSATIONS];
 // Listes : favoris, vidéos vues.
 const LISTES = [CLES.favoris, CLES.videosVues];
 

@@ -6,6 +6,7 @@ import LecteurPdf from "../components/LecteurPdf";
 import { ChoixReponse, RepondreAvecIA } from "../components/RepondreExercice";
 import { questionsDe } from "../questionsExercice";
 import { corrigerExercice, iaActive, raisonEchec } from "../ia";
+import { enregistrerDevoir } from "../progression";
 import { Container, EtatVide } from "../components/ui";
 import { cx } from "../components/classes";
 import { mono } from "../components/styleAdmin";
@@ -357,6 +358,8 @@ export function ExamenSession() {
   // Ce qui est écrit sous chaque partie, et la correction de chacune.
   const ecrit = useRef({});
   const [corrections, setCorrections] = useState({});
+  // La note est gardée dans l'historique une fois, quand l'IA a tout noté.
+  const noteGardee = useRef(false);
 
   // Un seul minuteur, qui ne tourne que pendant l'épreuve. Le temps
   // restant se calcule depuis l'heure de fin : il reste juste même si
@@ -372,6 +375,22 @@ export function ExamenSession() {
 
   const total = useMemo(() => (examen ? totalPoints(examen) : 0), [examen]);
   const obtenu = Object.values(notes).reduce((n, v) => n + (Number(v) || 0), 0);
+
+  // Devoir terminé et entièrement noté par l'IA : la note rejoint
+  // l'historique (Ma progression). Rien d'écrit, rien n'est gardé.
+  const toutNote =
+    Boolean(examen) &&
+    etape === "corrige" &&
+    examen.format !== "pdf" &&
+    Object.keys(corrections).length > 0 &&
+    examen.parties.every((p, i) => !p.corrige || (notes[i] != null && !corrections[i]?.attente));
+  useEffect(() => {
+    if (!toutNote || noteGardee.current) return;
+    noteGardee.current = true;
+    const totalDevoir = examen.parties.reduce((n, p) => n + (p.corrige ? p.points : 0), 0);
+    const note = examen.parties.reduce((n, p, i) => n + (p.corrige ? Number(notes[i]) || 0 : 0), 0);
+    enregistrerDevoir({ devoir: examen.id, titre: examen.titre, note, total: totalDevoir });
+  }, [toutNote, examen, notes]);
 
   if (!examen) {
     return (
@@ -422,6 +441,7 @@ export function ExamenSession() {
     });
   };
   const corrigeEnCours = Object.values(corrections).some((c) => c.attente);
+
   const nonNotees = examen.format === "pdf"
     ? 0
     : examen.parties.filter((p, i) => p.corrige && notes[i] == null && !corrections[i]?.attente).length;
@@ -623,6 +643,7 @@ export function ExamenSession() {
                   onClick={() => {
                     setNotes({});
                     setCorrections({});
+                    noteGardee.current = false;
                     setEtape("consignes");
                   }}
                   className={cx("inline-flex min-h-12 items-center gap-2 rounded-[14px] px-5 text-[15px] font-extrabold transition-colors hover:brightness-105", AMBRE)}

@@ -12,6 +12,8 @@ export const CLES = {
   favoris: "lrsi-favoris",
   videosVues: "lrsi-videos-vues",
   chapitresLus: "lrsi-chapitres-lus",
+  // Chaque devoir terminé et noté par l'IA : { tentative: { devoir, titre, note, total, date } }.
+  devoirs: "lrsi-devoirs",
 };
 
 function lire(cle, defaut) {
@@ -223,6 +225,36 @@ export function marquerVideoVue(id) {
 /* ---------------------------------------------------------------- */
 /* Remise à zéro                                                     */
 /* ---------------------------------------------------------------- */
+
+/* L'historique des devoirs : une entrée par tentative notée. Un
+   dictionnaire (et non une liste) pour que la synchronisation des
+   comptes fusionne les tentatives de deux appareils sans doublon. */
+export function lireDevoirs() {
+  const brut = lire(CLES.devoirs, {});
+  return brut && typeof brut === "object" && !Array.isArray(brut) ? brut : {};
+}
+
+export function enregistrerDevoir({ devoir, titre, note, total }) {
+  const devoirs = lireDevoirs();
+  const date = new Date().toISOString();
+  devoirs[`${devoir}@${date}`] = { devoir, titre, note, total, date };
+  ecrire(CLES.devoirs, devoirs);
+  return devoirs;
+}
+
+/* Les tentatives, regroupées par devoir, de la plus ancienne à la plus
+   récente : { devoir, titre, total, tentatives: [{ note, date }] }. */
+export function historiqueDevoirs(devoirs = lireDevoirs()) {
+  const groupes = {};
+  for (const t of Object.values(devoirs)) {
+    if (!t?.devoir || typeof t.note !== "number" || !(t.total > 0)) continue;
+    groupes[t.devoir] ??= { devoir: t.devoir, titre: t.titre, total: t.total, tentatives: [] };
+    groupes[t.devoir].tentatives.push({ note: t.note, total: t.total, date: t.date });
+  }
+  return Object.values(groupes)
+    .map((g) => ({ ...g, tentatives: g.tentatives.sort((a, b) => String(a.date).localeCompare(String(b.date))) }))
+    .sort((a, b) => String(b.tentatives.at(-1).date).localeCompare(String(a.tentatives.at(-1).date)));
+}
 
 export function reinitialiserProgression() {
   try {

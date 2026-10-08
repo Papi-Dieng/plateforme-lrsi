@@ -79,6 +79,12 @@ test.describe("devoir", () => {
     await expect(partie.getByText(`3 / ${devoir.parties[0].points}`)).toBeVisible();
     await expect(page.getByRole("spinbutton")).toHaveCount(0);
     await expect(page.getByText("Ma note, donnée par l'IA").locator("..")).toContainText(`3 / ${total}`);
+
+    // La note rejoint l'historique des devoirs, dans Ma progression.
+    await aller(page, "/progression");
+    const historique = page.locator("section").filter({ has: page.getByRole("heading", { name: "Mes devoirs" }) });
+    await expect(historique).toContainText(devoir.titre);
+    await expect(historique).toContainText("1 tentative");
   });
 
   test("la façon de répondre se choisit avant de commencer, pour toutes les parties", async ({ page }) => {

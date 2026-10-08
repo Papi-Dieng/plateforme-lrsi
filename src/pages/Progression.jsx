@@ -8,6 +8,8 @@ import {
   lireExercicesTravailles,
   lireFavoris,
   lireScores,
+  lireDevoirs,
+  historiqueDevoirs,
   pourcent,
   reinitialiserProgression,
 } from "../progression";
@@ -267,6 +269,108 @@ function Jauge({ valeur, t = 1, objectif = null }) {
   );
 }
 
+/* L'évolution d'un devoir : une petite courbe, un point par tentative,
+   chacun avec son infobulle (date et note). */
+function Courbe({ tentatives }) {
+  const L = 160;
+  const H = 44;
+  const n = tentatives.length;
+  const pts = tentatives.map((t, i) => ({
+    x: n === 1 ? L / 2 : 8 + ((L - 16) * i) / (n - 1),
+    y: H - 6 - ((H - 12) * t.note) / t.total,
+    t,
+  }));
+  return (
+    <span className="relative block h-11 w-40 shrink-0">
+      <svg viewBox={`0 0 ${L} ${H}`} className="absolute inset-0 size-full overflow-visible" aria-hidden="true">
+        <line x1="0" x2={L} y1={H / 2} y2={H / 2} stroke="#f1edf5" strokeDasharray="3 4" />
+        {n > 1 && (
+          <polyline
+            points={pts.map((p) => `${p.x},${p.y}`).join(" ")}
+            fill="none"
+            stroke="url(#pg-courbe)"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            pathLength={1}
+            className="ligne-trace"
+          />
+        )}
+        <defs>
+          <linearGradient id="pg-courbe" x1="0" x2="1">
+            <stop offset="0" stopColor="#9b6bff" />
+            <stop offset="1" stopColor="#ff8fb3" />
+          </linearGradient>
+        </defs>
+      </svg>
+      {pts.map((p, i) => (
+        <span
+          key={i}
+          tabIndex={0}
+          className="group/b absolute size-3 -translate-1/2 cursor-default rounded-full border-2 border-white bg-[#6b45e8] shadow outline-none transition-transform hover:scale-150 focus-visible:scale-150"
+          style={{ left: `${(p.x / L) * 100}%`, top: `${(p.y / H) * 100}%` }}
+        >
+          <Bulle>
+            {dateLisible(p.t.date)} : {p.t.note} / {p.t.total}
+          </Bulle>
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function CarteDevoirs({ historique }) {
+  const sur20 = (note, total) => Math.round((note / total) * 200) / 10;
+  return (
+    <section className={cx(CARTE, "apparition")} style={{ animationDelay: "500ms" }}>
+      <TitreCarte icone="file" ton="bg-[#fff1d6] text-[#7a4b00]" titre="Mes devoirs" texte="Chaque devoir terminé, noté par l'IA : ta dernière note, ta meilleure, et ton évolution." />
+      {historique.length === 0 ? (
+        <p className={cx("mt-5 text-sm", DOUX)}>
+          Aucun devoir noté pour l'instant.{" "}
+          <Link to="/examens" className="font-bold text-[#5434c9] underline dark:text-[#b9a4ff]">
+            En faire un
+          </Link>
+          .
+        </p>
+      ) : (
+        <ul className="mt-5 space-y-3">
+          {historique.map((g) => {
+            const derniere = g.tentatives.at(-1);
+            const meilleure = g.tentatives.reduce((m, t) => (t.note / t.total > m.note / m.total ? t : m));
+            const avant = g.tentatives.at(-2);
+            const ecart = avant ? sur20(derniere.note, derniere.total) - sur20(avant.note, avant.total) : null;
+            return (
+              <li key={g.devoir} className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-[20px] bg-[#fbf7f5] p-4 transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-md dark:bg-white/5">
+                <span className="min-w-0 flex-1">
+                  <Link to={`/examens/${g.devoir}`} className={cx("block truncate font-extrabold hover:underline", ENCRE)}>
+                    {g.titre}
+                  </Link>
+                  <span className={cx("block text-xs", DOUX)}>
+                    {g.tentatives.length} tentative{g.tentatives.length > 1 ? "s" : ""} · meilleure : {meilleure.note} / {meilleure.total}
+                  </span>
+                </span>
+                <Courbe tentatives={g.tentatives} />
+                <span className="text-right">
+                  <span className={cx("block text-2xl font-extrabold", ENCRE)}>
+                    {derniere.note}
+                    <span className={cx("text-sm", DOUX)}> / {derniere.total}</span>
+                  </span>
+                  <span className={cx("block text-xs font-bold", ecart > 0 ? "text-[#3b7d1f] dark:text-[#8fdc6a]" : ecart < 0 ? "text-[#b52a5e] dark:text-[#ff8fb3]" : DOUX)}>
+                    {ecart == null ? `soit ${sur20(derniere.note, derniere.total)} / 20` : ecart === 0 ? "comme la fois d'avant" : `${ecart > 0 ? "+" : ""}${ecart} sur 20 depuis la fois d'avant`}
+                  </span>
+                </span>
+                <Link to={`/examens/${g.devoir}`} className="rounded-full bg-[#5434c9] px-4 py-2 text-xs font-extrabold text-white transition-transform hover:scale-105">
+                  Refaire
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 /* Le détail d'une matière dépliée : ce qui est fait, ce qui reste. */
 function DetailMatiere({ m, exercicesFaits, scores }) {
   const exos = exercices.filter((e) => e.matiere === m.id);
@@ -310,12 +414,14 @@ function DetailMatiere({ m, exercicesFaits, scores }) {
 
 export default function Progression() {
   const [scores, setScores] = useState(lireScores);
+  const [devoirs, setDevoirs] = useState(lireDevoirs);
   const [exercicesFaits, setExercicesFaits] = useState(lireExercicesTravailles);
   const [favoris, setFavoris] = useState(lireFavoris);
   const [confirmation, setConfirmation] = useState(false);
 
   const charger = () => {
     setScores(lireScores());
+    setDevoirs(lireDevoirs());
     setExercicesFaits(lireExercicesTravailles());
     setFavoris(lireFavoris());
   };
@@ -347,7 +453,11 @@ export default function Progression() {
   /* ---- Régularité, sur les deux dernières semaines ---- */
 
   const activite = useMemo(() => {
-    const dates = [...Object.values(scores).map((s) => s.date), ...Object.values(exercicesFaits).map((e) => e.date)].filter(Boolean);
+    const dates = [
+      ...Object.values(scores).map((s) => s.date),
+      ...Object.values(exercicesFaits).map((e) => e.date),
+      ...Object.values(devoirs).map((d) => d.date),
+    ].filter((d) => typeof d === "string");
     const joursActifs = new Set(dates.map((iso) => iso.slice(0, 10)));
     const jours = [];
     for (let i = JOURS_SUIVIS - 1; i >= 0; i -= 1) {
@@ -356,8 +466,26 @@ export default function Progression() {
       const cle = d.toISOString().slice(0, 10);
       jours.push({ cle, actif: joursActifs.has(cle), date: d });
     }
-    return { jours, total: jours.filter((j) => j.actif).length };
-  }, [scores, exercicesFaits]);
+    // La série : les jours d'affilée avec au moins une activité, jusqu'à
+    // aujourd'hui (ou hier : la série n'est perdue qu'à minuit). Et le
+    // record, la plus longue série jamais faite.
+    const cleDu = (decalage) => {
+      const d = new Date();
+      d.setDate(d.getDate() - decalage);
+      return d.toISOString().slice(0, 10);
+    };
+    let serie = 0;
+    for (let k = joursActifs.has(cleDu(0)) ? 0 : 1; joursActifs.has(cleDu(k)); k += 1) serie += 1;
+    const tries = [...joursActifs].sort();
+    let record = 0;
+    let courant = 0;
+    tries.forEach((j, i) => {
+      const veille = i > 0 && (new Date(j) - new Date(tries[i - 1])) / 86400000 === 1;
+      courant = veille ? courant + 1 : 1;
+      record = Math.max(record, courant);
+    });
+    return { jours, total: jours.filter((j) => j.actif).length, serie, record, aujourdhui: joursActifs.has(cleDu(0)) };
+  }, [scores, exercicesFaits, devoirs]);
 
   /* ---- Par matière ---- */
 
@@ -532,9 +660,28 @@ export default function Progression() {
         <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
           <section className={cx(CARTE, "apparition")} style={{ animationDelay: "90ms" }}>
             <TitreCarte icone="clock" ton="bg-[#ffe6ef] text-[#b52a5e]" titre="Régularité" texte={`Tes ${JOURS_SUIVIS} derniers jours.`}>
-              <p className={cx("self-end text-sm font-bold", ENCRE)}>
-                {activite.total} jour{activite.total > 1 ? "s" : ""} actif{activite.total > 1 ? "s" : ""}
-              </p>
+              <div className="flex items-center gap-2 self-end">
+                <span
+                  tabIndex={0}
+                  className={cx(
+                    "group/b relative inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-extrabold outline-none focus-visible:ring-2 focus-visible:ring-[#e8579c]",
+                    activite.serie > 0 ? "bg-gradient-to-r from-[#ff8fb3] to-[#ffb38c] text-[#22183d]" : "bg-[#f1edf5] text-[#4a4163] dark:bg-white/10 dark:text-ink-200"
+                  )}
+                >
+                  <Icon name="rocket" className="size-4" />
+                  {activite.serie} jour{activite.serie > 1 ? "s" : ""} d&apos;affilée
+                  <Bulle>
+                    {activite.serie === 0
+                      ? "Travaille aujourd'hui pour lancer ta série"
+                      : activite.aujourdhui
+                        ? `Record : ${activite.record} jour${activite.record > 1 ? "s" : ""}`
+                        : "Travaille aujourd'hui pour ne pas la perdre"}
+                  </Bulle>
+                </span>
+                <span className={cx("text-sm font-bold", ENCRE)}>
+                  {activite.total} jour{activite.total > 1 ? "s" : ""} actif{activite.total > 1 ? "s" : ""}
+                </span>
+              </div>
             </TitreCarte>
             <ol className="mt-6 grid grid-cols-7 gap-1.5 sm:grid-cols-14">
               {activite.jours.map((j, n) => (
@@ -561,7 +708,7 @@ export default function Progression() {
                 </li>
               ))}
             </ol>
-            <p className={cx("mt-4 text-xs", DOUX)}>Une case s'allume dès qu'un exercice ou un QCM a été travaillé ce jour-là.</p>
+            <p className={cx("mt-4 text-xs", DOUX)}>Une case s'allume dès qu'un exercice, un QCM ou un devoir a été travaillé ce jour-là.</p>
           </section>
 
           <section className={cx(CARTE, "apparition")} style={{ animationDelay: "180ms" }}>
@@ -762,6 +909,9 @@ export default function Progression() {
             )}
           </section>
         </div>
+
+        {/* ---- Mes devoirs ---- */}
+        <CarteDevoirs historique={historiqueDevoirs(devoirs)} />
 
         {/* ---- Chapitres à revoir et priorités ---- */}
         <div className="grid items-start gap-5 lg:grid-cols-[1.6fr_1fr]">

@@ -781,3 +781,32 @@ describe("secours des comptes téléphone", () => {
     expect(await r.json()).toEqual({ erreur: "email-non-configure" });
   });
 });
+
+describe("fiche de révision d'un chapitre", () => {
+  const cours = "Le modèle OSI compte sept couches. La couche réseau achemine les paquets d'une machine à l'autre grâce à l'adressage IP.";
+  const fiche = (c) => relais.fetch(demande("/fiche-revision", { corps: c }), env());
+
+  test("renvoie les points clés et les définitions, tirés du seul cours", async () => {
+    geminiRepond(JSON.stringify({ points: ["Le modèle OSI a sept couches."], definitions: [{ terme: "Couche réseau", sens: "Achemine les paquets." }], extra: "non" }));
+    const r = await fiche({ titre: "Modèle OSI", texte: cours });
+    expect(r.status).toBe(200);
+    expect(await r.json()).toEqual({ points: ["Le modèle OSI a sept couches."], definitions: [{ terme: "Couche réseau", sens: "Achemine les paquets." }] });
+    const [appel] = appelsGemini;
+    expect(appel.corps.systemInstruction.parts[0].text).toContain("SEULE source");
+    expect(appel.corps.contents[0].parts[0].text).toContain(`<cours>
+${cours}
+</cours>`);
+  });
+
+  test("un cours trop court ou sans titre est refusé sans appeler l'IA", async () => {
+    geminiRepond("ne doit pas servir");
+    expect((await fiche({ titre: "OSI", texte: "trop court" })).status).toBe(400);
+    expect((await fiche({ texte: cours })).status).toBe(400);
+    expect(appelsGemini).toHaveLength(0);
+  });
+
+  test("une fiche sans aucun point est refusée", async () => {
+    geminiRepond(JSON.stringify({ points: [], definitions: [] }));
+    expect((await fiche({ titre: "OSI", texte: cours })).status).toBe(502);
+  });
+});

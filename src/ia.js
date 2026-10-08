@@ -266,6 +266,19 @@ export function textesExercice(e) {
   };
 }
 
+/* La fiche de révision d'un chapitre, tirée du seul texte du cours
+   (serveur-ia/fiches.js) : { points: [..], definitions: [{ terme, sens }] }. */
+export async function ficheRevision({ titre, texte }) {
+  const r = await fetch(new URL("/fiche-revision", site.urlIA), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ titre, texte }),
+  });
+  const donnees = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(donnees.erreur ?? `statut ${r.status}`);
+  return donnees;
+}
+
 // `bareme` (devoirs seulement) : la partie est notée, l'IA renvoie aussi `points`.
 export async function corrigerExercice({ enonce, corrige, reponse, bareme }) {
   const r = await fetch(new URL("/corriger-exercice", site.urlIA), {

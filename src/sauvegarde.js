@@ -40,6 +40,7 @@ export const DONNEES = [
   // Exercices travaillés : { identifiant: { date } }, pas une liste.
   { cle: CLES.exercices, libelle: (n) => `${n} exercice${n > 1 ? "s" : ""} travaillé${n > 1 ? "s" : ""}`, valide: estObjet, compter: (v) => Object.keys(v).length },
   { cle: CLES.chapitresLus, libelle: (n) => `${n} chapitre${n > 1 ? "s" : ""} lu${n > 1 ? "s" : ""}`, valide: estObjet, compter: (v) => Object.keys(v).length },
+  { cle: CLES.devoirs, libelle: (n) => `${n} devoir${n > 1 ? "s" : ""} noté${n > 1 ? "s" : ""}`, valide: estObjet, compter: (v) => Object.keys(v).length },
   { cle: CLES.favoris, libelle: (n) => `${n} favori${n > 1 ? "s" : ""}`, valide: Array.isArray, compter: (v) => v.length },
   { cle: CLES.videosVues, libelle: (n) => `${n} vidéo${n > 1 ? "s" : ""} vue${n > 1 ? "s" : ""}`, valide: Array.isArray, compter: (v) => v.length },
   { cle: CLE_PLANNING, libelle: () => "ton planning de révision", valide: estObjet, compter: () => 1 },
