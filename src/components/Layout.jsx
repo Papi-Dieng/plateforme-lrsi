@@ -315,7 +315,7 @@ function Cloche() {
       </button>
 
       {ouvert && (
-        <div className="absolute top-12 right-0 z-40 w-80 rounded-2xl border border-ink-200 bg-white p-2 shadow-xl dark:border-ink-700 dark:bg-ink-900">
+        <div role="region" aria-label="Notifications du jour" className="absolute top-12 right-0 z-40 w-80 rounded-2xl border border-ink-200 bg-white p-2 shadow-xl dark:border-ink-700 dark:bg-ink-900">
           <p className="px-3 pt-2 pb-1 text-xs font-semibold tracking-wide text-ink-500 uppercase dark:text-ink-400">
             Aujourd&apos;hui
           </p>

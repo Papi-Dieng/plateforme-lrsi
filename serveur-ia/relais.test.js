@@ -183,6 +183,29 @@ describe("correction d'un exercice par l'IA", () => {
     ]);
   });
 
+  test("un devoir envoie son barème : l'IA donne des points, bornés et arrondis au demi-point", async () => {
+    geminiRepond(JSON.stringify({ verdict: "partiel", justes: ["Le masque est juste."], erreurs: ["Il manque la diffusion."], points: 5.7 }));
+    const r = await corriger({ ...corps, bareme: 8 });
+    expect(await r.json()).toMatchObject({ verdict: "partiel", points: 5.5 });
+    expect(appelsGemini[0].corps.systemInstruction.parts[0].text).toContain("notée sur 8 points");
+    expect(appelsGemini[0].corps.generationConfig.responseSchema.required).toContain("points");
+  });
+
+  test("les points restent cohérents avec le verdict, et un exercice n'en a jamais", async () => {
+    geminiRepond(
+      JSON.stringify({ verdict: "juste", justes: ["Tout."], erreurs: [], points: 2 }),
+      JSON.stringify({ verdict: "faux", justes: [], erreurs: ["Rien."], points: 30 }),
+      JSON.stringify({ verdict: "partiel", justes: ["Un peu."], erreurs: ["Le reste."] }),
+      JSON.stringify({ verdict: "juste", justes: ["Tout."], erreurs: [], points: 4 })
+    );
+    expect((await (await corriger({ ...corps, bareme: 4 })).json()).points).toBe(4);
+    expect((await (await corriger({ ...corps, bareme: 4 })).json()).points).toBe(1);
+    expect((await (await corriger({ ...corps, bareme: 5 })).json()).points).toBe(2.5);
+    const exercice = await (await corriger()).json();
+    expect(exercice).not.toHaveProperty("points");
+    expect(appelsGemini[3].corps.systemInstruction.parts[0].text).not.toContain("notée sur");
+  });
+
   test("un verdict inconnu n'est jamais pris pour « juste »", async () => {
     geminiRepond(JSON.stringify({ verdict: "excellent", justes: [], erreurs: [] }));
     const r = await corriger();

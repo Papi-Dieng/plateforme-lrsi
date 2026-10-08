@@ -223,6 +223,8 @@ const nettoyerRessource = (r) => ({
   statut: unParmi(r?.statut, ["libre", "attente"], "attente"),
   url: lien(r?.url) || null,
   pdf: pdfValide(r?.pdf),
+  // L'image de la couverture, si l'auteur en donne une (https seulement).
+  couverture: lien(r?.couverture) || null,
   note: texte(r?.note, 600),
 });
 

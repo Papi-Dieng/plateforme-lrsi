@@ -37,7 +37,8 @@ test.describe("cloche", () => {
     await expect(page.getByText("Examen de Réseaux")).toBeVisible();
     await expect(page.getByText("Demain")).toBeVisible();
 
-    await page.getByRole("link", { name: /Refaire le QCM « Réseaux : les fondamentaux »/ }).click();
+    // Le même lien existe dans « À revoir aujourd'hui » : celui de la cloche.
+    await page.getByRole("region", { name: "Notifications du jour" }).getByRole("link", { name: /Refaire le QCM « Réseaux : les fondamentaux »/ }).click();
     await expect(page).toHaveURL(/#\/qcm\/reseaux-bases$/);
   });
 });

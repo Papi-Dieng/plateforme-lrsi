@@ -51,7 +51,7 @@ test.describe("devoir", () => {
       const entetes = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*" };
       if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: entetes });
       envois.push(route.request().postDataJSON());
-      return route.fulfill({ headers: entetes, json: { verdict: "partiel", justes: ["Les sept couches correspondent au corrigé."], erreurs: ["La question 2 ne correspond pas."] } });
+      return route.fulfill({ headers: entetes, json: { verdict: "partiel", justes: ["Les sept couches correspondent au corrigé."], erreurs: ["La question 2 ne correspond pas."], points: 3 } });
     });
     await entrerEnInvite(page);
     await aller(page, `/examens/${devoir.id}`);
@@ -73,10 +73,12 @@ test.describe("devoir", () => {
     expect(envois).toHaveLength(1);
     expect(envois[0]).toMatchObject({ enonce: devoir.parties[0].enonce, corrige: devoir.parties[0].corrige });
     expect(envois[0].reponse).toContain("Réponse : Physique, liaison, réseau");
-    // La note se remplit seule (presque juste = la moitié), sans case à remplir.
-    await expect(partie.getByText(`${devoir.parties[0].points / 2} / ${devoir.parties[0].points}`)).toBeVisible();
+    // Le barème de la partie part avec la réponse ; l'IA rend ses points
+    // (ici 3), et la note se remplit seule, sans case à remplir.
+    expect(envois[0].bareme).toBe(devoir.parties[0].points);
+    await expect(partie.getByText(`3 / ${devoir.parties[0].points}`)).toBeVisible();
     await expect(page.getByRole("spinbutton")).toHaveCount(0);
-    await expect(page.getByText("Ma note, donnée par l'IA").locator("..")).toContainText(`${devoir.parties[0].points / 2} / ${total}`);
+    await expect(page.getByText("Ma note, donnée par l'IA").locator("..")).toContainText(`3 / ${total}`);
   });
 
   test("la façon de répondre se choisit avant de commencer, pour toutes les parties", async ({ page }) => {

@@ -182,7 +182,8 @@ export default function RepondreExercice({ exercice, mode, numero, ancre, onReus
      écrit (un devoir corrige toutes ses parties d'un coup) ;
    - `correction` : { attente, resultat, erreur } d'une correction lancée
      par la page ; le bouton ne réapparaît alors qu'en cas d'échec ;
-   - `onCorrige(resultat)` : appelé à chaque correction réussie. */
+   - `onCorrige(resultat)` : appelé à chaque correction réussie ;
+   - `bareme` : les points de la partie d'un devoir, pour que l'IA note. */
 export function RepondreAvecIA({
   id,
   enonce,
@@ -200,6 +201,7 @@ export function RepondreAvecIA({
   onReponse,
   correction,
   onCorrige,
+  bareme,
 }) {
   const [reponse, setReponse] = useState("");
   const [reponses, setReponses] = useState({});
@@ -230,7 +232,7 @@ export function RepondreAvecIA({
     setEtat({ attente: true, erreur: "" });
     setResultat(null);
     try {
-      const r = await corrigerExercice({ enonce, corrige, reponse: aEnvoyer });
+      const r = await corrigerExercice({ enonce, corrige, reponse: aEnvoyer, bareme });
       setResultat(r);
       setEtat({ attente: false, erreur: "" });
       onCorrige?.(r);

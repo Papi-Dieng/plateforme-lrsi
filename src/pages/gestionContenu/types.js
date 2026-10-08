@@ -109,6 +109,7 @@ export const TYPES = {
       statut: "attente",
       url: null,
       pdf: null,
+      couverture: null,
       note: "",
     }),
     titre: (r) => r.titre,

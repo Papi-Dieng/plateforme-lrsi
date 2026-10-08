@@ -2,6 +2,7 @@ import { useState } from "react";
 import Icon from "../../components/Icon";
 import { cx } from "../../components/classes";
 import { typesRessource } from "../../data/bibliotheque";
+import { useCouverture } from "../../couvertures";
 import { deplacer, extraireYoutube, optionsMatieres } from "./outils";
 import { Bouton, Champ, ChampPdf, Choix, ChoixFormat, Ordre, Zone } from "./champs";
 
@@ -281,6 +282,8 @@ export function EditeurRessource({ element: r, changer, matieres, motDePasse }) 
         )}
       </fieldset>
 
+      <ChampCouverture r={r} onChange={(couverture) => changer({ couverture })} />
+
       <label className="flex items-start gap-3 rounded-xl border border-ink-200 p-4 text-sm text-ink-700 dark:border-ink-800 dark:text-ink-300">
         <input
           type="checkbox"
@@ -291,6 +294,34 @@ export function EditeurRessource({ element: r, changer, matieres, motDePasse }) 
         Sa diffusion est autorisée : licence libre, ou accord écrit de son auteur. Sinon, elle reste en
         attente et les étudiants n'y ont pas accès.
       </label>
+    </div>
+  );
+}
+
+/* La couverture : une adresse d'image à coller, ou rien. Vide, le site
+   la trouve tout seul (src/couvertures.js : lien du livre, première page
+   du PDF, recherche par titre) ; l'aperçu montre ce qu'il trouvera. */
+function ChampCouverture({ r, onChange }) {
+  const apercu = useCouverture(r);
+  const [echec, setEchec] = useState(null);
+  return (
+    <div className="flex gap-4 rounded-xl border border-ink-200 p-4 dark:border-ink-800">
+      <div className="grid h-28 w-20 shrink-0 place-items-center overflow-hidden rounded-md bg-ink-100 text-center text-[11px] text-ink-600 dark:bg-ink-800 dark:text-ink-300">
+        {apercu && echec !== apercu ? (
+          <img src={apercu} alt="Aperçu de la couverture" onError={() => setEchec(apercu)} className="size-full object-cover" />
+        ) : (
+          "Couverture composée"
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <Champ
+          label="Couverture (facultatif)"
+          placeholder="https://…/couverture.jpg"
+          value={r.couverture ?? ""}
+          aide="L'adresse https d'une image. Laisse vide : la couverture est trouvée toute seule (lien du livre, première page du PDF, ou titre et auteur)."
+          onChange={(e) => onChange(e.target.value.trim() || null)}
+        />
+      </div>
     </div>
   );
 }

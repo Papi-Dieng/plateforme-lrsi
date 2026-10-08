@@ -29,7 +29,9 @@ import { themeMatiere } from "../data/couleurs";
    Dès qu'il appuie sur « Terminer », toutes les parties écrites partent
    à la correction en même temps, et la note se remplit seule : juste =
    tous les points, presque = la moitié, faux ou vide = 0 (demande du
-   7 octobre 2026). Depuis le 8 octobre, à la demande, l'étudiant ne
+   7 octobre 2026). Depuis le 8 octobre, le barème de la partie part
+   avec la réponse et l'IA rend ses points au demi-point près (6 / 8
+   par exemple) ; le verdict ne sert plus que si les points manquent. Depuis le 8 octobre, à la demande, l'étudiant ne
    saisit plus ses points : seule l'IA note. Si elle ne répond pas pour
    une partie, celle-ci reste « pas encore notée » et se relance sous la
    partie. Un devoir donné en PDF n'a pas de texte lisible par l'IA : il
@@ -392,8 +394,9 @@ export function ExamenSession() {
   // La note proposée pour une partie, d'après le verdict de l'IA.
   const pointsPour = (verdict, max) =>
     verdict === "juste" ? max : verdict === "partiel" ? Math.round(max) / 2 : 0;
-  const noterAuto = (i, verdict) => {
-    const n = pointsPour(verdict, examen.parties[i].points);
+  // Les points donnés par l'IA (au demi-point près) ; sinon, d'après le verdict.
+  const noterAuto = (i, verdict, points) => {
+    const n = typeof points === "number" ? points : pointsPour(verdict, examen.parties[i].points);
     setNotes((x) => ({ ...x, [i]: n }));
   };
 
@@ -410,10 +413,10 @@ export function ExamenSession() {
         return;
       }
       setCorrections((c) => ({ ...c, [i]: { attente: true } }));
-      corrigerExercice({ enonce: p.enonce, corrige: p.corrige, reponse: texte })
+      corrigerExercice({ enonce: p.enonce, corrige: p.corrige, reponse: texte, bareme: p.points })
         .then((r) => {
           setCorrections((c) => ({ ...c, [i]: { resultat: r } }));
-          noterAuto(i, r.verdict);
+          noterAuto(i, r.verdict, r.points);
         })
         .catch((e) => setCorrections((c) => ({ ...c, [i]: { erreur: raisonEchec(e.message) } })));
     });
@@ -572,7 +575,8 @@ export function ExamenSession() {
                     ecrit.current[i] = { texte, vide };
                   }}
                   correction={corrections[i]}
-                  onCorrige={(r) => noterAuto(i, r.verdict)}
+                  onCorrige={(r) => noterAuto(i, r.verdict, r.points)}
+                  bareme={p.points}
                 />
 
                 {etape === "corrige" && (

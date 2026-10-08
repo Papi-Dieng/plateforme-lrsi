@@ -266,11 +266,12 @@ export function textesExercice(e) {
   };
 }
 
-export async function corrigerExercice({ enonce, corrige, reponse }) {
+// `bareme` (devoirs seulement) : la partie est notée, l'IA renvoie aussi `points`.
+export async function corrigerExercice({ enonce, corrige, reponse, bareme }) {
   const r = await fetch(new URL("/corriger-exercice", site.urlIA), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ enonce, corrige, reponse }),
+    body: JSON.stringify({ enonce, corrige, reponse, ...(bareme && { bareme }) }),
   });
   const donnees = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(donnees.erreur ?? `statut ${r.status}`);
