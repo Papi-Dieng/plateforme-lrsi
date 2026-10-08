@@ -65,7 +65,8 @@ export const navigation = [
   { label: "Ma progression", to: "/progression" },
   { label: "Mon planning", to: "/planning" },
   { label: "Assistant IA", to: "/assistant" },
-  { label: "Le projet", to: "/projet" },
+  // « Le projet » (/projet) n'est plus dans le menu (8 octobre 2026) : la
+  // page reste accessible depuis le pied de page et l'accueil.
 ];
 
 // Entrées du menu déroulant, sous l'avatar de la barre du haut.
