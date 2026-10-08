@@ -15,7 +15,7 @@ import { matieres, nomMatiere } from "../data/matieres";
    couverture, trouvée par src/couvertures.js (image du site, lien du
    livre, ou recherche par titre). Sinon, ou si l'image ne vient pas,
    une couverture est composée à partir du titre. Les ressources en
-   attente d'autorisation gardent leur place, sans rien publier.
+   attente d'autorisation ne s'affichent pas (retirées le 8 octobre 2026).
    ================================================================== */
 
 const TEINTES = [
@@ -52,17 +52,16 @@ function Livre({ r, teinte }) {
 export default function Bibliotheque() {
   const [matiere, setMatiere] = useState("toutes");
 
-  const presentes = matieres.filter((m) => ressources.some((r) => r.matiere === m.id));
-  const options = [
-    { value: "toutes", label: "Toutes les matières", nombre: ressources.length },
-    ...presentes.map((m) => ({ value: m.id, label: m.nom, nombre: ressources.filter((r) => r.matiere === m.id).length })),
-  ];
   const garde = (r) => matiere === "toutes" || r.matiere === matiere;
   // Seules les ressources dont la diffusion est autorisée s'affichent.
   const toutesLibres = ressources.filter((r) => r.statut === "libre");
   const libres = toutesLibres.filter(garde);
-  const attente = ressources.filter((r) => r.statut === "attente").filter(garde);
-  const numero = (r) => deux(ressources.indexOf(r) + 1);
+  const presentes = matieres.filter((m) => toutesLibres.some((r) => r.matiere === m.id));
+  const options = [
+    { value: "toutes", label: "Toutes les matières", nombre: toutesLibres.length },
+    ...presentes.map((m) => ({ value: m.id, label: m.nom, nombre: toutesLibres.filter((r) => r.matiere === m.id).length })),
+  ];
+  const numero = (r) => deux(toutesLibres.indexOf(r) + 1);
 
   return (
     <div className="bg-white bg-[radial-gradient(ellipse_at_top_right,#fff1c9_0%,transparent_45%),radial-gradient(ellipse_at_left,#efeaff_0%,transparent_40%)] dark:bg-ink-950 dark:bg-none">
@@ -91,7 +90,6 @@ export default function Bibliotheque() {
             {[
               [toutesLibres.length, "ressources en accès libre", "bg-[#ece8ff]"],
               [presentes.length, "matières couvertes", "bg-[#fff4cc]"],
-              [ressources.length - toutesLibres.length, "en attente d'un accord écrit", "bg-[#ffe9dc]"],
             ].map(([n, l, c]) => (
               <div key={l} className={cx("w-28 rounded-[20px] p-4 text-[#1a1530] sm:w-32", c)}>
                 <dd className="text-4xl font-extrabold">{n}</dd>
@@ -179,44 +177,6 @@ export default function Bibliotheque() {
           )}
         </section>
 
-        {/* ---- En attente d'autorisation ---- */}
-        {attente.length > 0 && (
-          <section className="mt-16">
-            <div className="flex flex-wrap items-baseline justify-between gap-3">
-              <h2 className="flex items-center gap-2 text-3xl font-extrabold tracking-[-0.04em] text-[#1a1530] dark:text-white">
-                En attente d'autorisation
-                <span className="rounded-full bg-ink-100 px-2 py-0.5 text-sm text-ink-700 dark:bg-ink-800 dark:text-ink-200">{attente.length}</span>
-              </h2>
-              <p className="max-w-md text-sm text-ink-600 sm:text-right dark:text-ink-300">
-                Leur place est gardée. Rien n'est publié sans l'accord écrit du département et des enseignants concernés.
-              </p>
-            </div>
-            <ul className="mt-6 grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
-              {attente.map((r) => (
-                <li key={r.id ?? r.titre}>
-                  <span className="relative flex h-52 items-center justify-center rounded-[24px] border border-dashed border-ink-300 bg-[repeating-linear-gradient(135deg,#f4f4f7_0_10px,#fff_10px_20px)] dark:border-ink-700 dark:bg-none">
-                    <span className="absolute top-3 left-3 rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-[#1a1530]">{r.type}</span>
-                    <span className={cx(mono, "absolute top-3.5 right-4 text-ink-600 dark:text-ink-300")}>N° {numero(r)}</span>
-                    <span className="flex h-32 w-24 flex-col items-center justify-center gap-2 rounded-md border border-dashed border-ink-300 bg-white text-center text-[11px] text-ink-600 dark:border-ink-600 dark:bg-ink-900 dark:text-ink-300">
-                      <Icon name="lock" className="size-4" />
-                      Place réservée
-                    </span>
-                  </span>
-                  <p className="mt-4 text-xs font-bold text-[#1a1530] dark:text-ink-200">{nomMatiere(r.matiere)}</p>
-                  <p className="mt-1.5 text-lg/6 font-extrabold tracking-[-0.02em] text-[#1a1530] dark:text-white">{r.titre}</p>
-                  <p className="mt-1 text-sm text-ink-600 dark:text-ink-300">
-                    {r.auteurs} · {r.langue}
-                  </p>
-                  <p className="mt-2 text-sm/6 text-ink-600 dark:text-ink-300">{r.note}</p>
-                  <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#fde8e4] px-2.5 py-1 text-xs font-bold text-[#a3261a]">
-                    <Icon name="lock" className="size-3.5" />
-                    {r.licence} · en attente
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
       </div>
     </div>
   );

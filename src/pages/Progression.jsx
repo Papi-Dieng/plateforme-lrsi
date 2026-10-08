@@ -104,10 +104,28 @@ function Compte({ valeur, t }) {
   return <>{Math.round((valeur ?? 0) * t)}</>;
 }
 
-function Barre({ valeur, etiquette, classe = DEGRADE, repere, delai = 0 }) {
+/* Une infobulle qui apparaît au survol ou au clavier de son parent
+   (`group/b`). Purement visuelle : l'information existe déjà en texte. */
+function Bulle({ children, haut = true, className, style }) {
+  return (
+    <span
+      aria-hidden="true"
+      style={style}
+      className={cx(
+        "pointer-events-none absolute left-1/2 z-20 -translate-x-1/2 scale-90 rounded-xl bg-[#22183d] px-2.5 py-1.5 text-[11px] font-bold whitespace-nowrap text-white opacity-0 shadow-lg transition-[opacity,transform] duration-150 group-hover/b:scale-100 group-hover/b:opacity-100 group-focus-visible/b:scale-100 group-focus-visible/b:opacity-100 dark:bg-white dark:text-[#22183d]",
+        haut ? "bottom-full mb-2" : "top-full mt-2",
+        className
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+function Barre({ valeur, etiquette, classe = DEGRADE, repere, delai = 0, bulle }) {
   return (
     <div
-      className="relative h-2.5 rounded-full bg-[#f1edf5] dark:bg-white/10"
+      className="group/b relative h-2.5 rounded-full bg-[#f1edf5] transition-[height] hover:h-3.5 dark:bg-white/10"
       role="progressbar"
       aria-valuenow={valeur}
       aria-valuemin={0}
@@ -116,6 +134,7 @@ function Barre({ valeur, etiquette, classe = DEGRADE, repere, delai = 0 }) {
     >
       <div className={cx("barre-pousse h-full rounded-full transition-[width] duration-700", classe)} style={{ width: `${valeur}%`, animationDelay: `${delai}ms` }} />
       {repere != null && <span className="absolute -inset-y-1 w-0.5 rounded bg-[#22183d]/60 dark:bg-white/60" style={{ left: `${repere}%` }} />}
+      {bulle && <Bulle style={{ left: `${Math.min(Math.max(valeur, 12), 88)}%` }}>{bulle}</Bulle>}
     </div>
   );
 }
@@ -248,6 +267,45 @@ function Jauge({ valeur, t = 1, objectif = null }) {
   );
 }
 
+/* Le détail d'une matière dépliée : ce qui est fait, ce qui reste. */
+function DetailMatiere({ m, exercicesFaits, scores }) {
+  const exos = exercices.filter((e) => e.matiere === m.id);
+  const quiz = qcms.filter((q) => q.matiere === m.id);
+  const ligne = (fait, to, titre, etat) => (
+    <li key={to}>
+      <Link
+        to={to}
+        className={cx("group flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors hover:bg-white dark:hover:bg-white/10", ENCRE)}
+      >
+        <span className={cx("grid size-5 shrink-0 place-items-center rounded-full", fait ? "bg-[#6b45e8] text-white" : "border-2 border-dashed border-[#9a92ad]")}>
+          {fait && <Icon name="check" className="size-3" />}
+        </span>
+        <span className="min-w-0 flex-1 font-bold">{titre}</span>
+        <span className={cx("text-xs", DOUX)}>{etat}</span>
+        <Icon name="arrow" className={cx("size-3.5 transition-transform group-hover:translate-x-1", DOUX)} />
+      </Link>
+    </li>
+  );
+  return (
+    <div className="apparition mb-4 grid gap-4 rounded-2xl bg-[#f4eef7] p-3 sm:grid-cols-2 dark:bg-white/5">
+      {exos.length > 0 && (
+        <div>
+          <p className={cx("px-3 pt-1 text-[11px] font-extrabold tracking-wide uppercase", DOUX)}>Exercices</p>
+          <ul className="mt-1">{exos.map((e) => ligne(Boolean(exercicesFaits[e.id]), `/exercices/${e.id}`, e.titre, exercicesFaits[e.id] ? "travaillé" : "à faire"))}</ul>
+        </div>
+      )}
+      {quiz.length > 0 && (
+        <div>
+          <p className={cx("px-3 pt-1 text-[11px] font-extrabold tracking-wide uppercase", DOUX)}>QCM</p>
+          <ul className="mt-1">
+            {quiz.map((q) => ligne(Boolean(scores[q.id]), `/qcm/${q.id}`, q.titre, scores[q.id] ? `${pourcent(scores[q.id].score, scores[q.id].total)} %` : "à tenter"))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ================================================================== */
 
 export default function Progression() {
@@ -372,6 +430,8 @@ export default function Progression() {
   const enPlus = Math.min(encore, reste);
   const projete = enPlus > 0 && totalContenus ? (faitsTotal + enPlus) / totalContenus : null;
   const [objectif, setObjectif] = useState(80);
+  // La matière dépliée dans « Progression par matière ».
+  const [deplie, setDeplie] = useState(null);
 
   // Le ciel suit la souris : la position, de -1 à 1, va dans --px / --py.
   const suivre = (e) => {
@@ -422,12 +482,17 @@ export default function Progression() {
 
           <dl className="mt-8 grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
             {[
-              [bilan.exosFaits, `/ ${bilan.exosTotal}`, "exercices travaillés"],
-              [bilan.qcmFaits, `/ ${bilan.qcmTotal}`, "QCM tentés"],
-              [bilan.points, "pts", "points cumulés"],
-              [bilan.tentatives, "", `tentative${bilan.tentatives > 1 ? "s" : ""} de QCM`],
-            ].map(([v, u, l]) => (
-              <div key={l} className="rounded-[20px] border border-white/20 bg-white/10 p-4 backdrop-blur-md">
+              [bilan.exosFaits, `/ ${bilan.exosTotal}`, "exercices travaillés", `Encore ${bilan.exosTotal - bilan.exosFaits} à ouvrir`],
+              [bilan.qcmFaits, `/ ${bilan.qcmTotal}`, "QCM tentés", `Encore ${bilan.qcmTotal - bilan.qcmFaits} à tenter`],
+              [bilan.points, "pts", "points cumulés", `${POINTS_PAR_BONNE_REPONSE} points par bonne réponse`],
+              [bilan.tentatives, "", `tentative${bilan.tentatives > 1 ? "s" : ""} de QCM`, "Chaque essai compte, seul le meilleur score reste"],
+            ].map(([v, u, l, aide]) => (
+              <div
+                key={l}
+                tabIndex={0}
+                className="group/b relative cursor-default rounded-[20px] border border-white/20 bg-white/10 p-4 backdrop-blur-md transition-[transform,background-color] duration-200 outline-none hover:z-10 hover:-translate-y-1 hover:bg-white/20 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-white"
+              >
+                <Bulle>{aide}</Bulle>
                 <dd className="text-3xl font-extrabold">
                   <Compte valeur={v} t={t} />
                   {u && <span className="ml-1 text-base font-bold text-white/80">{u}</span>}
@@ -545,7 +610,8 @@ export default function Progression() {
           <TitreCarte icone="layers" titre="Progression par matière" texte="Exercices et QCM ouverts, sur ceux disponibles." />
           <ul className="mt-5 divide-y divide-[#f1edf5] dark:divide-white/10">
             {parMatiere.map((l, n) => (
-              <li key={l.m.id} className="grid grid-cols-[2.5rem_1fr_auto] items-center gap-x-4 gap-y-2 py-3.5 sm:grid-cols-[2.5rem_14rem_1fr_4.5rem]">
+              <li key={l.m.id} className="-mx-3 rounded-2xl px-3 transition-colors hover:bg-[#fbf7f5] dark:hover:bg-white/5">
+                <div className="grid grid-cols-[2.5rem_1fr_auto_2.25rem] items-center gap-x-4 gap-y-2 py-3.5 sm:grid-cols-[2.5rem_14rem_1fr_4.5rem_2.25rem]">
                 <span className="grid size-10 place-items-center rounded-2xl bg-[#efe9ff] text-[#5434c9]">
                   <Icon name={l.m.icone ?? "book"} className="size-4" />
                 </span>
@@ -557,13 +623,29 @@ export default function Progression() {
                     {[l.exos > 0 && `Exercices ${l.exosFaits}/${l.exos}`, l.quiz > 0 && `QCM ${l.quizFaits}/${l.quiz}`].filter(Boolean).join(" · ")}
                   </span>
                 </span>
-                <span className="col-span-3 max-sm:order-last sm:col-span-1">
-                  <Barre valeur={l.taux} etiquette={`Progression en ${l.m.nom}`} delai={400 + n * 90} />
+                <span className="col-span-4 max-sm:order-last sm:col-span-1">
+                  <Barre
+                    valeur={l.taux}
+                    etiquette={`Progression en ${l.m.nom}`}
+                    delai={400 + n * 90}
+                    bulle={l.faits === l.total ? "Tout est fait !" : `Encore ${l.total - l.faits} à faire`}
+                  />
                 </span>
                 <span className="text-right">
                   <span className={cx("block text-lg font-extrabold", ENCRE)}>{l.taux} %</span>
                   <span className={cx("block text-[11px]", DOUX)}>{l.faits} sur {l.total}</span>
                 </span>
+                <button
+                  type="button"
+                  onClick={() => setDeplie(deplie === l.m.id ? null : l.m.id)}
+                  aria-expanded={deplie === l.m.id}
+                  aria-label={`${deplie === l.m.id ? "Masquer" : "Voir"} le détail : ${l.m.nom}`}
+                  className="grid size-9 place-items-center rounded-full bg-[#efe9ff] text-[#5434c9] transition-transform hover:scale-110"
+                >
+                  <Icon name="chevron" className={cx("size-4 transition-transform", deplie === l.m.id && "rotate-180")} />
+                </button>
+                </div>
+                {deplie === l.m.id && <DetailMatiere m={l.m} exercicesFaits={exercicesFaits} scores={scores} />}
               </li>
             ))}
           </ul>
@@ -586,7 +668,7 @@ export default function Progression() {
                 {resultatsQcm.map((r) => {
                   const ok = r.taux >= SEUIL_REUSSITE;
                   return (
-                    <li key={r.q.id} className="flex items-center gap-4 rounded-[20px] bg-[#fbf7f5] p-3 dark:bg-white/5">
+                    <li key={r.q.id} className="flex items-center gap-4 rounded-[20px] bg-[#fbf7f5] p-3 transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-md dark:bg-white/5">
                       <span className={cx("grid size-14 shrink-0 place-content-center rounded-2xl text-center text-white", ok ? "bg-gradient-to-br from-[#6b45e8] to-[#9b6bff]" : "bg-gradient-to-br from-[#e8579c] to-[#ffb38c]")}>
                         <span className="text-base font-extrabold">{r.taux}%</span>
                         <span className="text-[10px]">{r.score}/{r.total}</span>
@@ -603,6 +685,7 @@ export default function Progression() {
                             valeur={r.taux}
                             repere={SEUIL_REUSSITE}
                             etiquette={`Score sur ${r.q.titre}`}
+                            bulle={ok ? `Réussi : ${r.taux} % (seuil ${SEUIL_REUSSITE} %)` : `Encore ${SEUIL_REUSSITE - r.taux} points pour le seuil`}
                             classe={ok ? "bg-gradient-to-r from-[#6b45e8] to-[#9b6bff]" : "bg-gradient-to-r from-[#e8579c] to-[#ffb38c]"}
                           />
                         </span>
@@ -651,7 +734,15 @@ export default function Progression() {
                           <span className="flex-1 bg-[#efe9ff]" />
                         </div>
                         <span className="relative -mt-3.5 block h-4">
-                          <span className={cx("absolute size-4 -translate-x-1/2 rounded-full border-2 border-white shadow", t.point)} style={{ left: `${c.taux}%` }} />
+                          <span
+                            tabIndex={0}
+                            className={cx("group/b absolute size-4 -translate-x-1/2 cursor-default rounded-full border-2 border-white shadow outline-none transition-transform hover:scale-150 focus-visible:scale-150", t.point)}
+                            style={{ left: `${c.taux}%` }}
+                          >
+                            <Bulle>
+                              {c.justes} bonne{c.justes > 1 ? "s" : ""} réponse{c.justes > 1 ? "s" : ""} sur {c.total}
+                            </Bulle>
+                          </span>
                         </span>
                       </li>
                     );
@@ -692,12 +783,12 @@ export default function Progression() {
                   <ul className="mt-2 space-y-2">
                     {g.chapitres.map((m) => (
                       <li key={m.cle}>
-                        <Link to={`/cours/${m.matiere}`} className={cx("flex items-center gap-3 rounded-2xl bg-[#fbf7f5] px-4 py-3 text-sm font-bold hover:bg-[#f4eef7] dark:bg-white/5 dark:hover:bg-white/10", ENCRE)}>
+                        <Link to={`/cours/${m.matiere}`} className={cx("group flex items-center gap-3 rounded-2xl bg-[#fbf7f5] px-4 py-3 text-sm font-bold transition-[background-color,transform] hover:translate-x-1 hover:bg-[#f4eef7] dark:bg-white/5 dark:hover:bg-white/10", ENCRE)}>
                           <span className="min-w-0 flex-1">{m.chapitre}</span>
                           <span className={cx("rounded-full px-2 py-0.5 text-[11px] font-bold", m.dejaLu ? "bg-[#efe9ff] text-[#5434c9]" : "bg-white text-[#4a4163] dark:bg-white/10 dark:text-ink-200")}>
                             {m.dejaLu ? "à relire" : "pas encore lu"}
                           </span>
-                          <Icon name="arrow" className={cx("size-4", DOUX)} />
+                          <Icon name="arrow" className={cx("size-4 transition-transform group-hover:translate-x-1", DOUX)} />
                         </Link>
                       </li>
                     ))}
@@ -717,7 +808,7 @@ export default function Progression() {
               <ul className="mt-5 space-y-2.5">
                 {aReprendre.map((r) => (
                   <li key={r.q.id}>
-                    <Link to={`/cours/${r.q.matiere}`} className="flex items-center gap-3 rounded-2xl bg-white/15 p-2 hover:bg-white/25">
+                    <Link to={`/cours/${r.q.matiere}`} className="flex items-center gap-3 rounded-2xl bg-white/15 p-2 transition-[background-color,transform] hover:scale-[1.02] hover:bg-white/25">
                       <span className="min-w-0 flex-1 rounded-xl bg-white px-3 py-2 text-sm font-extrabold text-[#b52a5e]">{r.q.titre}</span>
                       <span className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-extrabold text-[#b52a5e]">{r.taux} %</span>
                     </Link>

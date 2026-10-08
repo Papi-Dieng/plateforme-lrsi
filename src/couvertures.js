@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { urlPdf } from "./contenu";
 
 /* ==================================================================
    La couverture d'un livre de la bibliothèque, trouvée toute seule.
@@ -11,7 +12,9 @@ import { useEffect, useState } from "react";
    3. le lien du livre : une page d'archive.org, d'Open Library ou de
       Google Livres a une image de couverture connue, et un lien qui
       contient un ISBN se lit chez Open Library ;
-   4. en dernier, une recherche chez Open Library par titre et auteur,
+   4. un livre déposé en PDF : sa première page, dessinée par pdf.js
+      (src/couverturePdf.js, chargé seulement dans ce cas) ;
+   5. en dernier, une recherche chez Open Library par titre et auteur,
       acceptée seulement si le titre correspond exactement et que le
       nom de l'auteur s'y retrouve (sinon « Power » donnerait « The
       Power and the Glory »). Le résultat est gardé dans le navigateur.
@@ -71,7 +74,8 @@ function couvertureImmediate(r) {
   return couvertureDuLien(r.url);
 }
 
-const cleDe = (r) => `${normalise(r.titre)}|${normalise(r.auteurs)}`;
+// Un PDF se reconnaît à son fichier, un livre en ligne à son titre et son auteur.
+const cleDe = (r) => (r.pdf?.id ? `pdf:${r.pdf.id}` : `${normalise(r.titre)}|${normalise(r.auteurs)}`);
 
 function lireCache() {
   try {
@@ -110,10 +114,15 @@ export function useCouverture(r) {
   const [trouvee, setTrouvee] = useState(() => lireCache()[cle]);
 
   const { titre, auteurs, type } = r;
+  const pdf = r.pdf?.id ?? null;
   useEffect(() => {
-    if (immediate || type !== "Livre" || lireCache()[cle] !== undefined) return;
+    if (immediate || lireCache()[cle] !== undefined) return;
+    if (!pdf && type !== "Livre") return;
     let actif = true;
-    chercher({ titre, auteurs })
+    const trouver = pdf
+      ? import("./couverturePdf").then((m) => m.premierePage(urlPdf(pdf)))
+      : chercher({ titre, auteurs });
+    trouver
       .then((url) => {
         ecrireCache(cle, url);
         if (actif) setTrouvee(url);
@@ -122,7 +131,7 @@ export function useCouverture(r) {
     return () => {
       actif = false;
     };
-  }, [immediate, cle, titre, auteurs, type]);
+  }, [immediate, cle, titre, auteurs, type, pdf]);
 
   return immediate || trouvee || null;
 }

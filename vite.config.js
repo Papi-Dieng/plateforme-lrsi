@@ -48,7 +48,9 @@ function applicationInstallable() {
 
       const publics = ['logo.svg', 'manifest.webmanifest', ...readdirSync('public/icones').map((f) => `icones/${f}`)]
       const fichiers = ['./', './index.html', ...Object.keys(bundle), ...publics]
-        .filter((f, i, liste) => liste.indexOf(f) === i && !f.endsWith('.map'))
+        // pdf.js (couvertures des livres en PDF) pèse 1,7 Mo : il n'est
+        // pas mis en cache d'avance, seulement chargé quand il sert.
+        .filter((f, i, liste) => liste.indexOf(f) === i && !f.endsWith('.map') && !/pdf\.worker|couverturePdf/.test(f))
         .map((f) => (f.startsWith('./') ? f : `./${f}`))
       const version = createHash('sha256').update(fichiers.join('|')).digest('hex').slice(0, 12)
       const source = readFileSync('pwa/sw-modele.js', 'utf8')
