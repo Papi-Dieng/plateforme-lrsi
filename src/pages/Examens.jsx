@@ -185,7 +185,7 @@ export function ExamensListe() {
           </nav>
           <div className="mt-8 flex flex-wrap items-center justify-between gap-x-14 gap-y-12">
             <div className="min-w-0 flex-[1_1_min(520px,100%)]">
-              <h1 className="text-[clamp(3.2rem,9vw,7.5rem)] leading-[0.86] font-extrabold tracking-[-0.06em]">
+              <h1 className="text-[clamp(2.4rem,9vw,7.5rem)] leading-[0.86] font-extrabold tracking-[-0.06em]">
                 Devoirs <span className="block text-[#ffc94d]">et examens.</span>
               </h1>
               <p className="mt-7 max-w-[500px] text-lg/8 text-ink-200">
@@ -231,7 +231,7 @@ export function ExamensListe() {
         )}
 
         <section aria-labelledby="titre-devoirs">
-          <h2 id="titre-devoirs" className="flex items-center gap-3 text-[clamp(2.2rem,4.5vw,3.2rem)] leading-none font-extrabold tracking-[-0.045em] text-ink-950 dark:text-white">
+          <h2 id="titre-devoirs" className="flex items-center gap-3 text-[clamp(1.8rem,4.5vw,3.2rem)] leading-none font-extrabold tracking-[-0.045em] text-ink-950 dark:text-white">
             Devoirs
             <span className="rounded-lg bg-[#1b2328] px-2 py-0.5 font-mono text-sm font-bold tracking-normal text-white dark:bg-white dark:text-ink-950">{blancs.length}</span>
           </h2>
@@ -243,11 +243,11 @@ export function ExamensListe() {
                 <li key={x.id}>
                   <Link
                     to={`/examens/${x.id}`}
-                    className="group flex flex-wrap items-center gap-x-10 gap-y-6 rounded-[28px] border border-ink-200 bg-white p-6 transition-colors hover:border-[#1b2328]/40 sm:p-8 dark:border-ink-800 dark:bg-ink-900 dark:hover:border-white/30"
+                    className="group flex flex-wrap items-center gap-x-6 gap-y-4 rounded-[28px] border border-ink-200 bg-white p-4 transition-colors hover:border-[#1b2328]/40 sm:gap-x-10 sm:gap-y-6 sm:p-8 dark:border-ink-800 dark:bg-ink-900 dark:hover:border-white/30"
                   >
                     <span className="min-w-0 flex-[1_1_300px]">
                       <span className={cx("block text-[11px] text-ink-500 dark:text-ink-400", mono)}>{nomMatiere(x.matiere).toUpperCase()}</span>
-                      <span className="mt-2 block text-[28px] leading-[1.1] font-extrabold tracking-[-0.03em] text-ink-950 dark:text-white">{x.titre}</span>
+                      <span className="mt-2 block text-[22px] leading-[1.1] font-extrabold tracking-[-0.03em] text-ink-950 sm:text-[28px] dark:text-white">{x.titre}</span>
                       <span className="mt-3 flex flex-wrap gap-2">
                         <Puce icone="clock">{formatMinutes(x.dureeMinutes)}</Puce>
                         <Puce icone={x.format === "pdf" ? "file" : "layers"}>{x.format === "pdf" ? "Sujet en PDF" : `${x.parties.length} parties`}</Puce>
@@ -285,7 +285,7 @@ export function ExamensListe() {
           ) : (
             <ul className="mt-6 grid gap-3 md:grid-cols-2">
               {sujets.map((a) => (
-                <li key={a.id} className="flex items-start gap-4 rounded-[24px] border border-ink-200 bg-white p-6 dark:border-ink-800 dark:bg-ink-900">
+                <li key={a.id} className="flex items-start gap-4 rounded-[24px] border border-ink-200 bg-white p-4 sm:p-6 dark:border-ink-800 dark:bg-ink-900">
                   <span className={cx("grid size-11 shrink-0 place-items-center rounded-[12px]", AMBRE)}>
                     <Icon name="file" className="size-5" />
                   </span>
@@ -517,12 +517,12 @@ export function ExamenSession() {
       <Container className="py-10">
         <div className="mx-auto max-w-[840px] space-y-5">
           {etape === "consignes" && (
-            <div className="rounded-[28px] border border-ink-200 bg-white p-6 sm:p-9 dark:border-ink-800 dark:bg-ink-900">
-              <h2 className="text-[30px] leading-tight font-extrabold tracking-[-0.03em] text-ink-950 dark:text-white">Avant de commencer</h2>
+            <div className="rounded-[28px] border border-ink-200 bg-white p-5 sm:p-9 dark:border-ink-800 dark:bg-ink-900">
+              <h2 className="text-[24px] leading-tight font-extrabold tracking-[-0.03em] text-ink-950 sm:text-[30px] dark:text-white">Avant de commencer</h2>
               <ol className="mt-5">
                 {etapes.map((t, i) => (
                   <li key={i} className="flex gap-5 border-b border-ink-100 py-4 last:border-b-0 dark:border-ink-800">
-                    <span className="w-10 shrink-0 text-[28px] leading-none font-extrabold tracking-tight text-ink-950 dark:text-white">{numero(i + 1)}</span>
+                    <span className="w-10 shrink-0 text-[22px] leading-none font-extrabold tracking-tight text-ink-950 sm:text-[28px] dark:text-white">{numero(i + 1)}</span>
                     <span className="text-base/7 text-ink-700 dark:text-ink-300">{t}</span>
                   </li>
                 ))}
@@ -549,12 +549,12 @@ export function ExamenSession() {
 
           {etape !== "consignes" && pdf && (
             <>
-              <section className="rounded-[28px] border border-ink-200 bg-white p-6 sm:p-8 dark:border-ink-800 dark:bg-ink-900">
+              <section className="rounded-[28px] border border-ink-200 bg-white p-5 sm:p-8 dark:border-ink-800 dark:bg-ink-900">
                 <h2 className="text-[26px] font-extrabold tracking-tight text-ink-950 dark:text-white">Sujet</h2>
                 <LecteurPdf pdf={examen.pdfEnonce} libelle="Sujet en PDF" titre={`Sujet : ${examen.titre}`} ouvert={etape === "epreuve"} className="mt-4" />
               </section>
               {etape === "corrige" && (
-                <section className="rounded-[28px] border border-ink-200 bg-white p-6 sm:p-8 dark:border-ink-800 dark:bg-ink-900">
+                <section className="rounded-[28px] border border-ink-200 bg-white p-5 sm:p-8 dark:border-ink-800 dark:bg-ink-900">
                   <BlocCorrige>
                     {examen.pdfCorrige ? (
                       <LecteurPdf pdf={examen.pdfCorrige} libelle="Corrigé en PDF" titre={`Corrigé : ${examen.titre}`} ouvert />
@@ -611,7 +611,7 @@ export function ExamenSession() {
             ))}
 
           {etape === "corrige" && (
-            <div className="flex flex-wrap items-center justify-between gap-6 rounded-[28px] bg-[#1b2328] p-7 text-white sm:p-9 dark:ring-1 dark:ring-white/10" style={QUADRILLAGE}>
+            <div className="flex flex-wrap items-center justify-between gap-6 rounded-[28px] bg-[#1b2328] p-5 text-white sm:p-9 dark:ring-1 dark:ring-white/10" style={QUADRILLAGE}>
               <div>
                 <p className={cx("text-xs text-ink-300", mono)}>
                   {pdf ? "Pas de note automatique" : corrigeEnCours ? "Ma note, l'IA corrige encore…" : "Ma note, donnée par l'IA"}

@@ -224,6 +224,30 @@ describe("correction d'un exercice par l'IA", () => {
 });
 
 describe("assistant des étudiants", () => {
+  test("un modèle qui ne répond pas en 12 s est abandonné pour le secours", async () => {
+    vi.useFakeTimers();
+    const modeles = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url, init) => {
+        const modele = String(url).match(/models\/([^:]+)/)[1];
+        modeles.push(modele);
+        // Le principal, saturé, ne répond jamais ; le secours répond tout de suite.
+        if (modele === "modele-principal") {
+          return new Promise((_, refuser) => init.signal.addEventListener("abort", () => refuser(new Error("abort"))));
+        }
+        return Promise.resolve(Response.json({ candidates: [{ content: { parts: [{ text: "Sept couches." }] } }] }));
+      })
+    );
+    const enCours = relais.fetch(demande("/", { corps: question("Combien de couches ?") }), env());
+    await vi.advanceTimersByTimeAsync(12000);
+    const r = await enCours;
+    vi.useRealTimers();
+    expect(r.status).toBe(200);
+    expect(await r.json()).toEqual({ texte: "Sept couches." });
+    expect(modeles).toEqual(["modele-principal", "modele-secours"]);
+  });
+
   test("renvoie le texte du modèle", async () => {
     geminiRepond("Le modèle OSI compte 7 couches.");
     const r = await relais.fetch(demande("/", { corps: question("Combien de couches ?") }), env());

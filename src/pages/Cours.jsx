@@ -223,7 +223,7 @@ export function Cours() {
               Semestre 1 <span aria-hidden="true" className="h-px w-8 bg-white/50" /> Semestre 2
             </p>
           </div>
-          <h1 className="relative mt-4 text-5xl font-extrabold tracking-[-0.05em] sm:text-7xl">Espace des cours</h1>
+          <h1 className="relative mt-4 text-3xl font-extrabold tracking-[-0.05em] sm:text-7xl">Espace des cours</h1>
           <ul className="relative mt-6 flex flex-wrap gap-x-6 gap-y-3 border-t border-white/10 pt-5">
             {matieres.map((m) => (
               <li key={m.id}>
@@ -240,14 +240,14 @@ export function Cours() {
           <p className="max-w-xl text-[15px]/7 text-ink-700 dark:text-ink-300">
             Les chapitres sont regroupés par matière et par semestre. Cette organisation est une proposition de structure : elle ne remplace pas le programme officiel de la filière.
           </p>
-          <dl className="flex gap-8 text-center">
+          <dl className="flex gap-5 text-center sm:gap-8">
             {[
               [matieres.length, "matières"],
               [nbChapitres, "chapitres"],
               [nbDispo, "disponibles"],
             ].map(([n, l]) => (
               <div key={l}>
-                <dd className="text-4xl font-extrabold tracking-tight text-ink-950 dark:text-white">{n}</dd>
+                <dd className="text-2xl font-extrabold tracking-tight text-ink-950 sm:text-4xl dark:text-white">{n}</dd>
                 <dt className="text-xs text-ink-600 dark:text-ink-300">{l}</dt>
               </div>
             ))}
@@ -270,7 +270,7 @@ export function Cours() {
               className="min-h-11 w-full rounded-[14px] border border-ink-200 bg-white pr-3 pl-10 text-sm placeholder:text-ink-500 focus:border-ink-950 focus:outline-none dark:border-ink-700 dark:bg-ink-900 dark:focus:border-white"
             />
           </div>
-          <div role="group" aria-label="Filtrer par semestre" className="flex rounded-[14px] bg-ink-100 p-1 dark:bg-ink-800">
+          <div role="group" aria-label="Filtrer par semestre" className="flex w-full rounded-[14px] bg-ink-100 p-1 sm:w-auto dark:bg-ink-800">
             {semestres.map((o) => (
               <button
                 key={o.value}
@@ -278,7 +278,7 @@ export function Cours() {
                 aria-pressed={semestre === o.value}
                 onClick={() => setSemestre(o.value)}
                 className={cx(
-                  "min-h-9 rounded-[10px] px-3 text-sm font-bold",
+                  "min-h-9 flex-1 rounded-[10px] px-2 text-sm font-bold sm:flex-none sm:px-3",
                   semestre === o.value ? "bg-white text-ink-950 shadow-sm dark:bg-ink-950 dark:text-white" : "text-ink-700 hover:text-ink-950 dark:text-ink-300 dark:hover:text-white"
                 )}
               >
@@ -308,7 +308,7 @@ export function Cours() {
 
         {/* ---- Toutes les matières ---- */}
         <div className="mt-12 flex items-baseline justify-between">
-          <h2 className="text-3xl font-extrabold tracking-[-0.04em] text-ink-950 dark:text-white">Toutes les matières</h2>
+          <h2 className="text-2xl font-extrabold tracking-[-0.04em] text-ink-950 sm:text-3xl dark:text-white">Toutes les matières</h2>
           <p className="text-sm text-ink-600 dark:text-ink-300">
             {resultats.length} matière{resultats.length > 1 ? "s" : ""}
           </p>
@@ -329,7 +329,7 @@ export function Cours() {
             </EtatVide>
           </div>
         ) : (
-          <ul className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-6 grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             {resultats.map((m) => {
               const filtre = semestre === "tous" ? null : Number(semestre);
               const liste = filtre ? chapitresDuSemestre(m, filtre) : m.chapitres;
@@ -348,9 +348,9 @@ export function Cours() {
                     )}
                     style={ouverte === m.id ? { borderColor: couleur(m) } : undefined}
                   >
-                    <span className="flex w-16 shrink-0 flex-col items-center justify-between py-3 text-white" style={{ background: couleurTexte(m) }}>
+                    <span className="flex w-14 shrink-0 flex-col items-center justify-between py-3 text-white sm:w-16" style={{ background: couleurTexte(m) }}>
                       <span className={cx(mono, "text-[9px]")}>Ligne</span>
-                      <span className="text-4xl font-extrabold">{rang(m) + 1}</span>
+                      <span className="text-3xl font-extrabold sm:text-4xl">{rang(m) + 1}</span>
                       <span className={cx(mono, "text-[9px]")}>
                         {semestresMatiere(m)
                           .filter((n) => !filtre || n === filtre)
@@ -358,7 +358,7 @@ export function Cours() {
                           .join(" · ")}
                       </span>
                     </span>
-                    <span className="flex min-w-0 flex-1 flex-col p-4">
+                    <span className="flex min-w-0 flex-1 flex-col p-3 sm:p-4">
                       {ouverte === m.id && (
                         <span className={cx(mono, "mb-1 text-[9px] text-(--t) dark:text-(--c)")} style={{ "--t": couleurTexte(m), "--c": `color-mix(in srgb, ${couleur(m)} 50%, white)` }}>
                           Ligne ouverte ci-dessous

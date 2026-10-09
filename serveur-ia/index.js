@@ -157,6 +157,9 @@ function construireConsignes(extraits, education, avecImage) {
   return parties.join("\n\n");
 }
 
+// Temps accordé à chaque modèle pour répondre à l'assistant (voir plus bas).
+export const DELAI_PAR_MODELE = 12000;
+
 async function appelerGemini({ messages, extraits, image }, env) {
   const education = await educationPour(env, extraits).catch((e) => {
     // Une fiche illisible ne doit pas priver l'étudiant de réponse.
@@ -177,7 +180,12 @@ async function appelerGemini({ messages, extraits, image }, env) {
       generationConfig: { temperature: 0.4, maxOutputTokens: 2048 },
     },
     env.GEMINI_API_KEY,
-    env
+    env,
+    // Mesuré le 8 octobre 2026 : sans limite, le modèle principal saturé
+    // faisait attendre 37 s, 62 s, puis plus de 120 s, et le site
+    // abandonnait à 45 s (« l'IA a mis trop de temps »). Chaque modèle a
+    // désormais 12 s ; au-delà, on passe au suivant, plus léger.
+    { delaiMax: DELAI_PAR_MODELE }
   );
 }
 

@@ -122,8 +122,10 @@ export default function Accueil() {
         </div>
       </div>
 
-      {/* Révision espacée : ce qui est à revoir aujourd'hui. */}
-      <ARevoir className="mt-6" />
+      {/* Révision espacée : ce qui est à revoir aujourd'hui.
+          Sur téléphone, le tableau de bord va à l'essentiel : ce bloc
+          n'y est pas montré (il reste sur ordinateur). */}
+      <ARevoir className="mt-6 hidden lg:block" />
 
       {/* Proposition d'installation, seulement quand elle est possible. */}
       <Installation compacte className="mt-6" />

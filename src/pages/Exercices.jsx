@@ -686,7 +686,10 @@ function DetailExercice({ exerciceId }) {
 
           {/* ---- Colonne de droite ---- */}
           <aside className="space-y-4 lg:sticky lg:top-24">
-            <nav aria-label="Dans cet exercice" className="rounded-[24px] border border-ink-200 bg-white p-4 dark:border-ink-800 dark:bg-ink-900">
+            {/* Sur téléphone, cette liste de raccourcis n'est pas montrée :
+                on descend directement dans l'énoncé, la réponse puis la
+                correction. Elle reste sur ordinateur. */}
+            <nav aria-label="Dans cet exercice" className="hidden rounded-[24px] border border-ink-200 bg-white p-4 lg:block dark:border-ink-800 dark:bg-ink-900">
               <p className={cx("px-2 pt-1 pb-3 text-[11px] font-bold text-ink-500 dark:text-ink-400", mono)}>DANS CET EXERCICE</p>
               <ol>
                 {blocs.map((b, i) => (

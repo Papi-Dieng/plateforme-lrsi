@@ -139,7 +139,7 @@ export default function Bibliotheque() {
               <p className="mt-1 text-sm text-ink-600 dark:text-ink-300">D'autres références seront ajoutées progressivement.</p>
             </div>
           ) : (
-            <ul className="mt-6 grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+            <ul className="mt-6 grid gap-x-5 gap-y-10 md:grid-cols-2 lg:grid-cols-4">
               {libres.map((r, i) => {
                 const t = TEINTES[i % TEINTES.length];
                 const lien = r.url || (r.pdf ? urlPdf(r.pdf.id) : undefined);

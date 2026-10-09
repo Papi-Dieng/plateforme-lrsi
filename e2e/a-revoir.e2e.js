@@ -14,7 +14,8 @@ const jour = (decalage) => {
 const revision = (page, du, etape) =>
   page.addInitScript(([id, d, e]) => localStorage.setItem("lrsi-revisions", JSON.stringify({ [id]: { du: d, etape: e } })), [qcms[0].id, du, etape]);
 
-test("un QCM en retard s'affiche avec son retard, et « Refaire » l'ouvre", async ({ page }) => {
+test("un QCM en retard s'affiche avec son retard, et « Refaire » l'ouvre", async ({ page, isMobile }) => {
+  test.skip(isMobile, "le bloc « À revoir » est masqué sur téléphone (voir Accueil.jsx)");
   await revision(page, jour(-3), 0);
   await entrerEnInvite(page);
   await aller(page, "/tableau-de-bord");
@@ -24,7 +25,8 @@ test("un QCM en retard s'affiche avec son retard, et « Refaire » l'ouvre", asy
   await expect(page).toHaveURL(new RegExp(`#/qcm/${qcms[0].id}$`));
 });
 
-test("rien de dû : la prochaine révision est annoncée", async ({ page }) => {
+test("rien de dû : la prochaine révision est annoncée", async ({ page, isMobile }) => {
+  test.skip(isMobile, "le bloc « À revoir » est masqué sur téléphone (voir Accueil.jsx)");
   await revision(page, jour(4), 1);
   await entrerEnInvite(page);
   await aller(page, "/tableau-de-bord");
@@ -36,4 +38,15 @@ test("rien à revoir du tout : pas de bloc", async ({ page }) => {
   await aller(page, "/tableau-de-bord");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByRole("region", { name: "À revoir aujourd'hui" })).toHaveCount(0);
+});
+
+test("sur téléphone, le bloc existe mais reste caché", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "comportement propre au téléphone");
+  await revision(page, jour(-3), 0);
+  await entrerEnInvite(page);
+  await aller(page, "/tableau-de-bord");
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  // Présent dans la page (le tableau de bord reste le même), mais masqué
+  // par `hidden lg:block` : c'est le seul endroit où il est montré.
+  await expect(page.locator('section[aria-labelledby="titre-a-revoir"]')).toBeHidden();
 });

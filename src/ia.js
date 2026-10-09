@@ -19,8 +19,10 @@ import { getMatiere } from "./data/matieres";
 
 export const iaActive = Boolean(site.urlIA);
 
-// Le modèle gratuit met souvent 10 à 20 secondes à répondre.
-const DELAI_MAXIMUM = 45_000;
+// Le modèle gratuit met souvent 10 à 20 secondes à répondre. Le relais
+// donne 12 s à chaque modèle avant de passer au suivant (trois modèles et
+// un dernier essai) : le site attend 60 s pour ne jamais couper avant lui.
+const DELAI_MAXIMUM = 60_000;
 
 /* Le contenu complet d'un lien trouvé par le guide, pour que l'IA
    s'appuie sur ce que la plateforme enseigne plutôt que sur sa seule

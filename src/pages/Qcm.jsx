@@ -165,7 +165,7 @@ export function QcmListe() {
           <div className="mt-6 flex flex-wrap items-center justify-between gap-x-14 gap-y-10">
             <div className="min-w-0 flex-[1_1_min(520px,100%)]">
               <h1>
-                <span className="-ml-1 block text-[clamp(6rem,15vw,13.5rem)] leading-[0.8] font-extrabold tracking-[-0.07em]">QCM</span>
+                <span className="-ml-1 block text-[clamp(4rem,15vw,13.5rem)] leading-[0.8] font-extrabold tracking-[-0.07em]">QCM</span>
                 <span className="mt-3 block text-[clamp(2.5rem,4.8vw,4.25rem)] leading-none font-extrabold tracking-[-0.045em] text-lime-400">
                   interactifs.
                 </span>
@@ -502,7 +502,7 @@ function ReglageExamenBlanc({ matieresAvecQcm }) {
     <section
       id="examen-blanc"
       aria-labelledby="titre-examen-blanc"
-      className="mb-12 scroll-mt-24 overflow-hidden rounded-[28px] bg-[#271627] p-6 text-white sm:p-9"
+      className="mb-12 scroll-mt-24 overflow-hidden rounded-[28px] bg-[#271627] p-5 text-white sm:p-9"
       style={QUADRILLAGE}
     >
       <div className="flex flex-wrap items-start justify-between gap-6">
@@ -756,7 +756,7 @@ function SessionQcm({ qcmId, qcm: fourni }) {
             </section>
 
             {/* ---- Question ---- */}
-            <section className="rounded-[26px] border border-ink-200 bg-white p-6 sm:p-9 dark:border-ink-800 dark:bg-ink-900">
+            <section className="rounded-[26px] border border-ink-200 bg-white p-4 sm:p-9 dark:border-ink-800 dark:bg-ink-900">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className={cx("text-xs text-ink-600 dark:text-ink-300", mono)}>QUESTION À CHOIX MULTIPLE {index + 1}</span>
                 {marquees[index] && (
@@ -780,7 +780,7 @@ function SessionQcm({ qcmId, qcm: fourni }) {
                         onClick={() => repondre(i)}
                         aria-pressed={choisi}
                         className={cx(
-                          "flex min-h-15 w-full items-center gap-4 rounded-[18px] border px-5 py-3.5 text-left text-base font-bold transition-colors",
+                          "flex min-h-15 w-full items-center gap-3 rounded-[18px] border px-3.5 py-3 text-left text-base font-bold transition-colors sm:gap-4 sm:px-5 sm:py-3.5",
                           choisi
                             ? "border-ink-950 bg-ink-950 text-white dark:border-white dark:bg-white dark:text-ink-950"
                             : "border-ink-200 bg-white text-ink-950 hover:border-ink-400 dark:border-ink-700 dark:bg-ink-900 dark:text-white dark:hover:border-ink-500"
@@ -939,7 +939,7 @@ function EcranResultat({ qcm, score, total, temps, reponses, detailsVisibles, ba
 
       <Container className="pb-14">
         <section
-          className="relative -mt-16 flex flex-wrap items-start justify-between gap-10 rounded-[32px] bg-[#271627] p-7 text-white sm:p-12 dark:ring-1 dark:ring-white/10"
+          className="relative -mt-16 flex flex-wrap items-start justify-between gap-10 rounded-[32px] bg-[#271627] p-5 text-white sm:p-12 dark:ring-1 dark:ring-white/10"
           style={QUADRILLAGE}
         >
           <div className="min-w-0 flex-[1_1_min(480px,100%)]">
@@ -1031,7 +1031,7 @@ function EcranResultat({ qcm, score, total, temps, reponses, detailsVisibles, ba
                 const choix = reponses[i];
                 const juste = choix === q.bonne;
                 return (
-                  <li key={i} className="flex gap-5 rounded-[24px] border border-ink-200 bg-white p-6 dark:border-ink-800 dark:bg-ink-900">
+                  <li key={i} className="flex gap-4 rounded-[24px] border border-ink-200 bg-white p-4 sm:gap-5 sm:p-6 dark:border-ink-800 dark:bg-ink-900">
                     <span
                       className={cx(
                         "grid size-9 shrink-0 place-items-center rounded-[11px]",

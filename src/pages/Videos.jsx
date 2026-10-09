@@ -29,15 +29,15 @@ const miniature = (id) => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 
 function Miniature({ video, grand = false }) {
   return (
-    <span className="relative block aspect-video w-full overflow-hidden rounded-[20px] bg-[#0f181b] ring-1 ring-white/10">
+    <span className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-[20px] bg-[#0f181b] ring-1 ring-white/10">
       <img src={miniature(video.youtubeId)} alt="" loading="lazy" className="size-full object-cover transition-transform duration-300 group-hover:scale-105" />
       <span
         className={cx(
-          "absolute top-1/2 left-1/2 grid -translate-1/2 place-items-center rounded-full bg-[#ffc94d] text-[#0f181b] shadow-lg transition-transform group-hover:scale-110",
-          grand ? "size-16" : "size-11"
+          "absolute grid place-items-center rounded-full bg-white/95 text-ink-950 shadow-lg transition-transform group-hover:scale-110",
+          grand ? "size-16" : "size-12"
         )}
       >
-        <Icon name="play" className={grand ? "size-6" : "size-4"} fill="currentColor" stroke="none" />
+        <Icon name="play" className={grand ? "size-6 translate-x-px" : "size-5 translate-x-px"} fill="currentColor" stroke="none" />
       </span>
       {video.duree && video.duree !== "—" && (
         <span className="absolute right-2 bottom-2 rounded-md bg-[#0f181b]/85 px-1.5 py-0.5 font-mono text-[11px] text-white">{video.duree}</span>

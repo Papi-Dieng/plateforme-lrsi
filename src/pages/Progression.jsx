@@ -51,7 +51,7 @@ const JOURS_COURTS = ["D", "L", "M", "M", "J", "V", "S"];
 const DEGRADE = "bg-gradient-to-r from-[#9b6bff] to-[#ff8fb3]";
 const ENCRE = "text-[#22183d] dark:text-white";
 const DOUX = "text-[#6b6280] dark:text-ink-300";
-const CARTE = "rounded-[28px] bg-white p-6 shadow-[0_20px_50px_-30px_#140f3680] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_30px_60px_-30px_#140f3699] sm:p-7 dark:bg-ink-900";
+const CARTE = "rounded-[28px] bg-white p-5 shadow-[0_20px_50px_-30px_#140f3680] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_30px_60px_-30px_#140f3699] sm:p-7 dark:bg-ink-900";
 
 // Couleurs des niveaux (forces et faiblesses).
 const TONS = {
@@ -621,7 +621,7 @@ export default function Progression() {
                 className="group/b relative cursor-default rounded-[20px] border border-white/20 bg-white/10 p-4 backdrop-blur-md transition-[transform,background-color] duration-200 outline-none hover:z-10 hover:-translate-y-1 hover:bg-white/20 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-white"
               >
                 <Bulle>{aide}</Bulle>
-                <dd className="text-3xl font-extrabold">
+                <dd className="text-2xl font-extrabold sm:text-3xl">
                   <Compte valeur={v} t={t} />
                   {u && <span className="ml-1 text-base font-bold text-white/80">{u}</span>}
                 </dd>
