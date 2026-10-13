@@ -24,7 +24,7 @@ function applicationInstallable() {
     start_url: './#/tableau-de-bord',
     scope: './',
     display: 'standalone',
-    background_color: '#0d101a',
+    background_color: '#ffffff',
     theme_color: '#1f47e0',
     icons: [
       { src: 'icones/icone-192.png', sizes: '192x192', type: 'image/png' },

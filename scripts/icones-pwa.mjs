@@ -14,15 +14,17 @@ import { mkdirSync, readFileSync } from "node:fs";
 import sharp from "sharp";
 
 const logo = readFileSync("public/logo.svg");
-const FOND = "#1f47e0";
+// Le baobab bleu sur blanc : le fond des icônes est blanc lui aussi.
+const FOND = "#ffffff";
 mkdirSync("public/icones", { recursive: true });
 
 for (const taille of [192, 512]) {
   await sharp(logo, { density: 600 }).resize(taille, taille).png().toFile(`public/icones/icone-${taille}.png`);
 }
 
-// Le logo occupe 70 % de la largeur : la zone sûre d'une icône
-// masquable est un cercle de 80 %.
+// La zone sûre d'une icône masquable est un cercle de 80 % : le logo
+// (tuile blanche, invisible sur le fond blanc) occupe 90 % de la largeur,
+// ce qui garde la feuille la plus éloignée du centre à 38 %.
 async function surFond(taille, part, fichier) {
   const interieur = Math.round(taille * part);
   const image = await sharp(logo, { density: 600 }).resize(interieur, interieur).png().toBuffer();
@@ -32,6 +34,6 @@ async function surFond(taille, part, fichier) {
     .toFile(fichier);
 }
 
-await surFond(512, 0.7, "public/icones/icone-masquable-512.png");
+await surFond(512, 0.9, "public/icones/icone-masquable-512.png");
 await surFond(180, 0.86, "public/icones/apple-touch-icon.png");
 console.log("Icônes écrites dans public/icones/");

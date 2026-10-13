@@ -6,8 +6,9 @@ import { cx } from "./classes";
 
    - Sunu Cours : le baobab binaire. L'arbre du Sénégal, dont les
      branches forment un arbre binaire, comme en algorithmique. Tronc et
-     branches blancs sur la tuile bleue ; les feuilles orange (le départ)
-     et citron (l'arrivée), les couleurs du site.
+     branches bleus sur une tuile blanche (choix du 13 octobre, à la
+     place du blanc sur bleu) ; les feuilles orange (le départ) et citron
+     (l'arrivée), les couleurs du site.
    - L'assistant : la bulle-étincelle. Une bulle de dialogue avec
      l'étincelle de l'IA découpée dedans, un point citron et un point
      orange.
@@ -57,13 +58,15 @@ export function Baobab({ trait = "#ffffff", fond = BLEU }) {
   );
 }
 
-/* Le logo du site : le baobab blanc sur la tuile bleue arrondie. */
+/* Le logo du site : le baobab bleu sur la tuile blanche arrondie. Le
+   liseré gris clair la détache d'un fond blanc ; sur fond sombre, la
+   tuile blanche ressort d'elle-même. */
 export function Logo({ className = "size-9" }) {
   return (
     <svg viewBox="0 0 120 120" className={className} aria-hidden="true">
-      <rect width="120" height="120" rx="30" fill={BLEU} />
+      <rect x="1.5" y="1.5" width="117" height="117" rx="28.5" fill="#ffffff" stroke="#dde3f3" strokeWidth="3" />
       <g transform="translate(12 6) scale(.8)">
-        <Baobab />
+        <Baobab trait={BLEU} fond="#ffffff" />
       </g>
     </svg>
   );
