@@ -46,7 +46,7 @@ function applicationInstallable() {
     generateBundle(_options, bundle) {
       this.emitFile({ type: 'asset', fileName: 'manifest.webmanifest', source: JSON.stringify(manifeste, null, 2) })
 
-      const publics = ['logo.svg', 'manifest.webmanifest', ...readdirSync('public/icones').map((f) => `icones/${f}`)]
+      const publics = ['logo.svg', 'logo-mono.svg', 'favicon.ico', 'manifest.webmanifest', ...readdirSync('public/icones').map((f) => `icones/${f}`)]
       // Ce qui ne sert à rien hors ligne n'est pas téléchargé d'avance (il
       // se charge normalement, en ligne, quand on en a besoin) :
       // - pdf.js, pour les couvertures des livres en PDF (1,7 Mo) ;

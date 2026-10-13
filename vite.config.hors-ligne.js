@@ -36,14 +36,18 @@ const FIN = "<!-- FIN AVERTISSEMENT FICHIER LOCAL -->";
 
 // L'icône vit dans `public/`, un dossier simplement recopié à côté du
 // HTML. Un fichier isolé ne la trouverait donc plus : on la recopie
-// directement dans la page, encodée en base64.
+// directement dans la page, encodée en base64, et on retire les icônes
+// de secours (favicon.ico, dessin d'une seule couleur), qui pointeraient
+// vers des fichiers absents.
 function integrerIcone() {
   return {
     name: "integrer-icone",
     transformIndexHtml(html) {
       const svg = readFileSync("public/logo.svg", "utf8");
       const donnees = `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
-      return html.replace('href="/logo.svg"', `href="${donnees}"`);
+      return html
+        .replace(/<!-- DEBUT SECOURS ICONE -->[\s\S]*?<!-- FIN SECOURS ICONE -->/, "")
+        .replace('href="/logo.svg"', `href="${donnees}"`);
     },
   };
 }
