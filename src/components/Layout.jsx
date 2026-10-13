@@ -16,7 +16,7 @@ import { initiales, useSession } from "../session";
 import { lireProfil, nomAffiche } from "../profil";
 import { getAvatar } from "../data/avatars";
 import { menuProfil, navigation, site } from "../data/site";
-import { lireNotifications } from "../notifications";
+import { lireComplements, lireNotifications } from "../notifications";
 
 /* ------------------------------------------------------------------ */
 /* Logo et signature                                                   */
@@ -259,11 +259,21 @@ function Pastille({ profil, session, taille = "size-10" }) {
 /* Cloche : ce qu'il y a à faire aujourd'hui (src/notifications.js)    */
 /* ------------------------------------------------------------------ */
 
+const jourLong = (iso) => {
+  const [a, m, j] = iso.split("-").map(Number);
+  return new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long" }).format(new Date(a, m - 1, j));
+};
+
 function Cloche() {
   const { session } = useSession();
   const { pathname } = useLocation();
   const [ouvert, setOuvert] = useState(false);
   const [entrees, setEntrees] = useState(lireNotifications);
+  const [complements, setComplements] = useState(lireComplements);
+  const relire = () => {
+    setEntrees(lireNotifications());
+    setComplements(lireComplements());
+  };
   const conteneur = useRef(null);
 
   // Relu à chaque changement de page : un QCM terminé ou un examen
@@ -271,7 +281,7 @@ function Cloche() {
   const [chemin, setChemin] = useState(pathname);
   if (chemin !== pathname) {
     setChemin(pathname);
-    setEntrees(lireNotifications());
+    relire();
     setOuvert(false);
   }
 
@@ -295,11 +305,11 @@ function Cloche() {
   const n = entrees.length;
 
   return (
-    <div ref={conteneur} className="relative hidden shrink-0 sm:block">
+    <div ref={conteneur} className="relative shrink-0">
       <button
         type="button"
         onClick={() => {
-          setEntrees(lireNotifications());
+          relire();
           setOuvert((v) => !v);
         }}
         aria-expanded={ouvert}
@@ -315,14 +325,15 @@ function Cloche() {
       </button>
 
       {ouvert && (
-        <div role="region" aria-label="Notifications du jour" className="absolute top-12 right-0 z-40 w-80 rounded-2xl border border-ink-200 bg-white p-2 shadow-xl dark:border-ink-700 dark:bg-ink-900">
+        <div role="region" aria-label="Notifications du jour" className="absolute top-12 right-0 z-40 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-ink-200 bg-white p-2 shadow-xl dark:border-ink-700 dark:bg-ink-900">
           <p className="px-3 pt-2 pb-1 text-xs font-semibold tracking-wide text-ink-500 uppercase dark:text-ink-400">
             Aujourd&apos;hui
           </p>
           {n === 0 ? (
             <p className="px-3 pb-3 text-sm/6 text-ink-600 dark:text-ink-300">
-              Rien pour aujourd&apos;hui. Les QCM à refaire et tes examens des 7 prochains jours
-              s&apos;afficheront ici.
+              {complements.prochaine
+                ? `Rien à refaire aujourd'hui. Prochaine révision le ${jourLong(complements.prochaine.jour)} : « ${complements.prochaine.titre} ».`
+                : "Rien pour aujourd'hui. Les QCM à refaire et tes examens des 7 prochains jours s'afficheront ici."}
             </p>
           ) : (
             <ul>
@@ -344,6 +355,32 @@ function Cloche() {
                 </li>
               ))}
             </ul>
+          )}
+          {complements.aRelire.length > 0 && (
+            <>
+              <p className="mt-1 border-t border-ink-100 px-3 pt-3 pb-1 text-xs font-semibold tracking-wide text-ink-500 uppercase dark:border-ink-800 dark:text-ink-400">
+                À relire
+              </p>
+              <ul>
+                {complements.aRelire.map((e) => (
+                  <li key={e.cle}>
+                    <Link
+                      to={e.lien}
+                      onClick={() => setOuvert(false)}
+                      className="flex gap-3 rounded-xl px-3 py-2.5 hover:bg-ink-50 dark:hover:bg-ink-800"
+                    >
+                      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-sun-100 text-sun-900 dark:bg-sun-500/15 dark:text-sun-300">
+                        <Icon name={e.icone} className="size-4" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium text-ink-900 dark:text-white">{e.titre}</span>
+                        <span className="block text-xs text-ink-500 dark:text-ink-400">{e.detail}</span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
           <Link
             to="/planning"

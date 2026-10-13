@@ -1,6 +1,8 @@
 import { qcms } from "./data/qcm";
 import { aujourdhui, joursEntre, lirePlanning } from "./planning";
 import { lireRevisions, revisionsDues } from "./revisions";
+import { analyserMatieres, chapitresARevoir } from "./analyseMatieres";
+import { lireChapitresLus, lireScores } from "./progression";
 
 /* ==================================================================
    Ce que montre la cloche du haut de page : ce qu'il y a à faire
@@ -8,13 +10,19 @@ import { lireRevisions, revisionsDues } from "./revisions";
 
    - les QCM à refaire (révision espacée, src/revisions.js), en retard
      ou prévus aujourd'hui ;
-   - les examens de l'emploi du temps dans les 7 prochains jours.
+   - les examens de l'emploi du temps dans les 7 prochains jours ;
+   - en complément, sans compter dans le point rouge : les chapitres à
+     relire dans les matières fragiles, et la prochaine révision quand
+     rien n'est dû aujourd'hui. (Ce rappel était un bloc du tableau de
+     bord ; il vit dans la cloche depuis le 13 octobre 2026.)
 
    Rien n'est envoyé nulle part. Le point rouge de la cloche n'apparaît
    que s'il y a au moins une entrée.
    ================================================================== */
 
 export const HORIZON_EXAMENS = 7;
+
+const enRetard = (n) => `En retard de ${n} jour${n > 1 ? "s" : ""} : c'est le moment de le revoir`;
 
 const quand = (n) => (n === 0 ? "Aujourd'hui" : n === 1 ? "Demain" : `Dans ${n} jours`);
 
@@ -24,7 +32,7 @@ export function notificationsDuJour({ jour, planning, revisions, qcms: liste }) 
     cle: `qcm:${r.qcm.id}`,
     icone: "target",
     titre: `Refaire le QCM « ${r.qcm.titre} »`,
-    detail: r.du < jour ? "En retard : c'est le moment de le revoir" : "Prévu aujourd'hui",
+    detail: r.du < jour ? enRetard(joursEntre(r.du, jour)) : "Prévu aujourd'hui",
     lien: `/qcm/${r.qcm.id}`,
   }));
 
@@ -50,6 +58,30 @@ export function notificationsDuJour({ jour, planning, revisions, qcms: liste }) 
   return [...examens, ...aRefaire];
 }
 
+/* Le complément, sans point rouge : { aRelire: [...], prochaine } où
+   `prochaine` est { jour, titre } de la prochaine révision, ou null. */
+export function complementsDuJour({ jour, revisions, qcms: liste, chapitres = [] }) {
+  const { aVenir } = revisionsDues(liste, jour, revisions);
+  return {
+    aRelire: chapitres.slice(0, 3).map((c) => ({
+      cle: `chapitre:${c.cle}`,
+      icone: "book",
+      titre: `Relire « ${c.chapitre} »`,
+      detail: `${c.nomMatiere} · ${c.dejaLu ? "à relire" : "pas encore lu"}`,
+      lien: `/cours/${c.matiere}`,
+    })),
+    prochaine: aVenir[0] ? { jour: aVenir[0].du, titre: aVenir[0].qcm.titre } : null,
+  };
+}
+
 /* Côté navigateur. */
 export const lireNotifications = () =>
   notificationsDuJour({ jour: aujourdhui(), planning: lirePlanning(), revisions: lireRevisions(), qcms });
+
+export const lireComplements = () =>
+  complementsDuJour({
+    jour: aujourdhui(),
+    revisions: lireRevisions(),
+    qcms,
+    chapitres: chapitresARevoir(analyserMatieres(lireScores()), lireChapitresLus()),
+  });

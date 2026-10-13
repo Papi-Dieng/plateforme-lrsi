@@ -2,7 +2,8 @@ import { qcms } from "../src/data/qcm.js";
 import { aller, entrerEnInvite, expect, test } from "./outils.js";
 
 /* ==================================================================
-   « À revoir aujourd'hui » : la révision espacée sur le tableau de bord.
+   Le rappel de la révision espacée vit dans la cloche (notifications),
+   sur ordinateur comme sur téléphone : plus sur le tableau de bord.
    ================================================================== */
 
 const jour = (decalage) => {
@@ -14,39 +15,33 @@ const jour = (decalage) => {
 const revision = (page, du, etape) =>
   page.addInitScript(([id, d, e]) => localStorage.setItem("lrsi-revisions", JSON.stringify({ [id]: { du: d, etape: e } })), [qcms[0].id, du, etape]);
 
-test("un QCM en retard s'affiche avec son retard, et « Refaire » l'ouvre", async ({ page, isMobile }) => {
-  test.skip(isMobile, "le bloc « À revoir » est masqué sur téléphone (voir Accueil.jsx)");
+const ouvrirCloche = (page) => page.getByRole("button", { name: /^Notifications :/ }).click();
+const panneau = (page) => page.getByRole("region", { name: "Notifications du jour" });
+
+test("un QCM en retard s'affiche dans la cloche avec son retard, et l'entrée l'ouvre", async ({ page }) => {
   await revision(page, jour(-3), 0);
   await entrerEnInvite(page);
   await aller(page, "/tableau-de-bord");
-  const bloc = page.getByRole("region", { name: "À revoir aujourd'hui" });
-  await expect(bloc).toContainText("en retard de 3 jours");
-  await bloc.getByRole("link", { name: `Refaire le QCM « ${qcms[0].titre} »` }).click();
+  await expect(page.getByRole("button", { name: "Notifications : 1 à faire aujourd'hui" })).toBeVisible();
+  await ouvrirCloche(page);
+  await expect(panneau(page)).toContainText("En retard de 3 jours");
+  await panneau(page).getByRole("link", { name: new RegExp(`Refaire le QCM « ${qcms[0].titre} »`) }).click();
   await expect(page).toHaveURL(new RegExp(`#/qcm/${qcms[0].id}$`));
 });
 
-test("rien de dû : la prochaine révision est annoncée", async ({ page, isMobile }) => {
-  test.skip(isMobile, "le bloc « À revoir » est masqué sur téléphone (voir Accueil.jsx)");
+test("rien de dû : la cloche annonce la prochaine révision, sans point rouge", async ({ page }) => {
   await revision(page, jour(4), 1);
   await entrerEnInvite(page);
   await aller(page, "/tableau-de-bord");
-  await expect(page.getByRole("region", { name: "À revoir aujourd'hui" })).toContainText("Rien à refaire aujourd'hui. Prochaine révision le");
+  await ouvrirCloche(page);
+  await expect(panneau(page)).toContainText("Rien à refaire aujourd'hui. Prochaine révision le");
+  await expect(page.getByRole("button", { name: "Notifications : rien pour aujourd'hui" })).toBeVisible();
 });
 
-test("rien à revoir du tout : pas de bloc", async ({ page }) => {
+test("le tableau de bord n'affiche plus le bloc de rappel", async ({ page }) => {
+  await revision(page, jour(-3), 0);
   await entrerEnInvite(page);
   await aller(page, "/tableau-de-bord");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByRole("region", { name: "À revoir aujourd'hui" })).toHaveCount(0);
-});
-
-test("sur téléphone, le bloc existe mais reste caché", async ({ page, isMobile }) => {
-  test.skip(!isMobile, "comportement propre au téléphone");
-  await revision(page, jour(-3), 0);
-  await entrerEnInvite(page);
-  await aller(page, "/tableau-de-bord");
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  // Présent dans la page (le tableau de bord reste le même), mais masqué
-  // par `hidden lg:block` : c'est le seul endroit où il est montré.
-  await expect(page.locator('section[aria-labelledby="titre-a-revoir"]')).toBeHidden();
 });

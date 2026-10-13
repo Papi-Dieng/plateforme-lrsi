@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { notificationsDuJour } from "./notifications";
+import { complementsDuJour, notificationsDuJour } from "./notifications";
 
 const JOUR = "2026-09-29";
 const qcms = [
@@ -20,7 +20,7 @@ describe("la cloche", () => {
       sql: { du: "2026-10-03", etape: 1 },
     });
     expect(n).toEqual([
-      { cle: "qcm:osi", icone: "target", titre: "Refaire le QCM « OSI »", detail: "En retard : c'est le moment de le revoir", lien: "/qcm/osi" },
+      { cle: "qcm:osi", icone: "target", titre: "Refaire le QCM « OSI »", detail: "En retard de 2 jours : c'est le moment de le revoir", lien: "/qcm/osi" },
     ]);
   });
 
@@ -48,5 +48,19 @@ describe("la cloche", () => {
   test("un examen aujourd'hui compte encore", () => {
     const planning = { ...vide, evaluations: [{ id: "x", titre: "Examen de Systèmes", date: JOUR }] };
     expect(notifs(planning)[0].detail).toBe("Aujourd'hui");
+  });
+});
+
+describe("le complément de la cloche", () => {
+  test("les chapitres à relire (trois au plus) et la prochaine révision", () => {
+    const chapitres = ["A", "B", "C", "D"].map((t) => ({ cle: `reseaux|${t}`, chapitre: t, matiere: "reseaux", nomMatiere: "Réseaux", dejaLu: t === "A" }));
+    const c = complementsDuJour({ jour: JOUR, revisions: { sql: { du: "2026-10-03", etape: 1 } }, qcms, chapitres });
+    expect(c.aRelire).toHaveLength(3);
+    expect(c.aRelire[0]).toEqual({ cle: "chapitre:reseaux|A", icone: "book", titre: "Relire « A »", detail: "Réseaux · à relire", lien: "/cours/reseaux" });
+    expect(c.prochaine).toEqual({ jour: "2026-10-03", titre: "SQL" });
+  });
+
+  test("rien de prévu : ni chapitre ni prochaine révision", () => {
+    expect(complementsDuJour({ jour: JOUR, revisions: {}, qcms })).toEqual({ aRelire: [], prochaine: null });
   });
 });
