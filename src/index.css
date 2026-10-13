@@ -263,6 +263,18 @@
   transform-origin: center;
   animation: halo 2.2s ease-out infinite;
 }
+/* L'étincelle du logo de l'assistant, pendant qu'il prépare sa réponse. */
+@keyframes etincelle {
+  50% {
+    transform: scale(0.72) rotate(45deg);
+  }
+}
+.etincelle-anime {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: etincelle 1.2s ease-in-out infinite;
+}
+
 @keyframes derive {
   from {
     transform: translateX(-40px);

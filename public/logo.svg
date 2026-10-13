@@ -1,7 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <rect width="64" height="64" rx="16" fill="#1f47e0"/>
-  <circle cx="32" cy="17" r="5.5" fill="#fff"/>
-  <circle cx="16" cy="45" r="5.5" fill="#cdef3e"/>
-  <circle cx="48" cy="45" r="5.5" fill="#ff5a2b"/>
-  <path d="M32 22.5 16 39.5M32 22.5l16 17M16 45h32" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".85"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <!-- Le baobab binaire : mêmes tracés que src/components/Logo.jsx. -->
+  <rect width="120" height="120" rx="30" fill="#1f47e0"/>
+  <g transform="translate(12 6) scale(.8)">
+    <path d="M47 112 C50 98 50 86 45 72 Q60 66 75 72 C70 86 70 98 73 112 Z" fill="#fff"/>
+    <g stroke="#fff" stroke-width="7" stroke-linecap="round">
+      <path d="M60 70L36 50M60 70L84 50M36 50L20 34M36 50L44 26M84 50L76 26M84 50L100 34"/>
+    </g>
+    <circle cx="36" cy="50" r="5.5" fill="#1f47e0" stroke="#fff" stroke-width="3.5"/>
+    <circle cx="84" cy="50" r="5.5" fill="#1f47e0" stroke="#fff" stroke-width="3.5"/>
+    <circle cx="20" cy="34" r="9" fill="#ff5a2b" stroke="#1f47e0" stroke-width="3.5"/>
+    <circle cx="44" cy="26" r="9" fill="#cdef3e" stroke="#1f47e0" stroke-width="3.5"/>
+    <circle cx="76" cy="26" r="9" fill="#ff5a2b" stroke="#1f47e0" stroke-width="3.5"/>
+    <circle cx="100" cy="34" r="9" fill="#cdef3e" stroke="#1f47e0" stroke-width="3.5"/>
+  </g>
 </svg>

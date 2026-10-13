@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Icon from "../components/Icon";
+import { LogoAssistant } from "../components/Logo";
 import ChargementIA from "../components/ChargementIA";
 import SaisieIA from "../components/SaisieIA";
 import { ETAPES_ASSISTANT } from "../chargementIA";
@@ -94,11 +95,10 @@ const iconesLien = {
 };
 
 /* Mise en page d'après la maquette « Assistant de révision » (7 octobre
-   2026) : salle sombre prune, un orbe pêche-rose pour l'assistant, les
+   2026) : salle sombre prune, la bulle-étincelle pour l'assistant, les
    réponses sans bulle. (« Les coulisses », le panneau de droite, a été
    retiré à la demande le 7 octobre 2026.) */
 
-const ORBE = "rounded-full bg-[radial-gradient(circle_at_30%_30%,#ffc1a0,#ff8fb8_55%,#b9a4ff)]";
 const DEGRADE = "bg-gradient-to-r from-[#ffc1a0] to-[#ff9fbf]";
 const mono = "font-mono text-[11px] font-bold tracking-[0.14em] uppercase";
 const tonsLien = {
@@ -410,7 +410,7 @@ export default function Assistant() {
         <div className="shrink-0 px-4 pt-4 pb-2 sm:px-6">
           <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-6 gap-y-3">
             <div className="flex items-center gap-3">
-              <span aria-hidden="true" className={cx(ORBE, "size-10 shrink-0 shadow-[0_0_30px_#ff8fb855]")} />
+              <LogoAssistant className="size-10 shrink-0" />
               <div>
                 <h1 className="text-xl font-extrabold tracking-tight text-white">Assistant de révision</h1>
                 <p className="mt-1 inline-flex items-center gap-2 rounded-full border border-white/15 px-2.5 py-0.5 text-xs text-[#cfc3d6]">
@@ -456,7 +456,7 @@ export default function Assistant() {
           <div className="mx-auto max-w-3xl space-y-8 px-4 py-6 sm:px-6">
             {messages.length === 0 && (
               <div className="pt-6 text-center">
-                <span aria-hidden="true" className={cx(ORBE, "mx-auto block size-24 shadow-[0_0_80px_#ff8fb866]")} />
+                <LogoAssistant className="mx-auto block size-24" />
                 <p className="mt-8 bg-gradient-to-r from-[#ffc1a0] via-[#ff9fbf] to-[#b9a4ff] bg-clip-text text-6xl font-extrabold tracking-[-0.05em] text-transparent">
                   Salut !
                 </p>
@@ -534,7 +534,7 @@ export default function Assistant() {
                 </div>
               ) : (
                 <div key={m.id} ref={i === messages.length - 1 ? dernierMessage : undefined} className="flex scroll-my-6 gap-4">
-                  <span aria-hidden="true" className={cx(ORBE, "mt-1 size-7 shrink-0")} />
+                  <LogoAssistant anime={m.etat === "attente"} className="mt-1 size-7 shrink-0" />
                   <div className="min-w-0 flex-1">
                     <div aria-live="polite" className="text-[16px]/7 text-[#f4eef7]">
                       {m.etat === "attente" ? (

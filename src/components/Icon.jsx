@@ -195,6 +195,17 @@ const paths = {
     </>
   ),
   route: <path d="M6 20V4M6 4h10l-2 3.5L16 11H6M18 20h-8" />,
+  // Le logo de l'assistant (bulle-étincelle) en une couleur : la bulle
+  // pleine, l'étincelle découpée dedans (components/Logo.jsx).
+  assistant: (
+    <path
+      transform="scale(.2)"
+      fill="currentColor"
+      stroke="none"
+      fillRule="evenodd"
+      d="M30 18 H90 A22 22 0 0 1 112 40 V72 A22 22 0 0 1 90 94 H50 L28 110 L32 94 H30 A22 22 0 0 1 8 72 V40 A22 22 0 0 1 30 18 Z M60 32 C62 48 68 54 84 56 C68 58 62 64 60 80 C58 64 52 58 36 56 C52 54 58 48 60 32 Z"
+    />
+  ),
 };
 
 export default function Icon({ name, className = "size-5", ...rest }) {

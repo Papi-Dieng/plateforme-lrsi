@@ -22,23 +22,10 @@ import { lireComplements, lireNotifications } from "../notifications";
 /* Logo et signature                                                   */
 /* ------------------------------------------------------------------ */
 
-export function Logo({ className = "size-9" }) {
-  return (
-    <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
-      <rect width="64" height="64" rx="16" className="fill-brand-600" />
-      <circle cx="32" cy="17" r="5.5" fill="#fff" />
-      <circle cx="16" cy="45" r="5.5" className="fill-lime-400" />
-      <circle cx="48" cy="45" r="5.5" className="fill-flame-500" />
-      <path
-        d="M32 22.5 16 39.5M32 22.5l16 17M16 45h32"
-        stroke="#fff"
-        strokeWidth="3"
-        strokeLinecap="round"
-        opacity=".85"
-      />
-    </svg>
-  );
-}
+// Le logo vit dans components/Logo.jsx (baobab binaire) ; il reste
+// importable depuis ici pour les pages qui le prenaient déjà là.
+import { Logo } from "./Logo";
+export { Logo };
 
 // Le nom vient de src/data/site.js. `nomAccent`, s'il est renseigné et qu'il
 // correspond au début du nom, s'affiche en orange : c'est purement décoratif
@@ -117,7 +104,7 @@ const icones = {
   "/favoris": "bookmark",
   "/progression": "layers",
   "/planning": "clock",
-  "/assistant": "sparkles",
+  "/assistant": "assistant",
   "/projet": "info",
 };
 
