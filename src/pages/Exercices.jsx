@@ -123,7 +123,7 @@ function Pastille({ actif, onClick, desactive, children, nombre, point }) {
       {children}
       <span
         className={cx(
-          "font-mono text-[10.5px] font-medium",
+          "font-mono text-[11px] font-medium",
           actif ? "rounded bg-lime-400 px-1 text-ink-950" : "text-ink-500 dark:text-ink-400"
         )}
       >

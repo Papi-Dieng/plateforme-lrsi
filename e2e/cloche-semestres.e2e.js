@@ -76,12 +76,15 @@ test.describe("semestres", () => {
     await expect(page).toHaveURL(/semestre=2/);
   });
 
-  test("le filtre Semestre 2 de la page Cours ouvre directement la partie semestre 2", async ({ page }) => {
+  test("le filtre Semestre 2 de la page Cours ouvre directement la partie semestre 2", async ({ page, isMobile }) => {
     await entrerEnInvite(page);
     await aller(page, "/cours");
     const filtres = page.getByRole("group", { name: "Filtrer par semestre" });
     await filtres.getByRole("button", { name: "Semestre 2" }).click();
-    await page.getByRole("link", { name: new RegExp(matieres[0].nom) }).first().click();
+    // Ordinateur : une station du grand plan (lien). Téléphone : la bande de
+    // la ligne, qui l'ouvre sous les cartes, au semestre filtré.
+    if (isMobile) await page.getByRole("button", { name: new RegExp(`^Ouvrir la ligne 1 : ${matieres[0].nom}`) }).click();
+    else await page.getByRole("link", { name: new RegExp(matieres[0].nom) }).first().click();
     const s2 = matieres[0].chapitres.find((c) => c.semestre === 2);
     await expect(page.getByRole("heading", { name: s2.titre })).toBeVisible();
   });

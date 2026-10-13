@@ -37,7 +37,7 @@ function Livre({ r, teinte }) {
   return (
     <span className="relative block h-36 w-26 rotate-[2deg] shadow-[8px_10px_18px_-6px_#0005] transition-transform duration-300 group-hover:-translate-y-1 group-hover:rotate-0">
       {composee ? (
-        <span className={cx("flex size-full flex-col justify-between rounded-r-md p-2.5", teinte.livre, sombre ? "text-white" : "text-[#1a1530]")}>
+        <span aria-hidden="true" className={cx("flex size-full flex-col justify-between rounded-r-md p-2.5", teinte.livre, sombre ? "text-white" : "text-[#1a1530]")}>
           <span className="font-mono text-[7px] uppercase">{r.auteurs}</span>
           <span className="text-[11px]/[1.1] font-extrabold">{r.titre}</span>
         </span>

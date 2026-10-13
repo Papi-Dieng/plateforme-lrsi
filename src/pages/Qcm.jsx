@@ -226,13 +226,13 @@ export function QcmListe() {
         <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Filtrer par matière">
           <button type="button" onClick={() => setMatiere("toutes")} aria-pressed={matiere === "toutes"} className={pastille(matiere === "toutes")}>
             Toutes les matières
-            <span className="font-mono text-[10.5px] font-medium opacity-70">{qcms.length}</span>
+            <span className="font-mono text-[11px] font-medium opacity-70">{qcms.length}</span>
           </button>
           {matieresAvecQcm.map((m) => (
             <button key={m.id} type="button" onClick={() => setMatiere(m.id)} aria-pressed={matiere === m.id} className={pastille(matiere === m.id)}>
               <i aria-hidden="true" className={cx("size-2 rounded-full", themeMatiere(m).point)} />
               {m.nom}
-              <span className="font-mono text-[10.5px] font-medium opacity-70">{qcms.filter((q) => q.matiere === m.id).length}</span>
+              <span className="font-mono text-[11px] font-medium opacity-70">{qcms.filter((q) => q.matiere === m.id).length}</span>
             </button>
           ))}
         </div>

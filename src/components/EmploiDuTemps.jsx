@@ -647,11 +647,11 @@ export default function EmploiDuTemps({ evenements, onChange, elementsDuJour, ma
                 aria-selected={vue === v.valeur}
                 onClick={() => setVue(v.valeur)}
                 className={cx(
-                  "inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
+                  "inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium transition-colors sm:px-3",
                   vue === v.valeur ? "bg-white text-ink-900 shadow-sm dark:bg-ink-950 dark:text-white" : "text-ink-600 hover:text-ink-900 dark:text-ink-300"
                 )}
               >
-                <Icon name={v.icone} className="size-4" />
+                <Icon name={v.icone} className="hidden size-4 sm:block" />
                 {v.label}
               </button>
             ))}

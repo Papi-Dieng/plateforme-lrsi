@@ -80,7 +80,7 @@ function Plan({ liste, lus, active, setActive, semestre, onOuvrir }) {
   };
 
   return (
-    <div className="overflow-x-auto rounded-[28px] border border-ink-200 bg-[radial-gradient(#d4d4dc_1px,transparent_1px)] [background-size:16px_16px] dark:border-ink-800 dark:bg-ink-900 dark:bg-[radial-gradient(#3a3a46_1px,transparent_1px)]" tabIndex={0} role="region" aria-label="Plan des cours">
+    <div className="hidden overflow-x-auto rounded-[28px] border border-ink-200 sm:block bg-[radial-gradient(#d4d4dc_1px,transparent_1px)] [background-size:16px_16px] dark:border-ink-800 dark:bg-ink-900 dark:bg-[radial-gradient(#3a3a46_1px,transparent_1px)]" tabIndex={0} role="region" aria-label="Plan des cours">
       <svg viewBox={`0 0 ${LARGEUR} ${hauteur}`} className="min-w-[760px]" role="group" aria-label="Plan des lignes : une ligne par matière, une station par chapitre">
         {semestre !== "2" && <text x={MARGE - 30} y="26" className="fill-ink-600 font-mono text-[11px] font-bold tracking-widest dark:fill-ink-300">ZONE 1 · SEMESTRE 1</text>}
         {semestre !== "1" && <text x={LARGEUR - MARGE + 30} y="26" textAnchor="end" className="fill-ink-600 font-mono text-[11px] font-bold tracking-widest dark:fill-ink-300">ZONE 2 · SEMESTRE 2</text>}
@@ -156,6 +156,60 @@ function Plan({ liste, lus, active, setActive, semestre, onOuvrir }) {
         })}
       </svg>
     </div>
+  );
+}
+
+/* Sur téléphone, le grand plan devient illisible (rétréci à 360 px, les
+   noms se chevauchent) : chaque ligne y est une bande avec ses stations
+   en points, semestre 1 puis semestre 2, et la toucher ouvre la ligne
+   sous les cartes. Même légende que le grand plan. */
+function PlanTelephone({ liste, lus, semestre, ouverte, onOuvrir }) {
+  const cotes = semestre === "1" ? [1] : semestre === "2" ? [2] : [1, 2];
+  return (
+    <ul className="space-y-2 sm:hidden" aria-label="Plan des lignes">
+      {liste.map((m) => {
+        const c = couleur(m);
+        const chapitres = cotes.flatMap((n) => chapitresDuSemestre(m, n).map((ch) => ({ ch, n })));
+        const faits = chapitres.filter(({ ch }) => ch.statut === "disponible" && lus[refChapitre(m.id, ch.titre)]).length;
+        return (
+          <li key={m.id}>
+            <button
+              type="button"
+              onClick={() => onOuvrir(m.id)}
+              aria-expanded={ouverte === m.id}
+              aria-controls="ligne-ouverte"
+              aria-label={`Ouvrir la ligne ${rang(m) + 1} : ${m.nom}, ${faits} chapitre${faits > 1 ? "s" : ""} lu${faits > 1 ? "s" : ""} sur ${chapitres.length}`}
+              className={cx(
+                "flex min-h-14 w-full items-center gap-3 rounded-2xl border bg-white px-3 py-2.5 text-left dark:bg-ink-900",
+                ouverte === m.id ? "border-2" : "border-ink-200 dark:border-ink-800"
+              )}
+              style={ouverte === m.id ? { borderColor: c } : undefined}
+            >
+              <Numero m={m} taille="size-9 text-sm" />
+              <span className="min-w-0 flex-1">
+                <span className="flex items-baseline justify-between gap-2">
+                  <span className="truncate text-sm font-extrabold text-ink-950 dark:text-white">{m.nomCourt ?? m.nom}</span>
+                  <span className="shrink-0 font-mono text-xs text-ink-600 dark:text-ink-300">
+                    {faits}/{chapitres.length}
+                  </span>
+                </span>
+                <span aria-hidden="true" className="relative mt-2 flex items-center justify-between">
+                  <span className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full" style={{ background: c }} />
+                  {chapitres.map(({ ch, n }, i) => {
+                    const pret = ch.statut === "disponible";
+                    const lu = pret && lus[refChapitre(m.id, ch.titre)];
+                    const passage = cotes.length === 2 && n === 2 && chapitres[i - 1]?.n === 1;
+                    return (
+                      <span key={`${n}-${ch.titre}`} className={cx("relative size-3.5 rounded-full border-[3px]", !pret && "border-dashed", passage && "ml-3")} style={{ borderColor: c, background: lu ? c : "#fff" }} />
+                    );
+                  })}
+                </span>
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -297,11 +351,13 @@ export function Cours() {
         {resultats.length > 0 && (
           <div className="mt-6">
             <Plan liste={resultats} lus={lus} active={allumee?.id} setActive={setActive} semestre={semestre} onOuvrir={ouvrir} />
+            <PlanTelephone liste={resultats} lus={lus} semestre={semestre} ouverte={ouverte} onOuvrir={ouvrir} />
             <p className="mt-2 flex flex-wrap justify-between gap-2 text-xs text-ink-600 dark:text-ink-300">
               <span>
                 Ligne {allumee ? rang(allumee) + 1 : ""}, {allumee?.nom} : ses stations sont nommées sur le plan.
               </span>
-              <span>Survole une ligne pour la voir ; touche un numéro de ligne pour l'ouvrir ci-dessous.</span>
+              <span className="hidden sm:inline">Survole une ligne pour la voir ; touche un numéro de ligne pour l'ouvrir ci-dessous.</span>
+              <span className="sm:hidden">Touche une ligne pour l'ouvrir ci-dessous.</span>
             </p>
           </div>
         )}
@@ -462,15 +518,17 @@ function PanneauLigne({ matiere, Titre = "h2", partie, choisirPartie, lus, setLu
   return (
         <div id={id} className={cx("scroll-mt-6 rounded-[32px] p-5 sm:p-8", className)} style={{ background: `color-mix(in srgb, ${c0} 12%, transparent)` }}>
           {/* ---- En-tête ---- */}
-          <header className="flex flex-wrap items-start gap-5">
-            <span className="grid size-20 shrink-0 place-items-center rounded-full border-[6px] border-white text-4xl font-extrabold text-white shadow-lg dark:border-ink-900" style={{ background: couleurTexte(matiere) }}>
+          {/* Téléphone : le rond et le favori en haut, le texte sur toute la
+              largeur dessous (sinon le titre se couperait lettre par lettre). */}
+          <header className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-5 gap-y-4 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
+            <span className="grid size-14 shrink-0 place-items-center rounded-full border-4 border-white text-2xl font-extrabold text-white shadow-lg sm:size-20 sm:border-[6px] sm:text-4xl dark:border-ink-900" style={{ background: couleurTexte(matiere) }}>
               {rang(matiere) + 1}
             </span>
-            <div className="min-w-0 flex-1">
+            <div className="col-span-2 min-w-0 max-sm:order-last sm:col-span-1">
               <p className={cx(mono, "text-ink-700 dark:text-ink-300")}>
                 Ligne {rang(matiere) + 1} · {presents.map((n) => `Semestre ${n}`).join(" · ")}
               </p>
-              <Titre className="mt-1 text-4xl font-extrabold tracking-[-0.04em] text-ink-950 sm:text-5xl dark:text-white">{matiere.nom}</Titre>
+              <Titre className="mt-1 text-[1.75rem] leading-tight font-extrabold tracking-[-0.03em] text-balance hyphens-auto text-ink-950 sm:text-5xl sm:tracking-[-0.04em] dark:text-white" lang="fr">{matiere.nom}</Titre>
               <p className="mt-3 max-w-2xl text-[15px]/7 text-ink-700 dark:text-ink-300">{matiere.resume}</p>
               <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-bold">
                 <span className="rounded-full px-2.5 py-1 text-white" style={{ background: couleurTexte(matiere) }}>
@@ -485,7 +543,9 @@ function PanneauLigne({ matiere, Titre = "h2", partie, choisirPartie, lus, setLu
                 )}
               </div>
             </div>
-            <BoutonFavori type="matiere" reference={matiere.id} libelle={matiere.nom} variante="encadre" avecTexte />
+            <span className="justify-self-end">
+              <BoutonFavori type="matiere" reference={matiere.id} libelle={matiere.nom} variante="encadre" avecTexte />
+            </span>
           </header>
 
           <div className="mt-8 grid items-start gap-6 lg:grid-cols-[1fr_20rem]">

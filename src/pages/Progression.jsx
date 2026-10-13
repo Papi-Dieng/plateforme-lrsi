@@ -688,7 +688,15 @@ export default function Progression() {
                 <li key={j.cle} tabIndex={0} className="group relative flex flex-col items-center rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[#e8579c]">
                   <span
                     aria-hidden="true"
-                    className="pointer-events-none absolute -top-11 left-1/2 z-10 -translate-x-1/2 scale-90 rounded-xl bg-[#22183d] px-2.5 py-1.5 text-[11px] font-bold whitespace-nowrap text-white opacity-0 shadow-lg transition-[opacity,transform] group-hover:scale-100 group-hover:opacity-100 group-focus-visible:scale-100 group-focus-visible:opacity-100"
+                    className={cx(
+                      "pointer-events-none absolute -top-11 left-1/2 z-10 -translate-x-1/2 scale-90 rounded-xl bg-[#22183d] px-2.5 py-1.5 text-[11px] font-bold whitespace-nowrap text-white opacity-0 shadow-lg transition-[opacity,transform] group-hover:scale-100 group-hover:opacity-100 group-focus-visible:scale-100 group-focus-visible:opacity-100",
+                      // Aux bords de la grille (7 colonnes sur téléphone, 14
+                      // au-delà), la bulle s'aligne sur le bord pour rester à l'écran.
+                      n % 7 <= 1 && "max-sm:left-0 max-sm:translate-x-0",
+                      n % 7 >= 5 && "max-sm:right-0 max-sm:left-auto max-sm:translate-x-0",
+                      n <= 1 && "sm:left-0 sm:translate-x-0",
+                      n >= JOURS_SUIVIS - 2 && "sm:right-0 sm:left-auto sm:translate-x-0"
+                    )}
                   >
                     {j.date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })} · {j.actif ? "actif" : "rien"}
                   </span>
