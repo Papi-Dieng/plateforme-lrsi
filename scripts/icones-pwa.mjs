@@ -1,15 +1,22 @@
 /* ==================================================================
    Fabrique les icônes de l'application installable (PWA) et l'icône de
-   l'onglet, à partir de public/logo.svg. À relancer seulement si le
-   logo change :
+   l'onglet, à partir de public/logo-baobab.svg. À relancer seulement
+   si le logo change :
 
      node scripts/icones-pwa.mjs
 
-   - icone-192.png, icone-512.png : l'icône telle quelle (téléphone,
+   Le nom des fichiers porte celui du dessin (baobab). Ce n'est pas une
+   coquetterie : un navigateur, un téléphone ou une application déjà
+   installée gardent longtemps en mémoire une image dont l'adresse n'a
+   pas bougé. Redessiner le logo sans changer ces noms laisse donc
+   l'ancienne icône partout. Un nouveau logo = de nouveaux noms ici,
+   dans index.html et dans vite.config.js.
+
+   - baobab-192.png, baobab-512.png : l'icône telle quelle (téléphone,
      tablette, et application installée sur un ordinateur) ;
-   - icone-masquable-512.png : le logo réduit au centre d'un fond plein,
+   - baobab-masquable-512.png : le logo réduit au centre d'un fond plein,
      pour Android qui découpe l'icône en cercle ou en goutte ;
-   - apple-touch-icon.png (180 px) : fond plein, iOS arrondit lui-même ;
+   - baobab-apple-touch.png (180 px) : fond plein, iOS arrondit lui-même ;
    - favicon.ico (16, 32, 48 px) : le secours des navigateurs qui ne
      savent pas afficher une icône SVG (Safari d'avant 2022, vieux
      Android, Firefox ancien) et l'icône des raccourcis sur un
@@ -20,7 +27,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import sharp from "sharp";
 
-const logo = readFileSync("public/logo.svg");
+const logo = readFileSync("public/logo-baobab.svg");
 // Le baobab bleu sur blanc : le fond des icônes est blanc lui aussi.
 const FOND = "#ffffff";
 mkdirSync("public/icones", { recursive: true });
@@ -37,7 +44,7 @@ const PETIT = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 
 </svg>`);
 
 for (const taille of [192, 512]) {
-  await sharp(logo, { density: 600 }).resize(taille, taille).png().toFile(`public/icones/icone-${taille}.png`);
+  await sharp(logo, { density: 600 }).resize(taille, taille).png().toFile(`public/icones/baobab-${taille}.png`);
 }
 
 // La zone sûre d'une icône masquable est un cercle de 80 % : le logo
@@ -52,8 +59,8 @@ async function surFond(taille, part, fichier) {
     .toFile(fichier);
 }
 
-await surFond(512, 0.9, "public/icones/icone-masquable-512.png");
-await surFond(180, 0.86, "public/icones/apple-touch-icon.png");
+await surFond(512, 0.9, "public/icones/baobab-masquable-512.png");
+await surFond(180, 0.86, "public/icones/baobab-apple-touch.png");
 
 /* Un fichier .ico est une simple enveloppe : un en-tête, puis une fiche
    de 16 octets par taille (largeur, hauteur, poids, position), puis les

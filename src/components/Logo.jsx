@@ -13,7 +13,7 @@ import { cx } from "./classes";
      l'étincelle de l'IA découpée dedans, un point citron et un point
      orange.
 
-   public/logo.svg (onglet du navigateur, icônes de l'application) et
+   public/logo-baobab.svg (onglet du navigateur, icônes de l'application) et
    design/apercu-partage.svg reprennent exactement ces tracés : les
    changer ici demande de les changer là aussi, puis de relancer
    `node scripts/icones-pwa.mjs`.

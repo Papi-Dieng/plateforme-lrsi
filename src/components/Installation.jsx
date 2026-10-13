@@ -96,7 +96,7 @@ export default function Installation({ compacte = false, className }) {
         className
       )}
     >
-      <img src="./icones/icone-192.png" alt="" className="size-12 shrink-0 rounded-2xl" />
+      <img src="./icones/baobab-192.png" alt="" className="size-12 shrink-0 rounded-2xl" />
       <div className="min-w-0 flex-1 space-y-3">
         <div>
           <p className="font-semibold text-ink-900 dark:text-white">

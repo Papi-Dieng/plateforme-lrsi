@@ -14,7 +14,10 @@ import { site } from './src/data/site.js'
    - les balises correspondantes sont ajoutées dans <head> ;
    - le service worker (pwa/sw-modele.js) reçoit la liste exacte des
      fichiers compilés, pour que tout le site s'ouvre sans réseau.
-   Les icônes se fabriquent avec `node scripts/icones-pwa.mjs`. */
+   Les icônes se fabriquent avec `node scripts/icones-pwa.mjs`. Leur
+   nom porte celui du dessin (baobab) : une icône dont l'adresse ne
+   change pas reste en mémoire des mois chez qui a déjà ouvert le site
+   ou installé l'application. Changer le logo, c'est changer ces noms. */
 function applicationInstallable() {
   const manifeste = {
     name: `${site.nom} — Plateforme LRSI`,
@@ -27,9 +30,9 @@ function applicationInstallable() {
     background_color: '#ffffff',
     theme_color: '#1f47e0',
     icons: [
-      { src: 'icones/icone-192.png', sizes: '192x192', type: 'image/png' },
-      { src: 'icones/icone-512.png', sizes: '512x512', type: 'image/png' },
-      { src: 'icones/icone-masquable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      { src: 'icones/baobab-192.png', sizes: '192x192', type: 'image/png' },
+      { src: 'icones/baobab-512.png', sizes: '512x512', type: 'image/png' },
+      { src: 'icones/baobab-masquable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
   }
 
@@ -38,7 +41,7 @@ function applicationInstallable() {
     transformIndexHtml() {
       return [
         { tag: 'link', attrs: { rel: 'manifest', href: './manifest.webmanifest' }, injectTo: 'head' },
-        { tag: 'link', attrs: { rel: 'apple-touch-icon', href: './icones/apple-touch-icon.png' }, injectTo: 'head' },
+        { tag: 'link', attrs: { rel: 'apple-touch-icon', href: './icones/baobab-apple-touch.png' }, injectTo: 'head' },
         { tag: 'meta', attrs: { name: 'apple-mobile-web-app-capable', content: 'yes' }, injectTo: 'head' },
         { tag: 'meta', attrs: { name: 'apple-mobile-web-app-title', content: site.nom }, injectTo: 'head' },
       ]
@@ -46,7 +49,7 @@ function applicationInstallable() {
     generateBundle(_options, bundle) {
       this.emitFile({ type: 'asset', fileName: 'manifest.webmanifest', source: JSON.stringify(manifeste, null, 2) })
 
-      const publics = ['logo.svg', 'logo-mono.svg', 'favicon.ico', 'manifest.webmanifest', ...readdirSync('public/icones').map((f) => `icones/${f}`)]
+      const publics = ['logo-baobab.svg', 'logo-mono.svg', 'favicon.ico', 'manifest.webmanifest', ...readdirSync('public/icones').map((f) => `icones/${f}`)]
       // Ce qui ne sert à rien hors ligne n'est pas téléchargé d'avance (il
       // se charge normalement, en ligne, quand on en a besoin) :
       // - pdf.js, pour les couvertures des livres en PDF (1,7 Mo) ;

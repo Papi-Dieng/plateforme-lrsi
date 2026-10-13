@@ -98,8 +98,8 @@ self.addEventListener("periodicsync", (e) => {
       if (dernier === jour || !duJour) return;
       await self.registration.showNotification(duJour.titre, {
         body: duJour.corps,
-        icon: "./icones/icone-192.png",
-        badge: "./icones/icone-192.png",
+        icon: "./icones/baobab-192.png",
+        badge: "./icones/baobab-192.png",
         tag: "rappel-du-jour",
         data: { lien: "./#/planning" },
       });

@@ -95,7 +95,7 @@ export function programmeDesRappels(debut = aujourdhui()) {
 /* ---- Afficher ---- */
 
 async function afficher({ titre, corps }) {
-  const options = { body: corps, icon: "./icones/icone-192.png", badge: "./icones/icone-192.png", tag: "rappel-du-jour", data: { lien: "./#/planning" } };
+  const options = { body: corps, icon: "./icones/baobab-192.png", badge: "./icones/baobab-192.png", tag: "rappel-du-jour", data: { lien: "./#/planning" } };
   // Sur Android, seule la voie du service worker est permise.
   const inscription = await navigator.serviceWorker?.getRegistration?.();
   if (inscription) return inscription.showNotification(titre, options);

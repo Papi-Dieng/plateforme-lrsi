@@ -392,7 +392,7 @@ l'ouverture des comptes, qui enregistrent des données chez Supabase.
 Trois nœuds reliés en triangle : un schéma réseau lisible à petite taille.
 Défini deux fois, volontairement :
 
-- `public/logo.svg` pour l'icône d'onglet du navigateur ;
+- `public/logo-baobab.svg` pour l'icône d'onglet du navigateur ;
 - le composant `Logo` dans `src/components/Layout.jsx` pour l'affichage dans
   le site, afin qu'il suive le thème clair ou sombre.
 
@@ -524,7 +524,7 @@ lrsi-platform/
 ├── public/
 │   ├── apercu-partage.png    image affichée au partage du lien
 │   ├── icones/               icônes de l'application installable
-│   └── logo.svg              icône d'onglet
+│   └── logo-baobab.svg       icône d'onglet
 ├── docs/                     site compilé, publié par GitHub Pages
 ├── src/
 │   ├── components/

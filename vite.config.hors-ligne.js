@@ -43,11 +43,11 @@ function integrerIcone() {
   return {
     name: "integrer-icone",
     transformIndexHtml(html) {
-      const svg = readFileSync("public/logo.svg", "utf8");
+      const svg = readFileSync("public/logo-baobab.svg", "utf8");
       const donnees = `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
       return html
         .replace(/<!-- DEBUT SECOURS ICONE -->[\s\S]*?<!-- FIN SECOURS ICONE -->/, "")
-        .replace('href="/logo.svg"', `href="${donnees}"`);
+        .replace('href="/logo-baobab.svg"', `href="${donnees}"`);
     },
   };
 }
