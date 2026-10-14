@@ -6,7 +6,9 @@ import { cx } from "./classes";
    Lire un texte en plein écran : un cours, un énoncé, une correction.
 
    Deux boutons : « Plein écran » ouvre le texte sur tout l'écran,
-   « Quitter le plein écran » (ou Échap) revient à la page.
+   « Quitter le plein écran » (ou Échap) revient à la page. Ce qui est
+   dedans peut aussi refermer lui-même, en passant une fonction plutôt
+   qu'un contenu : `{({ actif, fermer }) => …}`.
 
    Le bloc passe d'abord en `fixed inset-0` : ça marche partout, même
    sur iPhone où le plein écran du navigateur n'existe pas pour un
@@ -130,7 +132,13 @@ export default function PleinEcran({ titre, children, className }) {
       {/* `zoom` agrandit tout le texte, titres et code compris, quelles
           que soient leurs tailles propres. */}
       <div className={cx(actif && "mx-auto max-w-3xl px-4 py-8 text-base sm:px-8")}>
-        <div style={actif ? { zoom: taille } : undefined}>{children}</div>
+        {/* `children` peut être une fonction : elle reçoit de quoi
+            refermer le plein écran elle-même. « Ma réponse » s'en sert
+            pour revenir à la page dès qu'on fait corriger, et montrer
+            la réponse de l'IA. */}
+        <div style={actif ? { zoom: taille } : undefined}>
+          {typeof children === "function" ? children({ actif, fermer }) : children}
+        </div>
       </div>
     </div>
   );

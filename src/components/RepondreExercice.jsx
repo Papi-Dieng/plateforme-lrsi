@@ -38,7 +38,9 @@ import { assemblerReponses, questionsDe } from "../questionsExercice";
    2026) : le bouton est au-dessus des cases. Tout ce qu'il faut suit
    dedans — les questions, les cases et le bouton « Faire corriger »,
    qui sont dans le même formulaire — et ce qui est déjà écrit reste
-   écrit, en entrant comme en sortant.
+   écrit, en entrant comme en sortant. « Faire corriger » referme le
+   plein écran et amène à la réponse de l'IA, qui s'affiche sous le
+   formulaire.
 
    `RepondreAvecIA` est le bloc lui-même, partagé avec les devoirs
    (pages/Examens.jsx, une partie à la fois) : pendant l'épreuve il est
@@ -218,6 +220,9 @@ export function RepondreAvecIA({
   const [rates, setRates] = useState(0);
   const [etat, setEtat] = useState({ attente: false, erreur: "" });
   const [voirAttendue, setVoirAttendue] = useState(false);
+  // Là où s'affichent l'attente puis la réponse de l'IA : on y amène
+  // l'étudiant en sortant du plein écran.
+  const zoneResultat = useRef(null);
 
   const questions = questionsDe(enonce ?? "");
   const mode = questions.length ? modeChoisi : "libre";
@@ -236,10 +241,17 @@ export function RepondreAvecIA({
 
   if (!enonce || !corrige) return null;
 
-  const corriger = async (e) => {
+  /* `quitter` : on sort du plein écran avant de corriger (demande du
+     14 octobre 2026). L'étudiant écrit sur tout l'écran, appuie sur
+     « Faire corriger », et retombe sur la page, devant la réponse de
+     l'IA — qui s'affiche sous le formulaire, donc en dehors du plein
+     écran. */
+  const corriger = async (e, quitter) => {
     e.preventDefault();
+    quitter?.();
     setEtat({ attente: true, erreur: "" });
     setResultat(null);
+    setTimeout(() => zoneResultat.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 60);
     try {
       const r = await corrigerExercice({ enonce, corrige, reponse: aEnvoyer, bareme });
       setResultat(r);
@@ -290,7 +302,8 @@ export function RepondreAvecIA({
       </p>
 
       <PleinEcran titre="Ma réponse" className="mt-4">
-      <form onSubmit={corriger} className="space-y-3">
+      {({ fermer }) => (
+      <form onSubmit={(e) => corriger(e, fermer)} className="space-y-3">
         {mode === "questions" ? (
           <ol className="space-y-4">
             {questions.map((q, i) => (
@@ -352,8 +365,10 @@ export function RepondreAvecIA({
         </div>
         )}
       </form>
+      )}
       </PleinEcran>
 
+      <div ref={zoneResultat} className="scroll-mt-24" />
       {vu.attente && <ChargementIA etapes={ETAPES_CORRECTION} className="pt-4" />}
       {vu.erreur && (
         <p role="alert" className="mt-3 text-sm text-flame-700 dark:text-flame-400">

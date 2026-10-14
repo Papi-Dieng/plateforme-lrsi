@@ -724,7 +724,10 @@ function SessionQcm({ qcmId, qcm: fourni }) {
                 {question.enonce}
               </h2>
 
-              <ul className="mt-7 grid grid-cols-2 gap-2.5">
+              {/* Une réponse par ligne sur téléphone et tablette : les
+                  propositions sont souvent longues, et deux par ligne
+                  les coupaient. Deux par ligne sur ordinateur. */}
+              <ul className="mt-7 grid gap-2.5 lg:grid-cols-2">
                 {question.options.map((option, i) => {
                   const choisi = reponses[index] === i;
                   return (

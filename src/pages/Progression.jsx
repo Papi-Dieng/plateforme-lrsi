@@ -281,7 +281,7 @@ function Courbe({ tentatives }) {
     t,
   }));
   return (
-    <span className="relative block h-11 w-40 shrink-0">
+    <span className="relative block h-11 w-32 shrink-0 sm:w-40">
       <svg viewBox={`0 0 ${L} ${H}`} className="absolute inset-0 size-full overflow-visible" aria-hidden="true">
         <line x1="0" x2={L} y1={H / 2} y2={H / 2} stroke="#f1edf5" strokeDasharray="3 4" />
         {n > 1 && (
@@ -341,8 +341,8 @@ function CarteDevoirs({ historique }) {
             const ecart = avant ? sur20(derniere.note, derniere.total) - sur20(avant.note, avant.total) : null;
             return (
               <li key={g.devoir} className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-[20px] bg-[#fbf7f5] p-4 transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-md dark:bg-white/5">
-                <span className="min-w-0 flex-1">
-                  <Link to={`/examens/${g.devoir}`} className={cx("block truncate font-extrabold hover:underline", ENCRE)}>
+                <span className="w-full min-w-0 sm:w-auto sm:flex-1">
+                  <Link to={`/examens/${g.devoir}`} className={cx("block font-extrabold hover:underline", ENCRE)}>
                     {g.titre}
                   </Link>
                   <span className={cx("block text-xs", DOUX)}>
@@ -391,7 +391,7 @@ function DetailMatiere({ m, exercicesFaits, scores }) {
     </li>
   );
   return (
-    <div className="apparition mb-4 grid gap-4 rounded-2xl bg-[#f4eef7] p-3 sm:grid-cols-2 dark:bg-white/5">
+    <div className="apparition mb-4 grid grid-cols-1 gap-4 rounded-2xl bg-[#f4eef7] p-3 sm:grid-cols-2 dark:bg-white/5">
       {exos.length > 0 && (
         <div>
           <p className={cx("px-3 pt-1 text-[11px] font-extrabold tracking-wide uppercase", DOUX)}>Exercices</p>
@@ -657,7 +657,7 @@ export default function Progression() {
 
       <div className="relative mx-auto -mt-16 max-w-6xl space-y-5 px-4 sm:px-8">
         {/* ---- Régularité et précision ---- */}
-        <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.6fr_1fr]">
           <section className={cx(CARTE, "apparition")} style={{ animationDelay: "90ms" }}>
             <TitreCarte icone="clock" ton="bg-[#ffe6ef] text-[#b52a5e]" titre="Régularité" texte={`Tes ${JOURS_SUIVIS} derniers jours.`}>
               <div className="flex items-center gap-2 self-end">
@@ -807,7 +807,7 @@ export default function Progression() {
         </section>
 
         {/* ---- Résultats et forces ---- */}
-        <div className="grid items-start gap-5 lg:grid-cols-2">
+        <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2">
           <section className={cx(CARTE, "apparition")} style={{ animationDelay: "360ms" }}>
             <TitreCarte icone="graduation" ton="bg-[#ffe6ef] text-[#b52a5e]" titre="Résultats des QCM" texte="Seul le meilleur score de chaque questionnaire est gardé." />
             {resultatsQcm.length === 0 ? (
@@ -903,7 +903,7 @@ export default function Progression() {
                     );
                   })}
                 </ul>
-                <p className={cx("mt-4 flex justify-between text-[11px]", DOUX)} aria-hidden="true">
+                <p className={cx("mt-4 flex flex-wrap justify-between gap-x-3 gap-y-1 text-[11px]", DOUX)} aria-hidden="true">
                   <span>Faiblesse</span>
                   <span>À consolider dès {SEUIL_FAIBLESSE} %</span>
                   <span>Force dès {SEUIL_FORCE} %</span>
@@ -922,7 +922,7 @@ export default function Progression() {
         <CarteDevoirs historique={historiqueDevoirs(devoirs)} />
 
         {/* ---- Chapitres à revoir et priorités ---- */}
-        <div className="grid items-start gap-5 lg:grid-cols-[1.6fr_1fr]">
+        <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[1.6fr_1fr]">
           <section className={cx(CARTE, "apparition")} style={{ animationDelay: "540ms" }}>
             <TitreCarte icone="book" ton="bg-[#ffe6ef] text-[#b52a5e]" titre="Chapitres à revoir" texte="Dans tes matières fragiles, de la plus faible à la moins faible." />
             {modules.length === 0 ? (
