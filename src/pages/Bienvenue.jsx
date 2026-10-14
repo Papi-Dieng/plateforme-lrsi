@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Icon from "../components/Icon";
 import { Logo, Signature } from "../components/Layout";
+import { Baobab } from "../components/Logo";
 import { cx } from "../components/classes";
 import { useSession } from "../session";
 import { site } from "../data/site";
@@ -221,7 +222,7 @@ export default function Bienvenue() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Composition illustrée : un petit schéma réseau plutôt qu'une photo  */
+/* Composition illustrée : le logo du site, en grand                   */
 /* ------------------------------------------------------------------ */
 
 function Illustration() {
@@ -233,46 +234,29 @@ function Illustration() {
         aria-hidden="true"
       />
 
-      {/* Panneau vert */}
-      <div className="relative ml-auto aspect-4/3 w-[88%] overflow-hidden rounded-3xl bg-lime-300/70 dark:bg-lime-400/15">
+      {/* Le baobab de Sunu Cours sur son panneau bleu, comme sur la
+          fiche d'identité. Le bleu est celui du logo (brand-600, soit
+          #1f47e0) : les cernes des nœuds et des feuilles sont dessinés
+          avec cette couleur exacte, donc changer le fond du panneau
+          oblige à changer `fond` ci-dessous. */}
+      <div className="relative ml-auto flex aspect-4/3 w-[88%] items-center justify-center overflow-hidden rounded-3xl bg-brand-600">
+        {/* La grille en pointillés du fond */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-50 [background-image:radial-gradient(#ffffff4d_1.5px,transparent_1.5px)] [background-size:22px_22px]"
+          aria-hidden="true"
+        />
         <svg
-          viewBox="0 0 320 240"
-          className="absolute inset-0 size-full"
+          viewBox="0 0 120 120"
+          className="relative w-[56%] drop-shadow-[0_14px_26px_rgba(8,16,54,0.35)]"
           aria-hidden="true"
         >
-          {/* Liens */}
-          <g
-            stroke="currentColor"
-            className="text-accent-700/45 dark:text-lime-200/35"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          >
-            <path d="M160 62 72 150M160 62l88 88M72 150h176M160 62v60M72 150v34M248 150v34" />
-          </g>
-          {/* Nœuds */}
-          <g className="fill-accent-800 dark:fill-lime-200">
-            <circle cx="160" cy="62" r="17" />
-            <circle cx="72" cy="150" r="13" />
-            <circle cx="248" cy="150" r="13" />
-          </g>
-          <g className="fill-white">
-            <circle cx="160" cy="62" r="6" />
-          </g>
-          <g
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            className="text-accent-800/70 dark:text-lime-200/60"
-          >
-            <rect x="52" y="184" width="40" height="28" rx="6" />
-            <rect x="228" y="184" width="40" height="28" rx="6" />
-            <rect x="140" y="122" width="40" height="28" rx="6" />
-          </g>
+          <Baobab trait="#ffffff" fond="#1f47e0" />
         </svg>
 
-        {/* Repère vertical */}
-        <div className="absolute top-5 right-4 bottom-5 flex items-center">
-          <span className="rotate-180 text-[11px] font-medium tracking-wide text-accent-900/70 [writing-mode:vertical-rl] dark:text-lime-100/70">
+        {/* Repère vertical. Caché sur téléphone : le panneau y est trop
+            étroit, le texte passait sur deux colonnes par-dessus l'arbre. */}
+        <div className="absolute top-5 right-4 bottom-5 hidden items-center sm:flex">
+          <span className="rotate-180 text-[11px] font-medium tracking-wide text-white/70 [writing-mode:vertical-rl]">
             Filière Réseaux et Systèmes Informatiques
           </span>
         </div>
@@ -291,9 +275,12 @@ function Illustration() {
               d="M60,60 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0"
             />
           </defs>
-          <text className="fill-ink-900 text-[10.5px] font-semibold tracking-[0.2em] dark:fill-white">
+          {/* La phrase fait le tour exact du cercle : l'allonger demande
+              de réduire la taille du texte, sinon la fin recouvre le
+              début. */}
+          <text className="fill-ink-900 text-[9.2px] font-semibold tracking-[0.18em] dark:fill-white">
             <textPath href="#cercle-baseline">
-              · DÉCOUVRIR LA PLATEFORME · GRATUIT ·
+              · APPRENDRE ENSEMBLE · RÉUSSIR DEMAIN ·
             </textPath>
           </text>
         </svg>
