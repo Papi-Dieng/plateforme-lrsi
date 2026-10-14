@@ -150,6 +150,40 @@ test.describe("exercice : ma réponse corrigée par l'IA", () => {
   });
 });
 
+test.describe("exercice : l'IA refait le chemin à partir de ma réponse", () => {
+  const exercice = exercices.find((e) => e.etapes?.length && e.reponse);
+
+  test("le bouton n'apparaît qu'avec une réponse écrite, et les étapes s'affichent", async ({ page }) => {
+    const envois = [];
+    await page.route(`${new URL(site.urlIA).origin}/expliquer-etapes`, (route) => {
+      const entetes = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*" };
+      if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: entetes });
+      envois.push(route.request().postDataJSON());
+      return route.fulfill({
+        headers: entetes,
+        json: { depart: "Tu as bien posé le calcul.", etapes: ["Compte les bits restants.", "Retire les deux adresses réservées."] },
+      });
+    });
+
+    await entrerEnInvite(page);
+    await aller(page, `/exercices/${exercice.id}`);
+    await page.getByRole("button", { name: "J'ai cherché, voir la correction" }).click();
+    // Sans rien d'écrit, le site ne propose pas le chemin personnalisé.
+    await expect(page.getByRole("button", { name: "Explique à partir de ma réponse" })).toHaveCount(0);
+
+    await page.getByRole("textbox", { name: "Ta réponse à l'exercice" }).fill("Je trouve 64 hôtes");
+    const bouton = page.getByRole("button", { name: "Explique à partir de ma réponse" });
+    await expect(bouton).toBeVisible();
+    await bouton.click();
+
+    await expect(page.getByText("Tu as bien posé le calcul.")).toBeVisible();
+    await expect(page.getByText("Retire les deux adresses réservées.")).toBeVisible();
+    // Ce qui part : l'énoncé, le corrigé de l'auteur et la réponse écrite.
+    expect(envois[0]).toMatchObject({ reponse: "Je trouve 64 hôtes" });
+    expect(envois[0].corrige).toContain(exercice.reponse.slice(0, 20));
+  });
+});
+
 test.describe("exercice : répondre question par question, ou tout écrire", () => {
   const numerote = {
     id: "hotes-slash-27",

@@ -121,6 +121,37 @@ describe("origines", () => {
   });
 });
 
+describe("expliquer étape par étape à partir de la réponse de l'étudiant", () => {
+  const corps = { enonce: "Combien d'hôtes dans un /26 ?", corrige: "Réponse : 62 hôtes.", reponse: "64 hôtes" };
+  const expliquer = (c = corps) => relais.fetch(demande("/expliquer-etapes", { corps: c }), env());
+
+  test("renvoie le point de départ et les étapes, sans rien inventer", async () => {
+    geminiRepond(JSON.stringify({ depart: "Tu as bien vu qu'il fallait compter les hôtes.", etapes: ["Compte les bits restants.", "Retire l'adresse de réseau et celle de diffusion."] }));
+    const r = await expliquer();
+    expect(r.status).toBe(200);
+    expect(await r.json()).toEqual({
+      depart: "Tu as bien vu qu'il fallait compter les hôtes.",
+      etapes: ["Compte les bits restants.", "Retire l'adresse de réseau et celle de diffusion."],
+    });
+    const [appel] = appelsGemini;
+    expect(appel.corps.systemInstruction.parts[0].text).toContain("la SEULE référence");
+    expect(appel.corps.contents[0].parts[0].text).toContain(`<reponse>\n64 hôtes\n</reponse>`);
+  });
+
+  test("refuse une demande sans corrigé ou sans réponse", async () => {
+    for (const manque of [{ ...corps, corrige: "" }, { ...corps, reponse: "" }, { ...corps, enonce: "" }]) {
+      const r = await expliquer(manque);
+      expect(r.status).toBe(400);
+    }
+  });
+
+  test("une réponse de l'IA sans étape est refusée", async () => {
+    geminiRepond(JSON.stringify({ depart: "Rien de juste pour l'instant.", etapes: [] }));
+    const r = await expliquer();
+    expect(r.status).toBe(502);
+  });
+});
+
 describe("correction d'un exercice par l'IA", () => {
   const corps = { enonce: "Combien d'hôtes dans un /26 ?", corrige: "Réponse : 62 hôtes.", reponse: "64 hôtes" };
   const corriger = (c = corps) => relais.fetch(demande("/corriger-exercice", { corps: c }), env());

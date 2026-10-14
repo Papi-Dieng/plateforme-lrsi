@@ -161,7 +161,7 @@ export function ChoixReponse({ valeur, onChange, className }) {
 const champ =
   "w-full [[data-plein-ecran]_&]:min-h-[48dvh] rounded-[16px] border border-ink-200 bg-white px-4 py-3 text-[15px]/6 text-ink-900 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-ink-700 dark:bg-ink-950 dark:text-white";
 
-export default function RepondreExercice({ exercice, mode, numero, ancre, onReussi, onBesoinIndice, indiceDisponible }) {
+export default function RepondreExercice({ exercice, mode, numero, ancre, onReussi, onBesoinIndice, indiceDisponible, onReponse }) {
   const { enonce, corrige } = textesExercice(exercice);
   return (
     <RepondreAvecIA
@@ -172,6 +172,7 @@ export default function RepondreExercice({ exercice, mode, numero, ancre, onReus
       enonce={enonce}
       corrige={corrige}
       reponseAttendue={<ReponseAttendue exercice={exercice} />}
+      onReponse={onReponse}
       onReussi={onReussi}
       onBesoinIndice={onBesoinIndice}
       indiceDisponible={indiceDisponible}

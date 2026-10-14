@@ -293,3 +293,16 @@ export async function corrigerExercice({ enonce, corrige, reponse, bareme }) {
   return donnees;
 }
 
+/* « Explique-moi étape par étape à partir de ma réponse » : l'IA
+   reprend ce que l'étudiant a écrit et le mène au corrigé de l'auteur,
+   sans rien inventer (serveur-ia/avis.js). Renvoie { depart, etapes }. */
+export async function expliquerEtapes({ enonce, corrige, reponse }) {
+  const r = await fetch(new URL("/expliquer-etapes", site.urlIA), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ enonce, corrige, reponse }),
+  });
+  const donnees = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(donnees.erreur ?? `statut ${r.status}`);
+  return donnees;
+}

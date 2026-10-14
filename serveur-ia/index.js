@@ -43,7 +43,7 @@ import {
 import { menagePdfs, servirPdf, televerserPdf } from "./fichiers.js";
 import { API_GEMINI, interrogerGemini, listeModeles } from "./gemini.js";
 import { executerTacheAdmin } from "./agent-admin.js";
-import { corrigerExercice } from "./avis.js";
+import { corrigerExercice, expliquerEtapes } from "./avis.js";
 import { ficheRevision } from "./fiches.js";
 import { effacerStats, enregistrerStats, lireStats } from "./stats.js";
 import { composerPlanning } from "./planning-ia.js";
@@ -271,7 +271,7 @@ export default {
     const admin = await motDePasseValide(motDePasse, env);
     const limiteur = chemin.startsWith("/comptes/")
       ? env.LIMITEUR_COMPTES ?? env.LIMITEUR
-      : chemin === "/corriger-exercice" || chemin === "/fiche-revision"
+      : chemin === "/corriger-exercice" || chemin === "/fiche-revision" || chemin === "/expliquer-etapes"
         ? env.LIMITEUR_CORRECTION ?? env.LIMITEUR
         : env.LIMITEUR;
     if (limiteur && !admin) {
@@ -434,6 +434,22 @@ export default {
         return r.erreur ? json({ erreur: r.erreur }, r.statut, cors) : json(r.resultat, 200, cors);
       } catch (e) {
         console.log("Fiche de révision", e);
+        return json({ erreur: "reseau" }, 502, cors);
+      }
+    }
+
+    if (chemin === "/expliquer-etapes") {
+      let corps;
+      try {
+        corps = await requete.json();
+      } catch {
+        return json({ erreur: "format" }, 400, cors);
+      }
+      try {
+        const r = await expliquerEtapes(corps, env);
+        return r.erreur ? json({ erreur: r.erreur }, r.statut, cors) : json(r.resultat, 200, cors);
+      } catch (e) {
+        console.log("Explication etape par etape", e);
         return json({ erreur: "reseau" }, 502, cors);
       }
     }

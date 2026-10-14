@@ -5,7 +5,9 @@ import { CorrectionExercice, EnonceExercice } from "../components/AffichageExerc
 import RepondreExercice, { ChoixReponse } from "../components/RepondreExercice";
 import TexteLibre, { EnLigne } from "../components/TexteLibre";
 import PleinEcran from "../components/PleinEcran";
-import { textesExercice } from "../ia";
+import ChargementIA from "../components/ChargementIA";
+import { ETAPES_ETAPES } from "../chargementIA";
+import { expliquerEtapes, iaActive, raisonEchec, textesExercice } from "../ia";
 import { questionsDe } from "../questionsExercice";
 import { Bouton, Container, EtatVide } from "../components/ui";
 import { QUADRILLAGE, mono } from "../components/styleAdmin";
@@ -435,9 +437,29 @@ const boutonSecondaire =
   "inline-flex min-h-11 items-center gap-2 rounded-[14px] border border-ink-200 bg-white px-4 text-sm font-bold text-ink-950 transition-colors hover:bg-ink-50 dark:border-ink-700 dark:bg-ink-900 dark:text-white dark:hover:bg-ink-800";
 
 /* La correction écrite, sur fond sombre : étapes au grand numéro vert,
-   réponse dans un encadré, « À retenir » sur fond vert. */
-function CorrectionSombre({ exercice }) {
+   réponse dans un encadré, « À retenir » sur fond vert.
+
+   `reponse` : ce que l'étudiant vient d'écrire dans « Ma réponse ».
+   Quand il y a quelque chose, un bouton demande à l'IA de refaire le
+   chemin étape par étape EN PARTANT DE CETTE RÉPONSE (demande du
+   14 octobre 2026). La méthode de l'auteur, elle, ne bouge pas : elle
+   part de zéro, la même pour tout le monde. */
+function CorrectionSombre({ exercice, reponse = "" }) {
+  const [explication, setExplication] = useState({ attente: false, erreur: "", resultat: null });
   const etapes = (exercice.etapes ?? []).filter((s) => s.trim());
+  const { enonce, corrige } = textesExercice(exercice);
+  const expliquable = iaActive && Boolean(enonce && corrige) && reponse.trim().length > 1;
+
+  const expliquer = async () => {
+    setExplication({ attente: true, erreur: "", resultat: null });
+    try {
+      const r = await expliquerEtapes({ enonce, corrige, reponse });
+      setExplication({ attente: false, erreur: "", resultat: r });
+    } catch (e) {
+      setExplication({ attente: false, erreur: raisonEchec(e.message), resultat: null });
+    }
+  };
+
   if (!etapes.length && !exercice.reponse && !exercice.explication) return <CorrectionExercice exercice={exercice} />;
   const rubrique = cx("mb-4 text-[11px] font-bold text-[#8eaaff]", mono);
   return (
@@ -463,6 +485,51 @@ function CorrectionSombre({ exercice }) {
             </ol>
           </div>
         )}
+
+        {/* Le même chemin, mais à partir de ce que l'étudiant a écrit. */}
+        {(expliquable || explication.resultat) && (
+          <div>
+            <h3 className={rubrique}>ÉTAPE PAR ÉTAPE, À PARTIR DE MA RÉPONSE</h3>
+            {!explication.resultat && !explication.attente && (
+              <button
+                type="button"
+                onClick={expliquer}
+                className="inline-flex min-h-11 items-center gap-2 rounded-[14px] bg-lime-400 px-4 text-sm font-extrabold text-ink-950 transition-colors hover:bg-lime-300"
+              >
+                <Icon name="sparkles" className="size-4" />
+                {explication.erreur ? "Réessayer" : "Explique à partir de ma réponse"}
+              </button>
+            )}
+            {explication.attente && <ChargementIA etapes={ETAPES_ETAPES} className="text-ink-100" />}
+            {explication.erreur && (
+              <p role="alert" className="mt-3 text-sm text-flame-300">
+                {explication.erreur}
+              </p>
+            )}
+            {explication.resultat && (
+              <div>
+                {explication.resultat.depart && <p className="text-base/7 text-ink-100">{explication.resultat.depart}</p>}
+                <ol className="mt-2">
+                  {explication.resultat.etapes.map((etape, i) => (
+                    <li key={i} className="flex gap-5 border-b border-white/10 py-4 last:border-b-0">
+                      <span
+                        aria-hidden="true"
+                        className="w-11 shrink-0 text-[34px] leading-none font-extrabold tracking-[-0.05em] text-transparent [-webkit-text-stroke:1.4px_var(--color-brand-400)]"
+                      >
+                        {numero(i + 1)}
+                      </span>
+                      <span className="min-w-0 pt-1 text-base/7 whitespace-pre-line text-ink-100">{etape}</span>
+                    </li>
+                  ))}
+                </ol>
+                <p className="mt-3 text-xs text-ink-400">
+                  Chemin refait par une IA à partir du corrigé de l&apos;enseignant et de ta réponse : elle peut se tromper, le corrigé fait foi.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         {exercice.reponse && (
           <div>
             <h3 className={rubrique}>RÉPONSE</h3>
@@ -526,6 +593,9 @@ function DetailExercice({ exerciceId }) {
 
   const [indiceVisible, setIndiceVisible] = useState(false);
   const [correctionVisible, setCorrectionVisible] = useState(false);
+  // Ce que l'étudiant écrit dans « Ma réponse » : la correction s'en
+  // sert pour proposer le chemin étape par étape à partir de là.
+  const [maReponse, setMaReponse] = useState("");
   const [modeReponse, setModeReponse] = useState("questions");
 
   const textes = exercice ? textesExercice(exercice) : {};
@@ -673,6 +743,7 @@ function DetailExercice({ exerciceId }) {
                 numero={numeroDe("ma-reponse")}
                 ancre="ma-reponse"
                 indiceDisponible={Boolean(exercice.indice)}
+                onReponse={(texte) => setMaReponse(texte)}
                 onBesoinIndice={() => setIndiceVisible(true)}
                 onReussi={() => marquerExerciceTravaille(exercice.id)}
               />
@@ -698,7 +769,7 @@ function DetailExercice({ exerciceId }) {
               }
             >
               {correctionVisible ? (
-                <CorrectionSombre exercice={exercice} />
+                <CorrectionSombre exercice={exercice} reponse={maReponse} />
               ) : (
                 <p className="text-[15px] text-ink-300">
                   Prends le temps de chercher avant d&apos;ouvrir la correction. C&apos;est là que l&apos;apprentissage se joue.

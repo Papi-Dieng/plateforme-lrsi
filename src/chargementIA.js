@@ -57,6 +57,24 @@ export const ETAPES_CORRECTION = [
   },
 ];
 
+export const ETAPES_ETAPES = [
+  {
+    statut: "Lecture de ta réponse",
+    lignes: [
+      "Lecture de ta réponse…",
+      "Lecture du corrigé de l'enseignant…",
+    ],
+  },
+  {
+    statut: "Explication",
+    lignes: [
+      "Ce que tu as déjà juste…",
+      "Le chemin jusqu'au corrigé…",
+      "Étape par étape…",
+    ],
+  },
+];
+
 export const ETAPES_PROGRAMME = [
   {
     statut: "Préparation",
