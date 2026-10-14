@@ -744,6 +744,7 @@ function DetailExercice({ exerciceId }) {
                 ancre="ma-reponse"
                 indiceDisponible={Boolean(exercice.indice)}
                 onReponse={(texte) => setMaReponse(texte)}
+                onMode={setModeReponse}
                 onBesoinIndice={() => setIndiceVisible(true)}
                 onReussi={() => marquerExerciceTravaille(exercice.id)}
               />

@@ -150,6 +150,42 @@ test.describe("exercice : ma réponse corrigée par l'IA", () => {
   });
 });
 
+test.describe("exercice : importer sa copie en photo", () => {
+  const exercice = exercices.find((e) => e.reponse);
+  // Une vraie image, minuscule : le navigateur doit pouvoir la dessiner.
+  const png = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+    "base64"
+  );
+
+  test("la photo est lue par l'IA, le texte arrive dans la case et reste modifiable", async ({ page }) => {
+    const envois = [];
+    await page.route(`${new URL(site.urlIA).origin}/lire-copie`, (route) => {
+      const entetes = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*" };
+      if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: entetes });
+      envois.push(route.request().postDataJSON());
+      return route.fulfill({ headers: entetes, json: { texte: `1. Masque 255.255.255.224\n2. 30 hôtes` } });
+    });
+
+    await entrerEnInvite(page);
+    await aller(page, `/exercices/${exercice.id}`);
+    // Le bouton visible ouvre ce champ caché : le test écrit dedans.
+    await expect(page.getByRole("button", { name: "Importer ma copie (photo ou PDF)" })).toBeVisible();
+    await page.locator('input[type="file"]').setInputFiles({
+      name: "copie.png",
+      mimeType: "image/png",
+      buffer: png,
+    });
+
+    const champ = page.getByRole("textbox", { name: "Ta réponse à l'exercice" });
+    await expect(champ).toHaveValue(/Masque 255.255.255.224/);
+    await expect(page.getByText("Copie lue par l'IA")).toBeVisible();
+    // Une page a bien été envoyée, en JPEG réduit par le site.
+    expect(envois[0].images).toHaveLength(1);
+    expect(envois[0].images[0].type).toBe("image/jpeg");
+  });
+});
+
 test.describe("exercice : l'IA refait le chemin à partir de ma réponse", () => {
   const exercice = exercices.find((e) => e.etapes?.length && e.reponse);
 

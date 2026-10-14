@@ -6,6 +6,7 @@ import { ETAPES_CORRECTION } from "../chargementIA";
 import { cx } from "./classes";
 import TexteLibre, { EnLigne } from "./TexteLibre";
 import { corrigerExercice, iaActive, raisonEchec, textesExercice } from "../ia";
+import { TYPES_COPIE, lireCopie, messageErreurCopie } from "../copie";
 import { assemblerReponses, questionsDe } from "../questionsExercice";
 
 /* ==================================================================
@@ -161,7 +162,7 @@ export function ChoixReponse({ valeur, onChange, className }) {
 const champ =
   "w-full [[data-plein-ecran]_&]:min-h-[48dvh] rounded-[16px] border border-ink-200 bg-white px-4 py-3 text-[15px]/6 text-ink-900 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-ink-700 dark:bg-ink-950 dark:text-white";
 
-export default function RepondreExercice({ exercice, mode, numero, ancre, onReussi, onBesoinIndice, indiceDisponible, onReponse }) {
+export default function RepondreExercice({ exercice, mode, numero, ancre, onReussi, onBesoinIndice, indiceDisponible, onReponse, onMode }) {
   const { enonce, corrige } = textesExercice(exercice);
   return (
     <RepondreAvecIA
@@ -173,6 +174,7 @@ export default function RepondreExercice({ exercice, mode, numero, ancre, onReus
       corrige={corrige}
       reponseAttendue={<ReponseAttendue exercice={exercice} />}
       onReponse={onReponse}
+      onMode={onMode}
       onReussi={onReussi}
       onBesoinIndice={onBesoinIndice}
       indiceDisponible={indiceDisponible}
@@ -214,8 +216,14 @@ export function RepondreAvecIA({
   correction,
   onCorrige,
   bareme,
+  onMode,
+  reponseImportee,
 }) {
-  const [reponse, setReponse] = useState("");
+  /* `reponseImportee` : la part de copie rangée sous cette partie quand
+     l'étudiant importe tout son devoir d'un coup (pages/Examens.jsx).
+     C'est une valeur de départ : la page remonte le bloc à chaque
+     import, ce qui évite de recopier une valeur dans un effet. */
+  const [reponse, setReponse] = useState(typeof reponseImportee === "string" ? reponseImportee : "");
   const [reponses, setReponses] = useState({});
   const [resultat, setResultat] = useState(null);
   const [rates, setRates] = useState(0);
@@ -224,6 +232,9 @@ export function RepondreAvecIA({
   // Là où s'affichent l'attente puis la réponse de l'IA : on y amène
   // l'étudiant en sortant du plein écran.
   const zoneResultat = useRef(null);
+  // L'import d'une copie écrite à la main (src/copie.js).
+  const [copie, setCopie] = useState({ attente: false, erreur: "", lue: false });
+  const champFichiers = useRef(null);
 
   const questions = questionsDe(enonce ?? "");
   const mode = questions.length ? modeChoisi : "libre";
@@ -247,6 +258,26 @@ export function RepondreAvecIA({
      « Faire corriger », et retombe sur la page, devant la réponse de
      l'IA — qui s'affiche sous le formulaire, donc en dehors du plein
      écran. */
+  const importer = async (evenement) => {
+    // Copier la liste AVANT de vider le champ : `files` est vivante, la
+    // vider vide aussi ce qu'on vient d'y lire.
+    const fichiers = [...(evenement.target.files ?? [])];
+    evenement.target.value = "";
+    if (fichiers.length === 0) return;
+    setCopie({ attente: true, erreur: "", lue: false });
+    try {
+      const { texte, parLIA } = await lireCopie(fichiers);
+      setReponse(texte);
+      // Une copie photographiée est une réponse d'un seul tenant : on
+      // repasse sur la grande case, même si on répondait question par
+      // question.
+      onMode?.("libre");
+      setCopie({ attente: false, erreur: "", lue: parLIA });
+    } catch (err) {
+      setCopie({ attente: false, erreur: messageErreurCopie(err.message), lue: false });
+    }
+  };
+
   const corriger = async (e, quitter) => {
     e.preventDefault();
     quitter?.();
@@ -305,6 +336,41 @@ export function RepondreAvecIA({
       <PleinEcran titre="Ma réponse" className="mt-4">
       {({ fermer }) => (
       <form onSubmit={(e) => corriger(e, fermer)} className="space-y-3">
+        {/* Écrire sur papier puis photographier sa copie : le texte lu
+            arrive dans la case, où il reste modifiable (src/copie.js). */}
+        {iaActive && (
+          <div className="flex flex-wrap items-center gap-3">
+            <input
+              ref={champFichiers}
+              type="file"
+              accept={TYPES_COPIE}
+              multiple
+              onChange={importer}
+              className="sr-only"
+              aria-hidden="true"
+              tabIndex={-1}
+            />
+            <button
+              type="button"
+              onClick={() => champFichiers.current?.click()}
+              disabled={copie.attente}
+              className="inline-flex min-h-11 items-center gap-2 rounded-[14px] border border-ink-200 px-4 text-sm font-bold text-ink-950 transition-colors hover:bg-ink-50 disabled:opacity-60 dark:border-ink-700 dark:text-white dark:hover:bg-ink-800"
+            >
+              <Icon name="trombone" className="size-4" />
+              {copie.attente ? "Lecture de ta copie…" : "Importer ma copie (photo ou PDF)"}
+            </button>
+            {copie.lue && (
+              <p className="text-xs text-ink-600 dark:text-ink-300">
+                Copie lue par l&apos;IA : relis-la et corrige-la si besoin avant de faire corriger.
+              </p>
+            )}
+          </div>
+        )}
+        {copie.erreur && (
+          <p role="alert" className="text-sm text-flame-700 dark:text-flame-400">
+            {copie.erreur}
+          </p>
+        )}
         {mode === "questions" ? (
           <ol className="space-y-4">
             {questions.map((q, i) => (

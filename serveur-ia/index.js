@@ -44,6 +44,8 @@ import { menagePdfs, servirPdf, televerserPdf } from "./fichiers.js";
 import { API_GEMINI, interrogerGemini, listeModeles } from "./gemini.js";
 import { executerTacheAdmin } from "./agent-admin.js";
 import { corrigerExercice, expliquerEtapes } from "./avis.js";
+import { lireCopie } from "./copie.js";
+import { decouperDevoir } from "./decoupage.js";
 import { ficheRevision } from "./fiches.js";
 import { effacerStats, enregistrerStats, lireStats } from "./stats.js";
 import { composerPlanning } from "./planning-ia.js";
@@ -271,7 +273,7 @@ export default {
     const admin = await motDePasseValide(motDePasse, env);
     const limiteur = chemin.startsWith("/comptes/")
       ? env.LIMITEUR_COMPTES ?? env.LIMITEUR
-      : chemin === "/corriger-exercice" || chemin === "/fiche-revision" || chemin === "/expliquer-etapes"
+      : chemin === "/corriger-exercice" || chemin === "/fiche-revision" || chemin === "/expliquer-etapes" || chemin === "/lire-copie"
         ? env.LIMITEUR_CORRECTION ?? env.LIMITEUR
         : env.LIMITEUR;
     if (limiteur && !admin) {
@@ -331,6 +333,22 @@ export default {
         const r = await restaurerContenu(env);
         return r.erreur ? json(r, 404, cors) : json(r.contenu, 200, cors);
       }
+      if (chemin === "/admin/decouper-devoir" && requete.method === "POST") {
+        let corps;
+        try {
+          corps = await requete.json();
+        } catch {
+          return json({ erreur: "format" }, 400, cors);
+        }
+        try {
+          const r = await decouperDevoir(corps, env);
+          return r.erreur ? json({ erreur: r.erreur }, r.statut, cors) : json(r.resultat, 200, cors);
+        } catch (e) {
+          console.log("Decoupage d'un devoir", e);
+          return json({ erreur: "reseau" }, 502, cors);
+        }
+      }
+
       if (chemin === "/admin/stats" && requete.method === "GET") return json(await lireStats(env), 200, cors);
       if (chemin === "/admin/stats/effacer" && requete.method === "POST") {
         return json(await effacerStats(env), 200, cors);
@@ -434,6 +452,22 @@ export default {
         return r.erreur ? json({ erreur: r.erreur }, r.statut, cors) : json(r.resultat, 200, cors);
       } catch (e) {
         console.log("Fiche de révision", e);
+        return json({ erreur: "reseau" }, 502, cors);
+      }
+    }
+
+    if (chemin === "/lire-copie") {
+      let corps;
+      try {
+        corps = await requete.json();
+      } catch {
+        return json({ erreur: "format" }, 400, cors);
+      }
+      try {
+        const r = await lireCopie(corps, env);
+        return r.erreur ? json({ erreur: r.erreur }, r.statut, cors) : json(r.resultat, 200, cors);
+      } catch (e) {
+        console.log("Lecture d'une copie", e);
         return json({ erreur: "reseau" }, 502, cors);
       }
     }

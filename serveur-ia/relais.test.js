@@ -121,6 +121,47 @@ describe("origines", () => {
   });
 });
 
+describe("découper un devoir en questions (admin)", () => {
+  const corps = {
+    sujet: `Exercice 1 (3 points) : donne le masque d'un /26.\nExercice 2 : combien d'hôtes ?`,
+    corrige: `1. 255.255.255.192\n2. 62 hôtes`,
+  };
+  const decouper = (entetes = { "X-Admin": MOT_DE_PASSE }) =>
+    relais.fetch(demande("/admin/decouper-devoir", { corps, entetes }), env());
+
+  test("renvoie les parties, avec le barème écrit dans le sujet", async () => {
+    geminiRepond(
+      JSON.stringify({
+        parties: [
+          { titre: "Exercice 1", enonce: "Donne le masque d'un /26.", corrige: "255.255.255.192", points: 3 },
+          { titre: "Exercice 2", enonce: "Combien d'hôtes ?", corrige: "62 hôtes", points: 0 },
+        ],
+      })
+    );
+    const r = await decouper();
+    expect(r.status).toBe(200);
+    const { parties } = await r.json();
+    expect(parties).toHaveLength(2);
+    expect(parties[0]).toEqual({ titre: "Exercice 1", enonce: "Donne le masque d'un /26.", corrige: "255.255.255.192", points: 3 });
+    // Sans barème écrit, c'est 0 : l'auteur le met lui-même.
+    expect(parties[1].points).toBe(0);
+    expect(appelsGemini[0].corps.systemInstruction.parts[0].text).toContain("SANS LE RÉÉCRIRE");
+  });
+
+  test("un barème farfelu est ramené à 0 plutôt qu'écrit tel quel", async () => {
+    geminiRepond(JSON.stringify({ parties: [{ titre: "Exercice 1", enonce: "Question.", corrige: "", points: -5 }] }));
+    const { parties } = await (await decouper()).json();
+    expect(parties[0].points).toBe(0);
+  });
+
+  test("sans mot de passe, rien n'est découpé", async () => {
+    const avant = appelsGemini.length;
+    const r = await decouper({});
+    expect(r.status).toBe(401);
+    expect(appelsGemini).toHaveLength(avant);
+  });
+});
+
 describe("expliquer étape par étape à partir de la réponse de l'étudiant", () => {
   const corps = { enonce: "Combien d'hôtes dans un /26 ?", corrige: "Réponse : 62 hôtes.", reponse: "64 hôtes" };
   const expliquer = (c = corps) => relais.fetch(demande("/expliquer-etapes", { corps: c }), env());

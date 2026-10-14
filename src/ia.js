@@ -237,6 +237,14 @@ export function verifierReponse(reponse, { contient = [], exclut = [] }) {
    « extraire-exercices »). Il ne fait que proposer : la page affiche
    ses propositions, l'auteur choisit ce qui entre dans le brouillon. */
 /* Statistiques anonymes des QCM (voir `serveur-ia/stats.js`). */
+/* Découper un devoir en questions, à partir du sujet et du corrigé
+   collés ou lus dans les PDF (serveur-ia/decoupage.js). L'IA recopie et
+   range : elle ne rédige rien. Renvoie { parties: [{ titre, enonce,
+   corrige, points }] } ; `points` vaut 0 quand le sujet n'écrit pas de
+   barème, et c'est l'auteur qui le met. */
+export const decouperDevoir = ({ sujet, corrige }, motDePasse) =>
+  appelAdmin("/admin/decouper-devoir", motDePasse, { method: "POST", body: JSON.stringify({ sujet, corrige }) });
+
 export const lireStatsAdmin = (motDePasse) => appelAdmin("/admin/stats", motDePasse);
 export const effacerStatsAdmin = (motDePasse) =>
   appelAdmin("/admin/stats/effacer", motDePasse, { method: "POST" });

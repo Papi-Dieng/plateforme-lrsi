@@ -5,6 +5,9 @@ import { typesRessource } from "../../data/bibliotheque";
 import { useCouverture } from "../../couvertures";
 import { deplacer, extraireYoutube, optionsMatieres } from "./outils";
 import { Bouton, Champ, ChampPdf, Choix, ChoixFormat, Ordre, Zone } from "./champs";
+import { decouperDevoir } from "../../ia";
+import { messageErreurAdmin } from "../../sessionAdmin";
+import { urlPdf } from "../../contenu";
 
 /* ==================================================================
    Éditeurs des vidéos, des devoirs (`examens`), des examens passés
@@ -47,6 +50,115 @@ export function EditeurVideo({ element: v, changer, matieres }) {
         />
       )}
     </div>
+  );
+}
+
+/* ==================================================================
+   « Tout coller d'un coup » : le sujet entier d'un côté, le corrigé
+   entier de l'autre, et l'IA retrouve les questions (demande du
+   14 octobre 2026).
+
+   Écrire les parties une par une est long, alors que l'auteur a déjà
+   son devoir écrit, ou en PDF. L'IA ne rédige rien : elle recopie et
+   range (serveur-ia/decoupage.js). Elle relève aussi le barème quand le
+   sujet l'écrit (« (3 points) ») ; sinon chaque partie vaut 0 point et
+   l'auteur les remplit, ce que le bandeau lui dit.
+   ================================================================== */
+
+function DecoupageDevoir({ devoir, changer, motDePasse }) {
+  const [ouvert, setOuvert] = useState(false);
+  const [sujet, setSujet] = useState("");
+  const [corrige, setCorrige] = useState("");
+  const [etat, setEtat] = useState({ attente: "", erreur: "", bilan: "" });
+
+  const texteDuPdf = async (pdf) => {
+    const reponse = await fetch(urlPdf(pdf.id));
+    if (!reponse.ok) throw new Error("fichier");
+    const { extraireTextePdf } = await import("../../extrairePdf");
+    return extraireTextePdf(new File([await reponse.blob()], "document.pdf", { type: "application/pdf" }));
+  };
+
+  const lirePdfs = async () => {
+    setEtat({ attente: "Lecture des PDF…", erreur: "", bilan: "" });
+    try {
+      const [s, c] = await Promise.all([
+        devoir.pdfEnonce ? texteDuPdf(devoir.pdfEnonce) : "",
+        devoir.pdfCorrige ? texteDuPdf(devoir.pdfCorrige) : "",
+      ]);
+      if (s) setSujet(s);
+      if (c) setCorrige(c);
+      setEtat({
+        attente: "",
+        erreur: s ? "" : "Ce PDF ne contient pas de texte : c'est un PDF scanné. Colle le sujet à la main.",
+        bilan: s ? `${s.length.toLocaleString("fr-FR")} caractères lus dans le sujet.` : "",
+      });
+    } catch {
+      setEtat({ attente: "", erreur: "Les PDF n'ont pas pu être lus.", bilan: "" });
+    }
+  };
+
+  const decouper = async () => {
+    setEtat({ attente: "Découpage par l'IA…", erreur: "", bilan: "" });
+    try {
+      const { parties } = await decouperDevoir({ sujet, corrige }, motDePasse);
+      // Les parties déjà écrites sont gardées : le découpage s'ajoute.
+      changer({ format: "parties", parties: [...devoir.parties, ...parties] });
+      const sansBareme = parties.filter((p) => !p.points).length;
+      setEtat({
+        attente: "",
+        erreur: "",
+        bilan:
+          `${parties.length} partie${parties.length > 1 ? "s" : ""} ajoutée${parties.length > 1 ? "s" : ""}.` +
+          (sansBareme ? ` ${sansBareme} sans barème dans le sujet : mets les points toi-même.` : " Barème repris du sujet."),
+      });
+    } catch (e) {
+      setEtat({ attente: "", erreur: messageErreurAdmin(e.message), bilan: "" });
+    }
+  };
+
+  if (!ouvert) {
+    return (
+      <Bouton icone="sparkles" onClick={() => setOuvert(true)}>
+        Coller tout le devoir d&apos;un coup
+      </Bouton>
+    );
+  }
+
+  return (
+    <section className="space-y-3 rounded-xl border border-ink-200 p-4 dark:border-ink-800">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-ink-900 dark:text-white">Coller tout le devoir d&apos;un coup</h3>
+          <p className="mt-1 text-xs/5 text-ink-600 dark:text-ink-400">
+            Colle le sujet entier et le corrigé entier : l&apos;IA retrouve les questions, rapproche chaque corrigé, et
+            reprend le barème écrit dans le sujet. Elle ne réécrit rien — vérifie quand même avant de publier.
+          </p>
+        </div>
+        <Bouton onClick={() => setOuvert(false)}>Fermer</Bouton>
+      </div>
+
+      {(devoir.pdfEnonce || devoir.pdfCorrige) && (
+        <Bouton icone="file" onClick={lirePdfs}>
+          Reprendre le texte des PDF
+        </Bouton>
+      )}
+
+      <Zone label="Tout le sujet" rows={6} value={sujet} maxLength={30000} onChange={(e) => setSujet(e.target.value)} />
+      <Zone label="Tout le corrigé" aide="Facultatif, mais c'est lui qui permet la correction par l'IA." rows={6} value={corrige} maxLength={30000} onChange={(e) => setCorrige(e.target.value)} />
+
+      <div className="flex flex-wrap items-center gap-3">
+        <Bouton variante="principal" icone="sparkles" disabled={sujet.trim().length < 20 || Boolean(etat.attente)} onClick={decouper}>
+          Découper en questions
+        </Bouton>
+        {etat.attente && <p className="text-sm text-ink-600 dark:text-ink-300">{etat.attente}</p>}
+        {etat.bilan && <p className="text-sm font-semibold text-accent-700 dark:text-accent-300">{etat.bilan}</p>}
+      </div>
+      {etat.erreur && (
+        <p role="alert" className="text-sm text-flame-700 dark:text-flame-400">
+          {etat.erreur}
+        </p>
+      )}
+    </section>
   );
 }
 
@@ -111,6 +223,9 @@ export function EditeurExamen({ element: x, changer, matieres, motDePasse }) {
             onChange={(e) => changer({ pointsTotal: Number(e.target.value) })}
             className="sm:w-48"
           />
+          {/* Un sujet en PDF peut aussi devenir des questions notées une
+              par une : l'IA lit le PDF et relève le barème. */}
+          <DecoupageDevoir devoir={x} changer={changer} motDePasse={motDePasse} />
         </>
       ) : (
       <>
@@ -141,9 +256,12 @@ export function EditeurExamen({ element: x, changer, matieres, motDePasse }) {
           </div>
         ))}
       </div>
-      <Bouton icone="plus" onClick={() => changer({ parties: [...parties, { titre: "", enonce: "", points: 4, corrige: "" }] })}>
-        Ajouter une partie
-      </Bouton>
+      <div className="flex flex-wrap gap-3">
+        <Bouton icone="plus" onClick={() => changer({ parties: [...parties, { titre: "", enonce: "", points: 4, corrige: "" }] })}>
+          Ajouter une partie
+        </Bouton>
+      </div>
+      <DecoupageDevoir devoir={x} changer={changer} motDePasse={motDePasse} />
       </>
       )}
     </div>

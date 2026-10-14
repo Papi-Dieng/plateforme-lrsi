@@ -1,4 +1,5 @@
 import { examens } from "../src/data/demonstration.js";
+import { site } from "../src/data/site.js";
 import { aller, entrerAvecCompte, entrerEnInvite, expect, test } from "./outils.js";
 
 /* ==================================================================
@@ -116,6 +117,35 @@ test.describe("devoir", () => {
     await expect(partie.getByRole("alert")).toBeVisible();
     await expect(partie.getByRole("button", { name: "Faire corriger par l'IA" })).toBeEnabled();
     await expect(page.getByText("Corrigé", { exact: true }).first()).toBeVisible();
+  });
+});
+
+test.describe("devoir : importer toute sa copie d'un coup", () => {
+  test("l'IA range chaque passage sous sa partie, et le site dit ce qui manque", async ({ page }) => {
+    const devoir = examens.find((x) => x.format !== "pdf" && x.parties.length > 1);
+    const envois = [];
+    await page.route(`${new URL(site.urlIA).origin}/lire-copie`, (route) => {
+      const entetes = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*" };
+      if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: entetes });
+      envois.push(route.request().postDataJSON());
+      // Seule la première partie a été trouvée sur la copie.
+      return route.fulfill({ headers: entetes, json: { reponses: [{ question: 1, texte: "Ma reponse ecrite a la main" }] } });
+    });
+
+    await entrerEnInvite(page);
+    await aller(page, `/examens/${devoir.id}`);
+    await page.getByRole("button", { name: "Commencer le devoir" }).click();
+
+    await page.locator('input[type="file"]').first().setInputFiles({
+      name: "copie.png",
+      mimeType: "image/png",
+      buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64"),
+    });
+
+    await expect(page.getByText("1 partie remplie depuis ta copie.")).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Ta réponse à la partie 1" })).toHaveValue("Ma reponse ecrite a la main");
+    // Les questions du devoir partent avec la copie, pour le rangement.
+    expect(envois[0].questions.length).toBe(devoir.parties.length);
   });
 });
 

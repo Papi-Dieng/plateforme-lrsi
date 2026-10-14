@@ -7,6 +7,7 @@ import { ChoixReponse, RepondreAvecIA } from "../components/RepondreExercice";
 import { questionsDe } from "../questionsExercice";
 import { corrigerExercice, iaActive, raisonEchec } from "../ia";
 import { enregistrerDevoir } from "../progression";
+import { TYPES_COPIE, lireCopieDevoir, messageErreurCopie } from "../copie";
 import { Container, EtatVide } from "../components/ui";
 import { cx } from "../components/classes";
 import { mono } from "../components/styleAdmin";
@@ -370,6 +371,10 @@ export function ExamenSession() {
   const [modeReponse, setModeReponse] = useState("questions");
   // Ce qui est écrit sous chaque partie, et la correction de chacune.
   const ecrit = useRef({});
+  /* Toute la copie importée d'un coup (photos ou PDF) : l'IA range
+     chaque passage sous sa partie, et chacune reçoit le sien. */
+  const [copie, setCopie] = useState({ attente: false, erreur: "", reponses: null, manquantes: 0, cle: 0 });
+  const champCopie = useRef(null);
   const [corrections, setCorrections] = useState({});
   // La note est gardée dans l'historique une fois, quand l'IA a tout noté.
   const noteGardee = useRef(false);
@@ -416,6 +421,29 @@ export function ExamenSession() {
       </Container>
     );
   }
+
+  const importerCopie = async (evenement) => {
+    const fichiers = [...(evenement.target.files ?? [])];
+    evenement.target.value = "";
+    if (fichiers.length === 0) return;
+    setCopie((avant) => ({ ...avant, attente: true, erreur: "", reponses: null, manquantes: 0 }));
+    try {
+      const questions = examen.parties.map((p, i) => `${p.titre || `Partie ${i + 1}`} — ${p.enonce}`);
+      const { reponses } = await lireCopieDevoir(fichiers, questions);
+      setCopie((avant) => ({
+        attente: false,
+        erreur: "",
+        reponses,
+        manquantes: examen.parties.length - Object.keys(reponses).length,
+        // Change à chaque import : les blocs de réponse repartent de la
+        // copie qu'on vient de lire.
+        cle: avant.cle + 1,
+      }));
+      setModeReponse("libre");
+    } catch (e) {
+      setCopie((avant) => ({ ...avant, attente: false, erreur: messageErreurCopie(e.message), reponses: null, manquantes: 0 }));
+    }
+  };
 
   const commencer = () => {
     setFin(Date.now() + examen.dureeMinutes * 60 * 1000);
@@ -580,6 +608,52 @@ export function ExamenSession() {
             </>
           )}
 
+          {/* Toute la copie d'un coup : beaucoup de questions, une seule
+              photo (ou un PDF). L'IA lit et range (src/copie.js). */}
+          {etape !== "consignes" && !pdf && iaActive && (
+            <section className="rounded-[28px] border border-ink-200 bg-white p-6 sm:p-8 dark:border-ink-800 dark:bg-ink-900">
+              <h2 className="flex items-center gap-2 text-lg font-extrabold tracking-tight text-ink-950 dark:text-white">
+                <Icon name="trombone" className="size-4.5 text-brand-600 dark:text-brand-400" />
+                J&apos;ai répondu sur papier
+              </h2>
+              <p className="mt-1.5 text-[15px] text-ink-600 dark:text-ink-300">
+                Photographie ta copie (une photo par page) ou envoie-la en PDF : l&apos;IA la lit et range chaque réponse
+                sous sa partie. Relis ensuite ce qu&apos;elle a mis avant de terminer le devoir.
+              </p>
+              <input
+                ref={champCopie}
+                type="file"
+                accept={TYPES_COPIE}
+                multiple
+                onChange={importerCopie}
+                className="sr-only"
+                aria-hidden="true"
+                tabIndex={-1}
+              />
+              <button
+                type="button"
+                onClick={() => champCopie.current?.click()}
+                disabled={copie.attente}
+                className="mt-4 inline-flex min-h-12 items-center gap-2 rounded-[14px] bg-brand-600 px-5 text-[15px] font-extrabold text-white transition-colors hover:bg-brand-700 disabled:opacity-60"
+              >
+                <Icon name="sparkles" className="size-4" />
+                {copie.attente ? "Lecture de ta copie…" : "Importer toute ma copie"}
+              </button>
+              {copie.reponses && (
+                <p className="mt-3 text-sm text-ink-700 dark:text-ink-200">
+                  {Object.keys(copie.reponses).length} partie{Object.keys(copie.reponses).length > 1 ? "s" : ""} remplie
+                  {Object.keys(copie.reponses).length > 1 ? "s" : ""} depuis ta copie.
+                  {copie.manquantes > 0 && ` ${copie.manquantes} n'a rien reçu : complète-la à la main.`}
+                </p>
+              )}
+              {copie.erreur && (
+                <p role="alert" className="mt-3 text-sm text-flame-700 dark:text-flame-400">
+                  {copie.erreur}
+                </p>
+              )}
+            </section>
+          )}
+
           {etape !== "consignes" &&
             !pdf &&
             examen.parties.map((p, i) => (
@@ -597,16 +671,19 @@ export function ExamenSession() {
                     par l'IA une fois le devoir terminé. Même bloc que les
                     exercices : question par question, ou tout écrire. */}
                 <RepondreAvecIA
+                  key={copie.cle}
                   id={`${examen.id}-${i}`}
                   enonce={p.enonce}
                   corrige={p.corrige}
                   encadre={false}
                   verrouille={etape === "epreuve"}
                   mode={modeReponse}
+                  onMode={setModeReponse}
                   libelle={`Ta réponse à la partie ${i + 1}`}
                   onReponse={(texte, vide) => {
                     ecrit.current[i] = { texte, vide };
                   }}
+                  reponseImportee={copie.reponses?.[i]}
                   correction={corrections[i]}
                   onCorrige={(r) => noterAuto(i, r.verdict, r.points)}
                   bareme={p.points}
