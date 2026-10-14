@@ -192,19 +192,22 @@ export function ExamensListe() {
                 Des devoirs à faire en conditions réelles, avec minuteur et corrigé à la fin, et les sujets d&apos;examens passés
                 dont la publication a été autorisée.
               </p>
-              <ul className="mt-7 flex flex-wrap gap-3">
+              {/* Les trois repères tiennent sur une seule ligne, même sur un
+                  téléphone (demande du 14 octobre 2026) : l'icône passe
+                  au-dessus et le détail n'apparaît qu'à partir de la tablette. */}
+              <ul className="mt-7 grid grid-cols-3 gap-2 sm:gap-3">
                 {[
                   ["clock", "Minuteur", "en haut de la page"],
                   ["lock", "Corrigé à la fin", "jamais avant"],
-                  ["pencil", "Tu te notes", "partie par partie"],
+                  ["sparkles", "L'IA te note", "partie par partie"],
                 ].map(([icone, titre, texte]) => (
-                  <li key={titre} className="flex items-center gap-3 rounded-[16px] border border-white/12 bg-white/4 px-3.5 py-3">
-                    <span className={cx("grid size-9 place-items-center rounded-[10px]", AMBRE)}>
-                      <Icon name={icone} className="size-4.5" />
+                  <li key={titre} className="flex flex-col items-start gap-2 rounded-[16px] border border-white/12 bg-white/4 p-3 sm:flex-row sm:items-center sm:gap-3 sm:px-3.5">
+                    <span className={cx("grid size-8 shrink-0 place-items-center rounded-[10px] sm:size-9", AMBRE)}>
+                      <Icon name={icone} className="size-4 sm:size-4.5" />
                     </span>
                     <span className="leading-tight">
-                      <span className="block font-extrabold">{titre}</span>
-                      <span className="text-[13px] text-ink-300">{texte}</span>
+                      <span className="block text-[13px] font-extrabold sm:text-base">{titre}</span>
+                      <span className="hidden text-[13px] text-ink-300 sm:block">{texte}</span>
                     </span>
                   </li>
                 ))}

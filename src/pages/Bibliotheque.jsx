@@ -101,7 +101,9 @@ export default function Bibliotheque() {
 
         {/* ---- Filtres ---- */}
         <p className={cx(mono, "mt-8 text-ink-600 uppercase dark:text-ink-300")} id="filtre-biblio">Filtrer par matière</p>
-        <div role="group" aria-labelledby="filtre-biblio" className="mt-3 flex flex-wrap gap-2">
+        {/* Les matières défilent de côté au lieu de s'empiler : sur
+            téléphone, c'était une ligne par matière avant les livres. */}
+        <div role="group" aria-labelledby="filtre-biblio" className="mt-3 -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
           {options.map((o) => (
             <button
               key={o.value}
@@ -109,7 +111,7 @@ export default function Bibliotheque() {
               aria-pressed={matiere === o.value}
               onClick={() => setMatiere(o.value)}
               className={cx(
-                "inline-flex min-h-10 items-center gap-2 rounded-full border px-3 text-sm font-bold",
+                "inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-3 text-sm font-bold whitespace-nowrap",
                 matiere === o.value
                   ? "border-[#1a1530] bg-[#1a1530] text-white dark:border-white dark:bg-white dark:text-[#1a1530]"
                   : "border-ink-200 bg-white text-[#1a1530] hover:bg-ink-50 dark:border-ink-700 dark:bg-ink-900 dark:text-white dark:hover:bg-ink-800"
@@ -139,7 +141,8 @@ export default function Bibliotheque() {
               <p className="mt-1 text-sm text-ink-600 dark:text-ink-300">D'autres références seront ajoutées progressivement.</p>
             </div>
           ) : (
-            <ul className="mt-6 grid gap-x-5 gap-y-10 md:grid-cols-2 lg:grid-cols-4">
+            /* Deux livres par ligne dès le téléphone (demande du 14 octobre 2026). */
+            <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-5 sm:gap-y-10 lg:grid-cols-4">
               {libres.map((r, i) => {
                 const t = TEINTES[i % TEINTES.length];
                 const lien = r.url || (r.pdf ? urlPdf(r.pdf.id) : undefined);

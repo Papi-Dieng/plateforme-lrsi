@@ -158,87 +158,123 @@ const dateCourte = (iso) => {
 
 const estAujourdhui = (iso) => new Date(iso).toDateString() === new Date().toDateString();
 
-function Historique({ liste, active, onOuvrir, onSupprimer, onFermer }) {
+/* La barre latérale des discussions, comme dans un outil de
+   conversation (demande du 14 octobre 2026) : le nom de l'assistant,
+   « Nouvelle discussion », puis les discussions récentes. Elle est
+   toujours là sur un grand écran ; sur téléphone elle s'ouvre par le
+   bouton de l'en-tête, et c'est seulement là que le nom de l'assistant
+   s'affiche. */
+function BarreLaterale({ liste, active, ouverte, onOuvrir, onSupprimer, onNouvelle, onFermer, peutNouvelle }) {
   useEffect(() => {
+    if (!ouverte) return undefined;
     const surTouche = (e) => e.key === "Escape" && onFermer();
     window.addEventListener("keydown", surTouche);
     return () => window.removeEventListener("keydown", surTouche);
-  }, [onFermer]);
+  }, [ouverte, onFermer]);
 
   const groupes = [
     ["Aujourd'hui", liste.filter((c) => estAujourdhui(c.date))],
     ["Plus tôt", liste.filter((c) => !estAujourdhui(c.date))],
   ].filter(([, l]) => l.length > 0);
 
-  return (
-    <div className="absolute inset-0 z-30 flex p-2 sm:p-4">
-      <button type="button" aria-label="Fermer l'historique" tabIndex={-1} onClick={onFermer} className="absolute inset-0 bg-[#0f0b14]/60 backdrop-blur-sm" />
-      <section
-        aria-label="Historique des discussions"
-        className="relative flex h-full w-full max-w-sm flex-col rounded-[28px] border border-white/10 bg-[#1d1222] shadow-2xl"
-      >
-        <div className="flex items-center justify-between gap-3 px-6 pt-6 pb-2">
-          <h2 className="text-xl font-extrabold tracking-tight text-white">Mes discussions</h2>
-          <button
-            type="button"
-            onClick={onFermer}
-            aria-label="Fermer l'historique"
-            className="grid size-10 place-items-center rounded-xl border border-white/15 text-white hover:bg-white/10"
-          >
-            <Icon name="close" className="size-4" />
-          </button>
-        </div>
-        {liste.length === 0 ? (
-          <p className="px-6 py-6 text-sm/6 text-[#cfc3d6]">
-            Aucune discussion gardée pour l&apos;instant. Pose une question : elle apparaîtra ici,
-            et tu pourras la rouvrir pour la continuer.
+  const contenu = (
+    <section
+      aria-label="Historique des discussions"
+      className="flex h-full w-full flex-col rounded-[28px] border border-white/10 bg-[#1d1222] shadow-2xl lg:bg-[#160f1c]"
+    >
+      <div className="flex items-start gap-3 px-5 pt-5">
+        <LogoAssistant className="size-9 shrink-0" />
+        <div className="min-w-0 flex-1">
+          <h2 className="text-[17px] leading-tight font-extrabold tracking-tight text-white">Assistant de révision</h2>
+          <p className="mt-1 inline-flex items-center gap-2 rounded-full border border-white/15 px-2.5 py-0.5 text-[11px] text-[#cfc3d6]">
+            <span aria-hidden="true" className="size-2 rounded-full bg-[#ffb38c]" />
+            {iaActive ? "IA Gemini et contenu du site" : "Contenu du site"}
           </p>
-        ) : (
-          <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
-            {groupes.map(([titre, l]) => (
-              <div key={titre}>
-                <p className={cx(mono, "mt-4 mb-2 px-3 text-[10px] text-[#a99bb3]")}>{titre}</p>
-                <ul className="space-y-1">
-                  {l.map((c) => (
-                    <li key={c.id} className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => onOuvrir(c.id)}
-                        aria-current={c.id === active ? "true" : undefined}
-                        className={cx(
-                          "flex min-w-0 flex-1 gap-3 rounded-2xl border px-3 py-2.5 text-left transition-colors",
-                          c.id === active ? "border-white/15 bg-white/[0.07]" : "border-transparent hover:bg-white/5"
-                        )}
-                      >
-                        <span aria-hidden="true" className={cx("mt-1.5 size-2 shrink-0 rounded-full", c.id === active ? "bg-[#ff9fbf]" : "bg-white/25")} />
-                        <span className="min-w-0">
-                          <span className="line-clamp-2 block text-sm font-bold text-white">{c.titre}</span>
-                          <span className="block font-mono text-[11px] text-[#a99bb3]">
-                            {c.nombre} question{c.nombre > 1 ? "s" : ""} · {dateCourte(c.date)}
-                          </span>
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onSupprimer(c.id)}
-                        aria-label={`Supprimer la discussion « ${c.titre} »`}
-                        className="grid size-9 shrink-0 place-items-center rounded-xl text-[#a99bb3] hover:bg-[#ff8fb8]/10 hover:text-[#ffb0cc]"
-                      >
-                        <Icon name="trash" className="size-4" />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        )}
-        <p className="mx-6 border-t border-white/10 py-4 text-xs/5 text-[#a99bb3]">
-          Les {liste.length > 0 ? "20 " : ""}discussions les plus récentes sont gardées, sans les images. Avec un
-          compte, tu les retrouves sur tous tes appareils.
+        </div>
+        <button
+          type="button"
+          onClick={onFermer}
+          aria-label="Fermer les discussions"
+          className="grid size-9 shrink-0 place-items-center rounded-xl border border-white/15 text-white hover:bg-white/10 lg:hidden"
+        >
+          <Icon name="close" className="size-4" />
+        </button>
+      </div>
+
+      <div className="px-5 pt-4">
+        <button
+          type="button"
+          onClick={onNouvelle}
+          disabled={!peutNouvelle}
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-white/15 px-4 text-sm font-bold text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <Icon name="plus" className="size-4" />
+          Nouvelle discussion
+        </button>
+      </div>
+
+      {liste.length === 0 ? (
+        <p className="px-5 py-5 text-sm/6 text-[#cfc3d6]">
+          Aucune discussion gardée pour l&apos;instant. Pose une question : elle apparaîtra ici, et tu pourras la rouvrir
+          pour la continuer.
         </p>
-      </section>
-    </div>
+      ) : (
+        <div className="mt-2 min-h-0 flex-1 overflow-y-auto px-2 pb-3">
+          {groupes.map(([titre, l]) => (
+            <div key={titre}>
+              <p className={cx(mono, "mt-4 mb-2 px-3 text-[10px] text-[#a99bb3]")}>{titre}</p>
+              <ul className="space-y-1">
+                {l.map((c) => (
+                  <li key={c.id} className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => onOuvrir(c.id)}
+                      aria-current={c.id === active ? "true" : undefined}
+                      className={cx(
+                        "flex min-w-0 flex-1 gap-3 rounded-2xl border px-3 py-2.5 text-left transition-colors",
+                        c.id === active ? "border-white/15 bg-white/[0.07]" : "border-transparent hover:bg-white/5"
+                      )}
+                    >
+                      <span aria-hidden="true" className={cx("mt-1.5 size-2 shrink-0 rounded-full", c.id === active ? "bg-[#ff9fbf]" : "bg-white/25")} />
+                      <span className="min-w-0">
+                        <span className="line-clamp-2 block text-sm font-bold text-white">{c.titre}</span>
+                        <span className="block font-mono text-[11px] text-[#a99bb3]">
+                          {c.nombre} question{c.nombre > 1 ? "s" : ""} · {dateCourte(c.date)}
+                        </span>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onSupprimer(c.id)}
+                      aria-label={`Supprimer la discussion « ${c.titre} »`}
+                      className="grid size-9 shrink-0 place-items-center rounded-xl text-[#a99bb3] hover:bg-[#ff8fb8]/10 hover:text-[#ffb0cc]"
+                    >
+                      <Icon name="trash" className="size-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="mx-5 mt-auto border-t border-white/10 py-4 text-[11px]/5 text-[#a99bb3]">
+        Les {liste.length > 0 ? "20 " : ""}discussions les plus récentes sont gardées, sans les images. Avec un compte, tu
+        les retrouves sur tous tes appareils.
+      </p>
+    </section>
+  );
+
+  return (
+    <>
+      <div className="hidden w-[17.5rem] shrink-0 py-3 pl-3 lg:block">{contenu}</div>
+      {ouverte && (
+        <div className="absolute inset-0 z-30 flex p-2 sm:p-4 lg:hidden">
+          <button type="button" aria-label="Fermer les discussions" tabIndex={-1} onClick={onFermer} className="absolute inset-0 bg-[#0f0b14]/60 backdrop-blur-sm" />
+          <div className="relative h-full w-full max-w-sm">{contenu}</div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -394,55 +430,45 @@ export default function Assistant() {
   const icones = ["bulb", "pencil", "target", "graduation"];
 
   return (
-    <div className="dark relative flex h-full gap-5 bg-[#0f0b14] bg-[radial-gradient(ellipse_at_top_left,#3a1d2e_0%,transparent_55%),radial-gradient(ellipse_at_bottom_right,#2a1d44_0%,transparent_50%)] text-[#f4eef7]">
-      {historiqueOuvert && (
-        <Historique
-          liste={liste}
-          active={conversation}
-          onOuvrir={ouvrirDiscussion}
-          onSupprimer={supprimerDiscussion}
-          onFermer={() => setHistoriqueOuvert(false)}
-        />
-      )}
+    <div className="dark relative flex h-full bg-[#0f0b14] bg-[radial-gradient(ellipse_at_top_left,#3a1d2e_0%,transparent_55%),radial-gradient(ellipse_at_bottom_right,#2a1d44_0%,transparent_50%)] text-[#f4eef7]">
+      <BarreLaterale
+        liste={liste}
+        active={conversation}
+        ouverte={historiqueOuvert}
+        peutNouvelle={messages.length > 0}
+        onOuvrir={ouvrirDiscussion}
+        onSupprimer={supprimerDiscussion}
+        onNouvelle={nouvelleDiscussion}
+        onFermer={() => setHistoriqueOuvert(false)}
+      />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* ---- En-tête ---- */}
-        <div className="shrink-0 px-4 pt-4 pb-2 sm:px-6">
-          <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-6 gap-y-3">
-            <div className="flex items-center gap-3">
-              <LogoAssistant className="size-10 shrink-0" />
-              <div>
-                <h1 className="text-xl font-extrabold tracking-tight text-white">Assistant de révision</h1>
-                <p className="mt-1 inline-flex items-center gap-2 rounded-full border border-white/15 px-2.5 py-0.5 text-xs text-[#cfc3d6]">
-                  <span aria-hidden="true" className="size-2 rounded-full bg-[#ffb38c]" />
-                  {iaActive ? "IA Gemini et contenu de la plateforme" : "Cherche dans le contenu de la plateforme"}
-                </p>
-              </div>
-            </div>
-            <div className="ml-auto flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setListe(listeConversations(lireConversations()));
-                  setHistoriqueOuvert(true);
-                }}
-                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 px-4 text-sm font-bold text-white transition-colors hover:bg-white/10"
-              >
-                <Icon name="clock" className="size-4" />
-                Historique
-              </button>
-              <button
-                type="button"
-                onClick={nouvelleDiscussion}
-                disabled={messages.length === 0}
-                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 px-4 text-sm font-bold text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <Icon name="plus" className="size-4" />
-                <span className="hidden sm:inline">Nouvelle discussion</span>
-                <span className="sm:hidden">Nouvelle</span>
-              </button>
-            </div>
-          </div>
+        {/* Le nom de l'assistant est dans la barre latérale : ici, il n'est
+            lu que par les lecteurs d'écran, pour que la page ait un titre. */}
+        <h1 className="sr-only">Assistant de révision</h1>
+        {/* ---- Barre du haut, seulement là où la barre latérale est cachée ---- */}
+        <div className="flex shrink-0 items-center gap-2 px-4 pt-4 pb-2 sm:px-6 lg:hidden">
+          <button
+            type="button"
+            onClick={() => {
+              setListe(listeConversations(lireConversations()));
+              setHistoriqueOuvert(true);
+            }}
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 px-4 text-sm font-bold text-white transition-colors hover:bg-white/10"
+          >
+            <Icon name="menu" className="size-4" />
+            Discussions
+          </button>
+          <LogoAssistant className="size-9 shrink-0" />
+          <button
+            type="button"
+            onClick={nouvelleDiscussion}
+            disabled={messages.length === 0}
+            className="ml-auto inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 px-4 text-sm font-bold text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Icon name="plus" className="size-4" />
+            Nouvelle
+          </button>
         </div>
 
         {/* ---- Fil de discussion : seul à défiler ---- */}

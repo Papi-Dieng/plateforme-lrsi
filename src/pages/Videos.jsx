@@ -11,8 +11,10 @@ import { matieres, nomMatiere } from "../data/matieres";
    Vidéos d'explication.
 
    D'après la maquette « Vidéos d'explication » (7 octobre 2026),
-   allégée à la demande : fond ardoise, accent ambre, toutes les vidéos en
-   grille (le carrousel d'affiches a été retiré à la demande). Les
+   allégée à la demande : fond ardoise, toutes les vidéos en rangée (le
+   carrousel d'affiches a été retiré à la demande). L'ambre a laissé la
+   place au « gris liquide » le 14 octobre 2026, et les matières ne
+   s'empilent plus les unes sous les autres : elles défilent de côté. Les
    miniatures YouTube restent visibles avant la lecture, et le lecteur
    est la fenêtre habituelle (components/videos.jsx).
    ================================================================== */
@@ -23,7 +25,11 @@ const normalise = (s) =>
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "");
 
-const AMBRE = "text-[#8a5a00] dark:text-[#ffc94d]";
+// Le gris discret des sur-titres, et le « verre liquide » de la matière
+// choisie : un gris translucide et flouté, à la place de l'ambre.
+const GRIS = "text-ink-600 dark:text-ink-300";
+const VERRE =
+  "border-ink-950/15 bg-ink-950/12 text-ink-950 shadow-[inset_0_1px_0_#ffffffe6] backdrop-blur-md dark:border-white/25 dark:bg-white/18 dark:text-white";
 const mono = "font-mono text-[11px] font-bold tracking-[0.14em] uppercase";
 const miniature = (id) => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 
@@ -94,7 +100,7 @@ export default function Videos() {
       {/* ---- En-tête et vidéo à l'affiche ---- */}
       <section className="bg-ink-50 dark:bg-ink-900 px-4 pt-14 pb-12">
         <div className="text-center">
-          <p className={cx(mono, AMBRE)}>Comprendre autrement</p>
+          <p className={cx(mono, GRIS)}>Comprendre autrement</p>
           <h1 className="mt-4 text-5xl font-extrabold tracking-[-0.05em] text-balance sm:text-6xl">Vidéos d'explication</h1>
           <p className="mx-auto mt-4 max-w-xl text-ink-600 dark:text-ink-300">
             Des vidéos choisies pour débloquer une notion avant de reprendre le cours. Elles restent hébergées par YouTube : la plateforme n'en garde que le lien.
@@ -103,7 +109,7 @@ export default function Videos() {
 
         {n === 0 && (
           <div className="mt-10 text-center">
-            <p className={cx(mono, AMBRE)}>0 vidéo à l'affiche</p>
+            <p className={cx(mono, GRIS)}>0 vidéo à l'affiche</p>
             <h2 className="mt-3 text-3xl font-extrabold tracking-[-0.04em]">Pas encore de vidéo</h2>
             <p className="mt-2 text-ink-600 dark:text-ink-300">Les vidéos d'explication arriveront ici au fur et à mesure que l'équipe les choisit.</p>
           </div>
@@ -127,13 +133,15 @@ export default function Videos() {
                   value={recherche}
                   onChange={(e) => setRecherche(e.target.value)}
                   placeholder="Rechercher une vidéo, une notion…"
-                  className="min-h-11 w-full rounded-[14px] border border-ink-200 dark:border-ink-700 bg-white dark:bg-ink-900 pr-4 pl-11 placeholder:text-ink-500 focus:border-[#ffc94d] focus:outline-none"
+                  className="min-h-11 w-full rounded-[14px] border border-ink-200 dark:border-ink-700 bg-white dark:bg-ink-900 pr-4 pl-11 placeholder:text-ink-500 focus:border-ink-500 focus:outline-none dark:focus:border-ink-400"
                 />
               </div>
             </div>
           </div>
 
-          <div role="group" aria-label="Filtrer par matière" className="mt-5 flex flex-wrap gap-2">
+          {/* Une matière par ligne, c'était toute la hauteur de l'écran avant
+              la première vidéo : elles défilent maintenant de côté. */}
+          <div role="group" aria-label="Filtrer par matière" className="mt-5 -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
             {options.map((o) => (
               <button
                 key={o.value}
@@ -141,8 +149,8 @@ export default function Videos() {
                 aria-pressed={matiere === o.value}
                 onClick={() => setMatiere(o.value)}
                 className={cx(
-                  "inline-flex min-h-9 items-center gap-2 rounded-full border px-3.5 text-sm font-bold",
-                  matiere === o.value ? "border-[#ffc94d] bg-[#ffc94d] text-[#0f181b]" : "border-ink-200 dark:border-ink-700 hover:bg-ink-100 dark:hover:bg-ink-800"
+                  "inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border px-3.5 text-sm font-bold whitespace-nowrap",
+                  matiere === o.value ? VERRE : "border-ink-200 dark:border-ink-700 hover:bg-ink-100 dark:hover:bg-ink-800"
                 )}
               >
                 {o.label}
@@ -182,12 +190,12 @@ export default function Videos() {
                   </button>
                 </div>
               )}
-            <ul ref={rangee} tabIndex={0} aria-label="Vidéos, à faire défiler" className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-4 focus-visible:outline-2 focus-visible:outline-[#ffc94d]">
+            <ul ref={rangee} tabIndex={0} aria-label="Vidéos, à faire défiler" className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-4 focus-visible:outline-2 focus-visible:outline-ink-500">
               {resultats.map((video) => (
                 <li key={video.id} className="relative w-72 shrink-0 snap-start sm:w-80">
                   <button type="button" onClick={() => v.lire(video)} className="group block w-full text-left">
                     <Miniature video={video} />
-                    <span className="mt-3 block font-extrabold tracking-[-0.02em] group-hover:text-[#ffc94d]">{video.titre}</span>
+                    <span className="mt-3 block font-extrabold tracking-[-0.02em] group-hover:text-ink-600 dark:group-hover:text-ink-300">{video.titre}</span>
                     <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink-600 dark:text-ink-300">
                       {nomMatiere(video.matiere)}
                       {v.vues.includes(video.id) && <span className="rounded bg-ink-100 dark:bg-ink-800 px-1.5 py-0.5 font-bold">Déjà ouverte</span>}

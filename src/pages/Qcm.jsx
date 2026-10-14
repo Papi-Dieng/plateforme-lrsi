@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import Icon from "../components/Icon";
 import { Bouton, Container, EtatVide } from "../components/ui";
 import { cx } from "../components/classes";
@@ -12,7 +12,7 @@ import PartageResultat from "../components/PartageResultat";
 import { dureeLisible, enregistrerScore, lireScores } from "../progression";
 import { envoyerStats } from "../stats";
 import { noterTentative } from "../revisions";
-import { ID_EXAMEN_BLANC, MAX_QUESTIONS, MIN_QUESTIONS, composerExamenBlanc, lireReglages, questionsDisponibles } from "../examenBlanc";
+import { ID_TOUTES_MATIERES, NOMBRE_QUESTIONS, composerQcmGeneral, questionsDisponibles } from "../qcmGeneral";
 
 /* ==================================================================
    Les QCM : la liste, le questionnaire en cours, le résultat.
@@ -151,7 +151,7 @@ export function QcmListe() {
 
   const pastille = (actif) =>
     cx(
-      "inline-flex min-h-10 items-center gap-2 rounded-full border px-4 text-sm font-bold transition-colors",
+      "inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-bold whitespace-nowrap transition-colors",
       actif
         ? "border-[#271627] bg-[#271627] text-white dark:border-white dark:bg-white dark:text-ink-950"
         : "border-ink-200 bg-white text-ink-950 hover:border-ink-400 dark:border-ink-700 dark:bg-ink-900 dark:text-white"
@@ -160,25 +160,24 @@ export function QcmListe() {
   return (
     <>
       <header className={cx(PRUNE, "overflow-hidden")} style={QUADRILLAGE}>
-        <Container className="pt-10 pb-16 sm:pt-12 sm:pb-20">
+        <Container className="pt-8 pb-10 sm:pt-10 sm:pb-12">
           <FilDAriane elements={[{ label: "Accueil", to: "/tableau-de-bord" }, { label: "Se tester" }, { label: "QCM interactifs" }]} />
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-x-14 gap-y-10">
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-x-14 gap-y-8">
             <div className="min-w-0 flex-[1_1_min(520px,100%)]">
               <h1>
-                <span className="-ml-1 block text-[clamp(4rem,15vw,13.5rem)] leading-[0.8] font-extrabold tracking-[-0.07em]">QCM</span>
-                <span className="mt-3 block text-[clamp(2.5rem,4.8vw,4.25rem)] leading-none font-extrabold tracking-[-0.045em] text-lime-400">
+                <span className="-ml-1 block text-[clamp(2.8rem,9vw,6rem)] leading-[0.85] font-extrabold tracking-[-0.06em]">QCM</span>
+                <span className="mt-1 block text-[clamp(1.7rem,3.4vw,2.6rem)] leading-none font-extrabold tracking-[-0.04em] text-lime-400">
                   interactifs.
                 </span>
               </h1>
-              <p className={cx("mt-6 max-w-[540px] text-lg/8 sm:text-[19px]/8", TEXTE_PRUNE)}>
-                Chaque questionnaire se déroule comme un examen : tu réponds à ton rythme, tu peux revenir en arrière et marquer
-                une question à revoir. La correction complète arrive à la fin.
+              <p className={cx("mt-4 max-w-[540px] text-[15px]/7 sm:text-base/7", TEXTE_PRUNE)}>
+                Chaque questionnaire se déroule comme un examen : à ton rythme, avec un minuteur, et la correction à la fin.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
+              <div className="mt-6 flex flex-wrap gap-3">
                 <a
                   href="#questionnaires"
                   onClick={defiler("questionnaires")}
-                  className="inline-flex min-h-13 items-center gap-2.5 rounded-[14px] bg-lime-400 px-5.5 text-[15.5px] font-extrabold text-[#1a0f1c] transition-colors hover:bg-lime-300"
+                  className="inline-flex min-h-12 items-center gap-2 rounded-[14px] bg-lime-400 px-4 text-sm font-extrabold text-[#1a0f1c] transition-colors hover:bg-lime-300 sm:min-h-13 sm:gap-2.5 sm:px-5.5 sm:text-[15.5px]"
                 >
                   Choisir un QCM
                   <Icon name="arrow" className="size-4" />
@@ -186,20 +185,20 @@ export function QcmListe() {
                 <a
                   href="#comment-ca-marche"
                   onClick={defiler("comment-ca-marche")}
-                  className="inline-flex min-h-13 items-center rounded-[14px] border border-white/20 px-5 text-[15px] font-bold transition-colors hover:bg-white/10"
+                  className="inline-flex min-h-12 items-center rounded-[14px] border border-white/20 px-4 text-sm font-bold transition-colors hover:bg-white/10 sm:min-h-13 sm:px-5 sm:text-[15px]"
                 >
                   Comment ça marche
                 </a>
               </div>
-              <dl className="mt-9 grid max-w-[560px] grid-cols-3 gap-4 border-t border-white/12 pt-6">
+              <dl className="mt-6 grid max-w-[560px] grid-cols-3 gap-4 border-t border-white/12 pt-5">
                 {[
                   [qcms.length, `questionnaire${qcms.length > 1 ? "s" : ""}`],
                   [nbQuestions, "questions"],
                   [`${SEUIL_REUSSITE} %`, "pour réussir"],
                 ].map(([n, libelle]) => (
                   <div key={libelle} className="flex flex-col-reverse">
-                    <dt className={cx("text-sm", TEXTE_PRUNE)}>{libelle}</dt>
-                    <dd className="m-0 text-[36px] leading-none font-extrabold tracking-[-0.04em]">{n}</dd>
+                    <dt className={cx("text-[13px] sm:text-sm", TEXTE_PRUNE)}>{libelle}</dt>
+                    <dd className="m-0 text-[22px] leading-none font-extrabold tracking-[-0.04em] sm:text-[28px]">{n}</dd>
                   </div>
                 ))}
               </dl>
@@ -209,11 +208,9 @@ export function QcmListe() {
         </Container>
       </header>
 
-      <Container className="py-14">
-        <ReglageExamenBlanc matieresAvecQcm={matieresAvecQcm} />
-
+      <Container className="py-10">
         <div id="questionnaires" className="flex scroll-mt-24 flex-wrap items-end justify-between gap-4">
-          <h2 className="text-[clamp(2.2rem,4.5vw,3.4rem)] leading-none font-extrabold tracking-[-0.045em] text-ink-950 dark:text-white">
+          <h2 className="text-[clamp(1.7rem,4.5vw,3.4rem)] leading-none font-extrabold tracking-[-0.045em] text-ink-950 dark:text-white">
             Choisis ton questionnaire
           </h2>
           {nbFaits > 0 && (
@@ -223,7 +220,10 @@ export function QcmListe() {
           )}
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Filtrer par matière">
+        {/* Une pastille par ligne, c'était six lignes à faire défiler avant
+            d'atteindre les questionnaires : sur téléphone elles défilent
+            de côté. */}
+        <div className="mt-5 -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-label="Filtrer par matière">
           <button type="button" onClick={() => setMatiere("toutes")} aria-pressed={matiere === "toutes"} className={pastille(matiere === "toutes")}>
             Toutes les matières
             <span className="font-mono text-[11px] font-medium opacity-70">{qcms.length}</span>
@@ -305,7 +305,9 @@ export function QcmListe() {
           </ol>
         )}
 
-        <section id="comment-ca-marche" aria-label="Comment ça marche" className="mt-16 scroll-mt-24">
+        <CarteToutesMatieres />
+
+        <section id="comment-ca-marche" aria-label="Comment ça marche" className="mt-14 scroll-mt-24">
           <ol className="grid border-y border-ink-200 sm:grid-cols-3 dark:border-ink-800">
             {ETAPES.map(([titre, texte], i) => (
               <li key={titre} className="border-ink-200 py-8 sm:border-l sm:px-8 sm:first:border-l-0 sm:first:pl-0 dark:border-ink-800">
@@ -326,6 +328,42 @@ export function QcmListe() {
         </section>
       </Container>
     </>
+  );
+}
+
+/* Un seul questionnaire qui pioche dans toutes les matières à la fois
+   (demande du 14 octobre 2026, à la place de l'examen blanc et de ses
+   réglages) : vingt questions tirées au hasard, vingt minutes, un
+   tirage différent à chaque départ. */
+function CarteToutesMatieres() {
+  const dispo = questionsDisponibles(qcms).length;
+  if (dispo === 0) return null;
+  const nombre = Math.min(NOMBRE_QUESTIONS, dispo);
+  return (
+    <section
+      aria-labelledby="titre-toutes-matieres"
+      className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-5 overflow-hidden rounded-[28px] bg-[#271627] p-6 text-white sm:p-8"
+      style={QUADRILLAGE}
+    >
+      <span aria-hidden="true" className="grid size-14 shrink-0 place-items-center rounded-[18px] bg-lime-400 text-ink-950">
+        <Icon name="layers" className="size-7" />
+      </span>
+      <div className="min-w-0 flex-[1_1_18rem]">
+        <h2 id="titre-toutes-matieres" className="text-[26px] leading-tight font-extrabold tracking-[-0.03em]">
+          Un QCM sur toutes les matières
+        </h2>
+        <p className={cx("mt-1.5 text-[15px]/6", TEXTE_PRUNE)}>
+          {nombre} questions tirées au hasard dans tous les QCM du site, {nombre} minutes. Chaque départ est différent.
+        </p>
+      </div>
+      <Link
+        to={`/qcm/${ID_TOUTES_MATIERES}`}
+        className="inline-flex min-h-12 items-center gap-2.5 rounded-[14px] bg-lime-400 px-6 text-[15px] font-extrabold text-ink-950 transition-colors hover:bg-lime-300"
+      >
+        Commencer
+        <Icon name="arrow" className="size-4" />
+      </Link>
+    </section>
   );
 }
 
@@ -381,9 +419,20 @@ function Navigateur({ questions, reponses, marquees, index, aller, onTerminer })
 
   return (
     <aside className="h-fit rounded-[26px] border border-ink-200 bg-white p-6 xl:sticky xl:top-24 dark:border-ink-800 dark:bg-ink-900">
-      <h2 className="text-[24px] font-extrabold tracking-tight text-ink-950 dark:text-white">Questions</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-[24px] font-extrabold tracking-tight text-ink-950 dark:text-white">Questions</h2>
+        {/* Le bouton était tout en bas du panneau, donc tout en bas de la
+            page sur téléphone : il est maintenant à portée de main. */}
+        <button
+          type="button"
+          onClick={onTerminer}
+          className="min-h-11 rounded-[14px] bg-ink-950 px-4 text-sm font-extrabold text-white transition-colors hover:bg-[#271627] dark:bg-white dark:text-ink-950 dark:hover:bg-ink-200"
+        >
+          Terminer le QCM
+        </button>
+      </div>
 
-      <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2">
+      <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2">
         {legende.map((l) => (
           <li key={l.cle} className="flex items-center gap-2 text-[13px] text-ink-600 dark:text-ink-300">
             <span className={cx("size-3 rounded-[4px]", l.pastille)} />
@@ -433,14 +482,6 @@ function Navigateur({ questions, reponses, marquees, index, aller, onTerminer })
           </div>
         ))}
       </dl>
-
-      <button
-        type="button"
-        onClick={onTerminer}
-        className="mt-5 min-h-12 w-full rounded-[14px] bg-ink-950 px-4 text-[15px] font-extrabold text-white transition-colors hover:bg-[#271627] dark:bg-white dark:text-ink-950 dark:hover:bg-ink-200"
-      >
-        Terminer le QCM
-      </button>
     </aside>
   );
 }
@@ -454,117 +495,24 @@ function Navigateur({ questions, reponses, marquees, index, aller, onTerminer })
 // réponses du précédent.
 export function QcmSession() {
   const { qcmId } = useParams();
-  const [params] = useSearchParams();
-  // Un nouveau tirage à chaque changement de réglages (adresse).
-  if (qcmId === ID_EXAMEN_BLANC) return <ExamenBlanc key={params.toString()} params={params} />;
+  if (qcmId === ID_TOUTES_MATIERES) return <QcmToutesMatieres />;
   return <SessionQcm key={qcmId} qcmId={qcmId} />;
 }
 
-/* L'examen blanc : tiré une fois à l'ouverture, puis passé comme un QCM. */
-function ExamenBlanc({ params }) {
-  const [qcm] = useState(() => composerExamenBlanc(qcms, lireReglages(params, matieres)));
+/* Le QCM toutes matières : tiré une fois à l'ouverture, puis passé
+   comme un QCM ordinaire. */
+function QcmToutesMatieres() {
+  const [qcm] = useState(() => composerQcmGeneral(qcms));
   if (!qcm) {
     return (
       <Container className="py-20">
-        <EtatVide titre="Pas de question pour ces matières" texte="Choisis d'autres matières pour composer ton examen blanc.">
-          <Bouton to="/qcm#examen-blanc">Régler l'examen blanc</Bouton>
+        <EtatVide titre="Aucune question pour le moment" texte="Les questionnaires seront ajoutés au fil des versions.">
+          <Bouton to="/qcm">Revenir aux QCM</Bouton>
         </EtatVide>
       </Container>
     );
   }
   return <SessionQcm qcm={qcm} />;
-}
-
-/* Le réglage de l'examen blanc, sur la liste des QCM : les matières
-   (toutes au départ), le nombre de questions, puis le départ. */
-function ReglageExamenBlanc({ matieresAvecQcm }) {
-  const naviguer = useNavigate();
-  const [choisies, setChoisies] = useState([]);
-  const dispo = questionsDisponibles(qcms, choisies).length;
-  const max = Math.min(MAX_QUESTIONS, dispo);
-  const [n, setN] = useState(20);
-  const nombre = Math.min(Math.max(n, Math.min(MIN_QUESTIONS, max)), max);
-  const basculer = (id) => setChoisies((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
-  const lancer = () => {
-    const p = new URLSearchParams({ n: String(nombre) });
-    if (choisies.length) p.set("m", choisies.join(","));
-    naviguer(`/qcm/${ID_EXAMEN_BLANC}?${p}`);
-  };
-  if (dispo === 0 && choisies.length === 0) return null;
-
-  const pastille = (actif) =>
-    cx(
-      "min-h-10 rounded-full border px-4 text-sm font-bold transition-colors",
-      actif ? "border-lime-400 bg-lime-400 text-ink-950" : "border-white/25 hover:bg-white/10"
-    );
-
-  return (
-    <section
-      id="examen-blanc"
-      aria-labelledby="titre-examen-blanc"
-      className="mb-12 scroll-mt-24 overflow-hidden rounded-[28px] bg-[#271627] p-5 text-white sm:p-9"
-      style={QUADRILLAGE}
-    >
-      <div className="flex flex-wrap items-start justify-between gap-6">
-        <div className="max-w-xl">
-          <p className={cx("text-xs font-medium text-lime-400", mono)}>S&apos;ENTRAÎNER AVANT L&apos;EXAMEN</p>
-          <h2 id="titre-examen-blanc" className="mt-2 text-[clamp(1.8rem,3.5vw,2.6rem)] leading-none font-extrabold tracking-[-0.04em]">
-            Examen blanc
-          </h2>
-          <p className="mt-3 text-[15px]/6 text-ink-200">
-            Des questions tirées au hasard dans les QCM des matières choisies, chronométrées : une minute par question. Chaque tirage est différent.
-          </p>
-        </div>
-        <span className="grid size-16 place-items-center rounded-[18px] bg-lime-400 text-ink-950">
-          <Icon name="clock" className="size-7" />
-        </span>
-      </div>
-
-      <div role="group" aria-label="Matières de l'examen blanc" className="mt-6 flex flex-wrap gap-2">
-        <button type="button" onClick={() => setChoisies([])} aria-pressed={choisies.length === 0} className={pastille(choisies.length === 0)}>
-          Toutes les matières
-        </button>
-        {matieresAvecQcm.map((m) => (
-          <button key={m.id} type="button" onClick={() => basculer(m.id)} aria-pressed={choisies.includes(m.id)} className={pastille(choisies.includes(m.id))}>
-            {m.nom}
-          </button>
-        ))}
-      </div>
-
-      <div className="mt-6 flex flex-wrap items-end gap-6">
-        <div className="min-w-0 flex-[1_1_18rem]">
-          <label htmlFor="examen-blanc-nombre" className="flex justify-between text-sm font-bold">
-            Nombre de questions
-            <output htmlFor="examen-blanc-nombre">
-              {nombre} question{nombre > 1 ? "s" : ""} · {nombre} min
-            </output>
-          </label>
-          <input
-            id="examen-blanc-nombre"
-            type="range"
-            min={Math.min(MIN_QUESTIONS, max)}
-            max={max}
-            value={nombre}
-            onChange={(e) => setN(Number(e.target.value))}
-            disabled={max <= 1}
-            className="mt-2 w-full cursor-grab accent-lime-400 active:cursor-grabbing"
-          />
-          <p className="mt-1 text-xs text-ink-300">
-            {dispo} question{dispo > 1 ? "s" : ""} disponible{dispo > 1 ? "s" : ""} pour ce choix.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={lancer}
-          disabled={dispo === 0}
-          className="inline-flex min-h-12 items-center gap-2.5 rounded-[14px] bg-lime-400 px-6 text-[15px] font-extrabold text-ink-950 transition-colors hover:bg-lime-300 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          Commencer l&apos;examen blanc
-          <Icon name="arrow" className="size-4" />
-        </button>
-      </div>
-    </section>
-  );
 }
 
 const boutonClair =
@@ -584,7 +532,6 @@ function SessionQcm({ qcmId, qcm: fourni }) {
   // Révision espacée : ce que cette tentative change (voir src/revisions.js).
   const [revision, setRevision] = useState(null);
   const [tempsFinal, setTempsFinal] = useState(0);
-  const [detailsVisibles, setDetailsVisibles] = useState(false);
   const [alerteFin, setAlerteFin] = useState(false);
 
   // Garde-fou : le score ne doit être enregistré qu'une seule fois par
@@ -604,7 +551,6 @@ function SessionQcm({ qcmId, qcm: fourni }) {
     setRestant(tempsImparti);
     setTermine(false);
     setTempsFinal(0);
-    setDetailsVisibles(false);
     setAlerteFin(false);
     setRevision(null);
   }, [total, tempsImparti]);
@@ -623,9 +569,9 @@ function SessionQcm({ qcmId, qcm: fourni }) {
     // progression, src/analyseMatieres.js).
     const detail = qcm.questions.map((q, i) => ({ correct: reponses[i] === q.bonne }));
     enregistrerScore(qcm.id, score, total, ecoule, detail);
-    // L'examen blanc change à chaque tirage : ni statistiques ni
+    // Un tirage au hasard change à chaque départ : ni statistiques ni
     // révision espacée, seulement son score (et le jour d'activité).
-    if (!qcm.blanc) {
+    if (!qcm.tirage) {
       // Les réponses, anonymes, pour les statistiques de l'admin (sauf refus).
       envoyerStats(qcm, qcm.questions.map((_, i) => reponses[i]));
       setRevision(noterTentative(qcm.id, total > 0 && (score / total) * 100 >= SEUIL_REUSSITE));
@@ -667,8 +613,6 @@ function SessionQcm({ qcmId, qcm: fourni }) {
         total={total}
         temps={tempsFinal}
         reponses={reponses}
-        detailsVisibles={detailsVisibles}
-        basculerDetails={() => setDetailsVisibles((v) => !v)}
         recommencer={recommencer}
         revision={revision}
       />
@@ -701,7 +645,7 @@ function SessionQcm({ qcmId, qcm: fourni }) {
         <Container className="flex flex-wrap items-end justify-between gap-5 pt-10 pb-10">
           <div className="min-w-0">
             <p className={cx("text-xs font-medium text-lime-400", mono)}>
-              {qcm.blanc ? (qcm.matieres ?? []).map((m) => nomMatiere(m)).join(" · ").toUpperCase() : nomMatiere(qcm.matiere).toUpperCase()}
+              {qcm.tirage ? (qcm.matieres ?? []).map((m) => nomMatiere(m)).join(" · ").toUpperCase() : nomMatiere(qcm.matiere).toUpperCase()}
             </p>
             <h1 className="mt-3 text-[clamp(2.2rem,5.5vw,4rem)] leading-[0.95] font-extrabold tracking-[-0.045em] text-balance">{qcm.titre}</h1>
           </div>
@@ -770,7 +714,7 @@ function SessionQcm({ qcmId, qcm: fourni }) {
                 {question.enonce}
               </h2>
 
-              <ul className="mt-7 space-y-2.5">
+              <ul className="mt-7 grid grid-cols-2 gap-2.5">
                 {question.options.map((option, i) => {
                   const choisi = reponses[index] === i;
                   return (
@@ -780,7 +724,7 @@ function SessionQcm({ qcmId, qcm: fourni }) {
                         onClick={() => repondre(i)}
                         aria-pressed={choisi}
                         className={cx(
-                          "flex min-h-15 w-full items-center gap-3 rounded-[18px] border px-3.5 py-3 text-left text-base font-bold transition-colors sm:gap-4 sm:px-5 sm:py-3.5",
+                          "flex min-h-15 w-full items-center gap-2.5 rounded-[18px] border px-3 py-3 text-left text-[15px] font-bold transition-colors sm:gap-3.5 sm:px-4 sm:text-base",
                           choisi
                             ? "border-ink-950 bg-ink-950 text-white dark:border-white dark:bg-white dark:text-ink-950"
                             : "border-ink-200 bg-white text-ink-950 hover:border-ink-400 dark:border-ink-700 dark:bg-ink-900 dark:text-white dark:hover:border-ink-500"
@@ -923,7 +867,7 @@ function MessageRevision({ revision }) {
   );
 }
 
-function EcranResultat({ qcm, score, total, temps, reponses, detailsVisibles, basculerDetails, recommencer, revision }) {
+function EcranResultat({ qcm, score, total, temps, reponses, recommencer, revision }) {
   const taux = total > 0 ? Math.round((score / total) * 100) : 0;
   const reussi = taux >= SEUIL_REUSSITE;
   const points = score * POINTS_PAR_QUESTION;
@@ -958,7 +902,7 @@ function EcranResultat({ qcm, score, total, temps, reponses, detailsVisibles, ba
               )}
             </h1>
             <p className={cx("mt-5 max-w-[520px] text-[17px]/7", TEXTE_PRUNE)}>
-              Tu as terminé «&nbsp;{qcm.titre}&nbsp;». Consulte le détail des réponses, ou reviens au cours correspondant.
+              Tu as terminé «&nbsp;{qcm.titre}&nbsp;». Le détail de chaque réponse est plus bas, ou reviens au cours correspondant.
             </p>
             <p className="mt-3 text-[17px] font-semibold text-white">
               Tu as répondu correctement à {score} question{score > 1 ? "s" : ""} sur {total}.
@@ -967,14 +911,6 @@ function EcranResultat({ qcm, score, total, temps, reponses, detailsVisibles, ba
             <MessageRevision revision={revision} />
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={basculerDetails}
-                aria-expanded={detailsVisibles}
-                className="inline-flex min-h-12 items-center rounded-[14px] border border-white/20 px-4.5 text-sm font-bold transition-colors hover:bg-white/10"
-              >
-                {detailsVisibles ? "Masquer le détail" : "Voir le détail"}
-              </button>
               <button
                 type="button"
                 onClick={recommencer}
@@ -1020,9 +956,8 @@ function EcranResultat({ qcm, score, total, temps, reponses, detailsVisibles, ba
           </dl>
         </section>
 
-        {/* ---- Correction détaillée ---- */}
-        {detailsVisibles && (
-          <section className="mt-12" aria-labelledby="titre-correction">
+        {/* ---- Correction détaillée, toujours affichée ---- */}
+        <section className="mt-12" aria-labelledby="titre-correction">
             <h2 id="titre-correction" className="text-[clamp(1.9rem,3.5vw,2.6rem)] leading-tight font-extrabold tracking-[-0.04em] text-ink-950 dark:text-white">
               Correction question par question
             </h2>
@@ -1069,21 +1004,16 @@ function EcranResultat({ qcm, score, total, temps, reponses, detailsVisibles, ba
             </ol>
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              {qcm.matiere ? (
+              {qcm.matiere && (
                 <Link to={`/cours/${qcm.matiere}`} className={boutonClair}>
                   Revoir le cours{matiere ? ` de ${matiere.nomCourt}` : ""}
-                </Link>
-              ) : (
-                <Link to="/qcm#examen-blanc" className={boutonClair}>
-                  Nouvel examen blanc
                 </Link>
               )}
               <Link to="/qcm" className="px-2 text-sm font-bold text-ink-800 underline underline-offset-4 hover:text-ink-950 dark:text-ink-200 dark:hover:text-white">
                 Choisir un autre QCM
               </Link>
             </div>
-          </section>
-        )}
+        </section>
       </Container>
     </>
   );
