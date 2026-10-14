@@ -59,6 +59,7 @@ configuration du projet, rien d'autre à régler. Chaque fichier de test vit
 | `src/quizTexte.js` | toutes les façons d'écrire un QCM en texte, erreurs signalées sans rien deviner, aller-retour texte → questions → texte |
 | `src/sauvegarde.js` | aller-retour complet sur un autre appareil, fichiers refusés (autre application, version plus récente, trop gros), aucune donnée de session ou d'admin |
 | `src/revisions.js` | intervalles 2, 5, 12, 30 jours, retour à 2 jours après un échec, rien ne change si on refait un QCM en avance |
+| `src/qcmGeneral.js` | le QCM toutes matières : questions tirées sans doublon, nombre borné par ce qui existe, durée d'une minute par question |
 | `src/analyseMatieres.js` | réponses rangées dans la matière du QCM, aucun verdict sous `MINIMUM_REPONSES`, seuils de force et de faiblesse, chapitres à revoir (pas lus d'abord) |
 | `src/planning.js` | dates (fins de mois, années bissextiles), matière fragile d'abord, QCM la veille et devoir l'avant-veille, tâches par jour bornées |
 | `src/programmeIA.js` | créneaux libres (cours hebdomadaires, heures d'examen, heure déjà passée), répartition sans IA, événements de l'emploi du temps |
@@ -88,6 +89,8 @@ téléphone.
 | `e2e/filet.e2e.js` | une page qui plante affiche un message et la coque tient ; une page ou l'application introuvable après une mise en ligne invite à recharger ; un contenu publié mal formé est ignoré |
 | `e2e/accessibilite.e2e.js` | axe (règles WCAG 2.1 A et AA) sur chaque page, en thème clair et en thème sombre : contrastes, libellés, structure, navigation au clavier |
 | `e2e/ia.e2e.js` | saisie de l'assistant (Entrée, Maj + Entrée, rien à vide, hauteur bornée) ; raccourci « Un exercice » ; bouton Stop qui arrête vraiment ; image jointe (agrandir, retirer, envoi, relais pas à jour signalé, fichier refusé) ; dictée avec une fausse reconnaissance vocale ; attente de l'IA et son accessibilité |
+| `e2e/qcm-toutes-matieres.e2e.js` | le bouton de la liste lance un questionnaire tiré dans toutes les matières, corrigé comme les autres, et sans révision espacée |
+| `e2e/historique-ia.e2e.js` | une discussion gardée, rouverte avec ses échanges, puis effacée ; la barre latérale, panneau sur téléphone et colonne sur ordinateur |
 | `e2e/videos.e2e.js` | l'étudiant voit seulement les vidéos publiées avec un lien, sans aucun bouton pour en ajouter ou en retirer ; sans vidéo publiée, la section du tableau de bord disparaît ; les vidéos qu'il avait ajoutées avant sont effacées |
 
 Le relais IA n'est jamais appelé : `e2e/outils.js` le remplace par de
@@ -327,12 +330,13 @@ si le nom de la plateforme change. La conversion en PNG est obligatoire, les
 réseaux sociaux n'affichant pas les SVG.
 
 ```bash
-npm install --no-save sharp
-node -e "const s=require('sharp'),f=require('fs');s(f.readFileSync('design/apercu-partage.svg')).resize(1200,630).png().toFile('public/apercu-partage.png').then(i=>console.log(i.width+'x'+i.height))"
+node -e "require('sharp')('design/apercu-partage.svg',{density:144}).resize(1200,630).png().toFile('public/apercu-partage.png').then(()=>console.log('fait'))"
 ```
 
-L'option `--no-save` évite d'ajouter `sharp` aux dépendances du projet : il
-n'est utile que le jour où l'image change.
+`sharp` est une dépendance de développement (`npm install` l'installe) : il
+sert ici et dans `scripts/icones-pwa.mjs`, sur le poste de l'auteur seulement.
+Il n'est jamais envoyé aux visiteurs. La densité de 144 évite un dessin flou :
+sans elle, le SVG est d'abord rastérisé en petit, puis agrandi.
 
 Attention : les balises `og:image`, `og:url` et `canonical` de `index.html`
 contiennent l'adresse **absolue** du site. Un chemin relatif y serait inutile,
@@ -389,12 +393,38 @@ l'ouverture des comptes, qui enregistrent des données chez Supabase.
 
 ### Logo
 
-Trois nœuds reliés en triangle : un schéma réseau lisible à petite taille.
-Défini deux fois, volontairement :
+**Sunu Cours : le baobab binaire** (13 octobre 2026). L'arbre du Sénégal, dont
+les branches forment un arbre binaire comme en algorithmique : tronc et
+branches **bleus sur une tuile blanche** arrondie, deux feuilles orange (le
+départ) et deux citron (l'arrivée). Il remplace les trois nœuds en triangle.
 
-- `public/logo-baobab.svg` pour l'icône d'onglet du navigateur ;
-- le composant `Logo` dans `src/components/Layout.jsx` pour l'affichage dans
-  le site, afin qu'il suive le thème clair ou sombre.
+**L'assistant : la bulle-étincelle.** Une bulle de dialogue avec l'étincelle de
+l'IA découpée dedans. L'étincelle respire pendant que l'IA prépare sa réponse,
+et s'immobilise si l'appareil demande de réduire les animations.
+
+Les deux sont dessinés en code, dans `src/components/Logo.jsx` (`Logo`,
+`LogoAssistant`), pour suivre le thème clair ou sombre. Les mêmes tracés sont
+**recopiés à la main** dans trois fichiers, à changer ensemble :
+
+| Fichier | Sert à |
+| --- | --- |
+| `public/logo-baobab.svg` | l'onglet du navigateur, et la source des icônes fabriquées |
+| `public/logo-mono.svg` | l'onglet épinglé de Safari, qui n'accepte qu'une seule couleur |
+| `design/apercu-partage.svg` | l'image affichée au partage d'un lien |
+
+Le reste est **fabriqué** par `node scripts/icones-pwa.mjs`, à relancer après
+tout changement : `public/icones/baobab-*.png` (téléphone, tablette,
+application installée sur un ordinateur) et `public/favicon.ico`, le secours
+des navigateurs qui n'affichent pas d'icône SVG. Ce dernier porte trois
+tailles ; à 16 px, le baobab complet devient une tache, c'est donc un dessin
+simplifié — deux branches, deux feuilles — écrit dans le script lui-même.
+L'aperçu de partage, lui, se regénère à part (voir plus haut).
+
+**Changer le logo oblige à changer le nom de ses fichiers** (`logo-baobab.svg`,
+`icones/baobab-*.png`). Un navigateur, un téléphone ou une application déjà
+installée gardent longtemps en mémoire une image dont l'adresse n'a pas bougé :
+sans renommage, l'ancien logo reste affiché des semaines, y compris sur
+l'icône de l'application. C'est arrivé le 14 octobre 2026.
 
 ### Couleurs
 
@@ -457,13 +487,13 @@ latérale laisse place à un menu dans la barre du haut.
 | `/connexion` | Connexion | Formulaire de démonstration et mode invité |
 | `/inscription` | Inscription | Formulaire de démonstration et mode invité |
 | `/tableau-de-bord` | Tableau de bord | Cartes de matières, prochains chapitres, QCM suggéré |
-| `/cours` | Espace des cours | Recherche et filtre par semestre, grille des matières |
+| `/cours` | Espace des cours | Plan de métro des matières (réduit à l'écran sur téléphone), recherche et filtre par semestre |
 | `/cours/:matiereId` | Détail d'une matière | Chapitres, exercices liés, QCM liés |
-| `/exercices` | Exercices corrigés | Recherche, filtres matière et difficulté |
+| `/exercices` | Exercices corrigés | Recherche et choix de la matière |
 | `/exercices/:exerciceId` | Détail d'un exercice | Énoncé, indice, méthode, réponse, à retenir |
-| `/qcm` | QCM interactifs | Liste des questionnaires, meilleur score local |
-| `/qcm/:qcmId` | Session de QCM | Mode examen : minuteur, navigateur de questions, résultat |
-| `/bibliotheque` | Bibliothèque | Ressources libres, et ressources en attente d'autorisation |
+| `/qcm` | QCM interactifs | Liste des questionnaires, meilleur score local, QCM toutes matières |
+| `/qcm/:qcmId` | Session de QCM | Mode examen : minuteur, navigateur de questions, résultat et correction |
+| `/bibliotheque` | Bibliothèque | Ressources en accès libre, deux par ligne, avec la vraie couverture des livres |
 | `/projet` | Le projet | Autorisations, versions, rôles, sécurité, IA, pile technique |
 | `/videos` | Vidéos | Filtre par matière, lecteur intégré |
 | `/profil` | Mon profil | Avatar, nom d'utilisateur, coordonnées |
@@ -472,7 +502,7 @@ latérale laisse place à un menu dans la barre du haut.
 | `/examens` | Devoirs et examens | Devoirs chronométrés avec corrigé à la fin, et examens passés autorisés |
 | `/examens/:id` | Session de devoir | Sujet, minuteur, réponses écrites sur le site, puis corrigé et correction par l'IA |
 | `/planning` | Mon planning | Emploi du temps (mois, semaine, jour, liste) et programme de révision composé par l'IA |
-| `/assistant` | Assistant de révision | Guide qui retrouve chapitres, exercices et QCM, et dit par où commencer |
+| `/assistant` | Assistant de révision | Guide (puis IA) qui retrouve chapitres, exercices et QCM ; barre latérale des discussions |
 | `/parametres` | Paramètres | Thème, session, données conservées sur l'appareil |
 | `/conditions` | Conditions d'utilisation | Cadre d'usage, droits d'auteur, IA, usage attendu, responsabilité |
 | `/confidentialite` | Politique de confidentialité | Ce qui reste sur l'appareil, ce qui en sort et vers qui, droits (loi n° 2008-12) |
@@ -495,6 +525,8 @@ lrsi-platform/
 ├── e2e/                      tests dans un vrai navigateur (Playwright)
 │   ├── outils.js             faux relais IA, entrée en invité, erreurs relevées
 │   ├── parcours.e2e.js       QCM, exercice, favoris, sauvegarde…
+│   ├── qcm-toutes-matieres.e2e.js  le QCM tiré dans toutes les matières
+│   ├── historique-ia.e2e.js  la barre latérale des discussions de l'assistant
 │   ├── pages.e2e.js          chaque page, menus, assistant sans IA, admin
 │   ├── admin.e2e.js          « Gérer le contenu » : onglets, publication
 │   ├── devoirs-planning.e2e.js  un devoir complet, un programme de révision
@@ -523,12 +555,16 @@ lrsi-platform/
 ├── design/                   source SVG de l'aperçu de partage
 ├── public/
 │   ├── apercu-partage.png    image affichée au partage du lien
-│   ├── icones/               icônes de l'application installable
+│   ├── couvertures/          couvertures de livres hébergées sur le site
+│   ├── icones/               icônes de l'application installable (baobab-*.png)
+│   ├── favicon.ico           icône d'onglet de secours (16, 32 et 48 px)
+│   ├── logo-mono.svg         onglet épinglé de Safari, d'une seule couleur
 │   └── logo-baobab.svg       icône d'onglet
 ├── docs/                     site compilé, publié par GitHub Pages
 ├── src/
 │   ├── components/
 │   │   ├── Icon.jsx          jeu d'icônes SVG, sans dépendance externe
+│   │   ├── Logo.jsx          le baobab du site et la bulle-étincelle de l'assistant
 │   │   ├── VignetteAvatar.jsx     le dessin SVG d'un avatar
 │   │   ├── Layout.jsx        en-tête, navigation, thème, pied de page
 │   │   ├── ui.jsx            briques réutilisables (boutons, badges, filtres…)
@@ -545,7 +581,9 @@ lrsi-platform/
 │   │   ├── LecteurPdf.jsx         un PDF téléversé, côté étudiant
 │   │   ├── LectureTexte.jsx       un texte écrit dans l'admin, côté étudiant
 │   │   ├── TexteLibre.jsx         mise en forme simple, jamais de HTML
-│   │   ├── PleinEcran.jsx         lecture en plein écran, taille du texte
+│   │   ├── PleinEcran.jsx         lecture (et écriture) en plein écran, taille du texte
+│   │   ├── FicheRevision.jsx      fiche de révision d'un chapitre, écrite par l'IA
+│   │   ├── PartageResultat.jsx    image d'un QCM réussi, à partager
 │   │   ├── detectionLecture.js    chapitre lu, détecté sans bouton
 │   │   ├── EtatLecture.jsx        « Encore 20 s de lecture… », sous le cours
 │   │   ├── EmploiDuTemps.jsx      vues mois, semaine, jour et liste
@@ -615,6 +653,8 @@ lrsi-platform/
 │   ├── progression.js        exercices travaillés, chapitres lus, scores, favoris, vidéos
 │   ├── analyseMatieres.js    forces et faiblesses par matière, chapitres à revoir
 │   ├── revisions.js          révision espacée des QCM
+│   ├── qcmGeneral.js         le QCM tiré au hasard dans toutes les matières
+│   ├── couvertures.js        la couverture d'un livre : locale, lien, PDF ou recherche
 │   ├── planning.js           programme de révision jour par jour
 │   ├── emploiDuTemps.js      événements de l'emploi du temps, sans affichage
 │   ├── programmeIA.js        programme d'une session d'examens, disponibilités
@@ -917,16 +957,31 @@ qui fait la différence entre un questionnaire et un vrai outil de révision.
 - Amorce d'espace d'administration : inventaire du contenu, couverture de
   l'analyse par matière et nombre de questions de chacune. Page d'auteur, séparée du
   parcours étudiant.
-- QCM en mode examen : minuteur avec temps imparti, navigation libre entre les
-  questions, marquage « à revoir », effacement d'une réponse, confirmation
-  avant de rendre, puis écran de résultat avec points, temps passé, précision
-  et correction détaillée.
+- QCM en mode examen : minuteur avec temps imparti, réponses deux par ligne,
+  passage automatique à la question suivante, navigation libre, marquage « à
+  revoir », effacement d'une réponse, confirmation avant de rendre, puis écran
+  de résultat avec points, temps passé, précision, et la correction question
+  par question affichée directement, sans bouton à chercher.
+- **Un QCM sur toutes les matières** (`src/qcmGeneral.js`) : vingt questions
+  tirées au hasard dans tous les QCM du site, une minute par question, un
+  tirage différent à chaque départ. Il ne compte ni dans les statistiques ni
+  dans la révision espacée, ses questions changeant à chaque fois. Il remplace
+  l'examen blanc et ses réglages, retirés le 14 octobre 2026.
+- Espace des cours en plan de métro : une ligne par matière, une station par
+  chapitre, les lignes se rejoignant en faisceau au passage du semestre 2. Le
+  même plan sur téléphone, réduit à la largeur de l'écran, avec des traits et
+  des écritures plus gros pour rester lisible.
+- « Ma réponse », dans un exercice comme dans un devoir, s'ouvre en plein
+  écran : les questions, les cases et le bouton de correction, sur toute la
+  hauteur, avec le réglage de la taille du texte.
 - Thème clair et sombre, mémorisé d'une visite à l'autre.
 - Recherche et filtres sur les cours et les exercices.
 - Exercices avec indice et correction révélés à la demande.
 - Meilleur score par QCM conservé dans le navigateur.
-- Bibliothèque séparant clairement les ressources libres de celles en attente
-  d'autorisation.
+- Bibliothèque : uniquement des ressources dont la diffusion est autorisée,
+  deux livres par ligne, avec la vraie couverture du livre quand elle existe
+  (fichier local, lien reconnu, première page du PDF, sinon une couverture
+  dessinée) — `src/couvertures.js`.
 - Liens externes en `noopener noreferrer`, lien d'évitement vers le contenu,
   libellés accessibles sur les boutons d'icône.
 - Application installable (PWA) : manifeste et service worker produits à
@@ -973,10 +1028,18 @@ et le relais Cloudflare les publie (voir section 5). Les fichiers de
 
 ### L'assistant de révision
 
-**Historique** : chaque discussion est gardée (`src/conversations.js`). Le
-bouton « Historique » de l'assistant les liste, les rouvre et les efface ;
-une discussion rouverte se continue, l'IA recevant ses échanges précédents.
-Les 20 plus récentes sont gardées, sans les images, et suivent le compte.
+**Barre latérale** : chaque discussion est gardée (`src/conversations.js`).
+La barre latérale de l'assistant les liste, les rouvre et les efface, et porte
+« Nouvelle discussion » ; une discussion rouverte se continue, l'IA recevant
+ses échanges précédents. Les 20 plus récentes sont gardées, sans les images, et
+suivent le compte. Elle est toujours affichée sur un grand écran ; sur
+téléphone, les trois traits de l'en-tête l'ouvrent, et c'est là que le nom de
+l'assistant s'affiche.
+
+**Remonter dans le fil replie la zone d'écriture** (14 octobre 2026), pour
+laisser toute la hauteur au texte ; un bouton « Écrire une question » la
+ramène, et elle revient d'elle-même en redescendant. Jamais pendant qu'on
+écrit.
 
 Il fonctionne, et **ce n'est pas une intelligence artificielle**. Il ne rédige
 aucune explication : il reconnaît l'intention d'une question, cherche dans les
