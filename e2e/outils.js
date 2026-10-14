@@ -19,6 +19,10 @@ import { contenuDemo } from "../src/data/demonstration.js";
    - tout le reste répond 503 : l'IA est indisponible, le site doit
      alors se débrouiller seul (guide, répartition sans IA).
 
+   La table `avis` de Supabase (page « Ton avis ») est simulée elle
+   aussi : la lecture répond `relais.avis`, et chaque avis publié est
+   gardé dans `relais.avisEnvoyes`, puis ajouté à `relais.avis`.
+
    Les erreurs JavaScript de la page sont relevées : un test échoue si
    la page en a produit une.
    ================================================================== */
@@ -30,7 +34,7 @@ export const test = base.extend({
   // Playwright exige ce `{}` : une fixture reçoit toujours les autres en premier.
   // oxlint-disable-next-line no-empty-pattern
   relais: async ({}, utiliser) => {
-    await utiliser({ contenu: structuredClone(contenuDemo), stats: [], appels: [], publications: [] });
+    await utiliser({ contenu: structuredClone(contenuDemo), stats: [], appels: [], publications: [], avis: [], avisEnvoyes: [] });
   },
   page: async ({ page, relais }, utiliser) => {
     await page.route(`${RELAIS}/**`, async (route) => {
@@ -60,6 +64,22 @@ export const test = base.extend({
       }
       return route.fulfill({ status: 503, json: { erreur: "surcharge" }, headers: entetes });
     });
+
+    await page.route(
+      (url) => url.href.startsWith(`${comptes.url}/rest/v1/avis`),
+      async (route) => {
+        const requete = route.request();
+        const entetes = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS" };
+        if (requete.method() === "OPTIONS") return route.fulfill({ status: 204, headers: entetes });
+        if (requete.method() === "POST") {
+          const recu = requete.postDataJSON();
+          relais.avisEnvoyes.push(recu);
+          relais.avis.unshift({ id: 1000 + relais.avisEnvoyes.length, cree_le: new Date().toISOString(), ...recu });
+          return route.fulfill({ status: 201, headers: entetes, body: "" });
+        }
+        return route.fulfill({ headers: entetes, json: relais.avis });
+      }
+    );
 
     const erreurs = [];
     page.on("pageerror", (e) => erreurs.push(e.message));

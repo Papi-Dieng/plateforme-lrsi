@@ -35,6 +35,7 @@ const PAGES = [
   "/confidentialite",
   "/mentions-legales",
   "/projet",
+  "/avis",
   "/admin",
   "/admin/contenu",
 ];

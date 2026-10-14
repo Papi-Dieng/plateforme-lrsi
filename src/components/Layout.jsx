@@ -652,6 +652,7 @@ const COLONNES_PIED = [
     title: "Le projet",
     links: [
       { label: "La démarche du projet", href: "#/projet" },
+      { label: "Donner mon avis", href: "#/avis" },
       { label: "Nous écrire", href: `mailto:${site.contact}` },
     ],
   },

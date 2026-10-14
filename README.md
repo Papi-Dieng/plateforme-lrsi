@@ -496,6 +496,7 @@ latérale laisse place à un menu dans la barre du haut.
 | `/qcm/:qcmId` | Session de QCM | Mode examen : minuteur, navigateur de questions, résultat et correction |
 | `/bibliotheque` | Bibliothèque | Ressources en accès libre, deux par ligne, avec la vraie couverture des livres |
 | `/projet` | Le projet | Autorisations, versions, rôles, sécurité, IA, pile technique |
+| `/avis` | Ton avis | Ouverte sans entrer (c'est le lien à partager) : note de 1 à 5, ce qui plaît, propositions ; les avis sont publics |
 | `/videos` | Vidéos | Filtre par matière, lecteur intégré |
 | `/profil` | Mon profil | En-tête au nom de l'étudiant, carte d'étudiant qui se retourne, tampons gagnés, puis la fiche (avatar, nom d'utilisateur, coordonnées) |
 | `/favoris` | Mes favoris | Matières, chapitres, exercices, QCM et vidéos mis de côté |
@@ -1225,7 +1226,7 @@ rejoint le compte. Se déconnecter efface les données de l'appareil.
 
 | Fichier | Rôle |
 | --- | --- |
-| `supabase/schema.sql` | la table `donnees_etudiants`, ses règles d'accès (chacun ne lit que sa ligne) et la suppression de compte |
+| `supabase/schema.sql` | la table `donnees_etudiants`, ses règles d'accès (chacun ne lit que sa ligne) et la suppression de compte ; la table `avis` de la page « Ton avis » |
 | `src/data/comptes.js` | l'adresse du projet et sa clé publique ; vides = comptes éteints |
 | `src/comptes.js` | inscription, connexion, Google, mot de passe oublié, suppression |
 | `src/synchro.js` | la synchronisation et la fusion |
@@ -1266,6 +1267,15 @@ Password » sont traduits en français dans *Templates*, et contiennent le code
 clics, et son serveur de suivi ne répond pas toujours ; la limite d'envoi est
 à 100 par heure dans *Rate Limits*. Les premiers emails d'un compte Brevo neuf
 peuvent mettre quelques minutes à arriver.
+
+**Les avis (page « Ton avis », `#/avis`).** Sans compte, tout visiteur note
+le site, dit ce qui lui plaît et propose ce qui manque ; `src/avis.js`
+écrit directement dans la table `avis`. Les règles de `schema.sql` ne
+permettent que deux choses : lire les avis visibles, en ajouter un. Ni
+modification ni suppression depuis le site, la date est posée par la base,
+et elle refuse plus de 20 avis par minute. Pour cacher un avis déplacé :
+*Table Editor* → `avis` → décocher `visible`. Les avis sont publics, ce
+que dit la politique de confidentialité.
 
 Les règles d'accès de `schema.sql` sont ce qui protège les données : la clé
 « anon » est publique par nature. La clé `service_role` donne tous les droits,
