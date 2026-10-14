@@ -139,8 +139,14 @@ export default function Bibliotheque() {
 
           {libres.length === 0 ? (
             <div className="mt-6 rounded-[24px] border border-dashed border-ink-300 p-8 text-center dark:border-ink-700">
-              <p className="font-extrabold text-[#1a1530] dark:text-white">Aucune ressource libre pour cette matière</p>
-              <p className="mt-1 text-sm text-ink-600 dark:text-ink-300">D'autres références seront ajoutées progressivement.</p>
+              <p className="font-extrabold text-[#1a1530] dark:text-white">
+                {toutesLibres.length === 0 ? "Aucune ressource n'est encore publiée" : "Aucune ressource libre pour cette matière"}
+              </p>
+              <p className="mt-1 text-sm text-ink-600 dark:text-ink-300">
+                {toutesLibres.length === 0
+                  ? "Les livres et documents en accès libre apparaîtront ici dès qu'ils seront publiés."
+                  : "D'autres références seront ajoutées progressivement."}
+              </p>
             </div>
           ) : (
             /* Deux livres par ligne dès le téléphone (demande du 14 octobre 2026). */

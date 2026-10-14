@@ -47,9 +47,18 @@ test.describe("site vide", () => {
     await entrerEnInvite(page);
     await expect(page.getByText(/Aucun QCM n'est encore publié/)).toBeVisible();
 
-    await aller(page, "/qcm");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("QCM");
-    await aller(page, "/exercices");
-    await expect(page.getByText(/0 exercice affiché sur 0/)).toBeVisible();
+    await expect(page.getByText("Le site n'a pas encore de contenu")).toBeVisible();
+
+    // Chaque liste dit que rien n'est publié, au lieu de parler de filtre.
+    for (const [chemin, message] of [
+      ["/cours", "Le site n'a pas encore de cours"],
+      ["/exercices", "Aucun exercice n'est encore publié"],
+      ["/qcm", "Aucun QCM n'est encore publié"],
+      ["/bibliotheque", "Aucune ressource n'est encore publiée"],
+      ["/videos", "Pas encore de vidéo"],
+    ]) {
+      await aller(page, chemin);
+      await expect(page.getByText(message)).toBeVisible();
+    }
   });
 });

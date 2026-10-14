@@ -347,6 +347,12 @@ export function Cours() {
 
         {resultats.length === 0 ? (
           <div className="mt-6">
+            {matieres.length === 0 ? (
+              <EtatVide
+                titre="Le site n'a pas encore de cours"
+                texte="Les matières et leurs chapitres apparaîtront ici dès qu'ils seront publiés."
+              />
+            ) : (
             <EtatVide titre="Aucune matière ne correspond" texte="Essaie un autre mot-clé ou retire le filtre de semestre.">
               <Bouton
                 variante="secondaire"
@@ -358,6 +364,7 @@ export function Cours() {
                 Réinitialiser
               </Bouton>
             </EtatVide>
+            )}
           </div>
         ) : (
           <ul className="mt-6 grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">

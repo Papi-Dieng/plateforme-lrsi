@@ -129,14 +129,23 @@ export default function Accueil() {
       {/* ---------------------------------------------------------- */}
       {matieresFiltrees.length === 0 ? (
         <div className="mt-6">
-          <EtatVide
-            titre="Aucune matière ne correspond"
-            texte="Essaie un autre mot-clé, ou reviens à toutes les matières."
-          >
-            <Bouton variante="secondaire" onClick={() => setParams({}, { replace: true })}>
-              Réinitialiser
-            </Bouton>
-          </EtatVide>
+          {/* Rien publié du tout, ou rien qui corresponde à la recherche :
+              ce n'est pas le même message. */}
+          {matieres.length === 0 ? (
+            <EtatVide
+              titre="Le site n'a pas encore de contenu"
+              texte="Les matières, les chapitres et les exercices apparaîtront ici dès qu'ils seront publiés."
+            />
+          ) : (
+            <EtatVide
+              titre="Aucune matière ne correspond"
+              texte="Essaie un autre mot-clé, ou reviens à toutes les matières."
+            >
+              <Bouton variante="secondaire" onClick={() => setParams({}, { replace: true })}>
+                Réinitialiser
+              </Bouton>
+            </EtatVide>
+          )}
         </div>
       ) : (
         // Sur téléphone, deux matières par ligne en rectangles posés à plat

@@ -254,6 +254,12 @@ export function Exercices() {
 
         <div className="mt-5">
           {resultats.length === 0 ? (
+            exercices.length === 0 ? (
+              <EtatVide
+                titre="Aucun exercice n'est encore publié"
+                texte="Les exercices corrigés apparaîtront ici dès qu'ils seront publiés."
+              />
+            ) : (
             <EtatVide titre="Aucun exercice ne correspond" texte="Élargis la recherche ou retire un filtre.">
               <Bouton
                 variante="secondaire"
@@ -265,6 +271,7 @@ export function Exercices() {
                 Réinitialiser les filtres
               </Bouton>
             </EtatVide>
+            )
           ) : (
             <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {resultats.map((e) => {

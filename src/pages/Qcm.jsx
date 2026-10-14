@@ -242,11 +242,18 @@ export function QcmListe() {
 
         {resultats.length === 0 ? (
           <div className="mt-8">
-            <EtatVide titre="Aucun QCM pour cette matière" texte="D'autres questionnaires seront ajoutés au fil des versions.">
-              <Bouton variante="secondaire" onClick={() => setMatiere("toutes")}>
-                Voir tous les QCM
-              </Bouton>
-            </EtatVide>
+            {qcms.length === 0 ? (
+              <EtatVide
+                titre="Aucun QCM n'est encore publié"
+                texte="Les questionnaires apparaîtront ici dès qu'ils seront publiés."
+              />
+            ) : (
+              <EtatVide titre="Aucun QCM pour cette matière" texte="D'autres questionnaires seront ajoutés au fil des versions.">
+                <Bouton variante="secondaire" onClick={() => setMatiere("toutes")}>
+                  Voir tous les QCM
+                </Bouton>
+              </EtatVide>
+            )}
           </div>
         ) : (
           <ol className="mt-6 space-y-3">
