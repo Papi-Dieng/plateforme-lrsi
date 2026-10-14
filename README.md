@@ -491,20 +491,20 @@ latérale laisse place à un menu dans la barre du haut.
 | `/cours` | Espace des cours | Plan de métro des matières (réduit à l'écran sur téléphone), recherche et filtre par semestre |
 | `/cours/:matiereId` | Détail d'une matière | Chapitres, exercices liés, QCM liés |
 | `/exercices` | Exercices corrigés | Recherche et choix de la matière |
-| `/exercices/:exerciceId` | Détail d'un exercice | Énoncé, indice, méthode, réponse, à retenir |
+| `/exercices/:exerciceId` | Détail d'un exercice | Énoncé, indice, ma réponse (écrite, ou copie photographiée), méthode de l'auteur et chemin refait par l'IA depuis ma réponse |
 | `/qcm` | QCM interactifs | Liste des questionnaires, meilleur score local, QCM toutes matières |
 | `/qcm/:qcmId` | Session de QCM | Mode examen : minuteur, navigateur de questions, résultat et correction |
 | `/bibliotheque` | Bibliothèque | Ressources en accès libre, deux par ligne, avec la vraie couverture des livres |
 | `/projet` | Le projet | Autorisations, versions, rôles, sécurité, IA, pile technique |
 | `/videos` | Vidéos | Filtre par matière, lecteur intégré |
-| `/profil` | Mon profil | Avatar, nom d'utilisateur, coordonnées |
+| `/profil` | Mon profil | En-tête au nom de l'étudiant, carte d'étudiant qui se retourne, tampons gagnés, puis la fiche (avatar, nom d'utilisateur, coordonnées) |
 | `/favoris` | Mes favoris | Matières, chapitres, exercices, QCM et vidéos mis de côté |
 | `/progression` | Ma progression | Tableau de bord en grille : vue d'ensemble, précision, régularité, matières, QCM |
 | `/examens` | Devoirs et examens | Devoirs chronométrés avec corrigé à la fin, et examens passés autorisés |
-| `/examens/:id` | Session de devoir | Sujet, minuteur, réponses écrites sur le site, puis corrigé et correction par l'IA |
+| `/examens/:id` | Session de devoir | Sujet, minuteur, réponses écrites sur le site ou toute la copie importée d'un coup, puis corrigé et correction par l'IA |
 | `/planning` | Mon planning | Emploi du temps (mois, semaine, jour, liste) et programme de révision composé par l'IA |
 | `/assistant` | Assistant de révision | Guide (puis IA) qui retrouve chapitres, exercices et QCM ; barre latérale des discussions |
-| `/parametres` | Paramètres | Thème, session, données conservées sur l'appareil |
+| `/parametres` | Paramètres | Cinq sections : apparence (thème, taille du texte, nom affiché), rappels, confidentialité, mes données, compte et sécurité |
 | `/conditions` | Conditions d'utilisation | Cadre d'usage, droits d'auteur, IA, usage attendu, responsabilité |
 | `/confidentialite` | Politique de confidentialité | Ce qui reste sur l'appareil, ce qui en sort et vers qui, droits (loi n° 2008-12) |
 | `/mentions-legales` | Mentions légales | Éditeur, hébergeurs, propriété intellectuelle |
@@ -643,6 +643,9 @@ lrsi-platform/
 │   │   └── StatsAdmin.jsx        statistiques des QCM (admin)
 │   ├── session.js            contexte et hook de session (voir section 7)
 │   ├── stockage.js           où vont les données : compte (serveur), ou rien
+│   ├── apparence.js          thème (clair, sombre, appareil) et taille du texte
+│   ├── copie.js              importer sa copie en photo ou en PDF
+│   ├── tampons.js            les six tampons du profil
 │   ├── FournisseurSession.jsx  le fournisseur, séparé du hook
 │   ├── assistant.js          moteur du guide de révision
 │   ├── ia.js                 appel au relais IA, si `urlIA` est renseignée
@@ -687,6 +690,23 @@ matière : il n'y a pas de niveau intermédiaire. Chaque matière porte un
 `nomCourt`, utilisé pour les pastilles de filtre et les badges, là où le nom
 complet serait trop long. Le jour où la plateforme s'ouvrira à d'autres
 formations, la filière deviendra un niveau au-dessus de la matière.
+
+### Ce que l'IA a le droit d'écrire
+
+Le relais (`serveur-ia/`) tient une règle depuis le 6 octobre 2026 : le
+contenu pédagogique vient de l'enseignant, jamais du modèle. Chaque route
+la décline :
+
+| Route | Ce que l'IA fait | Ce qu'elle ne fait pas |
+| --- | --- | --- |
+| `/corriger-exercice` | compare la réponse au corrigé, point par point | écrire une solution, une piste, une note (sauf le barème d'un devoir) |
+| `/expliquer-etapes` | refait le chemin de la réponse de l'étudiant jusqu'au corrigé | ajouter une méthode ou une valeur absente du corrigé |
+| `/lire-copie` | transcrit une copie photographiée, range ses passages sous les questions d'un devoir | corriger, compléter ou répondre à la place de l'étudiant |
+| `/admin/decouper-devoir` | découpe un sujet en questions et relève le barème écrit | inventer une question, un corrigé ou un barème |
+
+Une copie lue est toujours montrée avant d'être corrigée : si l'IA a mal
+lu, l'étudiant le voit et corrige. Et un découpage est relu par l'auteur
+avant publication.
 
 ### Où vont les données de l'étudiant
 
