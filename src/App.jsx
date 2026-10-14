@@ -36,6 +36,7 @@ const MentionsLegales = aLaDemande(() => import("./pages/MentionsLegales"));
 const Favoris = aLaDemande(() => import("./pages/Favoris"));
 const Assistant = aLaDemande(() => import("./pages/Assistant"));
 const Planning = aLaDemande(() => import("./pages/Planning"));
+const Avis = aLaDemande(() => import("./pages/Avis"));
 const LayoutAdmin = lazy(() => import("./components/LayoutAdmin"));
 const Admin = aLaDemande(() => import("./pages/Admin"));
 const EducationIA = aLaDemande(() => import("./pages/EducationIA"));
@@ -149,6 +150,8 @@ export default function App() {
         <Route path="confidentialite" element={<Confidentialite />} />
         <Route path="mentions-legales" element={<MentionsLegales />} />
         <Route path="projet" element={<Projet />} />
+        {/* Ouverte à tous, sans entrer : c'est le lien partagé pour recueillir les avis. */}
+        <Route path="avis" element={<Avis />} />
         <Route
           path="profil"
           element={

@@ -1,1 +1,0 @@
-import{n as e,t}from"./LayoutAdmin-c8ActUbx.js";export{t as EnTeteAdmin,e as default};

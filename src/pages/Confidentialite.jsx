@@ -81,6 +81,10 @@ const articles = [
                   "Google, seulement si tu choisis « Continuer avec Google »",
                   "Google confirme ton identité à Supabase et lui transmet ton nom et ton adresse Gmail. Il n'a accès à rien d'autre sur la plateforme.",
                 ],
+                [
+                  "Ton avis sur le site, si tu en publies un : Supabase",
+                  `Sur la page « Ton avis », ce que tu publies part dans la base de données de la plateforme, chez Supabase : ta note, ce que tu as écrit et, seulement si tu les remplis, ton prénom et ton niveau. Pas besoin de compte, et rien d'autre n'est joint : ni ton compte, ni ta progression. Ton avis est public : tout visiteur du site peut le lire. Comme tout serveur, Supabase reçoit ton adresse IP au moment de l'envoi. Pour faire retirer un avis, écris à ${site.contact}.`,
+                ],
               ]
             : []),
           [
@@ -150,7 +154,10 @@ const articles = [
     paragraphes: [
       `Sur ton appareil : tant que tu ne les effaces pas ; se déconnecter d'un compte efface de l'appareil les données de ce compte. Sur le relais : les compteurs anonymes des QCM, tant que le projet existe ; l'équipe peut les remettre à zéro. Chez GitHub, Cloudflare, Google${comptesActifs ? ", Supabase et Brevo" : ""} : selon leurs propres politiques, indiquées plus haut.`,
       ...(comptesActifs
-        ? ["Ton compte et tout ce qu'il contient : jusqu'à ce que tu le supprimes, depuis les paramètres. La suppression est immédiate et définitive."]
+        ? [
+            "Ton compte et tout ce qu'il contient : jusqu'à ce que tu le supprimes, depuis les paramètres. La suppression est immédiate et définitive.",
+            "Tes avis sur le site : tant que le projet existe, ou jusqu'à ce que tu demandes leur retrait au contact du projet.",
+          ]
         : []),
     ],
   },
@@ -199,7 +206,7 @@ export default function Confidentialite() {
           ]}
           garde={[
             ["Ta progression, sans compte", "Pas gardée"],
-            ...(comptesActifs ? [["Ton mot de passe", "Chiffré"]] : []),
+            ...(comptesActifs ? [["Ton mot de passe", "Chiffré"], ["Tes avis sur le site", "Publics"]] : []),
             ["Statistiques des QCM", "Anonymes"],
           ]}
           pied="Loi sénégalaise n° 2008-12 du 25 janvier 2008 · Recours possible auprès de la CDP"

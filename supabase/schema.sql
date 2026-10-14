@@ -107,3 +107,67 @@ revoke all on table public.secours_comptes from anon, authenticated;
 drop trigger if exists dater_secours on public.secours_comptes;
 create trigger dater_secours before insert or update on public.secours_comptes
   for each row execute function public.dater_donnees();
+
+-- ------------------------------------------------------------------
+-- Les avis sur la plateforme (page « Ton avis », src/pages/Avis.jsx,
+-- adresse #/avis).
+--
+-- Une note de 1 à 5, ce qui plaît, ce qui manque et, si on veut, un
+-- prénom et un niveau. Pas besoin de compte : tout visiteur peut donner
+-- son avis, et tout le monde peut lire les avis publiés.
+--
+-- Ce qu'un visiteur peut faire, et rien de plus :
+--   - lire les avis visibles ;
+--   - en ajouter un, en ne remplissant que note, aime, propose, prenom
+--     et niveau. La date et la visibilité sont posées par la base.
+-- Personne ne peut modifier ni effacer un avis depuis le site. Pour
+-- cacher un avis déplacé : Table Editor → avis → décocher `visible`.
+-- Contre l'envoi en masse, la base refuse plus de 20 avis par minute,
+-- tous visiteurs confondus.
+-- ------------------------------------------------------------------
+
+create table if not exists public.avis (
+  id bigint generated always as identity primary key,
+  cree_le timestamptz not null default now(),
+  note smallint not null constraint avis_note check (note between 1 and 5),
+  aime text not null default '' constraint avis_aime check (char_length(aime) <= 600),
+  propose text not null default '' constraint avis_propose check (char_length(propose) <= 600),
+  prenom text not null default '' constraint avis_prenom check (char_length(prenom) <= 40),
+  niveau text not null default '' constraint avis_niveau check (niveau in ('', 'L1', 'L2', 'L3', 'Master', 'Autre')),
+  visible boolean not null default true
+);
+
+create index if not exists avis_recents on public.avis (cree_le desc) where visible;
+
+alter table public.avis enable row level security;
+
+revoke all on table public.avis from anon, authenticated;
+grant select on table public.avis to anon, authenticated;
+grant insert (note, aime, propose, prenom, niveau) on table public.avis to anon, authenticated;
+
+drop policy if exists "lire les avis" on public.avis;
+create policy "lire les avis" on public.avis
+  for select to anon, authenticated using (visible);
+
+drop policy if exists "donner son avis" on public.avis;
+create policy "donner son avis" on public.avis
+  for insert to anon, authenticated with check (visible);
+
+-- Pose la date et la visibilité, et freine l'envoi en masse.
+create or replace function public.limiter_avis() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if (select count(*) from public.avis where cree_le > now() - interval '1 minute') >= 20 then
+    raise exception 'trop-d-avis' using errcode = 'P0001';
+  end if;
+  new.cree_le := now();
+  new.visible := true;
+  return new;
+end;
+$$;
+
+revoke all on function public.limiter_avis() from public, anon, authenticated;
+
+drop trigger if exists limiter_avis on public.avis;
+create trigger limiter_avis before insert on public.avis
+  for each row execute function public.limiter_avis();

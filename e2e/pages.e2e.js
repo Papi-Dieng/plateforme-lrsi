@@ -26,6 +26,7 @@ const PAGES = [
   ["/confidentialite", "confidentialité"],
   ["/mentions-legales", "Mentions légales"],
   ["/projet", "Une plateforme"],
+  ["/avis", "ce que tu penses"],
   ["/admin", "Administration"],
 ];
 
