@@ -1,4 +1,4 @@
-import { matieres } from "../src/data/matieres.js";
+import { matieres } from "../src/data/demonstration.js";
 import { site } from "../src/data/site.js";
 import { aller, entrerEnInvite, expect, test } from "./outils.js";
 

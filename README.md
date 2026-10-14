@@ -89,13 +89,15 @@ téléphone.
 | `e2e/filet.e2e.js` | une page qui plante affiche un message et la coque tient ; une page ou l'application introuvable après une mise en ligne invite à recharger ; un contenu publié mal formé est ignoré |
 | `e2e/accessibilite.e2e.js` | axe (règles WCAG 2.1 A et AA) sur chaque page, en thème clair et en thème sombre : contrastes, libellés, structure, navigation au clavier |
 | `e2e/ia.e2e.js` | saisie de l'assistant (Entrée, Maj + Entrée, rien à vide, hauteur bornée) ; raccourci « Un exercice » ; bouton Stop qui arrête vraiment ; image jointe (agrandir, retirer, envoi, relais pas à jour signalé, fichier refusé) ; dictée avec une fausse reconnaissance vocale ; attente de l'IA et son accessibilité |
+| `e2e/site-vide.e2e.js` | sans rien de publié : chaque page s'ouvre, garde son titre et dit qu'il n'y a rien, aucune ne plante |
 | `e2e/qcm-toutes-matieres.e2e.js` | le bouton de la liste lance un questionnaire tiré dans toutes les matières, corrigé comme les autres, et sans révision espacée |
 | `e2e/historique-ia.e2e.js` | une discussion gardée, rouverte avec ses échanges, puis effacée ; la barre latérale, panneau sur téléphone et colonne sur ordinateur |
 | `e2e/videos.e2e.js` | l'étudiant voit seulement les vidéos publiées avec un lien, sans aucun bouton pour en ajouter ou en retirer ; sans vidéo publiée, la section du tableau de bord disparaît ; les vidéos qu'il avait ajoutées avant sont effacées |
 
 Le relais IA n'est jamais appelé : `e2e/outils.js` le remplace par de
-fausses réponses (rien de publié, IA indisponible, espace admin ouvert
-seulement avec `MOT_DE_PASSE_ADMIN`, un mot de passe propre aux tests). Un test échoue aussi
+fausses réponses (le contenu de démonstration publié, IA indisponible, espace
+admin ouvert seulement avec `MOT_DE_PASSE_ADMIN`, un mot de passe propre aux
+tests). Un test qui veut un site vierge met `relais.contenu = null`. Un test échoue aussi
 si la page produit une erreur JavaScript.
 
 La première fois, il faut télécharger le navigateur de test (environ
@@ -525,6 +527,7 @@ lrsi-platform/
 ├── e2e/                      tests dans un vrai navigateur (Playwright)
 │   ├── outils.js             faux relais IA, entrée en invité, erreurs relevées
 │   ├── parcours.e2e.js       QCM, exercice, favoris, sauvegarde…
+│   ├── site-vide.e2e.js      chaque page sans aucun contenu publié
 │   ├── qcm-toutes-matieres.e2e.js  le QCM tiré dans toutes les matières
 │   ├── historique-ia.e2e.js  la barre latérale des discussions de l'assistant
 │   ├── pages.e2e.js          chaque page, menus, assistant sans IA, admin
@@ -595,8 +598,9 @@ lrsi-platform/
 │   │   ├── QuizEnTexte.jsx        écrire un QCM en texte (admin)
 │   │   ├── BancSite.jsx           banc de test IA de tout le site (admin)
 │   │   └── Apercu.jsx             aperçu avant publication (admin)
-│   ├── data/
+│   ├── data/                 vides : le contenu vient de l'espace admin
 │   │   ├── site.js           nom, navigation, adresse du relais IA (urlIA)
+│   │   ├── demonstration.js  l'ancien contenu de démo : jeu d'essai des tests
 │   │   ├── matieres.js       matières et chapitres
 │   │   ├── exercices.js      exercices et corrections
 │   │   ├── qcm.js            questionnaires
@@ -685,9 +689,19 @@ formations, la filière deviendra un niveau au-dessus de la matière.
 
 **Le principe à retenir** : tout le contenu pédagogique vit dans `src/data/`,
 jamais dans les pages. Ajouter un cours, un exercice ou un QCM ne demande donc
-pas de toucher à l'interface. C'est ce qui rendra le passage à la version 2
-simple : il suffira de remplacer ces fichiers par des appels à une API, sans
-réécrire les pages.
+pas de toucher à l'interface.
+
+**Depuis le 14 octobre 2026, ces fichiers sont vides** : la plateforme ne
+montre que ce qui est publié depuis l'espace admin (section 5). Tant que rien
+n'est publié, chaque page affiche son message « rien pour l'instant », et
+`e2e/site-vide.e2e.js` vérifie qu'aucune ne plante dans cet état. Les tableaux
+restent exportés et remplis en place au chargement (`src/contenu.js`) : les
+pages n'ont pas changé.
+
+L'ancien contenu de démonstration est gardé dans `src/data/demonstration.js`.
+**Aucune page ne l'importe** — il ne part donc pas dans le site compilé — mais
+les tests s'en servent comme jeu d'essai, et il reste le modèle de forme à
+recopier pour écrire une matière, un exercice ou un QCM à la main.
 
 ---
 
@@ -828,8 +842,11 @@ recompilation, pas de push.
 
 ### Dans les fichiers
 
-Les sections suivantes décrivent le contenu par défaut, écrit dans le code.
-Une fois du contenu publié depuis l'admin, c'est ce dernier qui s'affiche.
+Les fichiers de `src/data/` sont vides depuis le 14 octobre 2026 : le contenu
+se saisit dans l'espace admin, et le relais le publie. Les sections suivantes
+décrivent quand même la **forme** attendue de chaque contenu — c'est celle que
+l'admin enregistre, et celle de `src/data/demonstration.js`, à recopier si on
+préfère écrire une matière ou un exercice à la main dans le code.
 
 ### Une matière
 

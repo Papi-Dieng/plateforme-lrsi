@@ -1,4 +1,4 @@
-import { qcms } from "../src/data/qcm.js";
+import { qcms } from "../src/data/demonstration.js";
 import { aller, entrerEnInvite, expect, test } from "./outils.js";
 
 /* ==================================================================

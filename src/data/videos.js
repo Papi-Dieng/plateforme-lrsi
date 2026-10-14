@@ -13,50 +13,7 @@
    l'identifiant est « AbCdEf12345 ».
    ================================================================== */
 
-export const videosSuggerees = [
-  {
-    id: "sugg-osi",
-    accroche: "OSI",
-    titre: "Le modèle OSI expliqué couche par couche",
-    resume: "Pour visualiser l'encapsulation avant le TD.",
-    matiere: "reseaux",
-    duree: "—",
-    youtubeId: null,
-  },
-  {
-    id: "sugg-sous-reseaux",
-    accroche: "/26",
-    titre: "Découper un réseau en sous-réseaux",
-    resume: "La méthode de calcul, pas à pas.",
-    matiere: "reseaux",
-    duree: "—",
-    youtubeId: null,
-  },
-  {
-    id: "sugg-ordonnancement",
-    accroche: "FIFO·SJF·RR",
-    titre: "Ordonnancement : FIFO, SJF et tourniquet",
-    resume: "Les diagrammes d'exécution en images.",
-    matiere: "systemes",
-    duree: "—",
-    youtubeId: null,
-  },
-  {
-    id: "sugg-complexite",
-    accroche: "O(n²)",
-    titre: "La complexité en grand O, sans mathématiques",
-    resume: "Comparer deux algorithmes en une minute.",
-    matiere: "algorithmique",
-    duree: "—",
-    youtubeId: null,
-  },
-  {
-    id: "sugg-sql",
-    accroche: "JOIN",
-    titre: "Les jointures SQL illustrées",
-    resume: "INNER, LEFT et RIGHT, enfin clairs.",
-    matiere: "bdd",
-    duree: "—",
-    youtubeId: null,
-  },
-];
+/* Vide : tout le contenu vient de l'espace admin (voir src/contenu.js).
+   Le contenu de démonstration d'avant le 14 octobre 2026 est gardé dans
+   src/data/demonstration.js, pour les tests et comme modèle de forme. */
+export const videosSuggerees = [];

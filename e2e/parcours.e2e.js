@@ -1,6 +1,4 @@
-import { qcms } from "../src/data/qcm.js";
-import { exercices } from "../src/data/exercices.js";
-import { matieres } from "../src/data/matieres.js";
+import { exercices, matieres, qcms } from "../src/data/demonstration.js";
 import { site } from "../src/data/site.js";
 import { aller, entrerEnInvite, expect, test } from "./outils.js";
 

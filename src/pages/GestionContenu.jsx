@@ -77,15 +77,17 @@ export default function GestionContenu() {
       .then((c) => {
         if (annule) return;
         // Une publication plus ancienne peut ne pas avoir toutes les
-        // rubriques (arrivées après elle) : on complète
-        // avec le contenu du code.
+        // rubriques (arrivées après elle) : on complète avec les
+        // rubriques vides de src/data/. Sans publication, le brouillon
+        // part donc vide : c'est l'état d'un site qui vient d'être
+        // installé.
         setBrouillon(c ? { ...copieContenuParDefaut(), ...c } : copieContenuParDefaut());
         setPublie(c?.publieLe ?? null);
         setEtat({
           type: "",
           texte: c
             ? `Version publiée le ${new Date(c.publieLe).toLocaleString("fr-FR")}.`
-            : "Rien n'a encore été publié : tu pars du contenu actuel du site.",
+            : "Rien n'a encore été publié : le site est vide, tout commence ici.",
         });
       })
       .catch((e) => {

@@ -1,4 +1,4 @@
-import { examens } from "../src/data/examens.js";
+import { examens } from "../src/data/demonstration.js";
 import { aller, entrerEnInvite, expect, test } from "./outils.js";
 
 /* ==================================================================

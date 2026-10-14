@@ -1,7 +1,5 @@
+import { examens, exercices, qcms } from "../src/data/demonstration.js";
 import AxeBuilder from "@axe-core/playwright";
-import { examens } from "../src/data/examens.js";
-import { exercices } from "../src/data/exercices.js";
-import { qcms } from "../src/data/qcm.js";
 import { aller, entrerEnInvite, expect, test } from "./outils.js";
 
 /* ==================================================================

@@ -1,0 +1,1 @@
+var e=[],t=t=>e.find(e=>e.id===t);export{e as n,t};

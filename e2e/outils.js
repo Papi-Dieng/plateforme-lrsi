@@ -1,12 +1,15 @@
 import { test as base, expect } from "@playwright/test";
 import { site } from "../src/data/site.js";
+import { contenuDemo } from "../src/data/demonstration.js";
 
 /* ==================================================================
    Ce que partagent les tests dans le navigateur.
 
    `page` est remplacée par une page dont le relais IA est simulé :
-   - GET /contenu répond `relais.contenu`, `null` par défaut : rien de
-     publié, le site affiche le contenu de src/data/ ;
+   - GET /contenu répond `relais.contenu`, le contenu de démonstration
+     par défaut (src/data/demonstration.js). Les fichiers de src/data/
+     sont vides : sans cette publication, le site n'aurait rien à
+     montrer. Un test qui veut un site vide met `relais.contenu = null` ;
    - POST /stats est accepté, et chaque envoi est gardé dans
      `relais.stats` pour que les tests puissent le relire ;
    - l'espace admin (/admin/…) n'accepte que MOT_DE_PASSE_ADMIN : rien
@@ -26,7 +29,7 @@ export const test = base.extend({
   // Playwright exige ce `{}` : une fixture reçoit toujours les autres en premier.
   // oxlint-disable-next-line no-empty-pattern
   relais: async ({}, utiliser) => {
-    await utiliser({ contenu: null, stats: [], appels: [], publications: [] });
+    await utiliser({ contenu: structuredClone(contenuDemo), stats: [], appels: [], publications: [] });
   },
   page: async ({ page, relais }, utiliser) => {
     await page.route(`${RELAIS}/**`, async (route) => {

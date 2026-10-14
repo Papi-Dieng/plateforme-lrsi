@@ -1,11 +1,11 @@
 import { describe, expect, test } from "vitest";
-import { exercices } from "./exercices";
-import { matieres } from "./matieres";
-import { qcms } from "./qcm";
+import { exercices, matieres, qcms } from "./demonstration";
 
-/* Le contenu par défaut, écrit dans le code, doit être cohérent : une
-   faute de frappe dans un identifiant ou un titre de chapitre casserait
-   en silence l'analyse par matière ou le planning. */
+/* Le contenu de démonstration (src/data/demonstration.js) doit rester
+   cohérent : il sert de jeu d'essai à tous les tests, et de modèle de
+   forme pour écrire un contenu à la main. Une faute de frappe dans un
+   identifiant ou un titre de chapitre casserait en silence l'analyse par
+   matière ou le planning. */
 
 const doublons = (liste) => liste.filter((x, i) => liste.indexOf(x) !== i);
 const idsMatieres = new Set(matieres.map((m) => m.id));

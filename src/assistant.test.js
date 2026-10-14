@@ -1,9 +1,15 @@
-import { describe, expect, test } from "vitest";
+import { beforeAll, describe, expect, test } from "vitest";
 import { detecterIntention, repondre } from "./assistant";
+import { chargerDemonstration } from "./data/demonstration";
 
 /* Le guide de l'assistant : il reconnaît l'intention d'une question et
-   retrouve les contenus de la plateforme qui en parlent (contenu par
-   défaut, src/data/). */
+   retrouve les contenus de la plateforme qui en parlent.
+
+   Les fichiers de src/data/ sont vides — le site n'affiche que ce qui est
+   publié depuis l'espace admin : le guide se teste donc sur le contenu de
+   démonstration, mis en place ici comme le ferait une publication. */
+
+beforeAll(chargerDemonstration);
 
 const chapitres = (question) => repondre(question).liens.filter((l) => l.type === "chapitre").map((l) => l.titre);
 

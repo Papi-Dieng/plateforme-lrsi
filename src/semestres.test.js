@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { matieres } from "./data/matieres";
+import { matieres } from "./data/demonstration";
 import { chapitresDuSemestre, normaliserChapitres, semestreChapitre, semestresMatiere } from "./semestres";
 
 const ch = (titre, semestre) => ({ titre, ...(semestre !== undefined && { semestre }) });

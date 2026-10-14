@@ -70,7 +70,7 @@ export default function Accueil() {
   const idsFiltres = matieresFiltrees.map((m) => m.id);
   const qcmEnAvant = qcms.find((x) => idsFiltres.includes(x.matiere)) ?? qcms[0];
 
-  const matiereDuQcm = matieres.find((m) => m.id === qcmEnAvant.matiere);
+  const matiereDuQcm = matieres.find((m) => m.id === qcmEnAvant?.matiere);
 
   const filtres = [
     { value: "toutes", label: "Toutes les matières" },
@@ -358,11 +358,17 @@ export default function Accueil() {
           )}
         </section>
 
-        {/* Suggestion */}
+        {/* Suggestion : rien à proposer tant qu'aucun QCM n'est publié. */}
         <aside className="flex min-w-0 flex-col rounded-2xl bg-lime-400 p-3 sm:rounded-3xl sm:p-6">
           <p className="text-xs font-medium text-lime-900 sm:text-sm">
             À tester pour vérifier tes acquis
           </p>
+          {!qcmEnAvant ? (
+            <p className="mt-3 text-sm/6 text-ink-950">
+              Aucun QCM n&apos;est encore publié. Ils apparaîtront ici dès qu&apos;il y en aura.
+            </p>
+          ) : (
+          <>
 
           <span className="mt-3 self-start rounded-lg bg-ink-950 px-2 py-0.5 text-[11px] font-semibold text-white sm:mt-4 sm:px-2.5 sm:py-1 sm:text-xs">
             {matiereDuQcm?.nomCourt ?? "QCM"}
@@ -393,6 +399,8 @@ export default function Accueil() {
           >
             Commencer<span className="hidden sm:inline"> le QCM</span>
           </Link>
+          </>
+          )}
         </aside>
       </div>
 
