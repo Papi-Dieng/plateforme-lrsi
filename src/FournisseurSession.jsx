@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SessionContext, ecrireSession, lireSession } from "./session";
 import { client, comptesActifs, deconnecter, nettoyerAdresse, sessionDeCompte, supprimerCompte } from "./comptes";
 import { lancerSynchro, oublierDonneesLocales, oublierReserve } from "./synchro";
+import { definirStockage } from "./stockage";
 
 // Retour d'un lien Supabase (Google, confirmation, mot de passe oublié).
 const retourDeLien = () => /[?&](code|error)=/.test(window.location.search);
@@ -38,6 +39,8 @@ export function FournisseurSession({ children }) {
             const utilisateur = s?.user;
             if (utilisateur) {
               const suite = sessionDeCompte(utilisateur);
+              // Ce que l'invité venait de faire rejoint le compte.
+              definirStockage("compte");
               setSession(suite);
               ecrireSession(suite);
               if (synchro.current?.utilisateur !== utilisateur.id) {
@@ -52,6 +55,7 @@ export function FournisseurSession({ children }) {
               // n'a pas pu partir reste en réserve pour ce compte.
               arreterSynchro();
               oublierDonneesLocales(lireSession()?.id);
+              definirStockage(null);
               setSession(null);
               ecrireSession(null);
             }
@@ -63,9 +67,17 @@ export function FournisseurSession({ children }) {
 
   useEffect(() => {
     if (lireSession()?.mode === "compte" || retourDeLien()) brancher();
+    // Depuis le 14 octobre 2026, seul un compte conserve la progression
+    // (src/stockage.js) : sans compte, ce qui traîne sur l'appareil est
+    // effacé au démarrage.
+    else oublierDonneesLocales();
   }, [brancher]);
 
   const entrer = useCallback((mode, nom) => {
+    definirStockage(mode);
+    // Sans compte, le navigateur ne garde rien : ce qu'une visite
+    // précédente aurait laissé est effacé en entrant.
+    if (mode !== "compte") oublierDonneesLocales();
     const suite = {
       mode,
       nom: mode === "invite" ? "Invité" : nom || "Étudiant",
@@ -87,6 +99,7 @@ export function FournisseurSession({ children }) {
       // pour ce compte, au lieu d'être perdue.
       oublierDonneesLocales(actuelle.id);
     }
+    definirStockage(null);
     setSession(null);
     ecrireSession(null);
   }, []);
@@ -98,6 +111,7 @@ export function FournisseurSession({ children }) {
     if (r.erreur) return r;
     if (id) oublierReserve(id);
     oublierDonneesLocales();
+    definirStockage(null);
     setSession(null);
     ecrireSession(null);
     return r;

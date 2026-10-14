@@ -19,7 +19,7 @@ test("une page qui plante affiche un message, et le reste du site marche encore"
 
   const alerte = page.getByRole("alert");
   await expect(alerte).toContainText("Cette page a rencontré un problème");
-  await expect(alerte).toContainText("Ta progression n'est pas touchée");
+  await expect(alerte).toContainText("ta progression n'est pas touchée");
   await expect(alerte.getByRole("button", { name: "Recharger la page" })).toBeVisible();
 
   // La coque tient : une autre page s'ouvre normalement.

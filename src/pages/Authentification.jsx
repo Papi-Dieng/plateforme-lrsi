@@ -128,7 +128,8 @@ function CadreAuth({ titre, texte, children, pied, sansInvite = false }) {
                 <Icon name="info" className="mt-0.5 size-4.5 shrink-0 text-ink-500 dark:text-ink-400" />
                 <p className="text-xs/5 text-ink-700 dark:text-ink-200">
                   Les comptes ne sont pas encore ouverts. En attendant, le
-                  mode invité donne accès à tout, sans compte.
+                  mode invité donne accès à tout, mais sans garder ta
+                  progression.
                 </p>
               </div>
             )}
@@ -141,14 +142,15 @@ function CadreAuth({ titre, texte, children, pied, sansInvite = false }) {
                 <button
                   type="button"
                   onClick={entrerEnInvite}
-                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-lime-400 px-5 py-3.5 text-sm font-semibold text-ink-950 transition-colors hover:bg-lime-300"
+                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
                 >
                   <Icon name="users" className="size-4.5" />
                   Entrer en mode invité
                 </button>
                 <p className="mt-2.5 text-center text-xs text-ink-500 dark:text-ink-400">
                   Accès immédiat à tous les contenus, sans compte. Ta
-                  progression reste alors sur cet appareil seulement.
+                  progression n'est alors pas gardée : elle disparaît dès que
+                  tu recharges la page.
                 </p>
               </div>
             )}

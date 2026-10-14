@@ -1,5 +1,5 @@
 import { examens } from "../src/data/demonstration.js";
-import { aller, entrerEnInvite, expect, test } from "./outils.js";
+import { aller, entrerAvecCompte, entrerEnInvite, expect, test } from "./outils.js";
 
 /* ==================================================================
    Un devoir en conditions réelles, et un programme de révision composé
@@ -122,7 +122,8 @@ test.describe("devoir", () => {
 test.describe("programme de révision", () => {
   test("sans IA, le site répartit les séances lui-même, et elles entrent dans l'emploi du temps", async ({ page }) => {
     await page.clock.install({ time: JEUDI });
-    await entrerEnInvite(page);
+    // Le planning n'est gardé que par un compte (src/stockage.js).
+    await entrerAvecCompte(page);
     await aller(page, "/planning");
 
     await page.getByRole("button", { name: "Créer mon programme avec l'IA" }).first().click();
@@ -144,7 +145,7 @@ test.describe("programme de révision", () => {
     await assistant.getByRole("button", { name: "Ajouter à mon emploi du temps" }).click();
     await expect(assistant).toBeHidden();
 
-    // Enregistré dans le navigateur : l'examen et des séances de révision
+    // Enregistré pour le compte : l'examen et des séances de révision
     // placées avant lui, dans les créneaux du soir ou du samedi matin.
     const planning = await page.evaluate(() => JSON.parse(localStorage.getItem("lrsi-planning")));
     const examen = planning.evenements.find((e) => e.categorie === "Examen");

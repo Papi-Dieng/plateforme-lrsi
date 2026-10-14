@@ -1,3 +1,4 @@
+import { stockage } from "./stockage";
 /* ==================================================================
    Fiche profil de l'étudiant.
 
@@ -24,7 +25,7 @@ export const niveaux = ["Licence 1", "Licence 2", "Licence 3"];
 
 export function lireProfil() {
   try {
-    const brut = JSON.parse(localStorage.getItem(CLE_PROFIL) ?? "null");
+    const brut = JSON.parse(stockage.getItem(CLE_PROFIL) ?? "null");
     if (!brut || typeof brut !== "object") return { ...profilVide };
     return { ...profilVide, ...brut };
   } catch {
@@ -35,7 +36,7 @@ export function lireProfil() {
 export function enregistrerProfil(profil) {
   const propre = { ...profilVide, ...profil };
   try {
-    localStorage.setItem(CLE_PROFIL, JSON.stringify(propre));
+    stockage.setItem(CLE_PROFIL, JSON.stringify(propre));
   } catch {
     /* stockage indisponible : la fiche ne sera pas conservée */
   }
@@ -44,7 +45,7 @@ export function enregistrerProfil(profil) {
 
 export function effacerProfil() {
   try {
-    localStorage.removeItem(CLE_PROFIL);
+    stockage.removeItem(CLE_PROFIL);
   } catch {
     /* rien à faire */
   }

@@ -6,22 +6,24 @@ import { CLE_DISPONIBILITES } from "./programmeIA";
 import { CLE_CONVERSATIONS, conversationsValides } from "./conversations";
 
 /* ==================================================================
-   Sauvegarder et restaurer ses données.
+   La liste des données de l'étudiant.
 
-   Sans compte, tout vit dans le navigateur : changer d'ordinateur ou
-   vider ses données de navigation fait tout perdre. Une sauvegarde est
-   un petit fichier JSON que l'étudiant télécharge, garde où il veut,
-   et recharge sur un autre appareil.
+   Un seul endroit dit ce qui appartient à l'étudiant : profil, scores
+   des QCM, exercices travaillés, chapitres lus, devoirs notés, favoris,
+   vidéos vues, planning, disponibilités, révisions espacées,
+   discussions avec l'assistant, thème. Ce qui n'y est pas : la session
+   (qui se recrée à l'entrée), le mot de passe admin, le cache du
+   contenu.
 
-   Ce qui est sauvegardé : profil, scores des QCM, exercices travaillés,
-   favoris, vidéos vues, thème, planning de révision et
-   disponibilités de la semaine. Ce qui
-   ne l'est pas : la session (qui se recrée à l'entrée), le mot de passe
-   admin, le cache du contenu.
+   C'est cette liste que src/synchro.js envoie au serveur pour un
+   compte, et qu'il efface de l'appareil à la déconnexion. Chaque entrée
+   dit aussi la forme attendue : une donnée abîmée (fichier modifié à la
+   main, autre version du site) est ignorée plutôt que recopiée.
 
-   Restaurer relit tout avec méfiance : un fichier d'une autre origine
-   ou modifié à la main ne doit pas casser la progression. Seules les
-   clés connues, de la bonne forme, sont écrites ; le reste est ignoré.
+   Le fichier de sauvegarde JSON, qui servait quand le navigateur gardait
+   la progression tout seul, a été retiré le 14 octobre 2026 : seul un
+   compte (email + mot de passe) conserve les données, et c'est le
+   serveur qui les garde (src/stockage.js).
    ================================================================== */
 
 export const CLE_THEME = "lrsi-theme";
@@ -29,7 +31,6 @@ export { CLE_PLANNING };
 
 const APPLICATION = "sunu-cours";
 const FORMAT = 1;
-const TAILLE_MAX = 2 * 1024 * 1024;
 
 const estObjet = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 
@@ -65,65 +66,4 @@ export function construireSauvegarde(lire) {
     }
   }
   return { application: APPLICATION, format: FORMAT, creeLe: new Date().toISOString(), donnees };
-}
-
-/* Lit un fichier de sauvegarde. Renvoie { donnees, resume, creeLe } ou
-   { erreur } avec un message à montrer tel quel. */
-export function lireSauvegarde(texte) {
-  if (typeof texte !== "string" || texte.length > TAILLE_MAX) {
-    return { erreur: "Ce fichier est trop gros pour être une sauvegarde." };
-  }
-  let brut;
-  try {
-    brut = JSON.parse(texte);
-  } catch {
-    return { erreur: "Ce fichier n'est pas une sauvegarde lisible." };
-  }
-  if (brut?.application !== APPLICATION || !estObjet(brut.donnees)) {
-    return { erreur: "Ce fichier n'est pas une sauvegarde de la plateforme." };
-  }
-  if (brut.format > FORMAT) {
-    return { erreur: "Cette sauvegarde vient d'une version plus récente du site. Recharge la page puis réessaie." };
-  }
-
-  const donnees = {};
-  const resume = [];
-  for (const d of DONNEES) {
-    const v = brut.donnees[d.cle];
-    if (v === undefined || !d.valide(v)) continue;
-    donnees[d.cle] = v;
-    resume.push(d.libelle(d.compter(v)));
-  }
-  if (resume.length === 0) return { erreur: "Cette sauvegarde est vide." };
-  return { donnees, resume, creeLe: typeof brut.creeLe === "string" ? brut.creeLe : null };
-}
-
-/* Écrit les données d'une sauvegarde lue par `lireSauvegarde`. Une
-   donnée absente de la sauvegarde n'est pas touchée. */
-export function restaurerSauvegarde(donnees, ecrire) {
-  for (const d of DONNEES) {
-    if (!(d.cle in donnees)) continue;
-    ecrire(d.cle, d.brut ? donnees[d.cle] : JSON.stringify(donnees[d.cle]));
-  }
-}
-
-/* Côté navigateur : télécharger le fichier. */
-export function telechargerSauvegarde() {
-  const lire = (cle) => {
-    try {
-      return localStorage.getItem(cle);
-    } catch {
-      return null;
-    }
-  };
-  const sauvegarde = construireSauvegarde(lire);
-  const blob = new Blob([JSON.stringify(sauvegarde, null, 2)], { type: "application/json" });
-  const lien = document.createElement("a");
-  lien.href = URL.createObjectURL(blob);
-  lien.download = `sunu-cours-sauvegarde-${sauvegarde.creeLe.slice(0, 10)}.json`;
-  document.body.append(lien);
-  lien.click();
-  lien.remove();
-  setTimeout(() => URL.revokeObjectURL(lien.href), 1000);
-  return Object.keys(sauvegarde.donnees).length;
 }

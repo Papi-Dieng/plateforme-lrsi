@@ -1,3 +1,4 @@
+import { stockage } from "./stockage";
 /* ==================================================================
    Historique des discussions avec l'assistant.
 
@@ -85,7 +86,7 @@ export const conversationsValides = (v) =>
 
 export function lireConversations() {
   try {
-    const brut = JSON.parse(localStorage.getItem(CLE_CONVERSATIONS) ?? "null");
+    const brut = JSON.parse(stockage.getItem(CLE_CONVERSATIONS) ?? "null");
     return conversationsValides(brut) ? brut : {};
   } catch {
     return {};
@@ -94,8 +95,8 @@ export function lireConversations() {
 
 export function ecrireConversations(toutes) {
   try {
-    if (Object.keys(toutes).length === 0) localStorage.removeItem(CLE_CONVERSATIONS);
-    else localStorage.setItem(CLE_CONVERSATIONS, JSON.stringify(toutes));
+    if (Object.keys(toutes).length === 0) stockage.removeItem(CLE_CONVERSATIONS);
+    else stockage.setItem(CLE_CONVERSATIONS, JSON.stringify(toutes));
   } catch {
     /* stockage plein ou refusé : la discussion ne sera pas gardée */
   }

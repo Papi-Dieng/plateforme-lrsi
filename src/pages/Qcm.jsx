@@ -215,7 +215,7 @@ export function QcmListe() {
           </h2>
           {nbFaits > 0 && (
             <p className="text-[15px] text-ink-600 dark:text-ink-300">
-              {nbFaits} QCM déjà tenté{nbFaits > 1 ? "s" : ""} sur cet appareil.
+              {nbFaits} QCM déjà tenté{nbFaits > 1 ? "s" : ""}.
             </p>
           )}
         </div>

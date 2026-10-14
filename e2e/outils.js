@@ -1,5 +1,6 @@
 import { test as base, expect } from "@playwright/test";
 import { site } from "../src/data/site.js";
+import { comptes } from "../src/data/comptes.js";
 import { contenuDemo } from "../src/data/demonstration.js";
 
 /* ==================================================================
@@ -76,5 +77,98 @@ export async function entrerEnInvite(page) {
   await expect(page).toHaveURL(/#\/tableau-de-bord$/);
 }
 
-/* Va à une page du site, adresse avec dièse comprise. */
-export const aller = (page, chemin) => page.goto(`./#${chemin}`);
+/* Va à une page du site, adresse avec dièse comprise.
+
+   Depuis le 14 octobre 2026, une visite sans compte ne garde rien : la
+   progression vit en mémoire, et un rechargement l'efface (voir
+   src/stockage.js). Changer de page ne doit donc pas recharger le site,
+   comme quand l'étudiant clique dans le menu. Tant que le site n'est pas
+   ouvert, on l'ouvre pour de bon. */
+export async function aller(page, chemin) {
+  if (!/#/.test(page.url()) && !page.url().includes("/index.html") && page.url() === "about:blank") {
+    await page.goto(`./#${chemin}`);
+    return;
+  }
+  await page.evaluate((c) => {
+    window.location.hash = c;
+  }, chemin);
+  // Laisse deux images à React pour afficher la page. On n'attend pas
+  // une adresse précise : le site renvoie parfois ailleurs tout de suite
+  // (une page réservée, ou l'accueil une fois entré).
+  await page.evaluate(() => new Promise((suite) => requestAnimationFrame(() => requestAnimationFrame(suite))));
+}
+
+/* Recharge vraiment la page : pour les tests qui veulent savoir ce qui
+   survit, et ce qui ne survit pas. */
+export const recharger = (page) => page.reload();
+
+/* ==================================================================
+   Entrer avec un compte.
+
+   Depuis le 14 octobre 2026, seul un compte conserve la progression :
+   un test qui veut des données déjà là, ou qui recharge la page pour
+   voir ce qui survit, passe par ici (voir src/stockage.js).
+
+   Supabase n'est jamais appelé pour de vrai : la connexion par mot de
+   passe et la table `donnees_etudiants` sont simulées. La table répond
+   toujours la même chose, pour que la synchronisation n'écrase jamais
+   ce que le test a semé.
+   ================================================================== */
+
+const COMPTE = {
+  id: "00000000-0000-4000-8000-000000000042",
+  aud: "authenticated",
+  email: "awa@exemple.com",
+  user_metadata: { nom: "Awa Diallo", niveau: "Licence 1" },
+  app_metadata: { provider: "email" },
+  identities: [{ id: "i1" }],
+  created_at: "2026-09-30T00:00:00Z",
+};
+
+async function supabaseDeTest(page) {
+  await page.route(`${comptes.url}/**`, (route) => {
+    const url = route.request().url();
+    const entetes = { "Access-Control-Allow-Origin": "*" };
+    if (url.includes("/auth/v1/token")) {
+      return route.fulfill({
+        headers: entetes,
+        json: {
+          access_token: "jeton-de-test",
+          token_type: "bearer",
+          expires_in: 3600,
+          expires_at: Math.floor(Date.now() / 1000) + 3600,
+          refresh_token: "rafraichir",
+          user: COMPTE,
+        },
+      });
+    }
+    // La ligne du compte : toujours vide, et toujours la même date, pour
+    // que l'appareil garde ce qu'il a.
+    if (url.includes("/rest/v1/donnees_etudiants")) {
+      if (route.request().method() === "GET") {
+        return route.fulfill({ headers: entetes, json: { donnees: {}, mis_a_jour: "2026-01-01T00:00:00Z" } });
+      }
+      return route.fulfill({ status: 201, headers: entetes, json: {} });
+    }
+    return route.fulfill({ status: 200, headers: entetes, json: {} });
+  });
+}
+
+/* Entre avec un compte, puis sème des données déjà enregistrées :
+   `donnees` est un dictionnaire { clé: valeur }, écrit tel quel comme
+   le ferait le site. La page est rechargée ensuite, pour que tout soit
+   relu depuis zéro. */
+export async function entrerAvecCompte(page, donnees = null) {
+  await supabaseDeTest(page);
+  await page.goto("./#/connexion");
+  await page.getByLabel("Email ou numéro de téléphone").fill(COMPTE.email);
+  await page.getByLabel("Mot de passe", { exact: true }).fill("un-mot-de-passe");
+  await page.getByRole("button", { name: "Se connecter" }).click();
+  await expect(page).toHaveURL(/#\/tableau-de-bord$/);
+  if (donnees) {
+    await page.evaluate((d) => {
+      for (const [cle, valeur] of Object.entries(d)) localStorage.setItem(cle, JSON.stringify(valeur));
+    }, donnees);
+    await page.reload();
+  }
+}

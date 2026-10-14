@@ -1,5 +1,5 @@
 import { site } from "../src/data/site.js";
-import { aller, entrerEnInvite, expect, test } from "./outils.js";
+import { aller, entrerAvecCompte, expect, test } from "./outils.js";
 
 /* ==================================================================
    La barre latérale des discussions de l'assistant (src/conversations.js).
@@ -41,7 +41,8 @@ const ouvrirBarre = async (page, isMobile) => {
 test.describe("historique de l'assistant", () => {
   test("une discussion se garde, se rouvre, se continue avec ses échanges, et s'efface", async ({ page, isMobile }) => {
     const demandes = await iaQuiRepond(page);
-    await entrerEnInvite(page);
+    // Les discussions ne sont gardées que par un compte (src/stockage.js).
+    await entrerAvecCompte(page);
     await aller(page, "/assistant");
 
     await demander(page, "Explique le modèle OSI", 1);

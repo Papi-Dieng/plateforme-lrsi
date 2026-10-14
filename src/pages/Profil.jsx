@@ -382,7 +382,7 @@ export default function Profil() {
           <p className="mt-2 text-sm/6 text-ink-600 dark:text-ink-400">
             {session?.mode === "compte"
               ? "Elles sont enregistrées dans ton compte : tu les retrouves sur tous tes appareils. Toi seul y as accès ; l'équipe ne les partage avec personne."
-              : "En mode invité, elles restent dans ce navigateur : rien n'est envoyé sur un serveur, et elles ne te suivent pas d'un appareil à l'autre. Crée un compte pour les retrouver partout."}
+              : "Sans compte, elles ne sont pas gardées : elles vivent le temps de ta visite et disparaissent quand tu recharges la page. Crée un compte, avec une adresse email et un mot de passe, pour qu'elles soient enregistrées sur le serveur et te suivent partout."}
           </p>
 
           <div className="mt-5">

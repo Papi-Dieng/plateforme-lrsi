@@ -27,7 +27,7 @@ const articles = [
     titre: "Accès",
     paragraphes: [
       comptesActifs
-        ? "L'accès est libre et gratuit. Le mode invité suffit pour tout consulter ; un compte, gratuit lui aussi, garde ta progression sur tous tes appareils. Tu t'inscris toi-même, avec ton email, ton numéro de téléphone ou ton compte Google. Un compte est personnel : ne partage pas ton mot de passe, et n'utilise pas celui d'un autre service. L'équipe peut supprimer un compte utilisé contre ces conditions."
+        ? "L'accès est libre et gratuit. Le mode invité suffit pour tout consulter, mais ne garde rien ; un compte, gratuit lui aussi, garde ta progression sur le serveur et sur tous tes appareils. Tu t'inscris toi-même, avec ton email, ton numéro de téléphone ou ton compte Google. Un compte est personnel : ne partage pas ton mot de passe, et n'utilise pas celui d'un autre service. L'équipe peut supprimer un compte utilisé contre ces conditions."
         : "L'accès est libre et gratuit, sans inscription : le mode invité suffit. Les comptes étudiants ne sont pas encore ouverts.",
       "Le site est fourni tel quel. Il peut être interrompu, modifié ou arrêté à tout moment, notamment pour une mise à jour ou si un service dont il dépend (hébergeur, relais, intelligence artificielle) est indisponible.",
     ],
@@ -85,7 +85,7 @@ const articles = [
     titre: "Limites et responsabilité",
     paragraphes: [
       "Les contenus sont fournis en l'état, sans garantie d'exactitude, d'exhaustivité ni de disponibilité. Une erreur reste toujours possible dans un corrigé ou une explication.",
-      "La plateforme ne peut être tenue responsable d'une mauvaise note, d'une perte de données enregistrées dans ton navigateur en mode invité (un compte les garde) ni du contenu des sites extérieurs.",
+      "La plateforme ne peut être tenue responsable d'une mauvaise note, de la progression perdue faute de compte (sans compte, rien n'est conservé) ni du contenu des sites extérieurs.",
     ],
   },
   {
@@ -93,7 +93,7 @@ const articles = [
     titre: "Données personnelles",
     paragraphes: [
       comptesActifs
-        ? "En mode invité, ta progression reste dans ton navigateur ; avec un compte, elle y est aussi enregistrée. Ce que la plateforme conserve, ce qui sort de ton appareil, vers qui, et tes droits sont décrits dans la politique de confidentialité."
+        ? "Sans compte, ta progression n'est pas conservée ; avec un compte, elle est enregistrée sur le serveur de la plateforme. Ce que la plateforme conserve, ce qui sort de ton appareil, vers qui, et tes droits sont décrits dans la politique de confidentialité."
         : "Il n'y a pas de compte : ta progression reste dans ton navigateur. Ce que la plateforme conserve, ce qui sort de ton appareil, vers qui, et tes droits sont décrits dans la politique de confidentialité.",
     ],
     liens: [{ to: "/confidentialite", label: "Politique de confidentialité" }],

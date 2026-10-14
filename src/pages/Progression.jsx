@@ -979,7 +979,7 @@ export default function Progression() {
 
         {/* ---- Données ---- */}
         <section className={cx(CARTE, "flex flex-wrap items-center justify-between gap-5")}>
-          <TitreCarte icone="lock" titre="Mes données de progression" texte="Conservées dans ce navigateur, et nulle part ailleurs." />
+          <TitreCarte icone="lock" titre="Mes données de progression" texte="Gardées par ton compte, et nulle part ailleurs ; sans compte, pas gardées." />
           <div className="flex flex-wrap items-center gap-3">
             {confirmation ? (
               <>

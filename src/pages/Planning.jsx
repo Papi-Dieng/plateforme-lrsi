@@ -498,8 +498,8 @@ export default function Planning() {
 
         <p className="text-xs text-ink-500 dark:text-ink-400">
           Le programme se recalcule à chaque visite : fais un QCM, et tes nouveaux résultats changent
-          les priorités. Avec un compte, ton emploi du temps et ton planning te suivent sur tous tes
-          appareils ; en mode invité, ils restent dans ce navigateur.
+          les priorités. Avec un compte, ton emploi du temps et ton planning sont gardés sur le serveur
+          et te suivent sur tous tes appareils ; sans compte, ils ne sont pas gardés.
         </p>
       </Container>
     </>

@@ -14,13 +14,15 @@ import { CLE_REVISIONS } from "../revisions";
 import { CLE_CONVERSATIONS } from "../conversations";
 import { site } from "../data/site";
 import { CLE_PLANNING, CLE_THEME } from "../sauvegarde";
+import { stockage } from "../stockage";
 
 /* ==================================================================
    Paramètres.
 
-   Ce que la plateforme enregistre dans le navigateur, noir sur blanc,
-   et de quoi tout effacer. Avec un compte, ces données sont aussi
-   recopiées dans le compte (src/synchro.js) : c'est lui qui les fait
+   Ce que la plateforme garde, noir sur blanc, et de quoi tout
+   effacer. Sans compte, rien ne survit au rechargement de la page
+   (src/stockage.js) ; avec un compte, les données sont rangées sur
+   l'appareil puis envoyées au serveur (src/synchro.js), qui les fait
    suivre d'un appareil à l'autre.
    ================================================================== */
 
@@ -41,7 +43,7 @@ const mesurer = () => Object.fromEntries(entreesStockage.map((e) => [e.cle, poid
 
 function poids(cle) {
   try {
-    const valeur = localStorage.getItem(cle);
+    const valeur = cle === CLE_THEME ? localStorage.getItem(cle) : stockage.getItem(cle);
     if (valeur === null) return null;
     return `${new Blob([valeur]).size} o`;
   } catch {
@@ -78,7 +80,8 @@ export default function Parametres() {
     entreesStockage.forEach((e) => {
       if (e.cle === CLE_THEME) return; // on garde le confort visuel
       try {
-        localStorage.removeItem(e.cle);
+        if (e.cle === CLE_THEME) localStorage.removeItem(e.cle);
+        else stockage.removeItem(e.cle);
       } catch {
         /* rien à faire */
       }
@@ -95,7 +98,7 @@ export default function Parametres() {
       <EnTetePage
         surtitre="Réglages"
         titre="Paramètres"
-        texte="L'apparence du site et les données qu'il conserve sur cet appareil."
+        texte="L'apparence du site, et ce qu'il garde de toi."
       />
 
       <Container className="py-10">
@@ -149,7 +152,7 @@ export default function Parametres() {
               <Badge ton={invite ? "neutre" : "brand"}>{invite ? "Mode invité" : "Compte"}</Badge>
               <span className="text-sm text-ink-500 dark:text-ink-400">
                 {invite
-                  ? "Ta progression reste sur cet appareil seulement."
+                  ? "Sans compte, ta progression n'est pas gardée."
                   : `Connecté${session?.identifiant ? ` : ${session.identifiant}` : ""}. Ta progression te suit sur tous tes appareils.`}
               </span>
             </div>
@@ -238,7 +241,7 @@ export default function Parametres() {
               Quand tu termines un QCM, la réponse choisie à chaque question est envoyée,
               sans ton nom ni aucun identifiant. L&apos;équipe voit ainsi quelles questions
               sont le plus ratées, pour mieux les réexpliquer. Ton score et ta progression
-              restent sur cet appareil.
+              ne partent pas avec : ils ne sont gardés que par ton compte.
             </p>
             <label className="mt-4 flex items-center gap-3 text-sm font-medium text-ink-800 dark:text-ink-200">
               <input
@@ -260,13 +263,13 @@ export default function Parametres() {
           <section className="card p-6">
             <h2 className="flex items-center gap-2 text-lg font-semibold text-ink-900 dark:text-white">
               <Icon name="lock" className="size-5" />
-              Mes données sur cet appareil
+              Mes données
             </h2>
             <p className="mt-1.5 max-w-2xl text-sm/6 text-ink-600 dark:text-ink-400">
-              Voici exactement ce que la plateforme conserve dans ce navigateur.{" "}
+              Voici exactement ce que la plateforme garde de toi.{" "}
               {invite
-                ? "En mode invité, rien de tout cela n'est envoyé sur un serveur, et rien ne te suit d'un appareil à l'autre : crée un compte pour retrouver ta progression partout."
-                : "Avec ton compte, ces données y sont aussi enregistrées, et te suivent sur tous tes appareils. Se déconnecter les efface de cet appareil, pas de ton compte."}{" "}
+                ? "Sans compte, rien n'est enregistré : tout cela vit le temps de ta visite et disparaît dès que tu recharges la page ou fermes l'onglet. Crée un compte avec une adresse email et un mot de passe pour que ta progression soit gardée sur le serveur et te suive sur tous tes appareils."
+                : "Ton compte les garde sur le serveur : elles te suivent sur tous tes appareils, et se déconnecter les efface de cet appareil, pas de ton compte."}{" "}
               Tes réponses aux QCM partent aussi, anonymes : voir « Statistiques
               anonymes » plus bas.
             </p>

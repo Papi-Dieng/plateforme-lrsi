@@ -52,8 +52,8 @@ export default class FiletErreur extends Component {
           </h1>
           <p className="mt-2 max-w-sm text-sm/6 text-ink-600 dark:text-ink-400">
             {perimee
-              ? "Recharge la page pour l'afficher. Ta progression est gardée dans ton navigateur : tu ne perds rien."
-              : "Ta progression n'est pas touchée : elle est gardée dans ton navigateur. Recharge la page, ou reviens au tableau de bord. Si le problème revient, signale-le à l'équipe."}
+              ? "Recharge la page pour l'afficher. Avec un compte, ta progression est gardée : tu ne perds rien."
+              : "Avec un compte, ta progression n'est pas touchée : elle est gardée sur le serveur. Recharge la page, ou reviens au tableau de bord. Si le problème revient, signale-le à l'équipe."}
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <button type="button" onClick={() => window.location.reload()} className={`${bouton} bg-brand-600 text-white hover:bg-brand-700`}>

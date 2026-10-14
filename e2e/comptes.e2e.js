@@ -238,6 +238,6 @@ test.describe("comptes", () => {
   test("une ancienne session « de démonstration » devient une visite", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("lrsi-session", JSON.stringify({ mode: "demo", nom: "Awa" })));
     await aller(page, "/parametres");
-    await expect(page.getByText("Ta progression reste sur cet appareil seulement.")).toBeVisible();
+    await expect(page.getByText("Sans compte, ta progression n'est pas gardée.")).toBeVisible();
   });
 });

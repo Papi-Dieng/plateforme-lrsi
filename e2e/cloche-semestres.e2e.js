@@ -1,5 +1,5 @@
 import { matieres } from "../src/data/demonstration.js";
-import { aller, entrerEnInvite, expect, test } from "./outils.js";
+import { aller, entrerAvecCompte, entrerEnInvite, expect, test } from "./outils.js";
 
 /* ==================================================================
    La cloche (ce qu'il y a à faire aujourd'hui) et les semestres (le 1
@@ -22,14 +22,11 @@ test.describe("cloche", () => {
 
   test("un QCM à refaire et un examen demain : la pastille compte 2, chaque entrée mène à sa page", async ({ page }) => {
     await page.clock.install({ time: new Date(`${JOUR}T09:00:00Z`) });
-    await page.addInitScript(() => {
-      localStorage.setItem("lrsi-revisions", JSON.stringify({ "reseaux-bases": { du: "2026-09-27", etape: 0 } }));
-      localStorage.setItem(
-        "lrsi-planning",
-        JSON.stringify({ evaluations: [{ id: "ev1", titre: "Examen de Réseaux", matiere: "reseaux", date: "2026-09-30" }], faites: {}, evenements: [] })
-      );
+    // Une révision et un examen déjà enregistrés : il faut un compte.
+    await entrerAvecCompte(page, {
+      "lrsi-revisions": { "reseaux-bases": { du: "2026-09-27", etape: 0 } },
+      "lrsi-planning": { evaluations: [{ id: "ev1", titre: "Examen de Réseaux", matiere: "reseaux", date: "2026-09-30" }], faites: {}, evenements: [] },
     });
-    await entrerEnInvite(page);
 
     const cloche = page.getByRole("button", { name: "Notifications : 2 à faire aujourd'hui" });
     await expect(cloche).toContainText("2");

@@ -19,8 +19,8 @@ const articles = [
     titre: "En bref",
     paragraphes: [
       comptesActifs
-        ? "Pas de publicité, pas de mesure d'audience, pas de cookie publicitaire. En mode invité, ta fiche profil et ta progression restent dans ton navigateur. Si tu crées un compte, elles sont aussi enregistrées dans ce compte, pour te suivre sur tous tes appareils."
-        : "Pas de compte, pas de publicité, pas de mesure d'audience, pas de cookie déposé par la plateforme. Ta fiche profil et ta progression restent dans ton navigateur, sur ton appareil.",
+        ? "Pas de publicité, pas de mesure d'audience, pas de cookie publicitaire. Sans compte, rien n'est conservé : ta fiche profil et ta progression vivent le temps de ta visite, puis disparaissent. Avec un compte, elles sont enregistrées sur le serveur de la plateforme, pour te suivre sur tous tes appareils."
+        : "Pas de compte, pas de publicité, pas de mesure d'audience, pas de cookie déposé par la plateforme. Ta fiche profil et ta progression ne sont pas conservées : elles vivent le temps de ta visite, puis disparaissent.",
       iaActive
         ? "Pour fonctionner, le site contacte quelques services extérieurs : son hébergeur, son relais, YouTube pour les vidéos, et Google Gemini quand tu utilises un outil d'intelligence artificielle. Chacun est détaillé ci-dessous, avec ce qu'il reçoit."
         : "Pour fonctionner, le site contacte quelques services extérieurs : son hébergeur, son relais et YouTube pour les vidéos. Chacun est détaillé ci-dessous, avec ce qu'il reçoit.",
@@ -36,11 +36,11 @@ const articles = [
   },
   {
     icone: "lock",
-    titre: "Ce qui reste sur ton appareil",
+    titre: "Ce que la plateforme garde de toi",
     paragraphes: [
       comptesActifs
-        ? "Ces informations sont enregistrées dans le stockage local de ton navigateur. En mode invité, elles ne sont envoyées nulle part. Avec un compte, elles sont aussi recopiées dans ce compte (voir plus bas) :"
-        : "Ces informations sont enregistrées dans le stockage local de ton navigateur. Elles ne sont envoyées nulle part, et ne suivent pas d'un appareil à l'autre :",
+        ? "Sans compte, ces informations ne sont ni enregistrées ni envoyées : elles vivent dans la page ouverte et disparaissent au rechargement. Avec un compte, elles sont enregistrées sur le serveur de la plateforme (voir plus bas), et une copie reste sur l'appareil pour travailler hors ligne :"
+        : "Tant que les comptes ne sont pas ouverts, ces informations ne sont ni enregistrées ni envoyées : elles vivent dans la page ouverte et disparaissent au rechargement :",
       {
         liste: [
           ["Ta fiche profil", "Avatar, nom d'utilisateur, âge, téléphone, e-mail, niveau et matricule. Tous ces champs sont facultatifs."],
@@ -198,7 +198,7 @@ export default function Confidentialite() {
             ["Données vendues ou partagées", "Aucune"],
           ]}
           garde={[
-            ["Ta progression, en mode invité", "Sur ton appareil"],
+            ["Ta progression, sans compte", "Pas gardée"],
             ...(comptesActifs ? [["Ton mot de passe", "Chiffré"]] : []),
             ["Statistiques des QCM", "Anonymes"],
           ]}

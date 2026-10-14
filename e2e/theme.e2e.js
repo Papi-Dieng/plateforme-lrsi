@@ -29,7 +29,9 @@ test.describe("thème", () => {
   test("le thème sombre choisi par l'étudiant reste après rechargement", async ({ page }) => {
     await entrerEnInvite(page);
     await aller(page, "/parametres");
-    await page.getByRole("button", { name: "Thème sombre" }).click();
+    // « Thème sombre » dans les paramètres, pas le bouton de la barre du
+    // haut (« Passer en thème sombre »), présent lui aussi sur téléphone.
+    await page.getByRole("button", { name: "Thème sombre", exact: true }).click();
     expect(await sombre(page)).toBe(true);
     await page.reload();
     expect(await sombre(page)).toBe(true);

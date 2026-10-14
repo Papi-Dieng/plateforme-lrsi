@@ -57,7 +57,7 @@ configuration du projet, rien d'autre à régler. Chaque fichier de test vit
 | Fichier testé | Ce qui est vérifié |
 | --- | --- |
 | `src/quizTexte.js` | toutes les façons d'écrire un QCM en texte, erreurs signalées sans rien deviner, aller-retour texte → questions → texte |
-| `src/sauvegarde.js` | aller-retour complet sur un autre appareil, fichiers refusés (autre application, version plus récente, trop gros), aucune donnée de session ou d'admin |
+| `src/sauvegarde.js` | la liste des données de l'étudiant : chaque clé une seule fois, aucune donnée de session ou d'admin, donnée abîmée écartée |
 | `src/revisions.js` | intervalles 2, 5, 12, 30 jours, retour à 2 jours après un échec, rien ne change si on refait un QCM en avance |
 | `src/qcmGeneral.js` | le QCM toutes matières : questions tirées sans doublon, nombre borné par ce qui existe, durée d'une minute par question |
 | `src/analyseMatieres.js` | réponses rangées dans la matière du QCM, aucun verdict sous `MINIMUM_REPONSES`, seuils de force et de faiblesse, chapitres à revoir (pas lus d'abord) |
@@ -82,7 +82,7 @@ téléphone.
 
 | Fichier | Ce qui est parcouru |
 | --- | --- |
-| `e2e/parcours.e2e.js` | entrer en invité, pages réservées, page introuvable, thème gardé ; un QCM tout juste puis tout faux (score, révision dans 2 jours, progression, statistiques anonymes et leur refus) ; une réponse d'exercice corrigée par l'IA (simulée) jusqu'à l'indice, puis juste ; favori, sauvegarde téléchargée puis restaurée dans un navigateur vierge, fichier étranger refusé |
+| `e2e/parcours.e2e.js` | entrer en invité, pages réservées, page introuvable, thème gardé ; un QCM tout juste puis tout faux (score, révision dans 2 jours, progression, statistiques anonymes et leur refus) ; une réponse d'exercice corrigée par l'IA (simulée) jusqu'à l'indice, puis juste ; un favori qui survit à un rechargement, avec un compte |
 | `e2e/pages.e2e.js` | chaque page s'ouvre, sans défilement horizontal ; menu du téléphone et barre latérale ; assistant qui répond sans IA ; mot de passe admin refusé ; vues du planning |
 | `e2e/admin.e2e.js` | « Gérer le contenu » avec le bon mot de passe : chaque onglet, une modification publiée (seul le brouillon modifié part au relais), un exercice sans titre signalé avant de publier |
 | `e2e/devoirs-planning.e2e.js` | un devoir : consignes, minuteur jusqu'à « Temps écoulé », corrigé seulement à la fin, auto-correction bornée au barème, avis de l'IA (ce qui part au relais) et son échec sans IA ; un programme de révision réparti sans IA, ajouté à l'emploi du temps et toujours là après rechargement |
@@ -112,7 +112,7 @@ une trace de chaque test raté, à ouvrir avec
 `npx playwright show-trace <fichier trace.zip>` : on y revoit la page
 étape par étape.
 
-Quand on ajoute une donnée à la sauvegarde, le test « toutes les données de
+Quand on ajoute une donnée de l'étudiant, le test « toutes les données de
 l'étudiant y sont » échoue tant que `src/sauvegarde.test.js` ne la connaît
 pas : c'est voulu, pour ne jamais en oublier une sans le voir.
 
@@ -272,9 +272,9 @@ Limites à connaître :
 - les **vidéos** restent hébergées par YouTube, elles demandent une connexion ;
 - les **comptes**, la connexion Google et l'**assistant IA** demandent le site
   en ligne : le fichier s'utilise en mode invité ;
-- la progression est enregistrée dans le navigateur, et un fichier ouvert
-  depuis le disque ne partage pas cet espace avec le site en ligne : les deux
-  versions ont chacune leur propre progression.
+- sans compte, la progression n'est pas conservée (voir plus bas) : un
+  fichier ouvert depuis le disque sert à consulter, pas à suivre un
+  parcours.
 
 Ce fichier n'est pas versionné, `.gitignore` l'écarte. Il se régénère en une
 commande, et le verser dans l'historique à chaque compilation l'alourdirait
@@ -365,10 +365,9 @@ export const site = {
 ```
 
 Cela met à jour l'en-tête, le pied de page, le titre de l'onglet et toutes les
-pages. Rien d'autre dans le code ne dépend du nom : les données enregistrées
-dans le navigateur utilisent volontairement des clés neutres (`lrsi-theme`,
-`lrsi-scores`), pour que les scores des étudiants survivent à un changement de
-nom.
+pages. Rien d'autre dans le code ne dépend du nom : les données de l'étudiant
+utilisent volontairement des clés neutres (`lrsi-theme`, `lrsi-scores`), pour
+que les scores survivent à un changement de nom.
 
 Baseline actuelle : *Apprendre, réviser, s'entraîner.*
 
@@ -526,7 +525,8 @@ lrsi-platform/
 │   └── verifications.yml     lint, tests et compilation à chaque push
 ├── e2e/                      tests dans un vrai navigateur (Playwright)
 │   ├── outils.js             faux relais IA, entrée en invité, erreurs relevées
-│   ├── parcours.e2e.js       QCM, exercice, favoris, sauvegarde…
+│   ├── parcours.e2e.js       QCM, exercice, favoris…
+│   ├── donnees-compte.e2e.js sans compte, rien n'est gardé
 │   ├── site-vide.e2e.js      chaque page sans aucun contenu publié
 │   ├── qcm-toutes-matieres.e2e.js  le QCM tiré dans toutes les matières
 │   ├── historique-ia.e2e.js  la barre latérale des discussions de l'assistant
@@ -625,7 +625,7 @@ lrsi-platform/
 │   │   ├── Profil.jsx            fiche : avatar, pseudo, coordonnées
 │   │   ├── Progression.jsx       suivi des acquis
 │   │   ├── Favoris.jsx           tout ce qui est mis de côté
-│   │   ├── Parametres.jsx        thème, sauvegarde, données locales
+│   │   ├── Parametres.jsx        thème, données de l'étudiant, compte
 │   │   ├── Conditions.jsx        conditions d'utilisation
 │   │   ├── Confidentialite.jsx   politique de confidentialité
 │   │   ├── MentionsLegales.jsx   éditeur et hébergeurs
@@ -642,6 +642,7 @@ lrsi-platform/
 │   │   ├── EducationIA.jsx       éduquer l'IA par matière (admin)
 │   │   └── StatsAdmin.jsx        statistiques des QCM (admin)
 │   ├── session.js            contexte et hook de session (voir section 7)
+│   ├── stockage.js           où vont les données : compte (serveur), ou rien
 │   ├── FournisseurSession.jsx  le fournisseur, séparé du hook
 │   ├── assistant.js          moteur du guide de révision
 │   ├── ia.js                 appel au relais IA, si `urlIA` est renseignée
@@ -686,6 +687,43 @@ matière : il n'y a pas de niveau intermédiaire. Chaque matière porte un
 `nomCourt`, utilisé pour les pastilles de filtre et les badges, là où le nom
 complet serait trop long. Le jour où la plateforme s'ouvrira à d'autres
 formations, la filière deviendra un niveau au-dessus de la matière.
+
+### Où vont les données de l'étudiant
+
+**Depuis le 14 octobre 2026, le navigateur ne garde plus rien tout seul.**
+La progression (scores, exercices, chapitres lus, favoris, planning,
+révisions, discussions avec l'assistant, fiche profil) n'est conservée que
+par un compte — inscription par email et mot de passe — et c'est le serveur
+qui la garde : `src/synchro.js` la recopie dans la table `donnees_etudiants`
+du projet Supabase.
+
+Tout passe par **`src/stockage.js`**, le seul endroit qui décide où écrire :
+
+| Qui | Où vont ses données | Ce qui survit à un rechargement |
+| --- | --- | --- |
+| Invité | en mémoire vive, dans la page ouverte | rien |
+| Compte | `localStorage` (copie locale, pour le hors ligne), puis le serveur | tout, sur tous ses appareils |
+
+Trois conséquences à connaître avant de toucher à ce code :
+
+- une donnée de l'étudiant s'écrit avec `stockage`, jamais avec
+  `localStorage` ; les réglages de l'appareil (thème, refus des
+  statistiques, rappels, caches du contenu et des couvertures), eux,
+  restent dans `localStorage` ;
+- toute nouvelle donnée de l'étudiant doit être ajoutée à la liste
+  `DONNEES` de `src/sauvegarde.js`, sinon elle ne part pas au serveur et
+  n'est pas effacée à la déconnexion ;
+- un test dans le navigateur qui veut des données déjà là, ou qui recharge
+  la page pour voir ce qui survit, passe par `entrerAvecCompte()`
+  (`e2e/outils.js`), qui simule Supabase. `e2e/donnees-compte.e2e.js`
+  vérifie l'autre moitié de la règle : sans compte, un favori disparaît au
+  rechargement.
+
+Le **fichier de sauvegarde JSON** (télécharger ses données, les recharger
+ailleurs) a été retiré le même jour : il n'était plus relié à aucune page, et
+le compte le remplace.
+
+---
 
 **Le principe à retenir** : tout le contenu pédagogique vit dans `src/data/`,
 jamais dans les pages. Ajouter un cours, un exercice ou un QCM ne demande donc

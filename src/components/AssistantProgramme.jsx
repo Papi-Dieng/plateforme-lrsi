@@ -5,6 +5,7 @@ import { ETAPES_PROGRAMME } from "../chargementIA";
 import { cx } from "./classes";
 import { ajouterJours, aujourdhui } from "../planning";
 import { versDate } from "../emploiDuTemps";
+import { stockage } from "../stockage";
 import {
   CLE_DISPONIBILITES,
   JOURS_SEMAINE,
@@ -36,7 +37,7 @@ import {
 
 function lireDispos() {
   try {
-    const brut = JSON.parse(localStorage.getItem(CLE_DISPONIBILITES) ?? "null");
+    const brut = JSON.parse(stockage.getItem(CLE_DISPONIBILITES) ?? "null");
     return brut && typeof brut === "object" ? { ...disponibilitesParDefaut(), ...brut } : disponibilitesParDefaut();
   } catch {
     return disponibilitesParDefaut();
@@ -146,7 +147,7 @@ export default function AssistantProgramme({ contexte, evenements, session: exis
   /* ---- Générer ---- */
   const generer = async () => {
     try {
-      localStorage.setItem(CLE_DISPONIBILITES, JSON.stringify(dispos));
+      stockage.setItem(CLE_DISPONIBILITES, JSON.stringify(dispos));
     } catch {
       /* les disponibilités seront redemandées */
     }

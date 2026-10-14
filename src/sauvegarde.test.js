@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { DONNEES, construireSauvegarde, lireSauvegarde, restaurerSauvegarde } from "./sauvegarde";
+import { DONNEES, construireSauvegarde } from "./sauvegarde";
 
 /* Un faux localStorage : un simple dictionnaire de chaînes. */
 function stockage(initial = {}) {
@@ -56,78 +56,5 @@ describe("construireSauvegarde", () => {
 
   test("un appareil vide donne une sauvegarde vide", () => {
     expect(construireSauvegarde(stockage().lire).donnees).toEqual({});
-  });
-});
-
-describe("aller-retour", () => {
-  test("restaurer sur un autre appareil redonne exactement les mêmes données", () => {
-    const fichier = JSON.stringify(construireSauvegarde(stockage(APPAREIL).lire));
-    const lue = lireSauvegarde(fichier);
-    expect(lue.erreur).toBeUndefined();
-
-    const autre = stockage();
-    restaurerSauvegarde(lue.donnees, autre.ecrire);
-    expect(Object.fromEntries(autre.valeurs)).toEqual(APPAREIL);
-  });
-
-  test("une ancienne sauvegarde avec des vidéos ajoutées par l'étudiant reste lisible, sans elles", () => {
-    // Avant, un étudiant pouvait ajouter des vidéos ; c'est réservé à l'admin.
-    const ancienne = JSON.stringify({
-      application: "sunu-cours",
-      format: 1,
-      donnees: { "lrsi-favoris": [], "lrsi-videos": [{ id: "perso-AbCdEf12345", youtubeId: "AbCdEf12345" }] },
-    });
-    const lue = lireSauvegarde(ancienne);
-    expect(Object.keys(lue.donnees)).toEqual(["lrsi-favoris"]);
-  });
-
-  test("le thème reste une chaîne brute, pas du JSON", () => {
-    const lue = lireSauvegarde(JSON.stringify(construireSauvegarde(stockage({ "lrsi-theme": "light" }).lire)));
-    const autre = stockage();
-    restaurerSauvegarde(lue.donnees, autre.ecrire);
-    expect(autre.lire("lrsi-theme")).toBe("light");
-  });
-
-  test("une donnée absente de la sauvegarde n'est pas effacée", () => {
-    const lue = lireSauvegarde(JSON.stringify(construireSauvegarde(stockage({ "lrsi-theme": "dark" }).lire)));
-    const autre = stockage({ "lrsi-scores": '{"a":1}' });
-    restaurerSauvegarde(lue.donnees, autre.ecrire);
-    expect(autre.lire("lrsi-scores")).toBe('{"a":1}');
-  });
-});
-
-describe("lireSauvegarde : un fichier est relu avec méfiance", () => {
-  const fichier = (contenu) => JSON.stringify({ application: "sunu-cours", format: 1, creeLe: "2026-09-24T10:00:00.000Z", ...contenu });
-
-  test("résume ce qui sera remplacé", () => {
-    const lue = lireSauvegarde(fichier({ donnees: { "lrsi-favoris": [1, 2], "lrsi-disponibilites": {} } }));
-    expect(lue.resume).toEqual(["2 favoris", "tes disponibilités de la semaine"]);
-    expect(lue.creeLe).toBe("2026-09-24T10:00:00.000Z");
-  });
-
-  test("ne garde que les clés connues, de la bonne forme", () => {
-    const lue = lireSauvegarde(
-      fichier({ donnees: { "lrsi-favoris": [], "lrsi-scores": "pas un objet", "lrsi-session": {}, autre: 1 } })
-    );
-    expect(Object.keys(lue.donnees)).toEqual(["lrsi-favoris"]);
-  });
-
-  test.each([
-    ["un fichier qui n'est pas du JSON", "bonjour", "pas une sauvegarde lisible"],
-    ["le fichier d'une autre application", JSON.stringify({ application: "autre", donnees: {} }), "pas une sauvegarde de la plateforme"],
-    ["un fichier sans données", JSON.stringify({ application: "sunu-cours", format: 1 }), "pas une sauvegarde de la plateforme"],
-    ["une version plus récente du site", JSON.stringify({ application: "sunu-cours", format: 2, donnees: {} }), "plus récente"],
-    ["une sauvegarde vide", JSON.stringify({ application: "sunu-cours", format: 1, donnees: {} }), "vide"],
-    ["une sauvegarde sans rien de valable", JSON.stringify({ application: "sunu-cours", format: 1, donnees: { "lrsi-theme": "rose" } }), "vide"],
-  ])("refuse %s", (_nom, texte, message) => {
-    expect(lireSauvegarde(texte).erreur).toContain(message);
-  });
-
-  test("refuse un fichier de plus de 2 Mo", () => {
-    expect(lireSauvegarde("x".repeat(2 * 1024 * 1024 + 1)).erreur).toContain("trop gros");
-  });
-
-  test("refuse ce qui n'est pas du texte", () => {
-    expect(lireSauvegarde(null).erreur).toBeTruthy();
   });
 });

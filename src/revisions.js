@@ -1,4 +1,5 @@
 import { ajouterJours, aujourdhui } from "./planning";
+import { stockage } from "./stockage";
 
 /* ==================================================================
    Révision espacée des QCM.
@@ -26,7 +27,7 @@ export const INTERVALLES = [2, 5, 12, 30];
 
 export function lireRevisions() {
   try {
-    const brut = JSON.parse(localStorage.getItem(CLE_REVISIONS) ?? "null");
+    const brut = JSON.parse(stockage.getItem(CLE_REVISIONS) ?? "null");
     return brut && typeof brut === "object" && !Array.isArray(brut) ? brut : {};
   } catch {
     return {};
@@ -35,7 +36,7 @@ export function lireRevisions() {
 
 function ecrire(revisions) {
   try {
-    localStorage.setItem(CLE_REVISIONS, JSON.stringify(revisions));
+    stockage.setItem(CLE_REVISIONS, JSON.stringify(revisions));
   } catch {
     /* stockage indisponible : la révision ne sera pas programmée */
   }

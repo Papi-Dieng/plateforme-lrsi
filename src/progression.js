@@ -1,9 +1,11 @@
+import { stockage } from "./stockage";
 /* ==================================================================
    Progression de l'étudiant.
 
-   Tout est conservé dans le navigateur (clés CLES ci-dessous). En mode
-   invité, rien n'en sort ; avec un compte, src/synchro.js recopie ces
-   données dans le compte et les ramène sur les autres appareils.
+   Tout passe par src/stockage.js (clés CLES ci-dessous) : sans compte,
+   rien n'est conservé au-delà de la page affichée ; avec un compte, la
+   progression est rangée sur l'appareil puis envoyée au serveur par
+   src/synchro.js, qui la ramène sur les autres appareils.
    ================================================================== */
 
 export const CLES = {
@@ -18,7 +20,7 @@ export const CLES = {
 
 function lire(cle, defaut) {
   try {
-    const brut = JSON.parse(localStorage.getItem(cle) ?? "null");
+    const brut = JSON.parse(stockage.getItem(cle) ?? "null");
     return brut ?? defaut;
   } catch {
     return defaut;
@@ -27,7 +29,7 @@ function lire(cle, defaut) {
 
 function ecrire(cle, valeur) {
   try {
-    localStorage.setItem(cle, JSON.stringify(valeur));
+    stockage.setItem(cle, JSON.stringify(valeur));
   } catch {
     /* stockage indisponible : la progression n'est pas conservée */
   }
@@ -203,6 +205,9 @@ export function retirerFavori(type, reference) {
 
 export function oublierAnciennesVideos() {
   try {
+    // Ces vidéos-là ont été écrites dans le navigateur par une version
+    // du site qui gardait tout : c'est bien localStorage qu'il faut
+    // nettoyer, pas le stockage du jour (src/stockage.js).
     localStorage.removeItem("lrsi-videos");
   } catch {
     /* stockage indisponible : rien à effacer */
@@ -258,7 +263,7 @@ export function historiqueDevoirs(devoirs = lireDevoirs()) {
 
 export function reinitialiserProgression() {
   try {
-    Object.values(CLES).forEach((cle) => localStorage.removeItem(cle));
+    Object.values(CLES).forEach((cle) => stockage.removeItem(cle));
   } catch {
     /* rien à faire : le stockage est déjà inaccessible */
   }

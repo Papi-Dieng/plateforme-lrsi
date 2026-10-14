@@ -150,13 +150,13 @@ export default function Bienvenue() {
               <button
                 type="button"
                 onClick={entrerEnInvite}
-                className="inline-flex items-center gap-2 rounded-xl bg-lime-400 px-5 py-3 text-sm font-semibold text-ink-950 transition-colors hover:bg-lime-300"
+                className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
               >
                 Entrer en mode invité
                 <Icon name="arrow" className="size-4" />
               </button>
               <span className="text-sm text-ink-500 dark:text-ink-400">
-                Sans compte, sans inscription.
+                Sans compte, sans inscription. Ta progression n'est alors pas gardée.
               </span>
             </div>
           </div>
@@ -173,7 +173,7 @@ export default function Bienvenue() {
           <ul className="grid gap-6 sm:grid-cols-3">
             {reperes.map((r) => (
               <li key={r.titre} className="grid grid-cols-[auto_1fr] items-center gap-x-4">
-                <span aria-hidden="true" className="row-span-2 grid size-12 shrink-0 place-items-center rounded-2xl bg-lime-400/25 text-accent-700 dark:bg-lime-400/15 dark:text-lime-300">
+                <span aria-hidden="true" className="row-span-2 grid size-12 shrink-0 place-items-center rounded-2xl bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-200">
                   <Icon name={r.icone} className="size-6" />
                 </span>
                 <p className="self-end text-sm text-ink-600 dark:text-ink-400">
@@ -230,7 +230,7 @@ function Illustration() {
     <div className="relative mx-auto w-full max-w-lg">
       {/* Halo */}
       <div
-        className="pointer-events-none absolute -top-8 left-4 size-56 rounded-full bg-lime-400/40 blur-3xl dark:bg-lime-400/15"
+        className="pointer-events-none absolute -top-8 left-4 size-56 rounded-full bg-brand-400/35 blur-3xl dark:bg-brand-500/20"
         aria-hidden="true"
       />
 
@@ -286,8 +286,8 @@ function Illustration() {
         </svg>
         <span
           className={cx(
-            "grid size-14 place-items-center rounded-full bg-ink-950 text-lime-400 sm:size-16",
-            "dark:bg-white dark:text-ink-950"
+            "grid size-14 place-items-center rounded-full bg-white text-brand-600 ring-1 ring-ink-200 sm:size-16",
+            "dark:bg-ink-100 dark:ring-ink-300"
           )}
         >
           <Icon name="graduation" className="size-7" />

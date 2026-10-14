@@ -1,6 +1,6 @@
 import { exercices, matieres, qcms } from "../src/data/demonstration.js";
 import { site } from "../src/data/site.js";
-import { aller, entrerEnInvite, expect, test } from "./outils.js";
+import { aller, entrerAvecCompte, entrerEnInvite, expect, test } from "./outils.js";
 
 /* ==================================================================
    Les parcours principaux d'un étudiant, dans un vrai navigateur.
@@ -229,7 +229,8 @@ test.describe("exercice : répondre question par question, ou tout écrire", () 
 test.describe("favoris", () => {
   test("un favori s'allume, reste après un rechargement, et s'éteint", async ({ page }) => {
     const exercice = exercices[0];
-    await entrerEnInvite(page);
+    // Ce qui survit à un rechargement n'existe qu'avec un compte.
+    await entrerAvecCompte(page);
     await aller(page, `/exercices/${exercice.id}`);
     const favori = page.getByRole("button", { name: /aux favoris$/ }).first();
     await favori.click();

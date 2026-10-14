@@ -671,7 +671,7 @@ export default function Assistant() {
             <p className="mt-2 text-center text-xs text-[#a99bb3]">
               {iaActive
                 ? "Tes questions et tes images sont envoyées à Google Gemini : rien de personnel, pas de photo de personne. L'IA peut se tromper, le cours fait foi. "
-                : "Tout se passe dans ton navigateur. "}
+                : "Rien n'est envoyé à une IA. "}
               <Link to="/confidentialite" className="text-[#f4eef7] underline underline-offset-2">
                 Confidentialité
               </Link>

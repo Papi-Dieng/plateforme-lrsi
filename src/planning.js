@@ -1,3 +1,4 @@
+import { stockage } from "./stockage";
 /* ==================================================================
    Planning de révision.
 
@@ -46,7 +47,7 @@ const vide = () => ({ evaluations: [], faites: {}, evenements: [] });
 
 export function lirePlanning() {
   try {
-    const brut = JSON.parse(localStorage.getItem(CLE_PLANNING) ?? "null");
+    const brut = JSON.parse(stockage.getItem(CLE_PLANNING) ?? "null");
     if (!brut || !Array.isArray(brut.evaluations)) return vide();
     return {
       evaluations: brut.evaluations,
@@ -60,7 +61,7 @@ export function lirePlanning() {
 
 export function ecrirePlanning(planning) {
   try {
-    localStorage.setItem(CLE_PLANNING, JSON.stringify(planning));
+    stockage.setItem(CLE_PLANNING, JSON.stringify(planning));
   } catch {
     /* stockage indisponible : le planning ne sera pas gardé */
   }
