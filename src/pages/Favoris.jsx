@@ -9,7 +9,7 @@ import {
   retirerFavori,
 } from "../progression";
 import { getMatiere } from "../data/matieres";
-import { getExercice } from "../data/exercices";
+import { getExercice, niveauExercice } from "../data/exercices";
 import { getQcm } from "../data/qcm";
 import { videosSuggerees } from "../data/videos";
 
@@ -69,7 +69,7 @@ function resoudre(favori) {
       detail: e.enonce,
       matiere: getMatiere(e.matiere),
       lien: `/exercices/${e.id}`,
-      complement: e.difficulte,
+      complement: niveauExercice(e, getMatiere(e.matiere)),
     };
   }
 

@@ -55,7 +55,13 @@ export function EditeurExercice({ element: e, changer, matieres, motDePasse }) {
       <Champ label="Titre" value={e.titre} maxLength={150} onChange={(ev) => changer({ titre: ev.target.value })} />
       <div className="grid gap-4 sm:grid-cols-[1fr_auto_8rem]">
         <Choix label="Matière" value={e.matiere} options={optionsMatieres(matieres)} onChange={(ev) => changer({ matiere: ev.target.value })} />
-        <Segments label="Difficulté" valeur={e.difficulte} options={["Facile", "Moyen", "Difficile"]} onChange={(d) => changer({ difficulte: d })} />
+        {/* « Aucun » : l'exercice n'affiche pas de niveau (src/data/exercices.js). */}
+        <Segments
+          label="Difficulté"
+          valeur={e.difficulte || "Aucun"}
+          options={["Aucun", "Facile", "Moyen", "Difficile"]}
+          onChange={(d) => changer({ difficulte: d === "Aucun" ? "" : d })}
+        />
         <Champ label="Durée" value={e.duree} maxLength={20} placeholder="20 min" onChange={(ev) => changer({ duree: ev.target.value })} />
       </div>
       <Champ

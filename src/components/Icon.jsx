@@ -76,6 +76,15 @@ const paths = {
   moon: <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5" />,
   menu: <path d="M3.5 7h17M3.5 12h17M3.5 17h17" />,
   external: <path d="M14 4h6v6M20 4l-9 9M18 14v5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 19V8a1.5 1.5 0 0 1 1.5-1.5H10" />,
+  // Deux flèches en rond : « chaque semaine », « à refaire ».
+  repeter: <path d="M20 11.5a8 8 0 0 0-13.9-5.4L3 9M3 4v5h5M4 12.5a8 8 0 0 0 13.9 5.4L21 15M21 20v-5h-5" />,
+  // Triangle d'avertissement : un problème à corriger, sans gravité.
+  alerte: (
+    <>
+      <path d="M12 3.5 2.8 19.5a1.4 1.4 0 0 0 1.2 2h16a1.4 1.4 0 0 0 1.2-2z" />
+      <path d="M12 9.5v4.5M12 17.6v.01" />
+    </>
+  ),
   lock: (
     <>
       <rect x="4.5" y="10" width="15" height="11" rx="2.5" />

@@ -70,7 +70,8 @@ function PuceProgramme({ element, onOuvrir }) {
         element.fait && "line-through opacity-60"
       )}
     >
-      {element.type === "evaluation" ? "🎯 " : element.type === "revision" ? "↻ " : ""}
+      {element.type === "evaluation" && <Icon name="target" className="mr-1 inline size-3 align-[-1px]" />}
+      {element.type === "revision" && <Icon name="repeter" className="mr-1 inline size-3 align-[-1px]" />}
       {element.titre}
     </button>
   );
@@ -274,8 +275,8 @@ function GrilleHoraire({ jours, evenements, elementsDuJour, onCreer, onOuvrir, o
                     <span className="block truncate text-xs font-semibold">{e.titre || "Sans titre"}</span>
                     <span className="block truncate text-[10px] opacity-90">
                       {e.debut}–{e.fin}
-                      {e.hebdo ? " · ↻" : ""}
-                      {e.genere ? " · ✦" : ""}
+                      {e.hebdo && <Icon name="repeter" className="ml-1 inline size-2.5 align-[-1px]" />}
+                      {e.genere && <Icon name="sparkles" className="ml-1 inline size-2.5 align-[-1px]" />}
                     </span>
                     {jours.length === 1 && e.description && <span className="mt-0.5 block truncate text-[11px] opacity-90">{e.description}</span>}
                   </button>
@@ -334,7 +335,12 @@ function VueListe({ depuis, evenements, elementsDuJour, onOuvrir, onOuvrirProgra
                       <Icon name="clock" className="size-3.5" />
                       {e.debut}–{e.fin}
                       <span className={cx("rounded px-1.5 py-0.5", couleur(e.couleur).clair)}>{e.categorie}</span>
-                      {e.hebdo && <span>↻ chaque semaine</span>}
+                      {e.hebdo && (
+                        <span className="inline-flex items-center gap-1">
+                          <Icon name="repeter" className="size-3.5" />
+                          chaque semaine
+                        </span>
+                      )}
                     </span>
                   </span>
                 </button>
@@ -393,7 +399,12 @@ function FenetreEvenement({ evenement, nouveau, matieres, onEnregistrer, onSuppr
     <Fenetre titre={nouveau ? "Nouvel événement" : "Modifier l'événement"} onFermer={onFermer}>
       {(e.genere || e.lien) && (
         <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl bg-accent-50 px-3 py-2.5 text-sm text-accent-800 dark:bg-accent-500/10 dark:text-accent-200">
-          {e.genere && <span>✦ Séance de ton programme de révision.</span>}
+          {e.genere && (
+            <span className="inline-flex items-center gap-1.5">
+              <Icon name="sparkles" className="size-4" />
+              Séance de ton programme de révision.
+            </span>
+          )}
           {e.lien && (
             <Link to={e.lien} className="font-semibold underline">
               Ouvrir le contenu
@@ -724,7 +735,9 @@ export default function EmploiDuTemps({ evenements, onChange, elementsDuJour, ma
 
       <p className="text-xs text-ink-500 dark:text-ink-400">
         Clique sur un créneau vide pour y ajouter un cours ; sur ordinateur, fais glisser un événement pour le déplacer.
-        En haut de chaque jour : ton programme de révision (🎯 évaluation, ↻ QCM à refaire).
+        En haut de chaque jour : ton programme de révision (
+        <Icon name="target" className="inline size-3.5 align-[-2px]" /> évaluation,{" "}
+        <Icon name="repeter" className="inline size-3.5 align-[-2px]" /> QCM à refaire).
       </p>
 
       {edition && (

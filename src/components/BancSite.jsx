@@ -38,7 +38,7 @@ function rapportMarkdown(lignes) {
     `${new Date().toLocaleString("fr-FR")} · ${reussis} / ${lignes.length} réussis\n`,
     ...lignes.map((l) =>
       [
-        `## ${l.problemes?.length === 0 ? "✅" : "❌"} ${l.nom}\n`,
+        `## ${l.problemes?.length === 0 ? "OK" : "A REVOIR"} ${l.nom}\n`,
         `**Question :** ${l.question}\n`,
         l.erreur ? `**Erreur :** ${l.erreur}\n` : "",
         l.problemes?.length ? `**Problèmes :** ${l.problemes.join(" ; ")}\n` : "",

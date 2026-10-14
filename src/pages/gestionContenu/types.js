@@ -53,7 +53,7 @@ export const TYPES = {
       explication: "",
     }),
     titre: (e) => e.titre,
-    detail: (e) => `${e.difficulte}${e.pdfEnonce ? (e.enonce ? " · texte + PDF" : " · PDF") : ""}`,
+    detail: (e) => `${e.difficulte || "Sans niveau"}${e.pdfEnonce ? (e.enonce ? " · texte + PDF" : " · PDF") : ""}`,
   },
   qcms: {
     Editeur: EditeurQcm,

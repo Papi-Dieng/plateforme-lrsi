@@ -305,11 +305,13 @@ export function ExamensListe() {
                     <p className="mt-0.5 text-sm text-ink-600 dark:text-ink-300">{[nomMatiere(a.matiere), a.annee, a.session].filter(Boolean).join(" · ")}</p>
                     <div className="mt-3 flex flex-wrap gap-2.5 text-sm font-bold">
                       <a href={a.lienSujet} target="_blank" rel="noopener noreferrer" className="rounded-xl border border-ink-200 px-3 py-2 text-ink-950 hover:bg-ink-50 dark:border-ink-700 dark:text-white dark:hover:bg-ink-800">
-                        Sujet ↗
+                        Sujet{" "}
+                        <Icon name="external" className="inline size-3.5 align-[-2px]" />
                       </a>
                       {a.lienCorrige && (
                         <a href={a.lienCorrige} target="_blank" rel="noopener noreferrer" className="rounded-xl border border-ink-200 px-3 py-2 text-ink-950 hover:bg-ink-50 dark:border-ink-700 dark:text-white dark:hover:bg-ink-800">
-                          Corrigé ↗
+                          Corrigé{" "}
+                          <Icon name="external" className="inline size-3.5 align-[-2px]" />
                         </a>
                       )}
                     </div>

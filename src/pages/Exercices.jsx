@@ -10,7 +10,7 @@ import { questionsDe } from "../questionsExercice";
 import { Bouton, Container, EtatVide } from "../components/ui";
 import { QUADRILLAGE, mono } from "../components/styleAdmin";
 import { cx } from "../components/classes";
-import { exercices, getExercice } from "../data/exercices";
+import { difficultes, exercices, getExercice, niveauExercice } from "../data/exercices";
 import { getMatiere, matieres, nomMatiere } from "../data/matieres";
 import { themeMatiere } from "../data/couleurs";
 import { urlPdf } from "../contenu";
@@ -28,6 +28,27 @@ import BoutonFavori from "../components/BoutonFavori";
    l'exercice et la suite dans la matière.
    ================================================================== */
 
+
+/* Le niveau d'un exercice : facultatif, et une matière peut n'en
+   vouloir aucun (voir niveauExercice, src/data/exercices.js). */
+const STYLE_DIFFICULTE = {
+  Facile: "bg-lime-100 text-lime-900 dark:bg-lime-400/15 dark:text-lime-200",
+  Moyen: "bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300",
+  Difficile: "bg-flame-100 text-flame-800 dark:bg-flame-500/15 dark:text-flame-300",
+};
+
+const PLURIELS = { Facile: "faciles", Moyen: "moyens", Difficile: "difficiles" };
+
+const niveau = (e) => niveauExercice(e, getMatiere(e.matiere));
+
+function Difficulte({ valeur, className }) {
+  if (!valeur) return null;
+  return (
+    <span className={cx("inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold", STYLE_DIFFICULTE[valeur], className)}>
+      {valeur}
+    </span>
+  );
+}
 
 const numero = (n) => String(n).padStart(2, "0");
 const rang = (e) => exercices.findIndex((x) => x.id === e.id) + 1;
@@ -132,6 +153,7 @@ const ETAPES = [
 export function Exercices() {
   const [recherche, setRecherche] = useState("");
   const [matiere, setMatiere] = useState("toutes");
+  const [difficulte, setDifficulte] = useState("toutes");
   const champRecherche = useRef(null);
 
   // « / » place le curseur dans la recherche, comme sur beaucoup de sites.
@@ -152,14 +174,20 @@ export function Exercices() {
   const q = normalise(recherche.trim());
   const resultats = exercices.filter((e) => {
       if (matiere !== "toutes" && e.matiere !== matiere) return false;
+      if (difficulte !== "toutes" && niveau(e) !== difficulte) return false;
       if (!q) return true;
       const corpus = normalise([e.titre, e.enonce, ...e.tags, nomMatiere(e.matiere)].join(" "));
       return corpus.includes(q);
   });
 
+  // Le filtre par niveau n'apparaît que si des exercices en ont un.
+  const parDifficulte = Object.fromEntries(difficultes.map((d) => [d, exercices.filter((e) => niveau(e) === d).length]));
+  const avecNiveaux = difficultes.some((d) => parDifficulte[d] > 0);
+
   const chiffres = [
     [exercices.length, `exercice${exercices.length > 1 ? "s" : ""}`],
     [matieresAvecExercices.length, `matière${matieresAvecExercices.length > 1 ? "s" : ""}`],
+    ...difficultes.filter((d) => parDifficulte[d] > 0).map((d) => [parDifficulte[d], parDifficulte[d] > 1 ? PLURIELS[d] : d.toLowerCase()]),
   ];
 
   return (
@@ -243,6 +271,25 @@ export function Exercices() {
               </Pastille>
             ))}
           </div>
+          {avecNiveaux && (
+            <>
+              <p className={cx("text-[11px] font-bold text-ink-500 dark:text-ink-400", mono)} id="niveau-exercices">
+                NIVEAU
+              </p>
+              <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-labelledby="niveau-exercices">
+                <Pastille actif={difficulte === "toutes"} onClick={() => setDifficulte("toutes")} nombre={exercices.length}>
+                  Tous niveaux
+                </Pastille>
+                {difficultes
+                  .filter((d) => parDifficulte[d] > 0)
+                  .map((d) => (
+                    <Pastille key={d} actif={difficulte === d} onClick={() => setDifficulte(d)} nombre={parDifficulte[d]}>
+                      {d}
+                    </Pastille>
+                  ))}
+              </div>
+            </>
+          )}
         </div>
 
         <p className="mt-8 text-[15px] text-ink-600 dark:text-ink-300" role="status">
@@ -266,6 +313,7 @@ export function Exercices() {
                 onClick={() => {
                   setRecherche("");
                   setMatiere("toutes");
+                  setDifficulte("toutes");
                 }}
               >
                 Réinitialiser les filtres
@@ -292,6 +340,7 @@ export function Exercices() {
                         <BoutonFavori type="exercice" reference={e.id} libelle={e.titre} variante="encadre" taille="lg" />
                       </div>
                       <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[13px] text-ink-600 dark:text-ink-300">
+                        <Difficulte valeur={niveau(e)} />
                         <span className="inline-flex items-center gap-1.5 font-semibold text-ink-800 dark:text-ink-200">
                           <Point matiere={e.matiere} />
                           {getMatiere(e.matiere)?.nomCourt ?? nomMatiere(e.matiere)}
@@ -439,7 +488,8 @@ function CorrectionSombre({ exercice }) {
             className="inline-flex items-center gap-2 text-sm font-bold text-[#8eaaff] hover:underline"
           >
             <Icon name="file" className="size-4" />
-            Télécharger la correction en PDF ↗
+            Télécharger la correction en PDF{" "}
+            <Icon name="external" className="inline size-3.5 align-[-2px]" />
           </a>
         )}
       </div>
@@ -535,6 +585,12 @@ function DetailExercice({ exerciceId }) {
             <i aria-hidden="true" className="size-2 rounded-full bg-lime-400" />
             {nomMatiere(exercice.matiere)}
           </span>
+          {niveauExercice(exercice, getMatiere(exercice.matiere)) && (
+            <span className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 px-4 text-sm font-bold">
+              <Icon name="target" className="size-4 text-lime-400" />
+              {niveauExercice(exercice, getMatiere(exercice.matiere))}
+            </span>
+          )}
           {exercice.duree && (
             <span className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 px-4 text-sm font-bold">
               <Icon name="clock" className="size-4 text-lime-400" />
@@ -572,7 +628,8 @@ function DetailExercice({ exerciceId }) {
                   className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-brand-600 hover:underline dark:text-brand-300"
                 >
                   <Icon name="file" className="size-4" />
-                  Télécharger l&apos;énoncé en PDF ↗
+                  Télécharger l&apos;énoncé en PDF{" "}
+                  <Icon name="external" className="inline size-3.5 align-[-2px]" />
                 </a>
               )}
               {exercice.tags.length > 0 && (
@@ -684,6 +741,7 @@ function DetailExercice({ exerciceId }) {
             <dl className="rounded-[24px] border border-ink-200 bg-white px-5 py-2 text-sm dark:border-ink-800 dark:bg-ink-900">
               {[
                 ["Matière", nomMatiere(exercice.matiere)],
+                ...(niveauExercice(exercice, getMatiere(exercice.matiere)) ? [["Difficulté", niveauExercice(exercice, getMatiere(exercice.matiere))]] : []),
                 ...(exercice.duree ? [["Durée", exercice.duree]] : []),
                 ...(exercice.tags.length ? [["Mots-clés", exercice.tags.join(", ")]] : []),
               ].map(([quoi, valeur]) => (

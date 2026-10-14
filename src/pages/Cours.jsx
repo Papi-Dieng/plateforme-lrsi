@@ -12,7 +12,7 @@ import BoutonFavori from "../components/BoutonFavori";
 import FicheRevision from "../components/FicheRevision";
 import { lireChapitresLus, marquerChapitreLu, refChapitre } from "../progression";
 import { tempsMinimumTexte } from "../components/detectionLecture";
-import { exercices } from "../data/exercices";
+import { exercices, niveauExercice } from "../data/exercices";
 import { qcms } from "../data/qcm";
 
 /* ==================================================================
@@ -667,7 +667,9 @@ function PanneauLigne({ matiere, Titre = "h2", partie, choisirPartie, lus, setLu
                         </span>
                         <span className="text-sm font-bold text-ink-900 dark:text-ink-100">
                           {e.titre}
-                          {e.difficulte && <span className="block text-xs font-normal text-ink-600 dark:text-ink-300">{e.difficulte}</span>}
+                          {niveauExercice(e, matiere) && (
+                            <span className="block text-xs font-normal text-ink-600 dark:text-ink-300">{niveauExercice(e, matiere)}</span>
+                          )}
                         </span>
                       </Link>
                     </li>

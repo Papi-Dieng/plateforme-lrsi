@@ -1,0 +1,1 @@
+var e=[`Facile`,`Moyen`,`Difficile`];function t(t,n){return!t?.difficulte||n&&n.difficultes===!1?``:e.includes(t.difficulte)?t.difficulte:``}var n=[],r=e=>n.find(t=>t.id===e);export{t as i,n,r,e as t};

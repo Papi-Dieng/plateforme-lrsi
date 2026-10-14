@@ -8,7 +8,7 @@ import Apercu from "../../components/Apercu";
 import LectureTexte from "../../components/LectureTexte";
 import LecteurPdf from "../../components/LecteurPdf";
 import { deplacer, ICONES_MATIERE } from "./outils";
-import { Bouton, BoutonApercu, Champ, ChampPdf, Choix, Ordre, Zone } from "./champs";
+import { Bouton, BoutonApercu, Champ, ChampPdf, Choix, Ordre, Segments, Zone } from "./champs";
 
 /* ==================================================================
    Éditeur des matières, avec le cours de chaque chapitre.
@@ -96,6 +96,14 @@ export function EditeurMatiere({ element: m, changer, motDePasse }) {
           />
         </div>
       </div>
+      {/* Une matière peut ne pas vouloir de niveaux : ses exercices n'en
+          affichent alors aucun, même s'ils en portent un. */}
+      <Segments
+        label="Niveau de difficulté des exercices"
+        valeur={m.difficultes === false ? "Masqué" : "Affiché"}
+        options={["Affiché", "Masqué"]}
+        onChange={(v) => changer({ difficultes: v === "Affiché" })}
+      />
       <Zone label="Présentation" rows={2} value={m.resume} maxLength={600} onChange={(e) => changer({ resume: e.target.value })} />
 
       <div>

@@ -163,7 +163,8 @@ export default function QuizEnTexte({ qcm, onAjouter, onRemplacer }) {
               {q.explication && <p className="mt-1.5 text-xs text-ink-500 dark:text-ink-400">{q.explication}</p>}
               {q.erreurs.map((e) => (
                 <p key={e} className="mt-1.5 text-xs font-medium text-sun-800 dark:text-sun-400">
-                  ⚠ {e}
+                  <Icon name="alerte" className="mr-1 inline size-3.5 align-[-2px]" />
+                  {e}
                 </p>
               ))}
             </div>

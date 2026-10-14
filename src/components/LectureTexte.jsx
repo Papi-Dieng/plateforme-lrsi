@@ -32,7 +32,8 @@ export default function LectureTexte({ libelle, titre, pdf, icone = "book", ouve
             onClick={marquerLu}
             className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-300"
           >
-            Télécharger le PDF ↗
+            Télécharger le PDF{" "}
+            <Icon name="external" className="inline size-3.5 align-[-2px]" />
           </a>
         )}
       </div>

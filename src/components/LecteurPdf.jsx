@@ -35,7 +35,8 @@ export default function LecteurPdf({ pdf, titre, libelle = "Document en PDF", ou
           onClick={marquerLu}
           className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-300"
         >
-          Ouvrir ou télécharger ↗
+          Ouvrir ou télécharger{" "}
+          <Icon name="external" className="inline size-3.5 align-[-2px]" />
         </a>
       </div>
       <details open={ouvert} onToggle={surBascule} className="group border-t border-ink-200 dark:border-ink-800">
