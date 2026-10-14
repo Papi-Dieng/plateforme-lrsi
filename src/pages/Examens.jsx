@@ -162,7 +162,7 @@ export function ExamensListe() {
 
   const pastille = (actif) =>
     cx(
-      "inline-flex min-h-10 items-center gap-2 rounded-full border px-4 text-sm font-bold transition-colors",
+      "inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-bold whitespace-nowrap transition-colors",
       actif
         ? "border-[#1b2328] bg-[#1b2328] text-white dark:border-white dark:bg-white dark:text-ink-950"
         : "border-ink-200 bg-white text-ink-950 hover:border-ink-400 dark:border-ink-700 dark:bg-ink-900 dark:text-white"
@@ -219,8 +219,15 @@ export function ExamensListe() {
       </header>
 
       <Container className="space-y-14 py-14">
-        {matieresListees.length > 1 && (
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrer par matière">
+        {/* Le choix de la matière était caché tant qu'une seule matière avait
+            un devoir : il est maintenant toujours là (demande du 14 octobre
+            2026), sur une ligne qui défile. */}
+        {matieresListees.length > 0 && (
+          <div>
+          <p className={cx(mono, "text-[11px] font-bold text-ink-500 dark:text-ink-400")} id="matiere-examens">
+            CHOISIS UNE MATIÈRE <span className="font-sans tracking-normal normal-case sm:hidden">— fais glisser pour les voir toutes</span>
+          </p>
+          <div className="-mx-4 mt-2 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-labelledby="matiere-examens">
             <button type="button" onClick={() => setMatiere("toutes")} aria-pressed={matiere === "toutes"} className={pastille(matiere === "toutes")}>
               Toutes
             </button>
@@ -230,6 +237,7 @@ export function ExamensListe() {
                 {m.nomCourt}
               </button>
             ))}
+          </div>
           </div>
         )}
 

@@ -100,7 +100,9 @@ export default function Bibliotheque() {
         </div>
 
         {/* ---- Filtres ---- */}
-        <p className={cx(mono, "mt-8 text-ink-600 uppercase dark:text-ink-300")} id="filtre-biblio">Filtrer par matière</p>
+        <p className={cx(mono, "mt-8 text-ink-600 uppercase dark:text-ink-300")} id="filtre-biblio">
+          Choisis une matière <span className="font-sans tracking-normal normal-case sm:hidden">— fais glisser pour les voir toutes</span>
+        </p>
         {/* Les matières défilent de côté au lieu de s'empiler : sur
             téléphone, c'était une ligne par matière avant les livres. */}
         <div role="group" aria-labelledby="filtre-biblio" className="mt-3 -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">

@@ -10,7 +10,7 @@ import { questionsDe } from "../questionsExercice";
 import { Bouton, Container, EtatVide } from "../components/ui";
 import { QUADRILLAGE, mono } from "../components/styleAdmin";
 import { cx } from "../components/classes";
-import { difficultes, exercices, getExercice } from "../data/exercices";
+import { exercices, getExercice } from "../data/exercices";
 import { getMatiere, matieres, nomMatiere } from "../data/matieres";
 import { themeMatiere } from "../data/couleurs";
 import { urlPdf } from "../contenu";
@@ -28,13 +28,6 @@ import BoutonFavori from "../components/BoutonFavori";
    l'exercice et la suite dans la matière.
    ================================================================== */
 
-const STYLE_DIFFICULTE = {
-  Facile: "bg-lime-100 text-lime-900 dark:bg-lime-400/15 dark:text-lime-200",
-  Moyen: "bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300",
-  Difficile: "bg-flame-100 text-flame-800 dark:bg-flame-500/15 dark:text-flame-300",
-};
-
-const PLURIELS = { Facile: "faciles", Moyen: "moyens", Difficile: "difficiles" };
 
 const numero = (n) => String(n).padStart(2, "0");
 const rang = (e) => exercices.findIndex((x) => x.id === e.id) + 1;
@@ -60,13 +53,6 @@ function extrait(enonce = "") {
   return { texte: nettoyer(code ? premier : enonce), code };
 }
 
-function Difficulte({ valeur, className }) {
-  return (
-    <span className={cx("inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold", STYLE_DIFFICULTE[valeur], className)}>
-      {valeur}
-    </span>
-  );
-}
 
 function Point({ matiere, className }) {
   const m = getMatiere(matiere);
@@ -113,7 +99,7 @@ function Pastille({ actif, onClick, desactive, children, nombre, point }) {
       aria-pressed={actif}
       disabled={desactive}
       className={cx(
-        "inline-flex min-h-10 items-center gap-2 rounded-full border px-3.5 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-45",
+        "inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-3.5 text-sm font-bold whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-45",
         actif
           ? "border-ink-950 bg-ink-950 text-white dark:border-white dark:bg-white dark:text-ink-950"
           : "border-ink-200 bg-white text-ink-950 hover:border-ink-400 dark:border-ink-700 dark:bg-ink-900 dark:text-white"
@@ -146,7 +132,6 @@ const ETAPES = [
 export function Exercices() {
   const [recherche, setRecherche] = useState("");
   const [matiere, setMatiere] = useState("toutes");
-  const [difficulte, setDifficulte] = useState("toutes");
   const champRecherche = useRef(null);
 
   // « / » place le curseur dans la recherche, comme sur beaucoup de sites.
@@ -163,12 +148,10 @@ export function Exercices() {
   }, []);
 
   const matieresAvecExercices = matieres.filter((m) => exercices.some((e) => e.matiere === m.id));
-  const parDifficulte = Object.fromEntries(difficultes.map((d) => [d, exercices.filter((e) => e.difficulte === d).length]));
 
   const q = normalise(recherche.trim());
   const resultats = exercices.filter((e) => {
       if (matiere !== "toutes" && e.matiere !== matiere) return false;
-      if (difficulte !== "toutes" && e.difficulte !== difficulte) return false;
       if (!q) return true;
       const corpus = normalise([e.titre, e.enonce, ...e.tags, nomMatiere(e.matiere)].join(" "));
       return corpus.includes(q);
@@ -177,7 +160,6 @@ export function Exercices() {
   const chiffres = [
     [exercices.length, `exercice${exercices.length > 1 ? "s" : ""}`],
     [matieresAvecExercices.length, `matière${matieresAvecExercices.length > 1 ? "s" : ""}`],
-    ...difficultes.filter((d) => parDifficulte[d] > 0).map((d) => [parDifficulte[d], parDifficulte[d] > 1 ? PLURIELS[d] : d.toLowerCase()]),
   ];
 
   return (
@@ -202,14 +184,14 @@ export function Exercices() {
               ))}
             </dl>
           </div>
-          <ol className="w-full max-w-[420px] overflow-hidden rounded-[24px] border border-white/10 bg-white/4">
+          {/* Les trois étapes côte à côte (demande du 14 octobre 2026) :
+              empilées, elles poussaient la liste des exercices hors de l'écran. */}
+          <ol className="grid w-full max-w-[420px] grid-cols-3 overflow-hidden rounded-[24px] border border-white/10 bg-white/4">
             {ETAPES.map(([titre, texte], i) => (
-              <li key={titre} className="flex gap-4 border-b border-white/10 px-6 py-5 last:border-b-0">
-                <span className={cx("pt-0.5 text-[11px] text-lime-400", mono)}>{numero(i + 1)}</span>
-                <span>
-                  <span className="block font-extrabold">{titre}</span>
-                  <span className="mt-0.5 block text-sm text-ink-300">{texte}</span>
-                </span>
+              <li key={titre} className="border-l border-white/10 px-3 py-4 first:border-l-0 sm:px-4 sm:py-5">
+                <span className={cx("block text-[11px] text-lime-400", mono)}>{numero(i + 1)}</span>
+                <span className="mt-1.5 block text-[13px] leading-tight font-extrabold sm:text-[15px]">{titre}</span>
+                <span className="mt-1 hidden text-sm text-ink-300 sm:block">{texte}</span>
               </li>
             ))}
           </ol>
@@ -240,10 +222,12 @@ export function Exercices() {
               /
             </kbd>
           </div>
-          <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filtrer par matière">
-            <span className={cx("mr-2 text-[11px] font-bold text-ink-500 dark:text-ink-400", mono)} aria-hidden="true">
-              MATIÈRE
-            </span>
+          <p className={cx("text-[11px] font-bold text-ink-500 dark:text-ink-400", mono)} id="matiere-exercices">
+            CHOISIS UNE MATIÈRE <span className="font-sans tracking-normal normal-case sm:hidden">— fais glisser pour les voir toutes</span>
+          </p>
+          {/* Une matière par ligne, c'était tout l'écran avant le premier
+              exercice : elles défilent maintenant de côté. */}
+          <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-labelledby="matiere-exercices">
             <Pastille actif={matiere === "toutes"} onClick={() => setMatiere("toutes")} nombre={exercices.length}>
               Toutes les matières
             </Pastille>
@@ -256,25 +240,6 @@ export function Exercices() {
                 point={<Point matiere={m.id} />}
               >
                 {m.nom}
-              </Pastille>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filtrer par difficulté">
-            <span className={cx("mr-2 text-[11px] font-bold text-ink-500 dark:text-ink-400", mono)} aria-hidden="true">
-              NIVEAU
-            </span>
-            <Pastille actif={difficulte === "toutes"} onClick={() => setDifficulte("toutes")} nombre={exercices.length}>
-              Tous niveaux
-            </Pastille>
-            {difficultes.map((d) => (
-              <Pastille
-                key={d}
-                actif={difficulte === d}
-                onClick={() => setDifficulte(d)}
-                nombre={parDifficulte[d]}
-                desactive={parDifficulte[d] === 0}
-              >
-                {d}
               </Pastille>
             ))}
           </div>
@@ -295,7 +260,6 @@ export function Exercices() {
                 onClick={() => {
                   setRecherche("");
                   setMatiere("toutes");
-                  setDifficulte("toutes");
                 }}
               >
                 Réinitialiser les filtres
@@ -321,7 +285,6 @@ export function Exercices() {
                         <BoutonFavori type="exercice" reference={e.id} libelle={e.titre} variante="encadre" taille="lg" />
                       </div>
                       <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[13px] text-ink-600 dark:text-ink-300">
-                        <Difficulte valeur={e.difficulte} />
                         <span className="inline-flex items-center gap-1.5 font-semibold text-ink-800 dark:text-ink-200">
                           <Point matiere={e.matiere} />
                           {getMatiere(e.matiere)?.nomCourt ?? nomMatiere(e.matiere)}
@@ -565,10 +528,6 @@ function DetailExercice({ exerciceId }) {
             <i aria-hidden="true" className="size-2 rounded-full bg-lime-400" />
             {nomMatiere(exercice.matiere)}
           </span>
-          <span className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 px-4 text-sm font-bold">
-            <Icon name="target" className="size-4 text-lime-400" />
-            {exercice.difficulte}
-          </span>
           {exercice.duree && (
             <span className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 px-4 text-sm font-bold">
               <Icon name="clock" className="size-4 text-lime-400" />
@@ -718,7 +677,6 @@ function DetailExercice({ exerciceId }) {
             <dl className="rounded-[24px] border border-ink-200 bg-white px-5 py-2 text-sm dark:border-ink-800 dark:bg-ink-900">
               {[
                 ["Matière", nomMatiere(exercice.matiere)],
-                ["Difficulté", exercice.difficulte],
                 ...(exercice.duree ? [["Durée", exercice.duree]] : []),
                 ...(exercice.tags.length ? [["Mots-clés", exercice.tags.join(", ")]] : []),
               ].map(([quoi, valeur]) => (
@@ -742,7 +700,6 @@ function DetailExercice({ exerciceId }) {
                         className="block rounded-[16px] border border-ink-200 p-3.5 transition-colors hover:border-brand-300 dark:border-ink-700 dark:hover:border-brand-500/50"
                       >
                         <span className="flex items-center gap-2.5 text-xs text-ink-600 dark:text-ink-300">
-                          <Difficulte valeur={e.difficulte} />
                           {e.duree && (
                             <span className="inline-flex items-center gap-1 font-semibold">
                               <Icon name="clock" className="size-3.5" />

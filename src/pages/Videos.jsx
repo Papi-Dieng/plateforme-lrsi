@@ -141,7 +141,10 @@ export default function Videos() {
 
           {/* Une matière par ligne, c'était toute la hauteur de l'écran avant
               la première vidéo : elles défilent maintenant de côté. */}
-          <div role="group" aria-label="Filtrer par matière" className="mt-5 -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+          <p className={cx(mono, "mt-5", GRIS)} id="matiere-videos">
+            CHOISIS UNE MATIÈRE <span className="font-sans tracking-normal normal-case sm:hidden">— fais glisser pour les voir toutes</span>
+          </p>
+          <div role="group" aria-labelledby="matiere-videos" className="mt-2 -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
             {options.map((o) => (
               <button
                 key={o.value}

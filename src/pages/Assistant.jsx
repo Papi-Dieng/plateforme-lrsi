@@ -297,6 +297,11 @@ export default function Assistant() {
   const [messages, setMessages] = useState(depart.messages);
   const [conversation, setConversation] = useState(depart.id);
   const [historiqueOuvert, setHistoriqueOuvert] = useState(false);
+  // Remonter dans le fil referme la zone d'écriture (demande du 14 octobre
+  // 2026) : sur un téléphone, elle mange le tiers de l'écran pendant la
+  // lecture. Redescendre, ou le bouton « Écrire », la ramène.
+  const [saisieVisible, setSaisieVisible] = useState(true);
+  const defilementPrecedent = useRef(0);
   const [liste, setListe] = useState(() => listeConversations(lireConversations()));
   // Les messages tels qu'ouverts depuis l'historique : les rouvrir ne
   // doit pas changer la date de la discussion.
@@ -447,28 +452,19 @@ export default function Assistant() {
             lu que par les lecteurs d'écran, pour que la page ait un titre. */}
         <h1 className="sr-only">Assistant de révision</h1>
         {/* ---- Barre du haut, seulement là où la barre latérale est cachée ---- */}
-        <div className="flex shrink-0 items-center gap-2 px-4 pt-4 pb-2 sm:px-6 lg:hidden">
+        <div className="flex shrink-0 items-center gap-3 px-4 pt-4 pb-2 sm:px-6 lg:hidden">
           <button
             type="button"
             onClick={() => {
               setListe(listeConversations(lireConversations()));
               setHistoriqueOuvert(true);
             }}
-            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 px-4 text-sm font-bold text-white transition-colors hover:bg-white/10"
+            aria-label="Discussions"
+            className="grid size-11 shrink-0 place-items-center rounded-full border border-white/15 text-white transition-colors hover:bg-white/10"
           >
-            <Icon name="menu" className="size-4" />
-            Discussions
+            <Icon name="menu" className="size-5" />
           </button>
           <LogoAssistant className="size-9 shrink-0" />
-          <button
-            type="button"
-            onClick={nouvelleDiscussion}
-            disabled={messages.length === 0}
-            className="ml-auto inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 px-4 text-sm font-bold text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <Icon name="plus" className="size-4" />
-            Nouvelle
-          </button>
         </div>
 
         {/* ---- Fil de discussion : seul à défiler ---- */}
@@ -477,6 +473,17 @@ export default function Assistant() {
           tabIndex={0}
           role="region"
           aria-label="Conversation avec l'assistant"
+          onScroll={(e) => {
+            const el = e.currentTarget;
+            const y = el.scrollTop;
+            const duBas = el.scrollHeight - el.clientHeight - y;
+            const monte = y < defilementPrecedent.current - 8;
+            const descend = y > defilementPrecedent.current + 8;
+            defilementPrecedent.current = y;
+            // Jamais pendant qu'on écrit, ni tout en bas du fil.
+            if (monte && duBas > 140 && !saisie.trim()) setSaisieVisible(false);
+            else if (descend || duBas < 80) setSaisieVisible(true);
+          }}
           className="min-h-0 flex-1 overflow-y-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff9fbf] focus-visible:ring-inset"
         >
           <div className="mx-auto max-w-3xl space-y-8 px-4 py-6 sm:px-6">
@@ -635,8 +642,20 @@ export default function Assistant() {
           </div>
         </div>
 
-        {/* ---- Saisie ---- */}
-        <div className="shrink-0 px-4 pt-2 pb-4">
+        {/* ---- Saisie, repliée quand on remonte dans le fil ---- */}
+        {!saisieVisible && (
+          <div className="shrink-0 px-4 pb-3">
+            <button
+              type="button"
+              onClick={() => setSaisieVisible(true)}
+              className="mx-auto flex min-h-10 items-center gap-2 rounded-full border border-white/15 bg-[#1d1222]/80 px-4 text-sm font-bold text-white backdrop-blur transition-colors hover:bg-white/10"
+            >
+              <Icon name="pencil" className="size-4" />
+              Écrire une question
+            </button>
+          </div>
+        )}
+        <div className={cx("shrink-0 px-4 pt-2 pb-4", !saisieVisible && "hidden")}>
           <div className="mx-auto max-w-3xl">
             <SaisieIA
               id="assistant-question"

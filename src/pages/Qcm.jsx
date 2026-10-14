@@ -222,8 +222,11 @@ export function QcmListe() {
 
         {/* Une pastille par ligne, c'était six lignes à faire défiler avant
             d'atteindre les questionnaires : sur téléphone elles défilent
-            de côté. */}
-        <div className="mt-5 -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-label="Filtrer par matière">
+            de côté, et la phrase au-dessus le dit. */}
+        <p className={cx(mono, "mt-6 text-[11px] font-bold text-ink-500 dark:text-ink-400")} id="matiere-qcm">
+          CHOISIS UNE MATIÈRE <span className="font-sans tracking-normal normal-case sm:hidden">— fais glisser pour les voir toutes</span>
+        </p>
+        <div className="mt-2 -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-labelledby="matiere-qcm">
           <button type="button" onClick={() => setMatiere("toutes")} aria-pressed={matiere === "toutes"} className={pastille(matiere === "toutes")}>
             Toutes les matières
             <span className="font-mono text-[11px] font-medium opacity-70">{qcms.length}</span>

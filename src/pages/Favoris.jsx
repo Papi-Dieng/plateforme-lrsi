@@ -117,10 +117,10 @@ function Signet({ actif, label, nombre, onClick }) {
       aria-pressed={actif}
       onClick={onClick}
       className={cx(
-        "flex w-11 flex-col items-center gap-3 pt-4 transition-[height,background-color] sm:w-14",
+        "flex w-10 flex-col items-center gap-2 pt-3 transition-[height,background-color] sm:w-14 sm:gap-3 sm:pt-4",
         actif
-          ? "h-56 bg-[#d4371f] pb-8 text-white sm:h-72"
-          : "h-36 bg-white pb-6 text-[#1c1838] shadow-[0_8px_18px_-8px_#1c183840] hover:h-40 sm:h-44 sm:hover:h-48 dark:bg-ink-800 dark:text-white"
+          ? "h-36 bg-[#d4371f] pb-5 text-white sm:h-72 sm:pb-8"
+          : "h-24 bg-white pb-4 text-[#1c1838] shadow-[0_8px_18px_-8px_#1c183840] sm:h-44 sm:pb-6 sm:hover:h-48 dark:bg-ink-800 dark:text-white"
       )}
       style={ENTAILLE}
     >
@@ -311,13 +311,13 @@ export default function Favoris() {
     <div className="bg-[#f3f2f8] dark:bg-ink-950">
       <header className="border-b border-[#1c1838]/10 dark:border-white/10">
         <div className="mx-auto flex max-w-6xl flex-wrap-reverse items-start justify-between gap-x-8 px-4 sm:px-6">
-          <div className="pt-12 pb-14 sm:pt-16">
+          <div className="pt-6 pb-8 sm:pt-16 sm:pb-14">
             <p className={cx(mono, ROUGE)}>Ma sélection</p>
-            <h1 className={cx("mt-6 text-7xl/[0.85] font-black tracking-[-0.06em] sm:text-9xl/[0.85]", ENCRE)}>
-              Mes <br />
+            <h1 className={cx("mt-3 text-[2.6rem]/[0.9] font-black tracking-[-0.06em] sm:mt-6 sm:text-9xl/[0.85]", ENCRE)}>
+              Mes <br className="hidden sm:block" />
               favoris
             </h1>
-            <p className={cx("mt-8 max-w-md", DOUX)}>
+            <p className={cx("mt-3 max-w-md text-[15px] sm:mt-8 sm:text-base", DOUX)}>
               Tout ce que tu as mis de côté : matières, chapitres, exercices, QCM et vidéos. Le marque-page se trouve sur chaque carte.
             </p>
           </div>
@@ -344,7 +344,7 @@ export default function Favoris() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-14">
         {vide ? (
           <div className="flex flex-wrap items-center justify-between gap-10">
             <div className="max-w-xl">

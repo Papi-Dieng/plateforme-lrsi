@@ -45,7 +45,9 @@ test.describe("historique de l'assistant", () => {
     await aller(page, "/assistant");
 
     await demander(page, "Explique le modèle OSI", 1);
-    await page.getByRole("button", { name: /Nouvelle/ }).click();
+    // « Nouvelle discussion » vit dans la barre latérale.
+    await ouvrirBarre(page, isMobile);
+    await page.getByRole("button", { name: "Nouvelle discussion" }).click();
     await expect(page.getByText("Réponse n° 1")).toHaveCount(0);
     await demander(page, "Qu'est-ce qu'un VLAN ?", 2);
 
