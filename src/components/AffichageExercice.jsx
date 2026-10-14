@@ -73,7 +73,7 @@ export function CorrectionExercice({ exercice }) {
       <div className="space-y-6 text-base/7 text-ink-800 dark:text-ink-200">
         {etapes.length > 0 && (
           <div>
-            <h3 className="font-semibold text-ink-900 dark:text-white">Méthode, étape par étape</h3>
+            <h3 className="font-semibold text-ink-900 dark:text-white">Méthode, étape par étape (explication)</h3>
             <ol className="mt-2 list-decimal space-y-1 pl-6">
               {etapes.map((etape, i) => (
                 <li key={i} className="whitespace-pre-line">

@@ -83,6 +83,9 @@ export default function PleinEcran({ titre, children, className }) {
     <div
       ref={bloc}
       className={actif ? "fixed inset-0 z-50 overflow-y-auto bg-white dark:bg-ink-950" : cx("relative", className)}
+      /* Ce qui est à l'intérieur peut s'adapter : une case où écrire
+         occupe toute la hauteur en plein écran. */
+      data-plein-ecran={actif ? "oui" : undefined}
       role={actif ? "dialog" : undefined}
       aria-modal={actif || undefined}
       aria-label={actif ? titre : undefined}

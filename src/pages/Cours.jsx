@@ -67,12 +67,27 @@ const B = 440; // début du faisceau
 const C = 560; // fin du faisceau
 const D = 670; // fin de la courbe, début des stations du semestre 2
 
-function Plan({ liste, lus, active, setActive, semestre, onOuvrir }) {
-  const ecart = 56;
-  const hauteur = 80 + liste.length * ecart;
-  const yDe = (i) => 62 + i * ecart;
+/* Le même plan, à deux tailles. Sur téléphone il doit tenir en entier
+   dans la largeur de l'écran (demande du 14 octobre 2026) : réduit de
+   1000 unités à 360 px, un trait de 6 unités ne ferait plus que 2 px et
+   une écriture de 11 unités, 4 px. Tout y est donc plus gros — traits,
+   points, écritures, pastilles — pour que le dessin reste le même une
+   fois rétréci. Les repères horizontaux (A, B, C, D) ne bougent pas : le
+   faisceau du milieu garde exactement la forme de la maquette. */
+const TAILLES_PLAN = {
+  grand: { ecart: 56, premier: 62, bas: 74, faisceau: 9, trait: 6, traitActif: 9, station: 6.5, stationActive: 8, contour: 3.5, tirets: "3 3", cible: 0, numero: 15, ecartNumero: 26, texteNumero: 14, nom: 11, nomHaut: 12, zone: 11, zoneY: 26, gare: 11, gareMax: 20, gareHaut: 16, gareBas: 26, passage: 10 },
+  // `gareMax: 0` : sur téléphone, les noms des stations ne tiennent pas
+  // entre deux points sans se chevaucher. Le plan ne garde que les
+  // points ; les chapitres sont nommés dans la ligne qui s'ouvre dessous.
+  petit: { ecart: 104, premier: 112, bas: 104, faisceau: 15, trait: 13, traitActif: 18, station: 14, stationActive: 17, contour: 7, tirets: "6 8", cible: 24, numero: 28, ecartNumero: 36, texteNumero: 30, nom: 30, nomHaut: 30, zone: 24, zoneY: 44, gare: 0, gareMax: 0, gareHaut: 34, gareBas: 54, passage: 22 },
+};
+
+function Plan({ liste, lus, active, setActive, semestre, onOuvrir, petit = false }) {
+  const T = TAILLES_PLAN[petit ? "petit" : "grand"];
+  const hauteur = T.premier + (liste.length - 1) * T.ecart + T.bas;
+  const yDe = (i) => T.premier + i * T.ecart;
   const centre = yDe((liste.length - 1) / 2);
-  const yFaisceau = (i) => centre + (i - (liste.length - 1) / 2) * 9;
+  const yFaisceau = (i) => centre + (i - (liste.length - 1) / 2) * T.faisceau;
   const xStations = (n, cote) => {
     const debut = cote === 1 ? MARGE + 55 : D + 30;
     const fin = cote === 1 ? A - 30 : LARGEUR - MARGE - 55;
@@ -80,13 +95,21 @@ function Plan({ liste, lus, active, setActive, semestre, onOuvrir }) {
   };
 
   return (
-    <div className="hidden overflow-x-auto rounded-[28px] border border-ink-200 sm:block bg-[radial-gradient(#d4d4dc_1px,transparent_1px)] [background-size:16px_16px] dark:border-ink-800 dark:bg-ink-900 dark:bg-[radial-gradient(#3a3a46_1px,transparent_1px)]" tabIndex={0} role="region" aria-label="Plan des cours">
-      <svg viewBox={`0 0 ${LARGEUR} ${hauteur}`} className="min-w-[760px]" role="group" aria-label="Plan des lignes : une ligne par matière, une station par chapitre">
-        {semestre !== "2" && <text x={MARGE - 30} y="26" className="fill-ink-600 font-mono text-[11px] font-bold tracking-widest dark:fill-ink-300">ZONE 1 · SEMESTRE 1</text>}
-        {semestre !== "1" && <text x={LARGEUR - MARGE + 30} y="26" textAnchor="end" className="fill-ink-600 font-mono text-[11px] font-bold tracking-widest dark:fill-ink-300">ZONE 2 · SEMESTRE 2</text>}
+    <div
+      className={cx(
+        "rounded-[28px] border border-ink-200 bg-[radial-gradient(#d4d4dc_1px,transparent_1px)] [background-size:16px_16px] dark:border-ink-800 dark:bg-ink-900 dark:bg-[radial-gradient(#3a3a46_1px,transparent_1px)]",
+        petit ? "overflow-hidden sm:hidden" : "hidden overflow-x-auto sm:block"
+      )}
+      tabIndex={0}
+      role="region"
+      aria-label="Plan des cours"
+    >
+      <svg viewBox={`0 0 ${LARGEUR} ${hauteur}`} className={petit ? "w-full" : "min-w-[760px]"} role="group" aria-label="Plan des lignes : une ligne par matière, une station par chapitre">
+        {semestre !== "2" && <text x={MARGE - 30} y={T.zoneY} style={{ fontSize: T.zone }} className="fill-ink-600 font-mono font-bold tracking-widest dark:fill-ink-300">ZONE 1 · SEMESTRE 1</text>}
+        {semestre !== "1" && <text x={LARGEUR - MARGE + 30} y={T.zoneY} textAnchor="end" style={{ fontSize: T.zone }} className="fill-ink-600 font-mono font-bold tracking-widest dark:fill-ink-300">ZONE 2 · SEMESTRE 2</text>}
         <rect x={MILIEU} y="0" width={LARGEUR - MILIEU} height={hauteur} className="fill-ink-950/[0.035] dark:fill-white/[0.04]" />
-        <line x1={MILIEU} y1="38" x2={MILIEU} y2={hauteur - 26} className="stroke-ink-400" strokeDasharray="3 5" />
-        <text x={MILIEU} y={hauteur - 8} textAnchor="middle" className="fill-ink-600 font-mono text-[10px] tracking-widest dark:fill-ink-300">PASSAGE AU SEMESTRE 2</text>
+        <line x1={MILIEU} y1={T.zoneY + 12} x2={MILIEU} y2={hauteur - T.passage * 2.6} className="stroke-ink-400" strokeDasharray="3 5" />
+        <text x={MILIEU} y={hauteur - T.passage * 0.8} textAnchor="middle" style={{ fontSize: T.passage }} className="fill-ink-600 font-mono tracking-widest dark:fill-ink-300">PASSAGE AU SEMESTRE 2</text>
 
         {liste.map((m, i) => {
           const y = yDe(i);
@@ -105,7 +128,7 @@ function Plan({ liste, lus, active, setActive, semestre, onOuvrir }) {
               <path
                 d={`M${MARGE} ${y} H${A} C${A + 60} ${y} ${B - 60} ${yf} ${B} ${yf} H${C} C${C + 60} ${yf} ${D - 60} ${y} ${D} ${y} H${LARGEUR - MARGE}`}
                 stroke={c}
-                strokeWidth={allumee ? 9 : 6}
+                strokeWidth={allumee ? T.traitActif : T.trait}
                 strokeLinecap="round"
                 fill="none"
                 pathLength={1}
@@ -118,16 +141,19 @@ function Plan({ liste, lus, active, setActive, semestre, onOuvrir }) {
                 return (
                   <a key={`${n}-${k}`} href={`#/cours/${m.id}?semestre=${n}`} aria-label={`${m.nom}, semestre ${n} : ${ch.titre}${lu ? " (lu)" : pret ? "" : " (bientôt)"}`}>
                     <title>{ch.titre}</title>
-                    <circle cx={x} cy={y} r={allumee ? 8 : 6.5} fill={lu ? c : "#fff"} stroke={c} strokeWidth="3.5" strokeDasharray={pret ? undefined : "3 3"} />
-                    {allumee && (
-                      <text x={x} y={y + (j % 2 ? 26 : -16)} textAnchor="middle" className="fill-ink-900 text-[11px] font-bold dark:fill-white">
-                        {ch.titre.length > 28 ? `${ch.titre.slice(0, 27)}…` : ch.titre}
+                    {/* Sur téléphone, un point de 10 px est trop petit pour
+                        le doigt : une cible transparente l'agrandit. */}
+                    {T.cible > 0 && <circle cx={x} cy={y} r={T.cible} fill="transparent" />}
+                    <circle cx={x} cy={y} r={allumee ? T.stationActive : T.station} fill={lu ? c : "#fff"} stroke={c} strokeWidth={T.contour} strokeDasharray={pret ? undefined : T.tirets} />
+                    {allumee && T.gareMax > 0 && (
+                      <text x={x} y={y + (j % 2 ? T.gareBas : -T.gareHaut)} textAnchor="middle" style={{ fontSize: T.gare }} className="fill-ink-900 font-bold dark:fill-white">
+                        {ch.titre.length > T.gareMax ? `${ch.titre.slice(0, T.gareMax - 1)}…` : ch.titre}
                       </text>
                     )}
                   </a>
                 );
               })}
-              {[MARGE - 26, LARGEUR - MARGE + 26].map((x) => (
+              {[MARGE - T.ecartNumero, LARGEUR - MARGE + T.ecartNumero].map((x) => (
                 <g
                   key={x}
                   role="button"
@@ -142,12 +168,15 @@ function Plan({ liste, lus, active, setActive, semestre, onOuvrir }) {
                     }
                   }}
                 >
-                  <circle cx={x} cy={y} r="15" fill={couleurTexte(m)} stroke="#fff" strokeWidth="3" />
-                  <text x={x} y={y + 5} textAnchor="middle" className="pointer-events-none fill-white text-[14px] font-extrabold">{rang(m) + 1}</text>
+                  <circle cx={x} cy={y} r={T.numero} fill={couleurTexte(m)} stroke="#fff" strokeWidth={T.contour * 0.9} />
+                  <text x={x} y={y + T.texteNumero * 0.35} textAnchor="middle" style={{ fontSize: T.texteNumero }} className="pointer-events-none fill-white font-extrabold">{rang(m) + 1}</text>
                 </g>
               ))}
-              {!allumee && (
-                <text x={MARGE + 14} y={y - 12} className="text-[11px] font-bold" style={{ fill: couleurTexte(m) }}>
+              {/* Le nom de la ligne laisse la place aux noms des stations
+                  quand elle est allumée ; sur téléphone, où les stations ne
+                  sont pas nommées, il reste. */}
+              {(!allumee || T.gareMax === 0) && (
+                <text x={MARGE + 14} y={y - T.nomHaut} style={{ fontSize: T.nom }} className="font-bold" fill={couleurTexte(m)}>
                   {m.nomCourt ?? m.nom}
                 </text>
               )}
@@ -156,60 +185,6 @@ function Plan({ liste, lus, active, setActive, semestre, onOuvrir }) {
         })}
       </svg>
     </div>
-  );
-}
-
-/* Sur téléphone, le grand plan devient illisible (rétréci à 360 px, les
-   noms se chevauchent) : chaque ligne y est une bande avec ses stations
-   en points, semestre 1 puis semestre 2, et la toucher ouvre la ligne
-   sous les cartes. Même légende que le grand plan. */
-function PlanTelephone({ liste, lus, semestre, ouverte, onOuvrir }) {
-  const cotes = semestre === "1" ? [1] : semestre === "2" ? [2] : [1, 2];
-  return (
-    <ul className="space-y-2 sm:hidden" aria-label="Plan des lignes">
-      {liste.map((m) => {
-        const c = couleur(m);
-        const chapitres = cotes.flatMap((n) => chapitresDuSemestre(m, n).map((ch) => ({ ch, n })));
-        const faits = chapitres.filter(({ ch }) => ch.statut === "disponible" && lus[refChapitre(m.id, ch.titre)]).length;
-        return (
-          <li key={m.id}>
-            <button
-              type="button"
-              onClick={() => onOuvrir(m.id)}
-              aria-expanded={ouverte === m.id}
-              aria-controls="ligne-ouverte"
-              aria-label={`Ouvrir la ligne ${rang(m) + 1} : ${m.nom}, ${faits} chapitre${faits > 1 ? "s" : ""} lu${faits > 1 ? "s" : ""} sur ${chapitres.length}`}
-              className={cx(
-                "flex min-h-14 w-full items-center gap-3 rounded-2xl border bg-white px-3 py-2.5 text-left dark:bg-ink-900",
-                ouverte === m.id ? "border-2" : "border-ink-200 dark:border-ink-800"
-              )}
-              style={ouverte === m.id ? { borderColor: c } : undefined}
-            >
-              <Numero m={m} taille="size-9 text-sm" />
-              <span className="min-w-0 flex-1">
-                <span className="flex items-baseline justify-between gap-2">
-                  <span className="truncate text-sm font-extrabold text-ink-950 dark:text-white">{m.nomCourt ?? m.nom}</span>
-                  <span className="shrink-0 font-mono text-xs text-ink-600 dark:text-ink-300">
-                    {faits}/{chapitres.length}
-                  </span>
-                </span>
-                <span aria-hidden="true" className="relative mt-2 flex items-center justify-between">
-                  <span className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full" style={{ background: c }} />
-                  {chapitres.map(({ ch, n }, i) => {
-                    const pret = ch.statut === "disponible";
-                    const lu = pret && lus[refChapitre(m.id, ch.titre)];
-                    const passage = cotes.length === 2 && n === 2 && chapitres[i - 1]?.n === 1;
-                    return (
-                      <span key={`${n}-${ch.titre}`} className={cx("relative size-3.5 rounded-full border-[3px]", !pret && "border-dashed", passage && "ml-3")} style={{ borderColor: c, background: lu ? c : "#fff" }} />
-                    );
-                  })}
-                </span>
-              </span>
-            </button>
-          </li>
-        );
-      })}
-    </ul>
   );
 }
 
@@ -351,13 +326,13 @@ export function Cours() {
         {resultats.length > 0 && (
           <div className="mt-6">
             <Plan liste={resultats} lus={lus} active={allumee?.id} setActive={setActive} semestre={semestre} onOuvrir={ouvrir} />
-            <PlanTelephone liste={resultats} lus={lus} semestre={semestre} ouverte={ouverte} onOuvrir={ouvrir} />
+            <Plan petit liste={resultats} lus={lus} active={allumee?.id} setActive={setActive} semestre={semestre} onOuvrir={ouvrir} />
             <p className="mt-2 flex flex-wrap justify-between gap-2 text-xs text-ink-600 dark:text-ink-300">
-              <span>
+              <span className="hidden sm:inline">
                 Ligne {allumee ? rang(allumee) + 1 : ""}, {allumee?.nom} : ses stations sont nommées sur le plan.
               </span>
               <span className="hidden sm:inline">Survole une ligne pour la voir ; touche un numéro de ligne pour l'ouvrir ci-dessous.</span>
-              <span className="sm:hidden">Touche une ligne pour l'ouvrir ci-dessous.</span>
+              <span className="sm:hidden">Touche un numéro de ligne pour l'ouvrir ci-dessous.</span>
             </p>
           </div>
         )}

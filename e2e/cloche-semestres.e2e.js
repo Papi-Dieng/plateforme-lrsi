@@ -81,9 +81,10 @@ test.describe("semestres", () => {
     await aller(page, "/cours");
     const filtres = page.getByRole("group", { name: "Filtrer par semestre" });
     await filtres.getByRole("button", { name: "Semestre 2" }).click();
-    // Ordinateur : une station du grand plan (lien). Téléphone : la bande de
-    // la ligne, qui l'ouvre sous les cartes, au semestre filtré.
-    if (isMobile) await page.getByRole("button", { name: new RegExp(`^Ouvrir la ligne 1 : ${matieres[0].nom}`) }).click();
+    // Ordinateur : une station du grand plan (lien). Téléphone : le même
+    // plan, réduit à la largeur de l'écran ; son numéro de ligne (à gauche
+    // comme à droite, d'où le premier) ouvre la ligne au semestre filtré.
+    if (isMobile) await page.getByRole("button", { name: new RegExp(`^Ouvrir la ligne 1 : ${matieres[0].nom}`) }).first().click();
     else await page.getByRole("link", { name: new RegExp(matieres[0].nom) }).first().click();
     const s2 = matieres[0].chapitres.find((c) => c.semestre === 2);
     await expect(page.getByRole("heading", { name: s2.titre })).toBeVisible();

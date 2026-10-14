@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
 import ChargementIA from "./ChargementIA";
+import PleinEcran from "./PleinEcran";
 import { ETAPES_CORRECTION } from "../chargementIA";
 import { cx } from "./classes";
 import TexteLibre, { EnLigne } from "./TexteLibre";
@@ -32,6 +33,12 @@ import { assemblerReponses, questionsDe } from "../questionsExercice";
    quota, réseau), l'étudiant n'est pas laissé sans rien : « Voir la
    réponse attendue » lui montre la réponse de l'auteur, pour qu'il se
    corrige lui-même.
+
+   La zone d'écriture s'ouvre en plein écran (demande du 14 octobre
+   2026) : le bouton est au-dessus des cases. Tout ce qu'il faut suit
+   dedans — les questions, les cases et le bouton « Faire corriger »,
+   qui sont dans le même formulaire — et ce qui est déjà écrit reste
+   écrit, en entrant comme en sortant.
 
    `RepondreAvecIA` est le bloc lui-même, partagé avec les devoirs
    (pages/Examens.jsx, une partie à la fois) : pendant l'épreuve il est
@@ -147,8 +154,10 @@ export function ChoixReponse({ valeur, onChange, className }) {
   );
 }
 
+/* En plein écran, les cases où l'on écrit prennent la hauteur de
+   l'écran plutôt que leurs 6 lignes (voir PleinEcran). */
 const champ =
-  "w-full rounded-[16px] border border-ink-200 bg-white px-4 py-3 text-[15px]/6 text-ink-900 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-ink-700 dark:bg-ink-950 dark:text-white";
+  "w-full [[data-plein-ecran]_&]:min-h-[48dvh] rounded-[16px] border border-ink-200 bg-white px-4 py-3 text-[15px]/6 text-ink-900 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-ink-700 dark:bg-ink-950 dark:text-white";
 
 export default function RepondreExercice({ exercice, mode, numero, ancre, onReussi, onBesoinIndice, indiceDisponible }) {
   const { enonce, corrige } = textesExercice(exercice);
@@ -280,7 +289,8 @@ export function RepondreAvecIA({
           : "Réponds comme sur ta copie : l'IA compare ta réponse au corrigé et te dit si elle est juste."}
       </p>
 
-      <form onSubmit={corriger} className="mt-4 space-y-3">
+      <PleinEcran titre="Ma réponse" className="mt-4">
+      <form onSubmit={corriger} className="space-y-3">
         {mode === "questions" ? (
           <ol className="space-y-4">
             {questions.map((q, i) => (
@@ -342,6 +352,7 @@ export function RepondreAvecIA({
         </div>
         )}
       </form>
+      </PleinEcran>
 
       {vu.attente && <ChargementIA etapes={ETAPES_CORRECTION} className="pt-4" />}
       {vu.erreur && (
