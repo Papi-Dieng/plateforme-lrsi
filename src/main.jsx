@@ -41,7 +41,10 @@ try {
     localStorage.removeItem("lrsi-theme");
     localStorage.setItem("lrsi-theme-clair", "1");
   }
-  document.documentElement.classList.toggle("dark", localStorage.getItem("lrsi-theme") === "dark");
+  // « auto » suit l'appareil (voir src/apparence.js) ; sans choix, clair.
+  const choix = localStorage.getItem("lrsi-theme");
+  const sombre = choix === "dark" || (choix === "auto" && window.matchMedia?.("(prefers-color-scheme: dark)").matches);
+  document.documentElement.classList.toggle("dark", Boolean(sombre));
 } catch {
   /* stockage indisponible : on garde le thème clair par défaut */
 }

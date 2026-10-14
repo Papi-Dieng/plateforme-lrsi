@@ -18,7 +18,9 @@ const PAGES = [
   ["/progression", "Ma progression"],
   ["/planning", "planning"],
   ["/assistant", "Assistant"],
-  ["/profil", "profil"],
+  // Depuis la maquette du 14 octobre 2026, le grand titre de « Mon
+  // profil » est le nom de l'etudiant ; en invite, « Invité ».
+  ["/profil", "Invité"],
   ["/parametres", "Paramètres"],
   ["/conditions", "Conditions"],
   ["/confidentialite", "confidentialité"],

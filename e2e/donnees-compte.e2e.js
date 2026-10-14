@@ -36,6 +36,8 @@ test.describe("sans compte, rien n'est gardé", () => {
   test("les paramètres disent que rien n'est enregistré, et ne proposent plus de fichier", async ({ page }) => {
     await entrerEnInvite(page);
     await aller(page, "/parametres");
+    // Les paramètres sont en sections depuis le 14 octobre 2026.
+    await page.getByRole("tab", { name: "Mes données" }).click();
     await expect(page.getByText(/Sans compte, rien n'est enregistré/)).toBeVisible();
     await expect(page.getByRole("button", { name: /sauvegarde/i })).toHaveCount(0);
   });

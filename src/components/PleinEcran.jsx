@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
 import { cx } from "./classes";
+import { CLE_TAILLE, TAILLES } from "../apparence";
 
 /* ==================================================================
    Lire un texte en plein écran : un cours, un énoncé, une correction.
@@ -18,8 +19,7 @@ import { cx } from "./classes";
 
 /* La taille du texte en plein écran (A− / A+), gardée d'une lecture à
    l'autre dans ce navigateur. */
-const CLE_TAILLE = "lrsi-taille-lecture";
-const TAILLES = [0.85, 1, 1.15, 1.3, 1.5, 1.75];
+
 
 function lireTaille() {
   try {

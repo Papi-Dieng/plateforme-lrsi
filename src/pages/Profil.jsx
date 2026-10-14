@@ -10,14 +10,24 @@ import {
   enregistrerProfil,
   lireProfil,
   niveaux,
+  nomAffiche,
   verifierProfil,
 } from "../profil";
+import { initiales } from "../session";
+import { lireChapitresLus, lireExercicesTravailles, lireScores } from "../progression";
+import { lireTampons } from "../tampons";
+import CarteEtudiant from "../components/CarteEtudiant";
+import { Container } from "../components/ui";
+import { mono } from "../components/styleAdmin";
+import { site } from "../data/site";
 
 /* ==================================================================
-   Fiche profil : uniquement l'identité et les coordonnées.
+   Mon profil, d'après la maquette « 01 · Mon profil » (14 octobre
+   2026) : un en-tête bleu qui dit qui tu es, ta carte d'étudiant, tes
+   tampons, puis la fiche à remplir.
 
-   Le suivi des acquis vit sur sa propre page, « Ma progression », pour
-   que cette fiche reste courte et lisible.
+   Le détail des acquis reste sur « Ma progression » : ici, seulement
+   trois chiffres et ce qu'ils ont donné.
    ================================================================== */
 
 const LONGUEUR_PSEUDO = 20;
@@ -168,6 +178,20 @@ export default function Profil() {
     setEnregistre(true);
   };
 
+  // Ce que l'en-tête et la carte montrent : trois chiffres, et les
+  // tampons gagnés (src/tampons.js). Lus à l'affichage de la page.
+  const [bilan] = useState(() => {
+    const scores = lireScores();
+    const exercices = lireExercicesTravailles();
+    const chapitres = lireChapitresLus();
+    return {
+      chapitres: Object.keys(chapitres).length,
+      qcm: Object.keys(scores).length,
+      exercices: Object.keys(exercices).length,
+      tampons: lireTampons({ scores, exercices, chapitres }),
+    };
+  });
+
   const toutEffacer = () => {
     setProfil(effacerProfil());
     setErreurs({});
@@ -175,16 +199,119 @@ export default function Profil() {
     setConfirmation(false);
   };
 
-  return (
-    <div className="px-4 py-6 sm:px-7 sm:py-8">
-      <h1 className="text-3xl font-bold tracking-tight text-ink-900 dark:text-white">
-        Mon profil
-      </h1>
-      <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">
-        Ton avatar, ton nom d'utilisateur et tes coordonnées.
-      </p>
+  const nom = nomAffiche(profil, session);
+  const gagnes = bilan.tampons.filter((t) => t.gagne).length;
 
-      <form onSubmit={soumettre} noValidate className="mt-6 max-w-3xl space-y-5">
+  return (
+    <div className="pb-8">
+      {/* ------------------------------------------------------ */}
+      {/* En-tête : qui tu es, et ta carte d'étudiant             */}
+      {/* ------------------------------------------------------ */}
+      <header className="bg-brand-600 text-white">
+        <Container className="py-10 sm:py-12">
+          <div className="grid items-start gap-8 lg:grid-cols-[1.4fr_1fr]">
+            <div className="min-w-0">
+              <p className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 text-xs font-bold">
+                <span className="size-2 rounded-full bg-lime-400" />
+                {session?.mode === "compte" ? "Compte synchronisé sur tous tes appareils" : "Mode invité : rien n'est gardé"}
+              </p>
+              <p className={cx("mt-5 text-[11px] font-bold tracking-[0.18em] text-white/85", mono)}>MON PROFIL</p>
+              <h1 className="mt-1 text-[clamp(2.4rem,7vw,4.5rem)] leading-[0.95] font-extrabold tracking-[-0.05em] break-words">
+                {nom}
+              </h1>
+              <p className="mt-3 text-[15px] text-white/85">
+                {[profil.pseudo && `@${profil.pseudo}`, profil.niveau, site.filiere].filter(Boolean).join(" · ")}
+              </p>
+              <dl className="mt-6 flex flex-wrap gap-2.5">
+                {[
+                  ["book", "Ton parcours", `${bilan.chapitres} chapitre${bilan.chapitres > 1 ? "s" : ""} lu${bilan.chapitres > 1 ? "s" : ""}`],
+                  ["graduation", "Tes QCM", `${bilan.qcm} passé${bilan.qcm > 1 ? "s" : ""}`],
+                  ["pencil", "Tes exercices", `${bilan.exercices} travaillé${bilan.exercices > 1 ? "s" : ""}`],
+                ].map(([icone, titre, valeur]) => (
+                  <div key={titre} className="inline-flex items-center gap-2 rounded-full border border-white/25 px-4 py-2 text-sm">
+                    <Icon name={icone} className="size-4 text-lime-300" />
+                    <dt className="font-bold">{titre}</dt>
+                    <dd className="text-white/85">· {valeur}</dd>
+                  </div>
+                ))}
+              </dl>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <a
+                  href="#ma-fiche"
+                  className="inline-flex min-h-12 items-center gap-2 rounded-[14px] bg-lime-400 px-5 text-[15px] font-extrabold text-ink-950 transition-colors hover:bg-lime-300"
+                >
+                  <Icon name="pencil" className="size-4" />
+                  Modifier ma fiche
+                </a>
+                <Link
+                  to="/parametres"
+                  className="inline-flex min-h-12 items-center gap-2 rounded-[14px] border border-white/30 px-5 text-[15px] font-extrabold text-white transition-colors hover:bg-white/10"
+                >
+                  <Icon name="settings" className="size-4" />
+                  Paramètres
+                </Link>
+              </div>
+            </div>
+
+            <CarteEtudiant
+              profil={profil}
+              nom={nom}
+              initiales={initiales(nom)}
+              niveau={profil.niveau}
+              filiere="LRSI"
+              chiffres={[
+                [bilan.chapitres, "chapitres lus"],
+                [bilan.qcm, "QCM passés"],
+                [bilan.exercices, "exercices faits"],
+              ]}
+            />
+          </div>
+        </Container>
+      </header>
+
+      {/* ------------------------------------------------------ */}
+      {/* Tes tampons                                             */}
+      {/* ------------------------------------------------------ */}
+      <Container className="py-8">
+        <section className="card p-6 sm:p-8">
+          <h2 className="text-lg font-semibold text-ink-900 dark:text-white">Tes tampons</h2>
+          <p className="mt-1 text-sm text-ink-600 dark:text-ink-400">
+            Ils se gagnent en révisant. {gagnes} sur {bilan.tampons.length} pour l&apos;instant.
+          </p>
+          <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {bilan.tampons.map((t) => (
+              <li
+                key={t.cle}
+                className={cx(
+                  "rounded-2xl border p-4",
+                  t.gagne ? "border-lime-400/60 bg-lime-50 dark:border-lime-400/30 dark:bg-lime-400/10" : "border-ink-200 dark:border-ink-800"
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className={cx(
+                      "grid size-8 shrink-0 place-items-center rounded-full",
+                      t.gagne ? "bg-lime-400 text-ink-950" : "bg-ink-100 text-ink-400 dark:bg-ink-800"
+                    )}
+                  >
+                    <Icon name={t.gagne ? "check" : "lock"} className="size-4" />
+                  </span>
+                  <span className="font-bold text-ink-950 dark:text-white">{t.titre}</span>
+                </div>
+                <p className="mt-2 text-sm text-ink-600 dark:text-ink-300">{t.texte}</p>
+                {!t.gagne && t.avancee[1] > 1 && (
+                  <p className={cx("mt-2 text-xs text-ink-500 dark:text-ink-400", mono)}>
+                    {t.avancee[0]} / {t.avancee[1]}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      </Container>
+
+      <Container>
+      <form id="ma-fiche" onSubmit={soumettre} noValidate className="max-w-3xl scroll-mt-24 space-y-5">
         {/* ------------------------------------------------------ */}
         {/* Avatar et nom d'utilisateur                             */}
         {/* ------------------------------------------------------ */}
@@ -439,6 +566,7 @@ export default function Profil() {
           <Icon name="arrow" className="size-4 shrink-0 text-ink-500 dark:text-ink-400" />
         </Link>
       </div>
+      </Container>
     </div>
   );
 }

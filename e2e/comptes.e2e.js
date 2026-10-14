@@ -218,8 +218,10 @@ test.describe("comptes", () => {
     await page.reload();
     await expect(page.getByRole("dialog", { name: "Garde ton code de secours" })).toHaveCount(0);
 
-    // Paramètres : nouveau code, avec la session du compte.
+    // Paramètres : nouveau code, avec la session du compte. Les
+    // paramètres sont en sections depuis le 14 octobre 2026.
     await aller(page, "/parametres");
+    await page.getByRole("tab", { name: "Compte et sécurité" }).click();
     const secours = page.locator("#secours");
     await expect(secours.getByRole("heading", { name: "Récupérer mon compte" })).toBeVisible();
     await secours.getByRole("button", { name: "Obtenir un nouveau code" }).click();
@@ -238,6 +240,7 @@ test.describe("comptes", () => {
   test("une ancienne session « de démonstration » devient une visite", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("lrsi-session", JSON.stringify({ mode: "demo", nom: "Awa" })));
     await aller(page, "/parametres");
-    await expect(page.getByText("Sans compte, ta progression n'est pas gardée.")).toBeVisible();
+    await page.getByRole("tab", { name: "Compte et sécurité" }).click();
+    await expect(page.getByText(/Tu visites le site sans compte/)).toBeVisible();
   });
 });
