@@ -515,13 +515,6 @@ export default function PageJuridique({ surtitre, titre, texte, articles, visuel
               <Icon name="external" className="size-4" />
               {site.contact}
             </a>
-            <Link
-              to="/projet"
-              className="inline-flex min-h-13.5 items-center gap-2.5 rounded-[14px] border-2 border-ink-950 px-5.5 text-[15.5px] font-extrabold text-ink-950 transition-colors hover:bg-white/40"
-            >
-              La démarche du projet
-              <Icon name="arrow" className="size-4" />
-            </Link>
           </div>
         </section>
       </Container>

@@ -644,7 +644,6 @@ export default function Parametres() {
                   {[
                     ["/conditions", "Conditions d'utilisation"],
                     ["/confidentialite", "Politique de confidentialité"],
-                    ["/projet", "La démarche du projet"],
                   ].map(([to, label]) => (
                     <Link key={to} to={to} className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-400">
                       {label}

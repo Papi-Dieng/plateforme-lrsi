@@ -25,9 +25,9 @@ const PAGES = [
   ["/conditions", "Conditions"],
   ["/confidentialite", "confidentialité"],
   ["/mentions-legales", "Mentions légales"],
-  ["/projet", "Une plateforme"],
   ["/avis", "ce que tu penses"],
   ["/admin", "Administration"],
+  ["/admin/projet", "Une plateforme"],
 ];
 
 test.describe("chaque page s'ouvre", () => {

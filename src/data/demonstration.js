@@ -1120,7 +1120,57 @@ export const ressources = [
   },
 ];
 
-export const annales = [];
+/* Les examens passés se font comme un devoir. Le second n'a pas
+   d'autorisation : il ne doit jamais s'afficher côté étudiant. */
+export const annales = [
+  {
+    id: "examen-algo-2025",
+    titre: "Examen d'algorithmique, juin 2025",
+    matiere: "algorithmique",
+    annee: "2025",
+    session: "Session normale",
+    dureeMinutes: 90,
+    consignes: "Sans document. Les algorithmes sont à écrire en pseudo-code.",
+    format: "parties",
+    parties: [
+      {
+        titre: "Complexité",
+        points: 6,
+        enonce: "1. Quelle est la complexité de la recherche dichotomique dans un tableau trié de n éléments ?\n2. Justifie en une phrase.",
+        corrige: "1. O(log n). (3 points)\n2. La zone de recherche est divisée par deux à chaque tour. (3 points)",
+      },
+      {
+        titre: "Les piles",
+        points: 4,
+        enonce: "Selon quel principe une pile fonctionne-t-elle ? Donne un exemple d'utilisation.",
+        corrige: "LIFO : le dernier élément empilé est le premier dépilé. Exemple : vérifier qu'une expression est bien parenthésée. (4 points)",
+      },
+    ],
+    pdfEnonce: null,
+    pdfCorrige: null,
+    pointsTotal: 0,
+    lienSujet: "",
+    lienCorrige: "",
+    autorisation: { obtenue: true, detail: "Accord du responsable du module, par courriel du 3 mars 2026" },
+  },
+  {
+    id: "examen-reseaux-2024",
+    titre: "Examen de réseaux, juin 2024",
+    matiere: "reseaux",
+    annee: "2024",
+    session: "",
+    dureeMinutes: 120,
+    consignes: "",
+    format: "parties",
+    parties: [{ titre: "Adressage", points: 10, enonce: "Découpe 192.168.1.0/24 en quatre sous-réseaux.", corrige: "Préfixe /26." }],
+    pdfEnonce: null,
+    pdfCorrige: null,
+    pointsTotal: 0,
+    lienSujet: "",
+    lienCorrige: "",
+    autorisation: { obtenue: false, detail: "" },
+  },
+];
 
 /* Tout le contenu d'un coup, dans la forme que le relais publie. */
 export const contenuDemo = {

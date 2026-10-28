@@ -495,14 +495,13 @@ latérale laisse place à un menu dans la barre du haut.
 | `/qcm` | QCM interactifs | Liste des questionnaires, meilleur score local, QCM toutes matières |
 | `/qcm/:qcmId` | Session de QCM | Mode examen : minuteur, navigateur de questions, résultat et correction |
 | `/bibliotheque` | Bibliothèque | Ressources en accès libre, deux par ligne, avec la vraie couverture des livres |
-| `/projet` | Le projet | Autorisations, versions, rôles, sécurité, IA, pile technique |
 | `/avis` | Ton avis | Ouverte sans entrer (c'est le lien à partager) : note de 1 à 5, ce qui plaît, propositions ; les avis sont publics |
 | `/videos` | Vidéos | Filtre par matière, lecteur intégré |
 | `/profil` | Mon profil | En-tête au nom de l'étudiant, carte d'étudiant qui se retourne, tampons gagnés, puis la fiche (avatar, nom d'utilisateur, coordonnées) |
 | `/favoris` | Mes favoris | Matières, chapitres, exercices, QCM et vidéos mis de côté |
 | `/progression` | Ma progression | Tableau de bord en grille : vue d'ensemble, précision, régularité, matières, QCM |
 | `/examens` | Devoirs et examens | Devoirs chronométrés avec corrigé à la fin, et examens passés autorisés |
-| `/examens/:id` | Session de devoir | Sujet, minuteur, réponses écrites sur le site ou toute la copie importée d'un coup, puis corrigé et correction par l'IA |
+| `/examens/:id` | Session de devoir ou d'examen | Sujet, minuteur, réponses écrites sur le site ou toute la copie importée d'un coup, puis corrigé et correction par l'IA ; un examen passé ne s'ouvre qu'avec son autorisation |
 | `/planning` | Mon planning | Emploi du temps (mois, semaine, jour, liste) et programme de révision composé par l'IA |
 | `/assistant` | Assistant de révision | Guide (puis IA) qui retrouve chapitres, exercices et QCM ; barre latérale des discussions |
 | `/parametres` | Paramètres | Cinq sections : apparence (thème, taille du texte, nom affiché), rappels, confidentialité, mes données, compte et sécurité |
@@ -513,6 +512,7 @@ latérale laisse place à un menu dans la barre du haut.
 | `/admin/contenu` | Gérer le contenu | Brouillon et publication de tout le contenu, agent IA admin (mot de passe) |
 | `/admin/ia` | Éduquer l'IA | Consignes, cours, exemples et tests par matière, banc de test (mot de passe) |
 | `/admin/stats` | Statistiques des QCM | Réponses anonymes par question (mot de passe) |
+| `/admin/projet` | Feuille de route | Autorisations, versions, rôles, sécurité, IA, pile technique — jamais montrée aux étudiants |
 
 Toute autre adresse affiche une page « introuvable » avec un retour à l'accueil.
 
@@ -778,6 +778,17 @@ l'établissement, publié seulement avec autorisation. Dans le code, ils
 s'appellent encore `examens` et `annales` : les noms internes datent d'avant
 le renommage et restent, pour que le contenu déjà publié fonctionne.
 
+Depuis le 28 octobre 2026, **un examen se passe comme un devoir** : même
+éditeur dans l'admin (sujet par parties ou en PDF, « Coller tout l'examen
+d'un coup », durée, points), même page pour l'étudiant (minuteur, corrigé à
+la fin, note de l'IA, copie importée). Il garde en plus son année, sa session
+et l'autorisation écrite. Il n'est montré qu'avec **une autorisation déclarée
+et un sujet** : la règle est appliquée par le relais (`versionPublique`,
+`serveur-ia/contenu.js`) et répétée par le site (`examenVisible`,
+`src/data/examens.js`). Un examen publié avant, sous forme de simple lien
+vers un sujet hébergé ailleurs, reste un lien tant qu'on ne lui ajoute pas de
+sujet.
+
 On modifie un **brouillon** : rien ne change pour les étudiants avant
 **« Publier »**. Le contenu publié est gardé par le relais (Cloudflare KV,
 `serveur-ia/contenu.js`), qui vérifie et borne chaque champ. Le site le charge
@@ -847,8 +858,8 @@ recompilation, pas de push.
   terminé, ses réponses restent en place et l'IA les compare au corrigé de la
   partie (même route `/corriger-exercice`). La note reste son
   auto-correction : l'IA ne note jamais. Un devoir donné en PDF n'a pas de
-  texte lisible par l'IA, il n'a donc pas ce bloc ; les examens passés ne
-  sont que des liens, sans corrigé à comparer. Ce bloc remplace l'ancien
+  texte lisible par l'IA, il n'a donc pas ce bloc. Un examen passé écrit par
+  parties a le même bloc qu'un devoir. Ce bloc remplace l'ancien
   « Demander l'avis de l'IA », retiré du site et du relais.
 - Un **devoir** peut se donner en deux PDF, le sujet et le corrigé : le
   sujet s'affiche au lancement du minuteur, le corrigé à la fin, et

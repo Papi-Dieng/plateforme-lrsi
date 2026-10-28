@@ -37,7 +37,6 @@ const liensPublics = [
   { to: "/exercices", label: "Exercices" },
   { to: "/qcm", label: "QCM" },
   { to: "/bibliotheque", label: "Bibliothèque" },
-  { to: "/projet", label: "Le projet" },
 ];
 
 export default function Bienvenue() {
@@ -203,7 +202,6 @@ export default function Bienvenue() {
                 ["/conditions", "Conditions d'utilisation"],
                 ["/confidentialite", "Confidentialité"],
                 ["/mentions-legales", "Mentions légales"],
-                ["/projet", "La démarche du projet"],
               ].map(([to, label]) => (
                 <Link
                   key={to}

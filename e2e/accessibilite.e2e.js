@@ -1,4 +1,4 @@
-import { examens, exercices, qcms } from "../src/data/demonstration.js";
+import { annales, examens, exercices, qcms } from "../src/data/demonstration.js";
 import AxeBuilder from "@axe-core/playwright";
 import { aller, entrerEnInvite, expect, test } from "./outils.js";
 
@@ -23,6 +23,7 @@ const PAGES = [
   `/qcm/${qcms[0].id}`,
   "/examens",
   `/examens/${examens[0].id}`,
+  `/examens/${annales[0].id}`,
   "/videos",
   "/bibliotheque",
   "/favoris",
@@ -34,10 +35,10 @@ const PAGES = [
   "/conditions",
   "/confidentialite",
   "/mentions-legales",
-  "/projet",
   "/avis",
   "/admin",
   "/admin/contenu",
+  "/admin/projet",
 ];
 
 /* Une ligne lisible par défaut trouvé : la règle, l'élément et, pour

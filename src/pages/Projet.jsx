@@ -83,7 +83,9 @@ export default function Projet() {
               texte={`Ceux qui construisent ${site.nom} pour les étudiants de la filière.`}
               centre
             />
-            <div className="mt-10">
+            {/* Les cartes voisines débordent sur les côtés : la coque de
+                l'admin ne les coupe pas comme celle du site, d'où le clip. */}
+            <div className="mt-10 overflow-x-clip">
               <CarrouselEquipe membres={site.equipe} defilement={3000} />
             </div>
           </section>
@@ -217,7 +219,7 @@ export default function Projet() {
               ))}
             </div>
 
-            <p className="mt-5 max-w-3xl text-sm/6 text-ink-500 dark:text-ink-400">
+            <p className="mt-5 max-w-3xl text-sm/6 text-ink-600 dark:text-ink-400">
               Les étudiants s'inscrivent eux-mêmes, avec leur email, leur numéro
               de téléphone ou leur compte Google. Aucun matricule n'est demandé,
               et le mode invité reste ouvert à tous.

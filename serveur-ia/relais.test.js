@@ -517,6 +517,25 @@ describe("espace admin", () => {
     expect(vuAdmin.annales.map((a) => a.id)).toEqual(["autorise", "en-attente"]);
   });
 
+  test("un examen se passe comme un devoir : ses parties sont publiées, jamais sans autorisation", async () => {
+    const e = env();
+    const admin = { "X-Admin": MOT_DE_PASSE };
+    const partie = { titre: "Complexité", enonce: "Quelle est la complexité de la recherche dichotomique ?", points: 4, corrige: "O(log n)." };
+    const contenu = {
+      matieres: [{ id: "algo", nom: "Algo", chapitres: [] }],
+      annales: [
+        { id: "algo-2025", titre: "Algo, juin 2025", annee: "2025", parties: [partie], autorisation: { obtenue: true, detail: "Accord de M. X" } },
+        { id: "algo-2024", titre: "Algo, juin 2024", parties: [partie], autorisation: { obtenue: false } },
+        { id: "vide", titre: "Sans sujet", autorisation: { obtenue: true } },
+      ],
+    };
+    await relais.fetch(demande("/admin/contenu", { methode: "PUT", entetes: admin, corps: contenu }), e);
+
+    const public_ = await (await relais.fetch(demande("/contenu", { methode: "GET" }), e)).json();
+    expect(public_.annales.map((a) => a.id)).toEqual(["algo-2025"]);
+    expect(public_.annales[0]).toMatchObject({ format: "parties", dureeMinutes: 120, annee: "2025", parties: [partie] });
+  });
+
   test("restaurer échange la version publiée et la précédente", async () => {
     const e = env();
     const admin = { "X-Admin": MOT_DE_PASSE };

@@ -1,4 +1,4 @@
-import { examens } from "../src/data/demonstration.js";
+import { annales, examens } from "../src/data/demonstration.js";
 import { site } from "../src/data/site.js";
 import { aller, entrerAvecCompte, entrerEnInvite, expect, test } from "./outils.js";
 
@@ -146,6 +146,35 @@ test.describe("devoir : importer toute sa copie d'un coup", () => {
     await expect(page.getByRole("textbox", { name: "Ta réponse à la partie 1" })).toHaveValue("Ma reponse ecrite a la main");
     // Les questions du devoir partent avec la copie, pour le rangement.
     expect(envois[0].questions.length).toBe(devoir.parties.length);
+  });
+});
+
+test.describe("examen passé", () => {
+  const [examen, sansAutorisation] = annales;
+
+  test("un examen autorisé se passe comme un devoir ; sans autorisation, il n'apparaît jamais", async ({ page }) => {
+    await page.clock.install({ time: JEUDI });
+    await entrerEnInvite(page);
+    await aller(page, "/examens");
+    await expect(page.getByText(examen.titre)).toBeVisible();
+    await expect(page.getByText(sansAutorisation.titre)).toHaveCount(0);
+
+    await page.getByRole("link", { name: /Passer l'examen/ }).click();
+    await expect(page.getByRole("heading", { level: 1, name: examen.titre })).toBeVisible();
+    await expect(page.getByText(`Publié avec l'accord : ${examen.autorisation.detail}`)).toBeVisible();
+    await expect(page.getByText(examen.consignes)).toBeVisible();
+    const titrePartie = page.getByRole("heading", { name: `PARTIE 1 ${examen.parties[0].titre}` });
+    await expect(titrePartie).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Commencer l'examen" }).click();
+    await expect(titrePartie).toBeVisible();
+    await expect(page.getByText("Corrigé", { exact: true })).toHaveCount(0);
+    await page.getByRole("button", { name: "Terminer et voir le corrigé" }).click();
+    await expect(page.getByText("Corrigé", { exact: true })).toHaveCount(examen.parties.length);
+
+    // Même par son adresse, un examen sans autorisation ne s'ouvre pas.
+    await aller(page, `/examens/${sansAutorisation.id}`);
+    await expect(page.getByText("Examen introuvable")).toBeVisible();
   });
 });
 

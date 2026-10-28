@@ -410,7 +410,7 @@ export default function Admin() {
                 </li>
               ))}
             </ol>
-            <Link to="/projet" className="mt-6 inline-flex items-center gap-2 text-[15px] font-extrabold text-brand-600 hover:underline dark:text-brand-400">
+            <Link to="/admin/projet" className="mt-6 inline-flex items-center gap-2 text-[15px] font-extrabold text-brand-600 hover:underline dark:text-brand-400">
               Voir la feuille de route du projet
               <Icon name="arrow" className="size-4" />
             </Link>

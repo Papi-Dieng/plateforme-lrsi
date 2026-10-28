@@ -11,7 +11,7 @@ import { TYPES_COPIE, lireCopieDevoir, messageErreurCopie } from "../copie";
 import { Container, EtatVide } from "../components/ui";
 import { cx } from "../components/classes";
 import { mono } from "../components/styleAdmin";
-import { annales, examens, getExamen, totalPoints } from "../data/examens";
+import { annales, estExamenPasse, examenVisible, examens, getExamen, sePasseSurLeSite, totalPoints } from "../data/examens";
 import { matieres, nomMatiere } from "../data/matieres";
 import { themeMatiere } from "../data/couleurs";
 
@@ -39,8 +39,11 @@ import { themeMatiere } from "../data/couleurs";
    partie. Un devoir donné en PDF n'a pas de texte lisible par l'IA : il
    n'a pas de note, seulement son corrigé.
 
-   Les examens ne sont que des liens vers des sujets dont la
-   publication a été autorisée ; la plateforme n'en héberge aucun.
+   Depuis le 28 octobre 2026, un examen passé se fait de la même façon,
+   sur la même page : sujet, minuteur, corrigé à la fin et note de
+   l'IA. Il n'est montré qu'avec l'autorisation écrite déclarée dans
+   l'admin. Un examen publié avant, sous forme de simple lien vers un
+   sujet hébergé ailleurs, reste un lien.
 
    Mise en page d'après la maquette « Devoirs et examens » (7 octobre
    2026) : en-tête ardoise quadrillé, accent ambre, une copie de devoir
@@ -156,10 +159,11 @@ function Bareme({ examen }) {
 export function ExamensListe() {
   const [matiere, setMatiere] = useState("toutes");
 
-  const matieresListees = matieres.filter((m) => examens.some((x) => x.matiere === m.id) || annales.some((a) => a.matiere === m.id));
+  const autorises = annales.filter(examenVisible);
+  const matieresListees = matieres.filter((m) => examens.some((x) => x.matiere === m.id) || autorises.some((a) => a.matiere === m.id));
   const garde = (x) => matiere === "toutes" || x.matiere === matiere;
   const blancs = examens.filter(garde);
-  const sujets = annales.filter(garde);
+  const sujets = autorises.filter(garde);
 
   const pastille = (actif) =>
     cx(
@@ -296,7 +300,33 @@ export function ExamensListe() {
             </div>
           ) : (
             <ul className="mt-6 grid gap-3 md:grid-cols-2">
-              {sujets.map((a) => (
+              {sujets.map((a) =>
+                sePasseSurLeSite(a) ? (
+                <li key={a.id} className="md:col-span-2">
+                  <Link
+                    to={`/examens/${a.id}`}
+                    className="group flex flex-wrap items-center gap-x-6 gap-y-4 rounded-[28px] border border-ink-200 bg-white p-4 transition-colors hover:border-[#1b2328]/40 sm:gap-x-10 sm:gap-y-6 sm:p-8 dark:border-ink-800 dark:bg-ink-900 dark:hover:border-white/30"
+                  >
+                    <span className="min-w-0 flex-[1_1_300px]">
+                      <span className={cx("block text-[11px] text-ink-500 dark:text-ink-400", mono)}>
+                        {[nomMatiere(a.matiere), a.annee, a.session].filter(Boolean).join(" · ").toUpperCase()}
+                      </span>
+                      <span className="mt-2 block text-[22px] leading-[1.1] font-extrabold tracking-[-0.03em] text-ink-950 sm:text-[28px] dark:text-white">{a.titre}</span>
+                      <span className="mt-3 flex flex-wrap gap-2">
+                        <Puce icone="clock">{formatMinutes(a.dureeMinutes)}</Puce>
+                        <Puce icone={a.format === "pdf" ? "file" : "layers"}>{a.format === "pdf" ? "Sujet en PDF" : `${a.parties.length} parties`}</Puce>
+                        <Puce>Sur {totalPoints(a)} points</Puce>
+                      </span>
+                      {a.autorisation?.detail && <span className="mt-3 block text-xs text-ink-500 dark:text-ink-400">Publié avec l&apos;accord : {a.autorisation.detail}</span>}
+                    </span>
+                    {a.format !== "pdf" && a.parties?.length > 0 && <Bareme examen={a} />}
+                    <span className="inline-flex min-h-12 items-center gap-2 rounded-[14px] bg-[#1b2328] px-5 text-[15px] font-extrabold text-white transition-colors group-hover:bg-ink-950 dark:bg-white dark:text-ink-950">
+                      Passer l&apos;examen
+                      <Icon name="arrow" className="size-4" />
+                    </span>
+                  </Link>
+                </li>
+                ) : (
                 <li key={a.id} className="flex items-start gap-4 rounded-[24px] border border-ink-200 bg-white p-4 sm:p-6 dark:border-ink-800 dark:bg-ink-900">
                   <span className={cx("grid size-11 shrink-0 place-items-center rounded-[12px]", AMBRE)}>
                     <Icon name="file" className="size-5" />
@@ -319,7 +349,8 @@ export function ExamensListe() {
                     {a.autorisation?.detail && <p className="mt-2 text-xs text-ink-500 dark:text-ink-400">Publié avec l&apos;accord : {a.autorisation.detail}</p>}
                   </div>
                 </li>
-              ))}
+                )
+              )}
             </ul>
           )}
         </section>
@@ -363,6 +394,9 @@ function BlocCorrige({ children }) {
 export function ExamenSession() {
   const { id } = useParams();
   const examen = getExamen(id);
+  // Un examen passé se fait comme un devoir : seuls les mots changent.
+  const passe = estExamenPasse(id);
+  const mot = passe ? "examen" : "devoir";
   const [etape, setEtape] = useState("consignes"); // consignes → epreuve → corrige
   const [fin, setFin] = useState(null);
   const [maintenant, setMaintenant] = useState(() => Date.now());
@@ -413,7 +447,7 @@ export function ExamenSession() {
   if (!examen) {
     return (
       <Container className="py-16">
-        <EtatVide titre="Devoir introuvable" texte="Il a peut-être été retiré ou renommé.">
+        <EtatVide titre={passe ? "Examen introuvable" : "Devoir introuvable"} texte="Il a peut-être été retiré ou renommé.">
           <Link to="/examens" className="text-sm font-medium text-brand-600 hover:underline">
             Retour aux examens
           </Link>
@@ -494,7 +528,7 @@ export function ExamenSession() {
       ? `Sujet en PDF, noté sur ${total} points. Rédige tes réponses sur une feuille, comme un jour d'examen.`
       : `${examen.parties.length} parties, ${total} points au total. Écris tes réponses sous chaque partie, question par question ou d'un bloc (ou sur une feuille, comme un jour d'examen).`,
     pdf
-      ? "Le corrigé ne s'affiche qu'à la fin. Un devoir en PDF n'est pas noté automatiquement : compare ta copie au corrigé."
+      ? `Le corrigé ne s'affiche qu'à la fin. Un ${mot} en PDF n'est pas noté automatiquement : compare ta copie au corrigé.`
       : "Le corrigé ne s'affiche qu'à la fin : l'IA compare alors toutes tes réponses au corrigé et te donne ta note, partie par partie.",
   ];
 
@@ -515,12 +549,20 @@ export function ExamenSession() {
             <Puce icone="bookmark" sombre>
               Sur {total} points
             </Puce>
+            {passe && (examen.annee || examen.session) && (
+              <Puce icone="graduation" sombre>
+                {[examen.annee, examen.session].filter(Boolean).join(" · ")}
+              </Puce>
+            )}
             {etape === "corrige" && (
               <Puce icone="check" sombre>
                 Corrigé affiché
               </Puce>
             )}
           </div>
+          {passe && examen.autorisation?.detail && (
+            <p className="mt-4 text-sm text-ink-300">Publié avec l&apos;accord : {examen.autorisation.detail}</p>
+          )}
         </Container>
       </header>
 
@@ -570,7 +612,7 @@ export function ExamenSession() {
               </ol>
               {examen.consignes && (
                 <div className="mt-6 rounded-[20px] bg-[#1b2328] p-5 text-white dark:ring-1 dark:ring-white/10">
-                  <p className={cx("text-[11px] font-bold text-[#ffc94d]", mono)}>CONSIGNES DU DEVOIR</p>
+                  <p className={cx("text-[11px] font-bold text-[#ffc94d]", mono)}>{passe ? "CONSIGNES DE L'EXAMEN" : "CONSIGNES DU DEVOIR"}</p>
                   <TexteLibre texte={examen.consignes} className="mt-2 text-base/7 text-white!" />
                 </div>
               )}
@@ -583,7 +625,7 @@ export function ExamenSession() {
                 className="mt-6 inline-flex min-h-13 items-center gap-2.5 rounded-[14px] bg-[#1b2328] px-6 text-[15.5px] font-extrabold text-white transition-colors hover:bg-ink-950 dark:bg-[#ffc94d] dark:text-ink-950"
               >
                 <Icon name="clock" className="size-4.5 text-[#ffc94d] dark:text-ink-950" />
-                Commencer le devoir
+                {passe ? "Commencer l'examen" : "Commencer le devoir"}
               </button>
             </div>
           )}
@@ -600,7 +642,7 @@ export function ExamenSession() {
                     {examen.pdfCorrige ? (
                       <LecteurPdf pdf={examen.pdfCorrige} libelle="Corrigé en PDF" titre={`Corrigé : ${examen.titre}`} ouvert />
                     ) : (
-                      <p className="text-sm">Le corrigé de ce devoir n&apos;a pas encore été publié.</p>
+                      <p className="text-sm">Le corrigé de ce {mot} n&apos;a pas encore été publié.</p>
                     )}
                   </BlocCorrige>
                 </section>
@@ -618,7 +660,7 @@ export function ExamenSession() {
               </h2>
               <p className="mt-1.5 text-[15px] text-ink-600 dark:text-ink-300">
                 Photographie ta copie (une photo par page) ou envoie-la en PDF : l&apos;IA la lit et range chaque réponse
-                sous sa partie. Relis ensuite ce qu&apos;elle a mis avant de terminer le devoir.
+                sous sa partie. Relis ensuite ce qu&apos;elle a mis avant de terminer {passe ? "l'examen" : "le devoir"}.
               </p>
               <input
                 ref={champCopie}
@@ -707,7 +749,7 @@ export function ExamenSession() {
                   {pdf ? "Pas de note automatique" : corrigeEnCours ? "Ma note, l'IA corrige encore…" : "Ma note, donnée par l'IA"}
                 </p>
                 {pdf ? (
-                  <p className="mt-2 max-w-md text-base/7 text-ink-200">L&apos;IA ne lit pas un devoir en PDF : compare ta copie au corrigé ci-dessus.</p>
+                  <p className="mt-2 max-w-md text-base/7 text-ink-200">L&apos;IA ne lit pas un {mot} en PDF : compare ta copie au corrigé ci-dessus.</p>
                 ) : !iaActive ? (
                   <p className="mt-2 max-w-md text-base/7 text-ink-200">La note automatique demande une connexion et la version en ligne du site.</p>
                 ) : (

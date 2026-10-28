@@ -83,18 +83,26 @@ export const TYPES = {
   },
   annales: {
     Editeur: EditeurAnnale,
+    // Depuis le 28 octobre 2026, un examen se passe comme un devoir :
+    // mêmes champs, plus l'année, la session et l'autorisation.
     nouveau: (tous, matiere) => ({
       id: identifiant("examen-passe", tous),
       titre: "",
       matiere,
       annee: "",
       session: "",
-      lienSujet: "",
-      lienCorrige: "",
+      dureeMinutes: 120,
+      consignes: "",
+      format: "parties",
+      parties: [],
       autorisation: { obtenue: false, detail: "" },
     }),
     titre: (a) => a.titre,
-    detail: (a) => (a.autorisation?.obtenue && a.lienSujet ? "visible" : "en attente"),
+    detail: (a) => {
+      const sujet = a.format === "pdf" && a.pdfEnonce ? "sujet PDF" : a.parties?.length ? `${a.parties.length} parties` : a.lienSujet ? "lien" : "sans sujet";
+      const visible = a.autorisation?.obtenue && sujet !== "sans sujet";
+      return `${visible ? "visible" : "en attente"} · ${sujet}`;
+    },
   },
   ressources: {
     Editeur: EditeurRessource,

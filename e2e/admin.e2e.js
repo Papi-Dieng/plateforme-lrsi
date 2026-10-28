@@ -65,6 +65,31 @@ test.describe("gérer le contenu", () => {
     expect(envoye.exercices.map((e) => e.id)).toEqual(exercices.map((e) => e.id));
   });
 
+  test("un examen s'écrit comme un devoir, avec son année et son autorisation, puis se publie", async ({ page, relais }) => {
+    await connecter(page, relais);
+    await onglet(page, "Examens").click();
+    await page.getByRole("button", { name: "Ajouter" }).click();
+
+    await page.getByLabel("Titre", { exact: true }).fill("Examen d'algorithmique, juin 2026");
+    await page.getByLabel("Année").fill("2026");
+    await expect(page.getByLabel("Durée (minutes)")).toHaveValue("120");
+    await expect(page.getByRole("button", { name: "Coller tout l'examen d'un coup" })).toBeVisible();
+    await page.getByRole("button", { name: "Ajouter une partie" }).click();
+    await page.getByLabel("Titre de la partie").fill("Complexité");
+    await page.getByLabel("Énoncé", { exact: true }).fill("Quelle est la complexité de la recherche dichotomique ?");
+    await page.getByRole("textbox", { name: /^Corrigé/ }).fill("O(log n).");
+    await expect(page.getByText(/En attente : un examen n'est montré/)).toBeVisible();
+    await page.getByLabel(/J'ai l'autorisation écrite/).check();
+    await expect(page.getByText(/Visible par les étudiants après publication/)).toBeVisible();
+
+    page.on("dialog", (d) => d.accept());
+    await page.getByRole("button", { name: "Publier" }).click();
+    await expect(page.getByText(/^Publié à /)).toBeVisible();
+    const examen = relais.publications.at(-1).annales.find((a) => a.titre === "Examen d'algorithmique, juin 2026");
+    expect(examen).toMatchObject({ annee: "2026", dureeMinutes: 120, format: "parties", autorisation: { obtenue: true } });
+    expect(examen.parties[0]).toMatchObject({ titre: "Complexité", corrige: "O(log n)." });
+  });
+
   test("un exercice ajouté sans titre est signalé avant de publier", async ({ page, relais }) => {
     await connecter(page, relais);
     await onglet(page, "Exercices").click();

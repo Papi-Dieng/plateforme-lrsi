@@ -3,7 +3,7 @@ import { matieres } from "./data/matieres";
 import { exercices } from "./data/exercices";
 import { qcms } from "./data/qcm";
 import { videosSuggerees } from "./data/videos";
-import { annales, examens } from "./data/examens";
+import { aUnSujet, annales, examens } from "./data/examens";
 import { ressources } from "./data/bibliotheque";
 import { normaliserChapitres } from "./semestres";
 
@@ -156,7 +156,7 @@ async function appel(chemin, motDePasse, options = {}) {
    publier, comme les étudiants le verront. */
 const versionVisible = (c) => ({
   ...c,
-  annales: c.annales.filter((a) => a.autorisation.obtenue && a.lienSujet),
+  annales: c.annales.filter((a) => a.autorisation.obtenue && aUnSujet(a)),
   ...(c.ressources && {
     ressources: c.ressources.map((r) => (r.statut === "libre" ? r : { ...r, url: null, pdf: null })),
   }),

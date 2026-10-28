@@ -194,10 +194,13 @@ function nettoyerExamen(x) {
   };
 }
 
+/* Un examen se passe comme un devoir (sujet par parties ou en PDF,
+   minuteur, corrigé à la fin) ; il garde en plus son année, sa session
+   et l'autorisation écrite sans laquelle il n'est jamais montré. Les
+   liens vers un sujet hébergé ailleurs restent lus, pour les examens
+   publiés avant le 28 octobre 2026. */
 const nettoyerAnnale = (a) => ({
-  id: id(a?.id),
-  titre: texte(a?.titre, 150),
-  matiere: id(a?.matiere),
+  ...nettoyerExamen({ dureeMinutes: 120, ...a }),
   annee: texte(a?.annee, 20),
   session: texte(a?.session, 40),
   lienSujet: lien(a?.lienSujet),
@@ -244,12 +247,15 @@ export function nettoyerContenu(brut) {
   };
 }
 
-/* Ce que voit un étudiant : une annale n'apparaît qu'avec une
-   autorisation déclarée et un lien vers le sujet. L'admin, lui, voit
-   aussi les annales en attente. */
+// Un examen a un sujet : des parties, un PDF, ou un lien de l'ancienne forme.
+export const aUnSujet = (a) => a.parties.length > 0 || Boolean(a.pdfEnonce) || Boolean(a.lienSujet);
+
+/* Ce que voit un étudiant : un examen n'apparaît qu'avec une
+   autorisation déclarée et un sujet. L'admin, lui, voit aussi les
+   examens en attente. */
 export const versionPublique = (c) => ({
   ...c,
-  annales: c.annales.filter((a) => a.autorisation.obtenue && a.lienSujet),
+  annales: c.annales.filter((a) => a.autorisation.obtenue && aUnSujet(a)),
   ...(c.ressources && {
     ressources: c.ressources.map((r) => (r.statut === "libre" ? r : { ...r, url: null, pdf: null })),
   }),

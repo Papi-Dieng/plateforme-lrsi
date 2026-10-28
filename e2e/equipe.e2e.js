@@ -1,5 +1,5 @@
 import { site } from "../src/data/site.js";
-import { aller, expect, test } from "./outils.js";
+import { aller, entrerEnInvite, expect, test } from "./outils.js";
 
 /* Le carrousel de l'équipe, page Projet (components/CarrouselEquipe.jsx).
    Les tests demandent « moins d'animations » : le carrousel part alors
@@ -11,7 +11,8 @@ test.describe("équipe", () => {
   });
 
   test("les flèches, les points et le clavier passent d'un membre à l'autre", async ({ page }) => {
-    await aller(page, "/projet");
+    await entrerEnInvite(page);
+    await aller(page, "/admin/projet");
     const carrousel = page.getByRole("region", { name: "L'équipe du projet" });
     const nom = carrousel.getByRole("heading", { level: 3 });
     await expect(nom).toHaveText(site.equipe[0].nom);
@@ -32,7 +33,8 @@ test.describe("équipe", () => {
   });
 
   test("le défilement se lance et s'arrête avec le bouton", async ({ page }) => {
-    await aller(page, "/projet");
+    await entrerEnInvite(page);
+    await aller(page, "/admin/projet");
     const carrousel = page.getByRole("region", { name: "L'équipe du projet" });
     await carrousel.getByRole("button", { name: "Relancer le défilement" }).click();
     // Ni survol ni focus dans le carrousel : l'un comme l'autre le suspend.

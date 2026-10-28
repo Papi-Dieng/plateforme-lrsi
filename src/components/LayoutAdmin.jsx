@@ -31,7 +31,7 @@ const LIENS = [
   ...(projetSupabase
     ? [{ href: `https://supabase.com/dashboard/project/${projetSupabase}/auth/users`, label: "Comptes · Supabase", icone: "users" }]
     : []),
-  { to: "/projet", label: "Feuille de route", icone: "route" },
+  { to: "/admin/projet", label: "Feuille de route", icone: "route" },
 ];
 
 function Marque() {

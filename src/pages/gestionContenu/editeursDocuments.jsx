@@ -65,7 +65,7 @@ export function EditeurVideo({ element: v, changer, matieres }) {
    l'auteur les remplit, ce que le bandeau lui dit.
    ================================================================== */
 
-function DecoupageDevoir({ devoir, changer, motDePasse }) {
+function DecoupageDevoir({ devoir, changer, motDePasse, mot = "devoir" }) {
   const [ouvert, setOuvert] = useState(false);
   const [sujet, setSujet] = useState("");
   const [corrige, setCorrige] = useState("");
@@ -119,7 +119,7 @@ function DecoupageDevoir({ devoir, changer, motDePasse }) {
   if (!ouvert) {
     return (
       <Bouton icone="sparkles" onClick={() => setOuvert(true)}>
-        Coller tout le devoir d&apos;un coup
+        {mot === "examen" ? "Coller tout l'examen d'un coup" : "Coller tout le devoir d'un coup"}
       </Bouton>
     );
   }
@@ -128,7 +128,7 @@ function DecoupageDevoir({ devoir, changer, motDePasse }) {
     <section className="space-y-3 rounded-xl border border-ink-200 p-4 dark:border-ink-800">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-ink-900 dark:text-white">Coller tout le devoir d&apos;un coup</h3>
+          <h3 className="text-sm font-semibold text-ink-900 dark:text-white">{mot === "examen" ? "Coller tout l'examen d'un coup" : "Coller tout le devoir d'un coup"}</h3>
           <p className="mt-1 text-xs/5 text-ink-600 dark:text-ink-400">
             Colle le sujet entier et le corrigé entier : l&apos;IA retrouve les questions, rapproche chaque corrigé, et
             reprend le barème écrit dans le sujet. Elle ne réécrit rien — vérifie quand même avant de publier.
@@ -162,7 +162,7 @@ function DecoupageDevoir({ devoir, changer, motDePasse }) {
   );
 }
 
-export function EditeurExamen({ element: x, changer, matieres, motDePasse }) {
+export function EditeurExamen({ element: x, changer, matieres, motDePasse, mot = "devoir", champsEnPlus = null }) {
   const format = x.format === "pdf" ? "pdf" : "parties";
   const parties = x.parties;
   const total = parties.reduce((n, p) => n + (Number(p.points) || 0), 0);
@@ -183,6 +183,7 @@ export function EditeurExamen({ element: x, changer, matieres, motDePasse }) {
           onChange={(e) => changer({ dureeMinutes: Number(e.target.value) })}
         />
       </div>
+      {champsEnPlus}
       <Zone label="Consignes" rows={2} value={x.consignes} maxLength={2000} placeholder="Sans document ni calculatrice…" onChange={(e) => changer({ consignes: e.target.value })} />
 
       <ChoixFormat
@@ -208,7 +209,7 @@ export function EditeurExamen({ element: x, changer, matieres, motDePasse }) {
               libelle="Corrigé (PDF)"
               pdf={x.pdfCorrige}
               motDePasse={motDePasse}
-              aide="Affiché seulement à la fin du devoir."
+              aide={`Affiché seulement à la fin ${mot === "examen" ? "de l'examen" : "du devoir"}.`}
               onChange={(pdf) => changer({ pdfCorrige: pdf })}
               onRetirer={() => changer({ pdfCorrige: null })}
             />
@@ -225,7 +226,7 @@ export function EditeurExamen({ element: x, changer, matieres, motDePasse }) {
           />
           {/* Un sujet en PDF peut aussi devenir des questions notées une
               par une : l'IA lit le PDF et relève le barème. */}
-          <DecoupageDevoir devoir={x} changer={changer} motDePasse={motDePasse} />
+          <DecoupageDevoir devoir={x} changer={changer} motDePasse={motDePasse} mot={mot} />
         </>
       ) : (
       <>
@@ -243,7 +244,7 @@ export function EditeurExamen({ element: x, changer, matieres, motDePasse }) {
                   <Champ label="Points" type="number" min={0} max={100} value={p.points} onChange={(e) => changerPartie(i, { points: Number(e.target.value) })} />
                 </div>
                 <Zone label="Énoncé" rows={5} value={p.enonce} maxLength={8000} onChange={(e) => changerPartie(i, { enonce: e.target.value })} />
-                <Zone label="Corrigé" aide="Affiché seulement à la fin du devoir." rows={5} value={p.corrige} maxLength={8000} onChange={(e) => changerPartie(i, { corrige: e.target.value })} />
+                <Zone label="Corrigé" aide={`Affiché seulement à la fin ${mot === "examen" ? "de l'examen" : "du devoir"}.`} rows={5} value={p.corrige} maxLength={8000} onChange={(e) => changerPartie(i, { corrige: e.target.value })} />
               </div>
               <Ordre
                 index={i}
@@ -261,16 +262,20 @@ export function EditeurExamen({ element: x, changer, matieres, motDePasse }) {
           Ajouter une partie
         </Bouton>
       </div>
-      <DecoupageDevoir devoir={x} changer={changer} motDePasse={motDePasse} />
+      <DecoupageDevoir devoir={x} changer={changer} motDePasse={motDePasse} mot={mot} />
       </>
       )}
     </div>
   );
 }
 
-export function EditeurAnnale({ element: a, changer, matieres }) {
+export function EditeurAnnale({ element: a, changer, matieres, motDePasse }) {
   const auto = a.autorisation ?? { obtenue: false, detail: "" };
-  const visible = auto.obtenue && a.lienSujet;
+  const sujet = (a.parties?.length ?? 0) > 0 || Boolean(a.pdfEnonce) || Boolean(a.lienSujet);
+  const visible = auto.obtenue && sujet;
+  // Un examen publié avant le 28 octobre 2026 pouvait n'être qu'un lien.
+  const ancienLien = Boolean(a.lienSujet || a.lienCorrige);
+  const examen = { format: "parties", dureeMinutes: 120, consignes: "", parties: [], ...a };
 
   return (
     <div className="space-y-4">
@@ -285,24 +290,39 @@ export function EditeurAnnale({ element: a, changer, matieres }) {
         <Icon name={visible ? "check" : "lock"} className="mt-0.5 size-4.5 shrink-0" />
         <p>
           {visible
-            ? "Visible par les étudiants après publication."
-            : "En attente : un examen n'est montré aux étudiants qu'avec une autorisation écrite déclarée et un lien vers le sujet."}
+            ? "Visible par les étudiants après publication. Ils le passent comme un devoir : minuteur, corrigé à la fin, note de l'IA."
+            : "En attente : un examen n'est montré aux étudiants qu'avec un sujet et une autorisation écrite déclarée ci-dessous."}
         </p>
       </div>
-      <Champ label="Titre" value={a.titre} maxLength={150} placeholder="Examen de réseaux, session 1" onChange={(e) => changer({ titre: e.target.value })} />
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Choix label="Matière" value={a.matiere} options={optionsMatieres(matieres)} onChange={(e) => changer({ matiere: e.target.value })} />
-        <Champ label="Année" value={a.annee} maxLength={20} placeholder="2025" onChange={(e) => changer({ annee: e.target.value })} />
-        <Champ label="Session" value={a.session} maxLength={40} placeholder="Session normale" onChange={(e) => changer({ session: e.target.value })} />
-      </div>
-      <Champ
-        label="Lien vers le sujet"
-        aide="Adresse https d'un fichier partagé (Google Drive, site du département…). La plateforme n'héberge aucun fichier."
-        value={a.lienSujet}
-        placeholder="https://…"
-        onChange={(e) => changer({ lienSujet: e.target.value })}
+
+      <EditeurExamen
+        element={examen}
+        changer={changer}
+        matieres={matieres}
+        motDePasse={motDePasse}
+        mot="examen"
+        champsEnPlus={
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Champ label="Année" value={a.annee} maxLength={20} placeholder="2025" onChange={(e) => changer({ annee: e.target.value })} />
+            <Champ label="Session" value={a.session} maxLength={40} placeholder="Session normale" onChange={(e) => changer({ session: e.target.value })} />
+          </div>
+        }
       />
-      <Champ label="Lien vers le corrigé (facultatif)" value={a.lienCorrige} placeholder="https://…" onChange={(e) => changer({ lienCorrige: e.target.value })} />
+
+      {ancienLien && (
+        <fieldset className="rounded-xl border border-ink-200 p-4 dark:border-ink-800">
+          <legend className="px-1 text-sm font-extrabold text-ink-950 dark:text-white">Liens de l'ancienne forme</legend>
+          <p className="text-sm/6 text-ink-600 dark:text-ink-300">
+            Cet examen n'était qu'un lien vers un sujet hébergé ailleurs. Tant qu'il n'a ni parties ni PDF, les étudiants voient ce lien ;
+            ajoute le sujet ci-dessus pour qu'ils puissent le passer sur le site.
+          </p>
+          <div className="mt-3 grid gap-4 sm:grid-cols-2">
+            <Champ label="Lien vers le sujet" value={a.lienSujet ?? ""} placeholder="https://…" onChange={(e) => changer({ lienSujet: e.target.value })} />
+            <Champ label="Lien vers le corrigé" value={a.lienCorrige ?? ""} placeholder="https://…" onChange={(e) => changer({ lienCorrige: e.target.value })} />
+          </div>
+        </fieldset>
+      )}
+
       <fieldset className="rounded-xl border border-ink-200 p-4 dark:border-ink-800">
         <legend className="px-1 text-sm font-extrabold text-ink-950 dark:text-white">Autorisation</legend>
         <label className="flex items-start gap-3 text-sm text-ink-700 dark:text-ink-300">

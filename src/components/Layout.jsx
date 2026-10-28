@@ -105,7 +105,6 @@ const icones = {
   "/progression": "layers",
   "/planning": "clock",
   "/assistant": "assistant",
-  "/projet": "info",
 };
 
 // La barre reste en place quand la page défile : son contenu colle en
@@ -651,7 +650,6 @@ const COLONNES_PIED = [
   {
     title: "Le projet",
     links: [
-      { label: "La démarche du projet", href: "#/projet" },
       { label: "Donner mon avis", href: "#/avis" },
       { label: "Nous écrire", href: `mailto:${site.contact}` },
     ],

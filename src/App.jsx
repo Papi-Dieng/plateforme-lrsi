@@ -125,6 +125,7 @@ export default function App() {
         <Route path="admin/contenu" element={<GestionContenu />} />
         <Route path="admin/ia" element={<EducationIA />} />
         <Route path="admin/stats" element={<StatsAdmin />} />
+        <Route path="admin/projet" element={<Projet />} />
       </Route>
 
       <Route element={<Layout />}>
@@ -149,7 +150,6 @@ export default function App() {
         <Route path="conditions" element={<Conditions />} />
         <Route path="confidentialite" element={<Confidentialite />} />
         <Route path="mentions-legales" element={<MentionsLegales />} />
-        <Route path="projet" element={<Projet />} />
         {/* Ouverte à tous, sans entrer : c'est le lien partagé pour recueillir les avis. */}
         <Route path="avis" element={<Avis />} />
         <Route
