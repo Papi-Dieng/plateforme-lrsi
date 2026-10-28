@@ -13,7 +13,7 @@ ORIGINES = "https://papi-dieng.github.io,http://localhost:5173,http://localhost:
 MODELE = "gemini-3.6-flash"
 # Essayés dans l'ordre si le principal est saturé ou a épuisé son quota.
 # La liste des modèles disponibles pour la clé :
-#   https://sunucours-ia.soniadieng22.workers.dev/modeles (depuis le site)
+#   https://sunucours-ia.sunucours.workers.dev/modeles (depuis le site)
 MODELES_SECOURS = "gemini-3.1-flash-lite,gemini-3.5-flash"
 # Modèle essayé d'abord pour les tâches courtes (corriger un exercice) :
 # mesuré le 6 octobre 2026, 3,6 s contre jusqu'à 100 s pour le principal
