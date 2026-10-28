@@ -40,9 +40,9 @@ export const site = {
   version: "Plateforme en ligne",
   // Adresse du relais IA (dossier `serveur-ia/`), affichée par Cloudflare
   // après `npx wrangler deploy`, par exemple
-  // "https://jangrsi-ia.<compte>.workers.dev". Tant qu'elle est vide,
+  // "https://sunucours-ia.<compte>.workers.dev". Tant qu'elle est vide,
   // l'assistant fonctionne en guide seul, sans modèle de langage.
-  urlIA: "https://jangrsi-ia.soniadieng22.workers.dev",
+  urlIA: "https://sunucours-ia.soniadieng22.workers.dev",
   // D'où vient le nom, sur la page Projet.
   origineNom:
     "« Sunu » veut dire « notre » en wolof : Sunu Cours, ce sont nos cours, ceux de la filière, réunis par et pour ses étudiants.",

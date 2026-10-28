@@ -1370,7 +1370,7 @@ calculé dans le navigateur, sans IA : les scores ne sont jamais envoyés.
 
    La deuxième commande demande la clé : elle est stockée chez Cloudflare, jamais
    dans le dépôt. La dernière affiche l'adresse du relais,
-   `https://jangrsi-ia.<compte>.workers.dev`.
+   `https://sunucours-ia.<compte>.workers.dev`.
 4. Recopier cette adresse dans `urlIA`, dans `src/data/site.js`, puis mettre le
    site en ligne comme d'habitude (`npm run build`, commit, push).
 
