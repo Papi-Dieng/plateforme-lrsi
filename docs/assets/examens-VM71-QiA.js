@@ -1,0 +1,1 @@
+var e=[],t=[],n=e=>(e.parties?.length??0)>0||!!e.pdfEnonce||!!e.lienSujet,r=e=>(e.parties?.length??0)>0||!!e.pdfEnonce,i=e=>e.autorisation?.obtenue===!0&&n(e),a=e=>t.some(t=>t.id===e),o=n=>e.find(e=>e.id===n)??t.find(e=>e.id===n&&i(e)&&r(e)),s=e=>e.format===`pdf`?e.pointsTotal??20:e.parties.reduce((e,t)=>e+(t.points??0),0);export{e as a,s as c,i,t as n,o,a as r,r as s,n as t};

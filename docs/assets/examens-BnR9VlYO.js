@@ -1,1 +1,0 @@
-var e=[],t=[],n=t=>e.find(e=>e.id===t),r=e=>e.format===`pdf`?e.pointsTotal??20:e.parties.reduce((e,t)=>e+(t.points??0),0);export{r as i,e as n,n as r,t};
