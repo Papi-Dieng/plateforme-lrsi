@@ -79,7 +79,7 @@ export default function FicheRevision({ reference, titre, texte, couleur = "#1f2
           {etat.attente ? (
             <p className="flex items-center gap-2 text-sm font-bold text-ink-700 dark:text-ink-200">
               <span aria-hidden="true" className="size-3 animate-ping rounded-full" style={{ background: couleur }} />
-              L&apos;IA lit le cours et prépare ta fiche…
+              Lecture du cours et préparation de ta fiche…
             </p>
           ) : etat.erreur ? (
             <div className="space-y-3">
@@ -119,7 +119,7 @@ export default function FicheRevision({ reference, titre, texte, couleur = "#1f2
                 )}
                 <p className="mt-4 flex items-center gap-1.5 text-xs text-ink-600 dark:text-ink-300">
                   <Icon name="info" className="size-3.5" />
-                  Rédigée par une IA à partir du cours : elle peut se tromper, le cours fait foi.
+                  Rédigée automatiquement à partir du cours : elle peut se tromper, le cours fait foi.
                 </p>
               </>
             )

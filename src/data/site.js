@@ -64,7 +64,7 @@ export const navigation = [
   { label: "Mes favoris", to: "/favoris" },
   { label: "Ma progression", to: "/progression" },
   { label: "Mon planning", to: "/planning" },
-  { label: "Assistant IA", to: "/assistant" },
+  { label: "Assistant", to: "/assistant" },
   // « Le projet » (/projet) n'est plus dans le menu (8 octobre 2026) : la
   // page reste accessible depuis le pied de page et l'accueil.
 ];

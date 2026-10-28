@@ -188,7 +188,7 @@ function BarreLaterale({ liste, active, ouverte, onOuvrir, onSupprimer, onNouvel
           <h2 className="text-[17px] leading-tight font-extrabold tracking-tight text-white">Assistant de révision</h2>
           <p className="mt-1 inline-flex items-center gap-2 rounded-full border border-white/15 px-2.5 py-0.5 text-[11px] text-[#cfc3d6]">
             <span aria-hidden="true" className="size-2 rounded-full bg-[#ffb38c]" />
-            {iaActive ? "IA Gemini et contenu du site" : "Contenu du site"}
+            {iaActive ? "Explications et contenu du site" : "Contenu du site"}
           </p>
         </div>
         <button
@@ -501,14 +501,14 @@ export default function Assistant() {
                       qui traitent le sujet.
                     </p>
                     <p className="mx-auto mt-3 max-w-xl text-sm/6 text-[#cfc3d6]">
-                      Une IA peut se tromper : en cas de doute, le cours et ton enseignant font foi.
+                      L&apos;assistant peut se tromper : en cas de doute, le cours et ton enseignant font foi.
                       N'écris rien de personnel ici.
                     </p>
                   </>
                 ) : (
                   <>
                     <p className="mx-auto mt-5 max-w-xl text-[17px]/7 text-[#f4eef7]">
-                      Je suis un guide, pas une intelligence artificielle. Je ne rédige aucune explication :
+                      Je suis un guide : je ne rédige aucune explication,
                       je cherche dans les cours, les exercices et les QCM de la plateforme, et je t'amène au
                       bon endroit.
                     </p>
@@ -617,7 +617,7 @@ export default function Assistant() {
                     {m.etat === "ia" && (
                       <p className="mt-4 flex items-center gap-2 text-sm text-[#cfc3d6]">
                         <Icon name="info" className="size-3.5" />
-                        Rédigé par une IA : elle peut se tromper, le cours fait foi.
+                        Réponse de l&apos;assistant : elle peut se tromper, le cours fait foi.
                       </p>
                     )}
 
@@ -670,8 +670,8 @@ export default function Assistant() {
             />
             <p className="mt-2 text-center text-xs text-[#a99bb3]">
               {iaActive
-                ? "Tes questions et tes images sont envoyées à Google Gemini : rien de personnel, pas de photo de personne. L'IA peut se tromper, le cours fait foi. "
-                : "Rien n'est envoyé à une IA. "}
+                ? "Tes questions et tes images sont envoyées à un service de Google pour y répondre : rien de personnel, pas de photo de personne. "
+                : "Rien n'est envoyé en dehors du site. "}
               <Link to="/confidentialite" className="text-[#f4eef7] underline underline-offset-2">
                 Confidentialité
               </Link>

@@ -125,7 +125,7 @@ test.describe("exercice : ma réponse corrigée par l'IA", () => {
     await aller(page, `/exercices/${exercice.id}`);
     await expect(page.getByRole("heading", { name: "Vérifier ma réponse" })).toHaveCount(0);
     const champ = page.getByRole("textbox", { name: "Ta réponse à l'exercice" });
-    const corriger = page.getByRole("button", { name: "Faire corriger par l'IA" });
+    const corriger = page.getByRole("button", { name: "Faire corriger", exact: true });
     await expect(corriger).toBeDisabled();
 
     await champ.fill("64 hôtes");
@@ -179,7 +179,7 @@ test.describe("exercice : importer sa copie en photo", () => {
 
     const champ = page.getByRole("textbox", { name: "Ta réponse à l'exercice" });
     await expect(champ).toHaveValue(/Masque 255.255.255.224/);
-    await expect(page.getByText("Copie lue par l'IA")).toBeVisible();
+    await expect(page.getByText("Copie lue automatiquement")).toBeVisible();
     // Une page a bien été envoyée, en JPEG réduit par le site.
     expect(envois[0].images).toHaveLength(1);
     expect(envois[0].images[0].type).toBe("image/jpeg");
@@ -251,7 +251,7 @@ test.describe("exercice : répondre question par question, ou tout écrire", () 
     await expect(choix.getByRole("button", { name: "Répondre question par question" })).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByText("Quel est le masque en notation décimale ?").last()).toBeVisible();
 
-    const corriger = page.getByRole("button", { name: "Faire corriger par l'IA" });
+    const corriger = page.getByRole("button", { name: "Faire corriger", exact: true });
     await expect(corriger).toBeDisabled();
     await page.getByRole("textbox", { name: "Ta réponse à la question 1" }).fill("255.255.255.224");
     await page.getByRole("textbox", { name: "Ta réponse à la question 2" }).fill("32");
@@ -277,7 +277,7 @@ test.describe("exercice : répondre question par question, ou tout écrire", () 
     await entrerEnInvite(page);
     await aller(page, `/exercices/${exercice.id}`);
     await page.getByRole("textbox", { name: "Ta réponse à l'exercice" }).fill("Une réponse.");
-    await page.getByRole("button", { name: "Faire corriger par l'IA" }).click();
+    await page.getByRole("button", { name: "Faire corriger", exact: true }).click();
     await expect(page.getByRole("alert")).toBeVisible();
 
     const voir = page.getByRole("button", { name: "Voir la réponse attendue" });

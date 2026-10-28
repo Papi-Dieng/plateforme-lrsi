@@ -16,7 +16,7 @@ test.describe("devoir", () => {
   const devoir = examens[0];
   const total = devoir.parties.reduce((n, p) => n + p.points, 0);
 
-  test("consignes, sujet et minuteur, corrigé à la fin, puis note donnée par l'IA", async ({ page }) => {
+  test("consignes, sujet et minuteur, corrigé à la fin, puis note automatique", async ({ page }) => {
     await page.clock.install({ time: JEUDI });
     await entrerEnInvite(page);
     await aller(page, `/examens/${devoir.id}`);
@@ -42,7 +42,7 @@ test.describe("devoir", () => {
     // Plus aucune case pour se noter : la note vient de l'IA. Rien n'a
     // été écrit, donc chaque partie vaut 0, sans rien envoyer.
     await expect(page.getByRole("spinbutton")).toHaveCount(0);
-    await expect(page.getByText("Ma note, donnée par l'IA").locator("..")).toContainText(`0 / ${total}`);
+    await expect(page.getByText("Ma note", { exact: true }).locator("..")).toContainText(`0 / ${total}`);
   });
 
   test("les réponses s'écrivent pendant le devoir, et l'IA les corrige une fois terminé", async ({ page }) => {
@@ -62,7 +62,7 @@ test.describe("devoir", () => {
     const partie = page.locator("section").filter({ hasText: devoir.parties[0].titre });
     const reponse1 = partie.getByRole("textbox", { name: "Ta réponse à la question 1" });
     await reponse1.fill("Physique, liaison, réseau, transport, session, présentation, application.");
-    await expect(page.getByRole("button", { name: "Faire corriger par l'IA" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Faire corriger", exact: true })).toHaveCount(0);
 
     // Terminé : les réponses sont toujours là, et toutes se font corriger
     // d'un coup, sans bouton à cliquer partie par partie.
@@ -70,7 +70,7 @@ test.describe("devoir", () => {
     await expect(reponse1).toHaveValue("Physique, liaison, réseau, transport, session, présentation, application.");
     await expect(partie.getByRole("status").filter({ hasText: "Presque" })).toBeVisible();
     await expect(partie.getByText("La question 2 ne correspond pas.")).toBeVisible();
-    await expect(partie.getByRole("button", { name: "Faire corriger par l'IA" })).toHaveCount(0);
+    await expect(partie.getByRole("button", { name: "Faire corriger", exact: true })).toHaveCount(0);
     expect(envois).toHaveLength(1);
     expect(envois[0]).toMatchObject({ enonce: devoir.parties[0].enonce, corrige: devoir.parties[0].corrige });
     expect(envois[0].reponse).toContain("Réponse : Physique, liaison, réseau");
@@ -79,7 +79,7 @@ test.describe("devoir", () => {
     expect(envois[0].bareme).toBe(devoir.parties[0].points);
     await expect(partie.getByText(`3 / ${devoir.parties[0].points}`)).toBeVisible();
     await expect(page.getByRole("spinbutton")).toHaveCount(0);
-    await expect(page.getByText("Ma note, donnée par l'IA").locator("..")).toContainText(`3 / ${total}`);
+    await expect(page.getByText("Ma note", { exact: true }).locator("..")).toContainText(`3 / ${total}`);
 
     // La note rejoint l'historique des devoirs, dans Ma progression.
     await aller(page, "/progression");
@@ -113,9 +113,9 @@ test.describe("devoir", () => {
     await page.getByRole("button", { name: "Terminer et voir le corrigé" }).click();
     // La correction automatique échoue : on le dit, et on peut relancer.
     await expect(partie.getByRole("alert")).toBeVisible();
-    await partie.getByRole("button", { name: "Faire corriger par l'IA" }).click();
+    await partie.getByRole("button", { name: "Faire corriger", exact: true }).click();
     await expect(partie.getByRole("alert")).toBeVisible();
-    await expect(partie.getByRole("button", { name: "Faire corriger par l'IA" })).toBeEnabled();
+    await expect(partie.getByRole("button", { name: "Faire corriger", exact: true })).toBeEnabled();
     await expect(page.getByText("Corrigé", { exact: true }).first()).toBeVisible();
   });
 });
@@ -185,8 +185,8 @@ test.describe("programme de révision", () => {
     await entrerAvecCompte(page);
     await aller(page, "/planning");
 
-    await page.getByRole("button", { name: "Créer mon programme avec l'IA" }).first().click();
-    const assistant = page.getByRole("dialog", { name: "Créer mon programme avec l'IA" });
+    await page.getByRole("button", { name: "Créer mon programme de révision" }).first().click();
+    const assistant = page.getByRole("dialog", { name: "Créer mon programme de révision" });
     await expect(assistant).toBeVisible();
 
     // Étape 1 : la session proposée par défaut (dans deux semaines, un examen).
@@ -195,8 +195,7 @@ test.describe("programme de révision", () => {
     await assistant.getByRole("button", { name: "Générer mon programme" }).click();
 
     // Le relais simulé refuse l'IA : répartition automatique, annoncée.
-    await expect(assistant.getByText("L'IA n'a pas pu répondre : le site a réparti les séances lui-même")).toBeVisible();
-    await expect(assistant.getByText("Proposé par l'IA.")).toHaveCount(0);
+    await expect(assistant.getByText("Le service n'a pas répondu : le site a réparti les séances lui-même")).toBeVisible();
     // L'examen proposé par défaut : dans deux semaines, à 8 h.
     await expect(assistant.getByText("Tes examens")).toBeVisible();
     await expect(assistant.getByRole("listitem").filter({ hasText: "Jeudi 8 octobre à 08:00" })).toBeVisible();

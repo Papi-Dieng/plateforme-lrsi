@@ -204,7 +204,7 @@ export function ExamensListe() {
                 {[
                   ["clock", "Minuteur", "en haut de la page"],
                   ["lock", "Corrigé à la fin", "jamais avant"],
-                  ["sparkles", "L'IA te note", "partie par partie"],
+                  ["sparkles", "Note automatique", "partie par partie"],
                 ].map(([icone, titre, texte]) => (
                   <li key={titre} className="flex flex-col items-start gap-2 rounded-[16px] border border-white/12 bg-white/4 p-3 sm:flex-row sm:items-center sm:gap-3 sm:px-3.5">
                     <span className={cx("grid size-8 shrink-0 place-items-center rounded-[10px] sm:size-9", AMBRE)}>
@@ -376,7 +376,7 @@ function PointsIA({ valeur, max, correction }) {
   return (
     <p className="mt-5 flex items-center gap-3 text-sm font-extrabold text-ink-950 dark:text-white">
       <Icon name="sparkles" className="size-4 text-brand-600 dark:text-brand-400" />
-      Points donnés par l&apos;IA
+      Tes points
       <span className="rounded-[12px] bg-ink-100 px-3 py-1.5 font-mono text-base dark:bg-ink-800">{texte}</span>
     </p>
   );
@@ -529,7 +529,7 @@ export function ExamenSession() {
       : `${examen.parties.length} parties, ${total} points au total. Écris tes réponses sous chaque partie, question par question ou d'un bloc (ou sur une feuille, comme un jour d'examen).`,
     pdf
       ? `Le corrigé ne s'affiche qu'à la fin. Un ${mot} en PDF n'est pas noté automatiquement : compare ta copie au corrigé.`
-      : "Le corrigé ne s'affiche qu'à la fin : l'IA compare alors toutes tes réponses au corrigé et te donne ta note, partie par partie.",
+      : "Le corrigé ne s'affiche qu'à la fin : tes réponses sont alors comparées au corrigé, et tu reçois ta note partie par partie.",
   ];
 
   return (
@@ -659,7 +659,7 @@ export function ExamenSession() {
                 J&apos;ai répondu sur papier
               </h2>
               <p className="mt-1.5 text-[15px] text-ink-600 dark:text-ink-300">
-                Photographie ta copie (une photo par page) ou envoie-la en PDF : l&apos;IA la lit et range chaque réponse
+                Photographie ta copie (une photo par page) ou envoie-la en PDF : elle est lue, et chaque réponse est rangée
                 sous sa partie. Relis ensuite ce qu&apos;elle a mis avant de terminer {passe ? "l'examen" : "le devoir"}.
               </p>
               <input
@@ -746,10 +746,10 @@ export function ExamenSession() {
             <div className="flex flex-wrap items-center justify-between gap-6 rounded-[28px] bg-[#1b2328] p-5 text-white sm:p-9 dark:ring-1 dark:ring-white/10" style={QUADRILLAGE}>
               <div>
                 <p className={cx("text-xs text-ink-300", mono)}>
-                  {pdf ? "Pas de note automatique" : corrigeEnCours ? "Ma note, l'IA corrige encore…" : "Ma note, donnée par l'IA"}
+                  {pdf ? "Pas de note automatique" : corrigeEnCours ? "Ma note, correction en cours…" : "Ma note"}
                 </p>
                 {pdf ? (
-                  <p className="mt-2 max-w-md text-base/7 text-ink-200">L&apos;IA ne lit pas un {mot} en PDF : compare ta copie au corrigé ci-dessus.</p>
+                  <p className="mt-2 max-w-md text-base/7 text-ink-200">Un {mot} en PDF n&apos;est pas corrigé automatiquement : compare ta copie au corrigé ci-dessus.</p>
                 ) : !iaActive ? (
                   <p className="mt-2 max-w-md text-base/7 text-ink-200">La note automatique demande une connexion et la version en ligne du site.</p>
                 ) : (

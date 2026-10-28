@@ -318,7 +318,7 @@ function repondreAide() {
   return {
     intention: "aide",
     texte: [
-      "Je suis un guide, pas une intelligence artificielle : je ne rédige aucune explication et je ne peux donc rien inventer. Ce que je sais faire, c'est chercher dans le contenu de la plateforme et t'amener au bon endroit.",
+      "Je suis un guide : je ne rédige aucune explication et je ne peux donc rien inventer. Ce que je sais faire, c'est chercher dans le contenu de la plateforme et t'amener au bon endroit.",
       "Tu peux me demander de retrouver un chapitre, un exercice ou un QCM sur une notion, ou me demander sur quoi travailler en priorité — dans ce cas je regarde tes résultats de QCM.",
     ],
     liens: [],
@@ -444,7 +444,7 @@ function repondreRevision(mots) {
     principal
       ? `Le chapitre « ${principal.titre} » en ${principal.matiere.nom} traite de ça.`
       : `Ce sujet relève de ${mats[0].nom}.`,
-    "Je ne te réexplique pas la notion moi-même : je ne suis pas une IA, et t'écrire une explication approximative serait pire qu'inutile. Je t'amène à ce qui a été écrit pour ça.",
+    "Je ne te réexplique pas la notion moi-même : t'écrire une explication approximative serait pire qu'inutile. Je t'amène à ce qui a été écrit pour ça.",
   ];
 
   if (indisponible) {

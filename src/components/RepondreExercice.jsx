@@ -329,8 +329,8 @@ export function RepondreAvecIA({
       </Titre>
       <p className="mt-2 text-[15px] text-ink-600 dark:text-ink-300">
         {verrouille
-          ? "Écris tes réponses ici pendant le devoir. Quand tu le termines, l'IA les compare au corrigé et te propose une note."
-          : "Réponds comme sur ta copie : l'IA compare ta réponse au corrigé et te dit si elle est juste."}
+          ? "Écris tes réponses ici pendant le devoir. Quand tu le termines, elles sont comparées au corrigé et tu reçois une note."
+          : "Réponds comme sur ta copie : ta réponse est comparée au corrigé, et tu sais tout de suite si elle est juste."}
       </p>
 
       <PleinEcran titre="Ma réponse" className="mt-4">
@@ -361,7 +361,7 @@ export function RepondreAvecIA({
             </button>
             {copie.lue && (
               <p className="text-xs text-ink-600 dark:text-ink-300">
-                Copie lue par l&apos;IA : relis-la et corrige-la si besoin avant de faire corriger.
+                Copie lue automatiquement : relis-la et corrige-la si besoin avant de faire corriger.
               </p>
             )}
           </div>
@@ -412,7 +412,7 @@ export function RepondreAvecIA({
         )}
         {!verrouille && !iaActive && (
           <p className="text-sm/6 text-ink-600 dark:text-ink-300">
-            La correction par l'IA demande une connexion et la version en ligne du site.
+            La correction automatique demande une connexion et la version en ligne du site.
             {reponseAttendue ? " Compare toi-même ta réponse à la réponse attendue." : " Compare toi-même ta réponse au corrigé."}
           </p>
         )}
@@ -424,10 +424,10 @@ export function RepondreAvecIA({
             className="inline-flex min-h-12 items-center gap-2 rounded-[14px] bg-brand-600 px-5 text-[15px] font-extrabold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Icon name="sparkles" className="size-4" />
-            {etat.attente ? "Correction en cours…" : resultat ? "Refaire corriger" : "Faire corriger par l'IA"}
+            {etat.attente ? "Correction en cours…" : resultat ? "Refaire corriger" : "Faire corriger"}
           </button>
           <p className="text-xs text-ink-500 dark:text-ink-400">
-            Ta réponse est envoyée à Google Gemini pour être corrigée, et n'est pas gardée.
+            Ta réponse est envoyée à un service de Google pour être corrigée, et n'est pas gardée.
           </p>
         </div>
         )}
@@ -478,7 +478,7 @@ export function RepondreAvecIA({
               </div>
             )}
             <p className="border-t border-ink-950/10 px-5 py-3 text-xs text-ink-600 dark:border-white/10 dark:text-ink-300">
-              Comparaison faite par une IA : elle peut se tromper. Le corrigé et ton enseignant font foi.
+              Correction automatique : elle peut se tromper. Le corrigé et ton enseignant font foi.
             </p>
           </div>
           {reponseAttendue}

@@ -22,7 +22,7 @@ import {
 } from "../programmeIA";
 
 /* ==================================================================
-   « Créer mon programme avec l'IA », pour une session d'examens, en
+   « Créer mon programme de révision », pour une session d'examens, en
    trois étapes :
    1. la session : dates de début et de fin, nombre de matières, puis
       pour chacune son semestre (qui limite la liste aux matières de ce
@@ -170,7 +170,7 @@ export default function AssistantProgramme({ contexte, evenements, session: exis
       parIA = false;
       seances = repartirSansIA(creneaux, taches, evaluations);
       resume =
-        "L'IA n'a pas pu répondre : le site a réparti les séances lui-même, entre toutes les matières, en commençant par celles qui passent en premier.";
+        "Le service n'a pas répondu : le site a réparti les séances lui-même, entre toutes les matières, en commençant par celles qui passent en premier.";
     }
     setResultat({ seances, resume, parIA, taches, evaluations });
     setOccupe(false);
@@ -202,7 +202,7 @@ export default function AssistantProgramme({ contexte, evenements, session: exis
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Créer mon programme avec l'IA"
+        aria-label="Créer mon programme de révision"
         onClick={(e) => e.stopPropagation()}
         className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl bg-white shadow-xl dark:bg-ink-900"
       >
@@ -308,7 +308,7 @@ export default function AssistantProgramme({ contexte, evenements, session: exis
           {etape === 2 && (
             <div className="space-y-4">
               <p className="text-sm text-ink-600 dark:text-ink-400">
-                Quand peux-tu réviser ? Coche tes jours et tes heures libres : l&apos;IA place les séances dedans,
+                Quand peux-tu réviser ? Coche tes jours et tes heures libres : les séances sont placées dedans,
                 en évitant tes cours déjà notés et les heures de tes examens.
               </p>
               <ul className="space-y-2">
@@ -362,7 +362,6 @@ export default function AssistantProgramme({ contexte, evenements, session: exis
                       resultat.parIA ? "bg-accent-50 text-accent-800 dark:bg-accent-500/10 dark:text-accent-200" : "bg-sun-100 text-sun-900 dark:bg-sun-500/15 dark:text-sun-100"
                     )}
                   >
-                    {resultat.parIA && <strong className="font-semibold">Proposé par l&apos;IA. </strong>}
                     {resultat.resume}
                   </p>
                   {parJour.map(([jour, seances]) => {

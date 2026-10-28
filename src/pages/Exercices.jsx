@@ -523,7 +523,7 @@ function CorrectionSombre({ exercice, reponse = "" }) {
                   ))}
                 </ol>
                 <p className="mt-3 text-xs text-ink-400">
-                  Chemin refait par une IA à partir du corrigé de l&apos;enseignant et de ta réponse : elle peut se tromper, le corrigé fait foi.
+                  Chemin refait automatiquement à partir du corrigé de l&apos;enseignant et de ta réponse : il peut se tromper, le corrigé fait foi.
                 </p>
               </div>
             )}

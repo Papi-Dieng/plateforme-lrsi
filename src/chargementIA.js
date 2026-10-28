@@ -25,13 +25,13 @@ export const ETAPES_ASSISTANT = [
     lignes: [
       "Ajout des consignes de la matière…",
       "Ajout des extraits du cours…",
-      "Envoi à Gemini par le relais…",
+      "Envoi de la demande…",
     ],
   },
   {
     statut: "Rédaction de la réponse",
     lignes: [
-      "Gemini rédige l'explication…",
+      "Rédaction de l'explication…",
       "Réception de la réponse…",
       "Mise en forme…",
     ],
@@ -44,7 +44,7 @@ export const ETAPES_CORRECTION = [
     lignes: [
       "Lecture de ta réponse…",
       "Lecture de l'énoncé et du corrigé…",
-      "Envoi à Gemini par le relais…",
+      "Envoi de la demande…",
     ],
   },
   {
@@ -81,7 +81,7 @@ export const ETAPES_PROGRAMME = [
     lignes: [
       "Lecture de tes créneaux libres…",
       "Tâches classées : tes points faibles d'abord…",
-      "Envoi à Gemini par le relais…",
+      "Envoi de la demande…",
     ],
   },
   {

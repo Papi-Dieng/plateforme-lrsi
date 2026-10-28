@@ -271,7 +271,7 @@ export default function Planning() {
   const reinitialiser = (tout) => {
     const message = tout
       ? "Tout effacer : tes cours, tes évaluations et tes programmes de révision ? C'est définitif."
-      : "Effacer les séances créées par l'IA ? Tes cours et tes évaluations restent.";
+      : "Effacer les séances des programmes de révision ? Tes cours et tes évaluations restent.";
     if (!window.confirm(message)) return;
     modifier(
       tout
@@ -338,7 +338,7 @@ export default function Planning() {
           <div className="min-w-60 flex-1">
             <h2 className="font-semibold">Des examens approchent ?</h2>
             <p className="mt-0.5 text-sm text-white/85">
-              Donne ton semestre, les dates de ta session, tes matières et tes heures libres : l&apos;IA place
+              Donne ton semestre, les dates de ta session, tes matières et tes heures libres : le site place
               tes séances de révision dans ton emploi du temps, matière par matière, avant chaque examen.
             </p>
           </div>
@@ -347,7 +347,7 @@ export default function Planning() {
             onClick={() => setAssistant({ session: null })}
             className="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-brand-700 hover:bg-brand-50"
           >
-            Créer mon programme avec l&apos;IA
+            Créer mon programme de révision
           </button>
         </section>
 
@@ -363,7 +363,7 @@ export default function Planning() {
         <div>
           <h2 className="text-lg font-semibold text-ink-900 dark:text-white">Mes évaluations</h2>
           <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">
-            Chaque examen ajouté avec l&apos;IA, et le détail de ce qu&apos;il faut revoir. Tu peux refaire son
+            Chaque examen ajouté avec son programme, et le détail de ce qu&apos;il faut revoir. Tu peux refaire son
             programme si tes disponibilités changent.
           </p>
         </div>
@@ -371,7 +371,7 @@ export default function Planning() {
         {evaluations.length === 0 && (
           <EtatVide
             titre="Aucune évaluation pour le moment"
-            texte="Clique sur « Créer mon programme avec l'IA » pour ajouter ton prochain examen."
+            texte="Clique sur « Créer mon programme de révision » pour ajouter ton prochain examen."
           />
         )}
 
@@ -407,7 +407,7 @@ export default function Planning() {
                   }}
                   className="text-xs font-medium text-brand-600 hover:underline dark:text-brand-300"
                 >
-                  {aUnProgramme(ev) ? "Refaire le programme" : "Programme avec l'IA"}
+                  {aUnProgramme(ev) ? "Refaire le programme" : "Créer son programme"}
                 </button>
                 <button
                   type="button"
@@ -465,7 +465,7 @@ export default function Planning() {
           <div className="min-w-60 flex-1">
             <h2 className="font-semibold text-ink-900 dark:text-white">Réinitialiser le planning</h2>
             <p className="mt-0.5 text-sm text-ink-500 dark:text-ink-400">
-              Repartir de zéro : effacer seulement les séances créées par l&apos;IA, ou tout ton planning.
+              Repartir de zéro : effacer seulement les séances des programmes de révision, ou tout ton planning.
             </p>
           </div>
           <button
@@ -474,7 +474,7 @@ export default function Planning() {
             disabled={!planning.evenements.some((e) => e.genere)}
             className="rounded-xl px-3.5 py-2 text-sm font-semibold text-ink-700 ring-1 ring-ink-200 ring-inset hover:bg-ink-50 disabled:opacity-40 dark:text-ink-200 dark:ring-ink-700 dark:hover:bg-ink-800"
           >
-            Effacer les séances de l&apos;IA
+            Effacer les séances des programmes
           </button>
           <button
             type="button"

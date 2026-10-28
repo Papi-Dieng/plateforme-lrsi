@@ -323,7 +323,7 @@ function CarteDevoirs({ historique }) {
   const sur20 = (note, total) => Math.round((note / total) * 200) / 10;
   return (
     <section className={cx(CARTE, "apparition")} style={{ animationDelay: "500ms" }}>
-      <TitreCarte icone="file" ton="bg-[#fff1d6] text-[#7a4b00]" titre="Mes devoirs" texte="Chaque devoir terminé, noté par l'IA : ta dernière note, ta meilleure, et ton évolution." />
+      <TitreCarte icone="file" ton="bg-[#fff1d6] text-[#7a4b00]" titre="Mes devoirs" texte="Chaque devoir terminé et noté : ta dernière note, ta meilleure, et ton évolution." />
       {historique.length === 0 ? (
         <p className={cx("mt-5 text-sm", DOUX)}>
           Aucun devoir noté pour l'instant.{" "}

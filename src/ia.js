@@ -126,13 +126,13 @@ export async function demanderIA(historique, liens, motDePasse, { signal, image 
 export function raisonEchec(code) {
   switch (code) {
     case "surcharge":
-      return "Le service d'IA gratuit est saturé en ce moment. Réessaie dans quelques secondes.";
+      return "Le service est saturé en ce moment. Réessaie dans quelques secondes.";
     case "quota":
-      return "Le quota gratuit de l'IA est atteint pour le moment. Réessaie un peu plus tard.";
+      return "Le service a atteint sa limite pour le moment. Réessaie un peu plus tard.";
     case "trop-de-requetes":
       return "Tu as posé beaucoup de questions d'un coup. Attends une minute avant de réessayer.";
     case "delai":
-      return "L'IA a mis trop de temps à répondre. Réessaie.";
+      return "La réponse a mis trop de temps à arriver. Réessaie.";
     case "annule":
       return "Tu as arrêté la réponse.";
     case "interrompu":
@@ -140,7 +140,7 @@ export function raisonEchec(code) {
     case "image":
       return "Cette image n'a pas pu être envoyée : choisis une photo en JPEG, PNG ou WebP.";
     default:
-      return "L'IA n'a pas pu répondre (connexion ou service indisponible). Réessaie.";
+      return "Pas de réponse (connexion ou service indisponible). Réessaie.";
   }
 }
 
